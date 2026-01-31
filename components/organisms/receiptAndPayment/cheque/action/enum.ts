@@ -1,0 +1,14 @@
+export enum ActionLabelsEnum {
+  RemindMe = "افزودن یادآوری",
+  ToAnotherCash = "واگذاری چک به سایر صندوق ها",
+  ToBank = "واگذاری چک به بانک",
+  ToPerson = "واگذاری چک به شخص",
+  ChequeReturn = "برگشت چک",
+  CustomerReturn = "برگشت چک مشتریان",
+  Collect = "وصول چک",
+  DirectCollect = "وصول مستقیم چک",
+  CashierCollect = "وصول چک توسط صندوقدار",
+  CashFundCollect = "وصول چک توسط تنخواه دار",
+  CustomerRefunding = "استرداد چک به مشتریان",
+  BankRefunding = "استرداد چک از بانک",
+}

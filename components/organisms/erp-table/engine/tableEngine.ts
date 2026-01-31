@@ -1,0 +1,201 @@
+// engine/TableEngine.ts
+
+import {
+  Actor,
+  TableCommand,
+} from '../application/commands';
+import { TableRepository } from '../application/ports/TableRepository';
+import { TableAppService } from '../application/TableAppService';
+import { Table } from '../domain/entities/Table';
+import { TableStore } from './tableStore';
+import {
+  TableSnapShot,
+  TableState,
+  TableViewState,
+  TCell,
+} from './type';
+
+export class TableEngine {
+  private tables = new Map<string, TableStore<TableState>>();
+  constructor(
+    private readonly app: TableAppService,
+    private readonly repo: TableRepository,
+    private readonly actor: Actor,
+  ) { }
+
+  async registerTable(table: Table) {
+    this.tables.set(
+      table.id.value,
+      new TableStore({
+        table,
+        version: table.getVersion(),
+        expanded: {},
+      })
+    );
+    await this.repo.save(table);
+  }
+ 
+
+  async deleteTable(tableId: string) {
+    await this.repo.delete(tableId);
+    this.tables.delete(tableId);
+  }
+  async resetTable(tableId: string, newTable: Table) {
+    const store = this.tables.get(tableId);
+    if (store) {
+      store.resetTable()
+      await this.repo.resetTable(tableId);
+    }
+  }
+
+  private getStore(tableId: string): TableStore<TableState> {
+    const exist = this.tables.has(tableId);
+    if (exist) {
+      return this.tables.get(tableId);
+    }
+  }
+
+
+  getViewState(tableId: string): TableViewState {
+    const { table, version, expanded } = this.getStore(tableId).getState();
+    const pagination = table.getPagination();
+    const totalRows = table.getRows().length;
+    const totalPages = Math.max(
+      1,
+      Math.ceil(totalRows / pagination.pageSize)
+    );
+    return {
+      table,
+      version,
+      rows: table.getVisibleRows().sort((a, b) => a.id.value - b.id.value).map((row) => {
+        const cells: Record<string, TCell> = {};
+        const columns = table.getColumns();
+        for (const col of columns) {
+          const cell = row.getCells().get(col.id);
+
+          cells[col.id] = {
+            value: cell?.getValue()?.value ?? null,
+            originalValue: cell?.getOriginalValue()?.value ?? null,
+            display: cell?.getDisplay()?.value ?? null,
+          };
+        }
+        return {
+          id: row.id.value,
+          rowState: row.rowState.value,
+          changeFields: row.getChangeFields(),
+          cells,//: Object.fromEntries([...row.getCells()].map(([k, c]) => [k, { value: c.getValue()?.value, originalValue: c.getOriginalValue()?.value }])),
+          isExpanded: !!expanded[row.id.value],
+        }
+      }),
+      deletedRows: [],
+      columns: table.getColumns().map((col) => ({
+        id: col.id,
+        title: col.title,
+        hidden: col.hidden,
+        renderType: col.renderType,
+        editable: col.editable,
+        options: col.selectOptions,
+        indexOptions: col.indexOptions,
+        dynamicValue: col.dynamicValue,
+      })),
+      pagination: {
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        totalRows,
+        totalPages,
+        canPrev: pagination.page > 1,
+        canNext: pagination.page < totalPages,
+      },
+    };
+  }
+  getSnapShot(tableId: string): TableSnapShot {
+    const { table } = this.getStore(tableId).getState();
+    return {
+      table,
+      rows: table.getVisibleRows().map(row => ({
+        id: row.id.value,
+        changeFields: row.getChangeFields(),
+        cells: Object.fromEntries(
+          [...row.getCells()].map(([k, c]) => [k, c.getValue()?.value])
+        ),
+        rowState: row.rowState.value
+      })),
+      deletedRows: [],
+
+    };
+  }
+  getExpandedRowData(tableId: string, rowId: number) {
+    const { table } = this.getStore(tableId).getState();
+    if (!table) return null;
+
+    const row = table.getRows().find(r => r.id.value === rowId);
+    if (!row) return null;
+
+    const rowValues: Record<string, unknown> = {};
+    for (const [colId, cell] of row.getCells().entries()) {
+      rowValues[colId] = cell.getValue().value;
+    }
+
+    return rowValues;
+  }
+  setRowExpanded(tableId: string, rowId: number, value: boolean) {
+    const store = this.getStore(tableId);
+    const state = store.getState();
+    const key = String(rowId);
+    if (!!state.expanded[rowId] === value) return;
+
+    store.setState({
+      ...state,
+      expanded: {
+        ...state.expanded,
+        [key]: value,
+      },
+    });
+  }
+
+  toggleRowExpanded(tableId: string, rowId: number) {
+    const key = String(rowId);
+
+    const store = this.getStore(tableId);
+    const state = store.getState();
+    const next = !state.expanded[key];
+
+    store.setState({
+      ...state,
+      expanded: {
+        ...state.expanded,
+        [key]: next,
+      },
+    });
+  }
+
+  collapseAll(tableId: string) {
+    const store = this.getStore(tableId);
+    const state = store.getState();
+    if (!state.expanded || Object.keys(state.expanded).length === 0) return;
+
+    store.setState({
+      ...state,
+      expanded: {},
+    });
+  }
+  async dispatch(command: TableCommand) {
+    await this.app.execute(command, this.actor);
+    const updated = await this.repo.getById(command.tableId);
+    const store = this.getStore(command.tableId);
+    const prev = store.getState();
+    const nextVersion = updated.getVersion();
+    if (prev.version === nextVersion) {
+      return;
+    }
+    store.setState({
+      ...prev,
+      table: updated,
+      version: nextVersion,
+    });
+  }
+
+  subscribe(tableId: string, cb: () => void) {
+    return this.getStore(tableId).subscribe(cb);
+  }
+}

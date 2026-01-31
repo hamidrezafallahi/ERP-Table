@@ -1,0 +1,288 @@
+// bootstrap/createERPTable.ts
+
+import { ConsoleAuditLogger } from '../adapters/infra/consoleAuditLogger';
+import { FetchRemoteApi } from '../adapters/infra/fetchRemoteApi';
+import { LocalTableRepository } from '../adapters/infra/localTableRepository';
+import { UITableController } from '../adapters/ui/UITableController';
+import {
+  ChangeCellValueHandler,
+} from '../application/handlers/cellCommandsHandler';
+import {
+  AddNewRowCommandHandler,
+  DeleteRowCommandHandler,
+  DuplicateRowCommandHandler,
+  ReorderRowCommandHandler,
+} from '../application/handlers/rowCommandsHandler';
+import {
+  ChangePageCommandHandler,
+  ChangePageSizeCommandHandler,
+  ChangeUnitLevelHandler,
+} from '../application/handlers/tableCommandHandler';
+import { TableAppService } from '../application/TableAppService';
+import { Cell } from '../domain/entities/Cell';
+import { Row } from '../domain/entities/Row';
+import { Table } from '../domain/entities/Table';
+import {
+  EditablePolicy,
+  PermissionPolicy,
+} from '../domain/policies';
+import {
+  CellDisplay,
+  CellValue,
+  ColumnId,
+  ColumnSchema,
+  RowId,
+  RowState,
+  RowStateEnum,
+  TableId,
+} from '../domain/value-objects';
+import { TableEngine } from '../engine/tableEngine';
+import {
+  CreateERPTableConfig,
+  IDetailColumnConfig,
+  RowInput,
+} from './type';
+
+/* ======================================================
+   helpers
+   ====================================================== */
+
+const isInitiallyHidden = (col: IDetailColumnConfig, inputRows: RowInput[]): boolean => {
+  if (inputRows.every(r => Object.keys(r.values).includes(col.fieldName))) { 
+    return false
+  } else if (col.hidden) { 
+    return true;
+  } else if (!col.visibility || col.visibility.kind == "always") {
+    return false;
+  } else {
+    return true;
+  }
+};
+
+function buildTable(
+  tableId: TableId,
+  columnsConfig: IDetailColumnConfig[],
+  rows?: RowInput[]
+): { table: Table; columnMeta: Map<string, IDetailColumnConfig> } {
+  const inputRows =
+    rows && rows.length > 0
+      ? rows.sort((a, b) => a.id - b.id)
+      : [{
+        id: 1, values: {
+          id: 1,
+          values: {
+            RowState: RowStateEnum.Added,
+          },
+        },
+      }];
+  const sortedColumns = [...columnsConfig].sort(
+    (a, b) => (a.order ?? 0) - (b.order ?? 0)
+  );
+  const rowMap = new Map<number, Row>();
+  const columns = new Map<string, ColumnSchema>();
+  const columnMeta = new Map<string, IDetailColumnConfig>();
+  for (const col of sortedColumns) {
+    let dynamicValue: ColumnSchema['dynamicValue'] | undefined = undefined
+
+    if (col.dynamicSource?.dependsOn) {
+      const { dependsOn, ...rest } = col.dynamicSource;
+      dynamicValue = {
+        endpoint: col.dynamicSource.endpoint,
+        dependOn: { fieldName: dependsOn[0], value: undefined },
+        ...rest,
+      };
+    }
+
+    const schema: ColumnSchema = {
+      id: col.fieldName,
+      title: col.fieldCaption,
+      renderType: col.fieldType,
+      required: col.required,
+      editable: col.computed
+        ? false
+        : col.fieldType === 'index'
+          ? false
+          : col.editable ?? true,
+      hidden: isInitiallyHidden(col, inputRows),
+      dynamicValue: col.dynamicSource,
+      selectOptions: col.selectOptions,
+      indexOptions: col.indexOptions,
+      displayFormat: col.displayFormat
+    };
+    columns.set(schema.id, schema);
+    columnMeta.set(schema.id, col);
+  }
+  inputRows.forEach((r, idx) => {
+    const rowId = new RowId(r.id);
+    const cells = new Map<string, Cell>();
+    for (const [colId, schema] of columns.entries()) {
+      const meta = columnMeta.get(colId);
+      const incoming = r.values?.[colId];
+      const RowNum = r.values['RowNum'];
+      let value =
+        meta.fieldType === 'index'
+          ? RowNum ?? idx + 1 :
+          incoming ?? null;
+      if (meta?.computed?.dependsOn) {
+        value = meta?.computed?.compute(r.values)
+      }
+      let display =
+        meta.fieldType === 'index'
+          ? RowNum ?? idx + 1 :
+          incoming ? schema.displayFormat ? schema.displayFormat(incoming) : incoming : null;
+      if (meta?.computed?.dependsOn) {
+        value = meta?.computed?.compute(r.values)
+      }
+      cells.set(
+        colId,
+        new Cell(rowId, new ColumnId(colId), new CellValue(value), new CellValue(value), new CellDisplay(display))
+      );
+    }
+    rowMap.set(rowId.value, new Row(rowId, cells, new RowState(rows.length > 0 ? RowStateEnum.Unchanged : RowStateEnum.Added), new Set()));
+
+  });
+  const table = new Table(tableId, rowMap, columns, 0)
+  return {
+    table,
+    columnMeta,
+  };
+
+
+}
+
+/* ======================================================
+   bootstrap
+   ====================================================== */
+
+export async function createERPTable(config: CreateERPTableConfig) {
+  const tableId = new TableId(config.tableId);
+  let table: Table;
+  const repo = config.repo ?? new LocalTableRepository([table]);
+  let columnMeta: Map<string, IDetailColumnConfig> = new Map(
+    config.columns.map(c => [c.fieldName, c])
+  );
+  // if (await repo.exists(tableId.value)) {
+  //   table = await repo.getById(tableId.value);
+  //   const columns = new Map<string, ColumnSchema>();
+  //   for (const col of config.columns) {
+  //     columns.set(col.fieldName, {
+  //       id: col.fieldName,
+  //       title: col.fieldCaption,
+  //       renderType: col.fieldType,
+  //       editable: col.editable ?? true,
+  //       hidden: col.hidden ?? false,
+  //       required: col.required ?? false,
+  //       selectOptions: col.selectOptions,
+  //       indexOptions: col.indexOptions,
+  //       dynamicValue: col.dynamicSource,
+  //       displayFormat: col.displayFormat,
+  //     });
+  //   }
+  //   const columnsArray: ColumnSchema[] = Array.from(columns.values());
+  //   table.setColumns(columnsArray);
+  // } else {
+  const built = buildTable(
+    tableId,
+    config.columns,
+    config.rows
+  );
+  table = built.table;
+  columnMeta = built.columnMeta;
+  await repo.save(table);
+  // }
+
+  /* ---------- infra ---------- */
+
+
+  const audit =
+    config.audit ?? new ConsoleAuditLogger();
+
+  const remoteApi = new FetchRemoteApi();
+
+  /* ---------- policies ---------- */
+
+  const editablePolicy: EditablePolicy =
+    config.editablePolicy ?? { canEdit: () => true };
+  const permissionPolicy: PermissionPolicy =
+    config.permissionPolicy ?? {
+      canChangeCell: ({ actor }) => actor.roles.includes('ADMIN'),
+      canAddRow: ({ actor }) => actor.roles.includes('ADMIN'),
+      canDeleteRow: ({ actor }) => actor.roles.includes('ADMIN'),
+      canReorderRow: ({ actor }) => actor.roles.includes('ADMIN'),
+    };
+
+  /* ---------- handlers ---------- */
+
+  const changeCellHandler = new ChangeCellValueHandler(
+    repo,
+    audit,
+    editablePolicy,
+    permissionPolicy,
+    { columnMeta, remoteApi }
+  );
+  const addRowHandler = new AddNewRowCommandHandler(
+    repo,
+    audit,
+    permissionPolicy
+  );
+  const duplicateRowHandler = new DuplicateRowCommandHandler(
+    repo,
+    audit,
+    permissionPolicy
+  );
+  const deleteRowHandler = new DeleteRowCommandHandler(
+    repo,
+    audit,
+    permissionPolicy
+  );
+  const reorderRowHandler = new ReorderRowCommandHandler(
+    repo,
+    audit,
+    permissionPolicy
+  );
+  const unitLevelHandler = new ChangeUnitLevelHandler(
+    repo,
+    audit,
+    { columnMeta, remoteApi }
+  );
+  const setPageSize = new ChangePageSizeCommandHandler(
+    repo,
+    audit,
+  );
+  const setPage = new ChangePageCommandHandler(
+    repo,
+    audit,
+  );
+
+  /* ---------- application ---------- */
+
+  const app = new TableAppService(
+    changeCellHandler,
+    addRowHandler,
+    duplicateRowHandler,
+    deleteRowHandler,
+    reorderRowHandler,
+    unitLevelHandler,
+    setPageSize,
+    setPage
+  );
+
+  /* ---------- engine ---------- */
+  const engine = new TableEngine(
+    app,
+    repo,
+    config.actor
+  );
+  engine.registerTable(table);
+  /* ---------- controller ---------- */
+  const controller = new UITableController(
+    engine,
+    tableId.value
+  );
+  return {
+    engine,
+    controller,
+    tableId: tableId.value,
+    columnMeta
+  };
+}

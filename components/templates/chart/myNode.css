@@ -1,0 +1,37 @@
+.orgchart.myChart > ul > li > ul li::before {
+  border-top-color: rgb(132 132 132 / var(--tw-border-opacity, 1)) !important;
+}
+
+.orgchart.myChart > ul > li > ul li .oc-node::before,
+.orgchart.myChart ul li .oc-node:not(:only-child)::after {
+  background-color: rgb(132 132 132 / var(--tw-border-opacity, 1)) !important;
+}
+
+.orgchart .oc-node .leftEdge,
+.orgchart .oc-node .topEdge,
+.orgchart .oc-node .rightEdge {
+  display: none;
+}
+
+.orgchart ul li .oc-node {
+  padding: 3px 30px !important;
+}
+
+.orgchart ul li .oc-node.selected {
+  background-color: unset !important;
+}
+.orgchart ul li .oc-node:hover {
+  background-color: unset !important;
+}
+.orgchart.myChart {
+  background-image: none !important;
+}
+.orgchart-container {
+  border: none !important;
+}
+.orgchart > ul > li > ul li::before {
+  border-top: 1px solid !important;
+}
+.dark .orgchart-container {
+  background-color: #292929;
+}

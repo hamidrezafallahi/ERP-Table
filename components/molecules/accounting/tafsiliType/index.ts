@@ -1,0 +1,1 @@
+export { TafsiliTypeForm } from "./form";

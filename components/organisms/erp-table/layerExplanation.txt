@@ -1,0 +1,60 @@
+
+
+// architecture = DDD (Domain-Driven Design)
+//               + Clean Architecture
+//               + Event-Driven UI Table
+
+erp-table
+├── domain
+│   ├── entities
+│   │   ├── Table.ts
+│   │   ├── Row.ts
+│   │   └── Cell.ts
+│   ├── events
+│   │   └── index.ts
+│   ├── value-objects
+│   │   └── index.ts
+│   ├── policies
+│   │   └── index.ts
+│   ├── errors
+│   │   └── DomainError.ts
+│   └── index.ts
+├── application
+│   ├── commands
+│   │   └── index.ts
+│   ├── events
+│   │   └── index.ts
+│   ├── handlers
+│   │   ├── tableCommandsHandler.ts
+│   │   ├── rowCommandsHandler.ts
+│   │   └── cellCommandsHandler.ts
+│   ├── ports
+│   │   ├── TableRepository.ts
+│   │   ├── RemoteApi.ts
+│   │   └── AuditLogger.ts
+│   └── TableAppService.ts
+├── engine
+│   ├── tableEngine.ts
+│   └── tableStore.ts
+├── adapters
+│   ├── infra
+│   │   ├── localTableRepository.ts
+│   │   ├── indexedDbTableRepository.ts
+│   │   ├── fetchRemoteApi.ts
+│   │   └── consoleAuditLogger.ts
+│   └── ui
+│   │   ├── UITableController.ts
+│   │   └── uiEvents.ts
+├── bootstrap
+│   └── createERPTable.ts
+└── ui
+    └── erpTable 
+           ├── index.tsx
+           ├── indexCol.tsx
+           ├── cellRenderer.tsx
+           ├── ERPTableBody.tsx
+           │── ERPTableHeader.tsx
+           └── hooks
+               └── useERPTable.ts
+ 
+

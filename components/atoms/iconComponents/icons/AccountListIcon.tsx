@@ -1,0 +1,59 @@
+import type { IIconConfig } from '../type';
+
+export const AccountListIcon = ({ config }: { config?: IIconConfig }) => {
+  return (
+    <svg
+      width={config?.width ? `${config.width}` : "22"}
+      height={config?.height ? `${config.height}` : "20"}
+      viewBox="0 0 22 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+                    <path
+        d="M4.08069 13.2964C2.86241 14.0335 -0.331825 15.5386 1.61368 17.422C2.56404 18.342 3.62251 19 4.95325 19H12.5468C13.8775 19 14.936 18.342 15.8863 17.422C17.8318 15.5386 14.6376 14.0335 13.4193 13.2964C10.5625 11.5679 6.93752 11.5679 4.08069 13.2964Z"
+         className={
+          !config?.stroke ? "stroke-gray-gray10 dark:stroke-gray-gray1" : ""
+        }
+        stroke={config?.stroke}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12.5 5C12.5 7.20914 10.7091 9 8.5 9C6.29086 9 4.5 7.20914 4.5 5C4.5 2.79086 6.29086 1 8.5 1C10.7091 1 12.5 2.79086 12.5 5Z"
+        className={
+          !config?.stroke ? "stroke-gray-gray10 dark:stroke-gray-gray1" : ""
+        }
+        stroke={config?.stroke}
+        strokeWidth="1.5"
+      />
+      <path
+        d="M16 3L21 3"
+        stroke="#585858"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M16 6L21 6"
+        className={
+          !config?.stroke ? "stroke-gray-gray10 dark:stroke-gray-gray1" : ""
+        }
+        stroke={config?.stroke}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M19 9L21 9"
+        className={
+          !config?.stroke ? "stroke-gray-gray10 dark:stroke-gray-gray1" : ""
+        }
+        stroke={config?.stroke}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};

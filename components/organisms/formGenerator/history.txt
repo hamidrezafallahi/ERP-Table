@@ -1,0 +1,1230 @@
+"use client";
+import "./style.css";
+
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+import { Drawer, Form } from "antd";
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { shallowEqual, useDispatch } from "react-redux";
+
+import { CustomButton } from "@components/atoms/defaultElements";
+import { MenuDrawerIcon } from "@components/atoms/iconComponents";
+import Title from "@components/atoms/Title";
+import Comments from "@components/molecules/comments";
+import FormToolbar from "@components/organisms/formToolbar";
+import DynamicLoaderComponent from "@components/templates/dynamicLoaderComponent";
+import { useFormHandlers, useFullScreen } from "@hooks/custom";
+import { useAppSelector } from "@redux/index";
+import { useGetData } from "@services/base";
+import { addNewPage, setAllPageData, setTagsInfo } from "@slice/pages";
+import { PageStateEnum } from "@slice/pages/enum";
+import type { IPageConfig } from "@type/elementType";
+import { PageTypeEnum } from "@type/enum";
+import type { IToolbar } from "@type/toolbar";
+import { formRulesReturner, renderFormField } from "@utils/core";
+
+import type { IProps } from "./type";
+
+export default function FormGenerator<T, K>({
+  caption,
+  fieldKey,
+  titleKey,
+  listUrl,
+  url,
+  pageIcon,
+  conditionalActions,
+  isModal = false,
+  parentPageId,
+  mutationSystemId,
+  extraFunction,
+  conditionalFields,
+  setConditionalFields,
+  withImage,
+  submitCaption,
+}: IProps) {
+  const t = useTranslations();
+  const dispatch = useDispatch();
+  const toggleFullScreen = useFullScreen();
+  const params = useSearchParams();
+  const defaultId = Number(params.get("id"));
+
+  const { initPage, activePage, pages, match } = useAppSelector(
+    (state) => ({
+      initPage: state.withPersist.init,
+      activePage: state?.withPersist?.pages?.find((item) => item.isActive),
+      pages: state?.withPersist?.pages,
+      match: state.withPersist.config.initMatch,
+    }),
+    shallowEqual
+  );
+
+  const pageType = PageTypeEnum.Form;
+  const {
+    pageId,
+    RepoId,
+    SystemId,
+    url: BaseUrl,
+    pageState,
+    originalPageState,
+    Id,
+    selectedView,
+    listPageId,
+    Key,
+    returnPageId,
+    data,
+  } = initPage;
+
+  const [form] = Form.useForm();
+
+  const formValuesRef = useRef(null);
+  const routingValue = useRef(null);
+
+  const [id, setId] = useState(defaultId);
+  const [repoViewId, setRepoViewId] = useState(null);
+
+  const { data: dataToolbar, isSuccess } = useGetData<IToolbar, null>({
+    url: "/api/menu/getToolbarData",
+    body: { RepoId, SystemId, Type: pageType, Id: id },
+    id: RepoId,
+    skip: !RepoId,
+  });
+
+  // const { data: dataToolbar, isSuccess } = useGetToolbarDataQuery(
+  //   {
+  //     RepoId,
+  //     SystemId,
+  //     Type: pageType,
+  //     Id: id,
+  //   },
+  //   {
+  //     refetchOnMountOrArgChange: true,
+  //     refetchOnFocus: true,
+  //   }
+  // );
+
+  const { data: defaultValueData, isSuccess: defaultValueSuccess } = useGetData<
+    T,
+    K
+  >({
+    url: url,
+    body: {
+      RepoViewId: repoViewId,
+      Id: id,
+      ShowBookmarked: true,
+      ShowTags: true,
+    },
+    skip: !repoViewId || !id,
+    id: id,
+  });
+
+  let defaultValue = defaultValueData?.Data && defaultValueData?.Data[0];
+
+  const selectedViewIndex = activePage?.selectedViewIndex ?? 0;
+  const safeParse = (s: any) => {
+    try {
+      return typeof s === "string" && s.trim() !== "" ? JSON.parse(s) : null;
+    } catch (e) {
+      return null;
+    }
+  };
+  const [FetchToolbarData, SetFetchToolbarData] = useState(true);
+  const [mobileDrawerContent, setMobileDrawerContent] = useState(null);
+  const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
+  const [mobileDrawerHeight, setMobileDrawerHeight] = useState(160);
+  const [fields, setFields] = useState([]);
+
+  const showDrawerContent = () => {
+    setOpenMobileDrawer(!openMobileDrawer);
+  };
+
+  let TagsInfo;
+  const config =
+    isSuccess &&
+    dataToolbar?.Result &&
+    dataToolbar?.Data?.List?.ListProp?.length > 0 &&
+    safeParse(dataToolbar?.Data?.List?.ListProp?.[selectedViewIndex]?.Config);
+
+  let formData = useMemo(() => {
+    if (
+      isSuccess &&
+      dataToolbar?.Result &&
+      dataToolbar?.Data?.List?.ListProp?.length > 0
+    ) {
+      const Config: IPageConfig =
+        safeParse(
+          dataToolbar?.Data?.List?.ListProp?.[selectedViewIndex]?.Config
+        ) || ({} as IPageConfig);
+
+      return Config.fields;
+    }
+    return [];
+  }, [isSuccess, dataToolbar, selectedViewIndex]);
+  const handleValuesChange = (changedValues, allValues) => {
+    formValuesRef.current = allValues;
+  };
+  const {
+    handleAdd,
+    handleReset,
+    handleSubmit,
+    handleSubmitAndClean,
+    handleSubmitAndClose,
+    isLoading,
+  } = useFormHandlers({
+    pages: pages,
+    activePage: activePage,
+    form: form,
+    mutationSystemId: mutationSystemId,
+  });
+  const handleOutsideClick = useCallback(
+    (event) => {
+      if (event.target.closest(".ant-drawer-content") === null) {
+        setOpenMobileDrawer(false);
+      }
+    },
+    [setOpenMobileDrawer]
+  );
+  const handleKeyAction = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.altKey === true) {
+      if (e.key === "s") {
+        submitCaption ? handleSubmitAndClose() : handleSubmit();
+      }
+      if (e.key === "r") handleReset();
+      if (e.key === "n") handleAdd();
+      if (e.key === "c") handleSubmitAndClean();
+      if (e.key === "y") {
+        toggleFullScreen();
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey) {
+        e.preventDefault();
+        if (e.key === "b" && containerRef.current) {
+          containerRef.current.focus();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (conditionalFields) {
+      setConditionalFields(formData);
+    }
+  }, [formData]);
+
+  useEffect(() => {
+    if (
+      typeof conditionalFields !== "boolean" &&
+      conditionalFields?.length > 0
+    ) {
+      setFields(conditionalFields);
+    } else {
+      setFields(formData);
+    }
+  }, [formData, conditionalFields, isSuccess]);
+
+  useEffect(() => {
+    if (extraFunction) {
+      extraFunction(formData);
+    }
+  }, [formData, activePage?.pageData]);
+
+  useEffect(() => {
+    setId(defaultId);
+
+    SetFetchToolbarData(true);
+  }, [defaultId]);
+
+  // useEffect(() => {
+  //   if (dataToolbar?.Data?.List?.ListProp) {
+  //     const currentConfig: IPageConfig =
+  //       safeParse(
+  //         dataToolbar?.Data?.List?.ListProp?.[selectedViewIndex]?.Config
+  //       ) || ({} as IPageConfig);
+  //     const formData = currentConfig?.fields;
+
+  //     if (defaultValue) {
+  //       formData?.map(
+  //         (item) => (
+  //           (item.value = defaultValue[item.name]),
+  //           (item.originalValue = defaultValue[item.name]),
+  //           item.name === titleKey
+  //             ? (item.isTitleField = true)
+  //             : (item.isTitleField = false)
+  //         )
+  //       );
+
+  //       formData?.push({
+  //         name: fieldKey,
+  //         caption: "MainIdField",
+  //         value: id,
+  //         originalValue: id,
+  //       });
+
+  //       if (defaultValue.TagsInfo) {
+  //         dispatch(setTagsInfo(defaultValue.TagsInfo));
+  //       }
+
+  //       formData && dispatch(setAllPageData(formData));
+  //     }
+  //   }
+  // }, [id, defaultValue]);
+  useEffect(() => {
+    if (dataToolbar?.Data?.List?.ListProp) {
+      const currentConfig: IPageConfig =
+        safeParse(
+          dataToolbar?.Data?.List?.ListProp?.[selectedViewIndex]?.Config
+        ) || ({} as IPageConfig);
+
+      const newFormData = currentConfig?.fields || [];
+
+      if (defaultValue) {
+        newFormData.forEach((item) => {
+          const currentValue = form.getFieldValue(item.name);
+
+          if (currentValue === undefined) {
+            item.value = defaultValue[item.name];
+          } else {
+            item.value = currentValue;
+          }
+
+          item.originalValue = defaultValue[item.name];
+
+          item.isTitleField = item.name === titleKey;
+        });
+
+        if (!newFormData.find((f) => f.name === fieldKey)) {
+          newFormData.push({
+            name: fieldKey,
+            caption: "MainIdField",
+            value: id,
+            originalValue: id,
+          });
+        }
+
+        if (defaultValue.TagsInfo) {
+          dispatch(setTagsInfo(defaultValue.TagsInfo));
+        }
+
+        form.setFieldsValue(
+          newFormData.reduce(
+            (acc, cur) => ({ ...acc, [cur.name]: cur.value }),
+            {}
+          )
+        );
+
+        dispatch(setAllPageData(newFormData));
+      }
+    }
+  }, [id, defaultValue, dataToolbar]);
+
+  useEffect(() => {
+    if (
+      isSuccess &&
+      dataToolbar?.Result &&
+      FetchToolbarData &&
+      dataToolbar?.Data?.List?.ListProp?.length > 0
+    ) {
+      const Config: IPageConfig =
+        safeParse(
+          dataToolbar?.Data?.List?.ListProp?.[selectedViewIndex]?.Config
+        ) || ({} as IPageConfig);
+      const info = {
+        addEndpoint: Config.addEndpoint,
+        deleteEndpoint: Config.deleteEndpoint,
+        updateEndpoint: Config.updateEndpoint,
+        formIdField: Config.formIdField,
+      };
+      formData = Config?.fields;
+      if (!id) {
+        defaultValue = null;
+      }
+      if (defaultValue) {
+        formData?.map(
+          (item) => (
+            (item.value = defaultValue[item.name]),
+            (item.originalValue = defaultValue[item.name]),
+            item.name === titleKey
+              ? (item.isTitleField = true)
+              : (item.isTitleField = false)
+          )
+        );
+        TagsInfo = defaultValue.TagsInfo;
+      } else {
+        formData?.map((item) => {
+          let value = undefined;
+          let originalValue = undefined;
+          if (item.type === "radio") {
+            value = item?.radioValues?.[0]?.value;
+            originalValue = null;
+          } else if (item.type === "date") {
+            // value = new Date().toISOString()
+            // originalValue = null
+          } else if (item.type === "bool") {
+            value = false;
+            originalValue = false;
+          } else if (item.type == "checkBox") {
+            value = false;
+            originalValue = false;
+          }
+          return (
+            item.name === titleKey
+              ? (item.isTitleField = true)
+              : (item.isTitleField = false),
+            (item.value = value),
+            (item.originalValue = originalValue)
+          );
+        });
+      }
+      if (id) {
+        formData?.push({
+          name: fieldKey,
+          caption: "MainIdField",
+          value: id,
+          originalValue: id,
+        });
+      }
+
+      dispatch(
+        addNewPage({
+          pageId,
+          icon: pageIcon,
+          caption: caption,
+          captionII: initPage.caption ?? "",
+          pageState: pageState ? pageState : PageStateEnum.Opened,
+          originalPageState: originalPageState
+            ? originalPageState
+            : PageStateEnum.Opened,
+          type: pageType,
+          RepoId,
+          SystemId,
+          url: BaseUrl,
+          withImage: withImage,
+          TagsInfo,
+          pageData: formData,
+          pageInfo: info,
+          toolbarData: dataToolbar.Data,
+          listUrl,
+          isModal: isModal,
+          parentPageId: parentPageId,
+          listPageId,
+          Key,
+          returnPageId,
+          selectedView: selectedView,
+          selectedViewIndex: 0,
+          data: data,
+        })
+      );
+      SetFetchToolbarData(false);
+    }
+  }, [isSuccess, FetchToolbarData, Id, pageId]);
+
+  useEffect(() => {
+    if (config) {
+      setRepoViewId(config?.repoViewId);
+    }
+  }, [config]);
+
+  useEffect(() => {
+    window.addEventListener("click", handleOutsideClick);
+
+    return () => {
+      window.removeEventListener("click", handleOutsideClick);
+    };
+  }, [handleOutsideClick]);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  return (
+    <>
+      <Title caption={caption} />
+      <div
+        className={`${match ? "relative  h-full" : ""} w-full outline-none `}
+        onKeyDown={handleKeyAction}
+        tabIndex={0}
+        ref={containerRef}
+      >
+        <div
+          className={
+            match ? `absolute -top-[60px] rtl:-left-[10px] -right-[10px]` : ""
+          }
+        >
+          <FormToolbar
+            form={form}
+            selectedView={selectedView ?? activePage?.selectedView}
+            listUrl={listUrl}
+            listPageId={listPageId}
+            getUrl={url}
+            toolbarData={dataToolbar?.Data}
+            isEdit={!!id}
+            id={id}
+            fieldKey={fieldKey}
+            conditionalActions={conditionalActions}
+            statusHandler={(routing) => {
+              routingValue.current = routing;
+            }}
+            mutationSystemId={mutationSystemId}
+            submitCaption={submitCaption}
+          />
+        </div>
+        <div className="hidden-show-scrollBar flex flex-col gap-10 mt-4 lg:mt-0 h-full max-h-[calc(100dvh-160px)] overflow-auto">
+          {config && config?.data ? (
+            <DynamicLoaderComponent
+              componentName={config.data}
+              props={{ setMobileDrawerContent, setMobileDrawerHeight, form }}
+            />
+          ) : (
+            <Form
+              onValuesChange={handleValuesChange}
+              className="gap-5 s:gap-y-16 xs:gap-8 grid grid-cols-4"
+              form={form}
+            >
+              {(!id || defaultValueSuccess) &&
+                formData &&
+                formData.length > 0 &&
+                fields
+                  ?.filter((item) => item.type !== "info")
+                  .sort((a, b) => a.order - b.order)
+                  .map((item, index) => {
+                    const colSpan = `lg:col-span-${item?.colSpan}`;
+                    return (
+                      <Form.Item
+                        key={index}
+                        label={item.type !== "checkBox" ? item.caption : ""}
+                        tooltip={
+                          item.help
+                            ? { title: item.help, color: "#585858" }
+                            : null
+                        }
+                        rules={formRulesReturner(item.rules)}
+                        validateTrigger="onBlur"
+                        name={item.name}
+                        layout="vertical"
+                        valuePropName={`${
+                          item.type == "checkBox" ? "checked" : "value"
+                        }`}
+                        getValueFromEvent={(e) =>
+                          item.type == "checkBox"
+                            ? e.target.checked
+                            : item.type === "number" ||
+                              item.type === "price" ||
+                              item.type === "selectOption" ||
+                              item.type === "date"
+                            ? e
+                            : e?.target?.value
+                        }
+                        className={`m-0 p-0 col-span-4
+                      ${item.type === "checkBox" ? "content-end" : ""}
+                      ${item.type == "noShow" ? "hidden lg:block" : ""}
+                      ${item.colSpan ? `${colSpan}` : `lg:col-span-2`}
+                       `}
+                      >
+                        {renderFormField(item, form, !!id)}
+                      </Form.Item>
+                    );
+                  })}
+            </Form>
+          )}
+          {!!id && activePage?.RepoId && (
+            <Comments referId={Number(id)} repoId={activePage.RepoId} />
+          )}
+        </div>
+      </div>
+
+      {!match && (
+        <div className="right-0 bottom-0 left-0 z-20 fixed flex flex-col bg-white w-full text-xs topShadow">
+          {mobileDrawerContent ? (
+            <div>
+              <Drawer
+                className="customMobileDrawer"
+                style={{
+                  padding: 0,
+                  paddingRight: 0,
+                  paddingLeft: 0,
+                  paddingTop: 0,
+                  paddingBottom: 0,
+                  backgroundColor: "white",
+                }}
+                placement="bottom"
+                closable={false}
+                open={true}
+                getContainer={false}
+                mask={false}
+                height={!openMobileDrawer ? 70 : mobileDrawerHeight}
+              >
+                <div
+                  className="flex flex-col justify-between h-full"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div
+                    className="flex justify-center items-center customMobileDrawer"
+                    onClick={showDrawerContent}
+                  >
+                    <span className="flex justify-center items-center h-6">
+                      <MenuDrawerIcon />
+                    </span>
+                  </div>
+                  {openMobileDrawer && (
+                    <div className="pb-4">{mobileDrawerContent}</div>
+                  )}
+                  <CustomButton
+                    loading={isLoading}
+                    type="text"
+                    className={`text-sm flex justify-center items-center focus:!text-none focus:none focus-within:none active:none active:bg-black-black95 !bg-black-black95 rounded w-full h-[42px] text-white`}
+                    onClick={
+                      submitCaption ? handleSubmitAndClose : handleSubmit
+                    }
+                  >
+                    {submitCaption ? submitCaption : t("general.save")}
+                  </CustomButton>
+                </div>
+              </Drawer>
+            </div>
+          ) : (
+            <div className="px-4 py-3">
+              <CustomButton
+                loading={isLoading}
+                type="text"
+                className={`text-sm flex justify-center items-center focus:!text-none focus:none focus-within:none active:none active:bg-black-black95 !bg-black-black95 rounded w-full h-[42px] text-white`}
+                onClick={submitCaption ? handleSubmitAndClose : handleSubmit}
+              >
+                {submitCaption ? submitCaption : t("general.save")}
+              </CustomButton>
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+/////////////////////////////////last work without bug /////////////////////////////////////////////////////////////////////////////////////////
+"use client";
+import "./style.css";
+
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+import { Drawer, Form, Spin } from "antd";
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { shallowEqual, useDispatch } from "react-redux";
+
+import { CustomButton } from "@components/atoms/defaultElements";
+import { MenuDrawerIcon } from "@components/atoms/iconComponents";
+import Title from "@components/atoms/Title";
+import Comments from "@components/molecules/comments";
+import FormToolbar from "@components/organisms/formToolbar";
+import DynamicLoaderComponent from "@components/templates/dynamicLoaderComponent";
+import { useFormHandlers, useFullScreen } from "@hooks/custom";
+import { useAppSelector } from "@redux/index";
+import { useGetConditionallyMutation, useGetData } from "@services/base";
+import { addNewPage } from "@slice/pages";
+import { PageStateEnum } from "@slice/pages/enum";
+import type { IPageConfig } from "@type/elementType";
+import { PageTypeEnum } from "@type/enum";
+import type { IToolbar } from "@type/toolbar";
+import { formRulesReturner, renderFormField } from "@utils/core";
+
+import type { IProps } from "./type";
+
+export default function FormGenerator<T, K>({
+  caption,
+  fieldKey,
+  titleKey,
+  listUrl,
+  url,
+  pageIcon,
+  conditionalActions,
+  isModal = false,
+  parentPageId,
+  mutationSystemId,
+  extraFunction,
+  conditionalFields,
+  setConditionalFields,
+  withImage,
+  submitCaption,
+}: IProps) {
+  const t = useTranslations();
+  const dispatch = useDispatch();
+  const toggleFullScreen = useFullScreen();
+  const params = useSearchParams();
+  const defaultId = Number(params.get("id"));
+
+  const { initPage, activePage, pages, match } = useAppSelector(
+    (state) => ({
+      initPage: state.withPersist.init,
+      activePage: state?.withPersist?.pages?.find((item) => item.isActive),
+      pages: state?.withPersist?.pages,
+      match: state.withPersist.config.initMatch,
+    }),
+    shallowEqual
+  );
+
+  const pageType = PageTypeEnum.Form;
+  const {
+    pageId,
+    RepoId,
+    SystemId,
+    url: BaseUrl,
+    pageState,
+    originalPageState,
+    Id,
+    selectedView,
+    listPageId,
+    Key,
+    returnPageId,
+    data,
+  } = initPage;
+
+  const [form] = Form.useForm();
+
+  const formValuesRef = useRef(null);
+  const routingValue = useRef(null);
+
+  const [id, setId] = useState(defaultId);
+  const [repoViewId, setRepoViewId] = useState(null);
+  const [getDefaults] = useGetConditionallyMutation();
+  const {
+    data: dataToolbar,
+    isSuccess,
+    isFetching: toolbarIsLoading,
+  } = useGetData<IToolbar, null>({
+    url: "/api/menu/getToolbarData",
+    body: { RepoId, SystemId, Type: pageType, Id: id },
+    id: RepoId,
+    skip: !RepoId,
+  });
+
+  // const { data: dataToolbar, isSuccess } = useGetToolbarDataQuery(
+
+  //   {
+  //     RepoId,
+  //     SystemId,
+  //     Type: pageType,
+  //     Id: id,
+  //   },
+  //   {
+  //     refetchOnMountOrArgChange: true,
+  //     refetchOnFocus: true,
+  //   }
+  // );
+
+  // let defaultValue = defaultValueData?.Data && defaultValueData?.Data[0];
+
+  const selectedViewIndex = activePage?.selectedViewIndex ?? 0;
+  const safeParse = (s: any) => {
+    try {
+      return typeof s === "string" && s.trim() !== "" ? JSON.parse(s) : null;
+    } catch (e) {
+      return null;
+    }
+  };
+  const [FetchToolbarData, SetFetchToolbarData] = useState(true);
+  const [mobileDrawerContent, setMobileDrawerContent] = useState(null);
+  const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
+  const [mobileDrawerHeight, setMobileDrawerHeight] = useState(160);
+  const [fields, setFields] = useState([]);
+
+  const showDrawerContent = () => {
+    setOpenMobileDrawer(!openMobileDrawer);
+  };
+
+  const config =
+    isSuccess &&
+    dataToolbar?.Result &&
+    dataToolbar?.Data?.List?.ListProp?.length > 0 &&
+    safeParse(dataToolbar?.Data?.List?.ListProp?.[selectedViewIndex]?.Config);
+
+  let formData = useMemo(() => {
+    if (
+      isSuccess &&
+      dataToolbar?.Result &&
+      dataToolbar?.Data?.List?.ListProp?.length > 0
+    ) {
+      const Config: IPageConfig =
+        safeParse(
+          dataToolbar?.Data?.List?.ListProp?.[selectedViewIndex]?.Config
+        ) || ({} as IPageConfig);
+
+      return Config.fields;
+    }
+    return [];
+  }, [isSuccess, dataToolbar, selectedViewIndex]);
+  const handleValuesChange = (changedValues, allValues) => {
+    formValuesRef.current = allValues;
+  };
+  const {
+    handleAdd,
+    handleReset,
+    handleSubmit,
+    handleSubmitAndClean,
+    handleSubmitAndClose,
+    isLoading,
+  } = useFormHandlers({
+    pages: pages,
+    activePage: activePage,
+    form: form,
+    mutationSystemId: mutationSystemId,
+  });
+  const handleOutsideClick = useCallback(
+    (event) => {
+      if (event.target.closest(".ant-drawer-content") === null) {
+        setOpenMobileDrawer(false);
+      }
+    },
+    [setOpenMobileDrawer]
+  );
+  const handleKeyAction = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.altKey === true) {
+      if (e.key === "s") {
+        submitCaption ? handleSubmitAndClose() : handleSubmit();
+      }
+      if (e.key === "r") handleReset();
+      if (e.key === "n") handleAdd();
+      if (e.key === "c") handleSubmitAndClean();
+      if (e.key === "y") {
+        toggleFullScreen();
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey) {
+        e.preventDefault();
+        if (e.key === "b" && containerRef.current) {
+          containerRef.current.focus();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (conditionalFields) {
+      setConditionalFields(formData);
+    }
+  }, [formData]);
+
+  useEffect(() => {
+    if (
+      typeof conditionalFields !== "boolean" &&
+      conditionalFields?.length > 0
+    ) {
+      setFields(conditionalFields);
+    } else {
+      setFields(formData);
+    }
+  }, [formData, conditionalFields, isSuccess]);
+
+  useEffect(() => {
+    if (extraFunction) {
+      extraFunction(formData);
+    }
+  }, [formData, activePage?.pageData]);
+
+  // useEffect(() => {
+  //   setId(defaultId);
+
+  //   SetFetchToolbarData(true);
+  // }, [defaultId]);
+
+  // useEffect(() => {
+  //   if (dataToolbar?.Data?.List?.ListProp) {
+  //     const currentConfig: IPageConfig =
+  //       safeParse(
+  //         dataToolbar?.Data?.List?.ListProp?.[selectedViewIndex]?.Config
+  //       ) || ({} as IPageConfig);
+  //     const formData = currentConfig?.fields;
+
+  //     if (defaultValue) {
+  //       formData?.map(
+  //         (item) => (
+  //           (item.value = defaultValue[item.name]),
+  //           (item.originalValue = defaultValue[item.name]),
+  //           item.name === titleKey
+  //             ? (item.isTitleField = true)
+  //             : (item.isTitleField = false)
+  //         )
+  //       );
+
+  //       formData?.push({
+  //         name: fieldKey,
+  //         caption: "MainIdField",
+  //         value: id,
+  //         originalValue: id,
+  //       });
+
+  //       if (defaultValue.TagsInfo) {
+  //         dispatch(setTagsInfo(defaultValue.TagsInfo));
+  //       }
+
+  //       formData && dispatch(setAllPageData(formData));
+  //     }
+  //   }
+  // }, [id, defaultValue]);
+
+  // useEffect(() => {
+  //   if (dataToolbar?.Data?.List?.ListProp) {
+  //     const currentConfig: IPageConfig =
+  //       safeParse(
+  //         dataToolbar?.Data?.List?.ListProp?.[selectedViewIndex]?.Config
+  //       ) || ({} as IPageConfig);
+
+  //     const newFormData = currentConfig?.fields || [];
+
+  //     if (defaultValue) {
+  //       newFormData.forEach((item) => {
+  //         const currentValue = form.getFieldValue(item.name);
+  //         if (currentValue === undefined) {
+  //           item.value = defaultValue[item.name];
+  //         } else {
+  //           item.value = currentValue;
+  //         }
+
+  //         item.originalValue = defaultValue[item.name];
+
+  //         item.isTitleField = item.name === titleKey;
+  //       });
+
+  //       if (!newFormData.find((f) => f.name === fieldKey)) {
+  //         newFormData.push({
+  //           name: fieldKey,
+  //           caption: "MainIdField",
+  //           value: id,
+  //           originalValue: id,
+  //         });
+  //       }
+
+  //       if (defaultValue.TagsInfo) {
+  //         dispatch(setTagsInfo(defaultValue.TagsInfo));
+  //       }
+
+  //       dispatch(setAllPageData(newFormData));
+  //     }
+  //   }
+  // }, [id, defaultValue, dataToolbar]);
+
+  useEffect(() => {
+    const fetchDefaultValue = async () => {
+      try {
+        const Config: IPageConfig =
+          safeParse(
+            dataToolbar?.Data?.List?.ListProp?.[selectedViewIndex]?.Config
+          ) || ({} as IPageConfig);
+        const info = {
+          addEndpoint: Config.addEndpoint,
+          deleteEndpoint: Config.deleteEndpoint,
+          updateEndpoint: Config.updateEndpoint,
+          formIdField: Config.formIdField,
+        };
+
+        let updatedFormData = Config?.fields ? [...Config.fields] : [];
+
+        let defaultValue = undefined;
+        let TagsInfo = undefined;
+
+        if (id) {
+          const config = safeParse(
+            dataToolbar?.Data?.List?.ListProp?.[selectedViewIndex]?.Config
+          );
+
+          const res = await getDefaults({
+            url: url,
+            body: {
+              RepoViewId: config.repoViewId,
+              Id: id,
+              ShowBookmarked: true,
+              ShowTags: true,
+            },
+            id: id,
+          }).unwrap();
+
+          if (res.Result === "Success" && res.Data?.[0]) {
+            defaultValue = res.Data[0];
+            TagsInfo = defaultValue.TagsInfo;
+          }
+        }
+
+        // پر کردن مقادیر formData
+        if (defaultValue && updatedFormData) {
+          updatedFormData = updatedFormData.map((item) => {
+            return {
+              ...item,
+              value: defaultValue[item.name],
+              originalValue: defaultValue[item.name],
+              isTitleField: item.name === titleKey,
+            };
+          });
+        } else if (updatedFormData) {
+          // حالت دوم: بدون مقدار پیش‌فرض (مقادیر اولیه)
+          updatedFormData = updatedFormData.map((item) => {
+            let value = undefined;
+            let originalValue = undefined;
+
+            switch (item.type) {
+              case "radio":
+                value = item?.radioValues?.[0]?.value;
+                originalValue = null;
+                break;
+              case "bool":
+              case "checkBox":
+                value = false;
+                originalValue = false;
+                break;
+              case "date":
+                // برای date می‌توانید مقدار پیش‌فرض بگذارید یا نگذارید
+                // value = new Date().toISOString();
+                // originalValue = null;
+                break;
+            }
+
+            return {
+              ...item,
+              value,
+              originalValue,
+              isTitleField: item.name === titleKey,
+            };
+          });
+        }
+
+        // اضافه کردن فیلد MainIdField اگر id وجود داشت
+        if (id && updatedFormData) {
+          updatedFormData.push({
+            name: fieldKey,
+            caption: "MainIdField",
+            value: id,
+            originalValue: id,
+            type: "hidden", // اضافه کردن type برای سازگاری بیشتر
+          });
+        }
+        // dispatch کردن action
+        dispatch(
+          addNewPage({
+            pageId,
+            icon: pageIcon,
+            caption: caption,
+            captionII: initPage.caption ?? "",
+            pageState: pageState ? pageState : PageStateEnum.Opened,
+            originalPageState: originalPageState
+              ? originalPageState
+              : PageStateEnum.Opened,
+            type: pageType,
+            RepoId,
+            SystemId,
+            url: BaseUrl,
+            withImage: withImage,
+            TagsInfo,
+            pageData: updatedFormData,
+            pageInfo: info,
+            toolbarData: dataToolbar.Data,
+            listUrl,
+            isModal: isModal,
+            parentPageId: parentPageId,
+            listPageId,
+            Key,
+            returnPageId,
+            selectedView: selectedView,
+            selectedViewIndex: 0,
+            data: data,
+          })
+        );
+
+        SetFetchToolbarData(false);
+      } catch (error) {
+        console.error("خطا در دریافت داده‌های پیش‌فرض:", error);
+      }
+    };
+
+    fetchDefaultValue();
+  }, [isSuccess, FetchToolbarData, Id, pageId]);
+
+  useEffect(() => {
+    window.addEventListener("click", handleOutsideClick);
+
+    return () => {
+      window.removeEventListener("click", handleOutsideClick);
+    };
+  }, [handleOutsideClick]);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  return (
+    <>
+      <Title caption={caption} />
+      <div
+        className={`${match ? "relative  h-full" : ""} w-full outline-none `}
+        onKeyDown={handleKeyAction}
+        tabIndex={0}
+        ref={containerRef}
+      >
+        <div
+          className={
+            match ? `absolute -top-[60px] rtl:-left-[10px] -right-[10px]` : ""
+          }
+        >
+          <FormToolbar
+            form={form}
+            selectedView={selectedView ?? activePage?.selectedView}
+            listUrl={listUrl}
+            listPageId={listPageId}
+            getUrl={url}
+            toolbarData={dataToolbar?.Data}
+            isEdit={!!id}
+            id={id}
+            fieldKey={fieldKey}
+            conditionalActions={conditionalActions}
+            statusHandler={(routing) => {
+              routingValue.current = routing;
+            }}
+            mutationSystemId={mutationSystemId}
+            submitCaption={submitCaption}
+          />
+        </div>
+        <div className="hidden-show-scrollBar flex flex-col gap-10 mt-4 lg:mt-0 h-full max-h-[calc(100dvh-160px)] overflow-auto">
+          {config && config?.data ? (
+            <DynamicLoaderComponent
+              componentName={config.data}
+              props={{ setMobileDrawerContent, setMobileDrawerHeight, form }}
+            />
+          ) : (
+            <Form
+              onValuesChange={handleValuesChange}
+              className="gap-5 s:gap-y-16 xs:gap-8 grid grid-cols-4"
+              form={form}
+            >
+              {formData &&
+                formData.length > 0 &&
+                fields
+                  ?.filter((item) => item.type !== "info")
+                  .sort((a, b) => a.order - b.order)
+                  .map((item, index) => {
+                    const colSpan = `lg:col-span-${item?.colSpan}`;
+                    return (
+                      <Form.Item
+                        key={index}
+                        label={item.type !== "checkBox" ? item.caption : ""}
+                        tooltip={
+                          item.help
+                            ? { title: item.help, color: "#585858" }
+                            : null
+                        }
+                        rules={formRulesReturner(item.rules)}
+                        validateTrigger="onBlur"
+                        name={item.name}
+                        layout="vertical"
+                        valuePropName={`${
+                          item.type == "checkBox" ? "checked" : "value"
+                        }`}
+                        getValueFromEvent={(e) =>
+                          item.type == "checkBox"
+                            ? e.target.checked
+                            : item.type === "number" ||
+                              item.type === "price" ||
+                              item.type === "selectOption" ||
+                              item.type === "date"
+                            ? e
+                            : e?.target?.value
+                        }
+                        className={`m-0 p-0 col-span-4
+                      ${item.type === "checkBox" ? "content-end" : ""}
+                      ${item.type == "noShow" ? "hidden lg:block" : ""}
+                      ${item.colSpan ? `${colSpan}` : `lg:col-span-2`}
+                       `}
+                      >
+                        {renderFormField(item, form, !!id)}
+                      </Form.Item>
+                    );
+                  })}
+            </Form>
+          )}
+          {!!id && activePage?.RepoId && (
+            <Comments referId={Number(id)} repoId={activePage.RepoId} />
+          )}
+        </div>
+      </div>
+
+      {!match && (
+        <div className="right-0 bottom-0 left-0 z-20 fixed flex flex-col bg-white w-full text-xs topShadow">
+          {mobileDrawerContent ? (
+            <div>
+              <Drawer
+                className="customMobileDrawer"
+                style={{
+                  padding: 0,
+                  paddingRight: 0,
+                  paddingLeft: 0,
+                  paddingTop: 0,
+                  paddingBottom: 0,
+                  backgroundColor: "white",
+                }}
+                placement="bottom"
+                closable={false}
+                open={true}
+                getContainer={false}
+                mask={false}
+                height={!openMobileDrawer ? 70 : mobileDrawerHeight}
+              >
+                <div
+                  className="flex flex-col justify-between h-full"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div
+                    className="flex justify-center items-center customMobileDrawer"
+                    onClick={showDrawerContent}
+                  >
+                    <span className="flex justify-center items-center h-6">
+                      <MenuDrawerIcon />
+                    </span>
+                  </div>
+                  {openMobileDrawer && (
+                    <div className="pb-4">{mobileDrawerContent}</div>
+                  )}
+                  <CustomButton
+                    loading={isLoading}
+                    type="text"
+                    className={`text-sm flex justify-center items-center focus:!text-none focus:none focus-within:none active:none active:bg-black-black95 !bg-black-black95 rounded w-full h-[42px] text-white`}
+                    onClick={
+                      submitCaption ? handleSubmitAndClose : handleSubmit
+                    }
+                  >
+                    {submitCaption ? submitCaption : t("general.save")}
+                  </CustomButton>
+                </div>
+              </Drawer>
+            </div>
+          ) : (
+            <div className="px-4 py-3">
+              <CustomButton
+                loading={isLoading}
+                type="text"
+                className={`text-sm flex justify-center items-center focus:!text-none focus:none focus-within:none active:none active:bg-black-black95 !bg-black-black95 rounded w-full h-[42px] text-white`}
+                onClick={submitCaption ? handleSubmitAndClose : handleSubmit}
+              >
+                {submitCaption ? submitCaption : t("general.save")}
+              </CustomButton>
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+}

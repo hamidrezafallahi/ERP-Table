@@ -1,0 +1,136 @@
+چک لیست ضروری
+
+Bootstrap
+
+ bootstrap فقط wiring انجام دهد، هیچ rule یا تصمیم دامنه‌ای داخلش نباشد
+
+ buildTable فقط factory باشد، نه محل business logic (computed/visibility را بعداً قابل جابجایی نگه دار)
+
+ policyها فقط تزریق شوند، نه ساخته‌شدن شرطی داخل bootstrap
+
+ RemoteApi / Repo / Audit کاملاً قابل تعویض باشند
+
+ bootstrap هیچ وابستگی به React یا UI نداشته باشد
+
+Engine
+
+ Engine فقط coordinator باشد (dispatch + state sync)
+
+ Engine مستقیماً ViewModel نسازد (حداقل‌سازی getViewState)
+
+ state دامنه‌ای (Table) و state نمایشی (expanded) مرزبندی شده باشند
+
+ Engine repository را برای read مستقیم دور نزند (یا نتیجهٔ app را بگیرد یا event مصرف کند)
+
+ expand به‌عنوان UI intent دیده شود، نه business rule
+
+UITableController
+
+ Controller فقط translate کند (UI event → command)
+
+ هیچ state نگه ندارد
+
+ keybinding فقط اینجا باشد، نه Engine
+
+ toggle/expand اگر domain-impact دارد → command؛ اگر ندارد → UI intent
+
+UI Layer
+
+ UI فقط subscriber باشد
+
+ hook فقط bridge باشد، نه محل logic
+
+ هیچ domain object مستقیم mutate نشود
+
+ ERPTable فقط composition انجام دهد
+
+Adapters (Infra / UI)
+
+ Infra کاملاً framework-agnostic بماند
+
+ UI Adapter به Engine وابسته باشد، نه Domain
+
+ هیچ type مربوط به React داخل Engine یا Domain نماند
+
+General ERP Sanity Checks
+
+ multi-table همزمان بدون تداخل state
+
+ refresh داده backend بدون از دست‌دادن UI intent
+
+ امکان headless consumption (بدون React)
+
+ امکان تست Engine بدون UI
+
+
+
+ Skip to content
+Chat history
+
+
+
+
+
+You said:
+در یک پروژه erp بزرگ و واقعی در حال پیاده سازی قسمت detail از masterDetail هستم .میخوام در پاسخهایی که به من میدی مثل یک مربی سختگیر و دقیق باشی .در حال حاضر برای ذخیره سازی داده  های سطر ها و ستون های جدول detail دارم سعی میکنم از indexed db استفاده کنم چون نمیخوام تو ریداکس باشه و با تغییرش کل موجودیت من نابود بشه . همچنین در نظر دارم در طول کار با جدول یک حافظه داخل خود کد داشته باشم مثل ریپازیتوری که تنها در لحظه ی ساخت جدول اطلاعات اولیه رو از indexed db بخونه و ادامه ی کار رو در درون خودش ست کنه و از ریپازیتوری درون خودش بخونه و فقط در indexed db در زمان ویرایش ست کنه به عنوان کش استفاده بشه . به نظرت کار درستیه برای جدول و پروژه erp این کار رو کردن ؟:
+برای درک بهتر ماجرا من معماری لایه بندی پوشه ها و فایل رو بهت میدم تا بیشتر بفهمی دارم در مورد چه موضوعی حرف میزنم :فقط پاسخ هات کوتاه و جامع باشه :
+
+
+// architecture = DDD (Domain-Driven Design)
+//               + Clean Architecture
+//               + Event-Driven UI Table
+
+erp-table
+├── domain
+│   ├── entities
+│   │   ├── Table.ts
+│   │   ├── Row.ts
+│   │   └── Cell.ts
+│   ├── events
+│   │   └── index.ts
+│   ├── value-objects
+│   │   └── index.ts
+│   ├── policies
+│   │   └── index.ts
+│   ├── errors
+│   │   └── DomainError.ts
+│   └── index.ts
+├── application
+│   ├── commands
+│   │   └── index.ts
+│   ├── events
+│   │   └── index.ts
+│   ├── handlers
+│   │   ├── tableCommandsHandler.ts
+│   │   ├── rowCommandsHandler.ts
+│   │   └── cellCommandsHandler.ts
+│   ├── ports
+│   │   ├── TableRepository.ts
+│   │   ├── RemoteApi.ts
+│   │   └── AuditLogger.ts
+│   └── TableAppService.ts
+├── engine
+│   ├── tableEngine.ts
+│   └── tableStore.ts
+├── adapters
+│   ├── infra
+│   │   ├── localTableRepository.ts
+│   │   ├── indexedDbTableRepository.ts
+│   │   ├── fetchRemoteApi.ts
+│   │   └── consoleAuditLogger.ts
+│   └── ui
+│   │   ├── UITableController.ts
+│   │   └── uiEvents.ts
+├── bootstrap
+│   └── createERPTable.ts
+└── ui
+    └── erpTable 
+           ├── index.tsx
+           ├── indexCol.tsx
+           ├── cellRenderer.tsx
+           ├── ERPTableBody.tsx
+           │── ERPTableHeader.tsx
+           └── hooks
+               └── useERPTable.ts
+ 
+ 
