@@ -22,42 +22,109 @@ export class TableEngine {
     private readonly repo: TableRepository,
     private readonly actor: Actor,
   ) { }
-
-  async registerTable(table: Table) {
+  private async registerTable(cmd: {
+    store: string, table: Table
+  }) {
+    const { store, table } = cmd
+    if (this.tables.has(table.id)) {
+      return;
+    }
     this.tables.set(
-      table.id.value,
+      table.id,
       new TableStore({
         table,
-        version: table.getVersion(),
         expanded: {},
+        activeCell: null,
+        selectedRows: {},
       })
     );
-    await this.repo.save(table);
+    await this.repo.save(store, table);
   }
- 
+  private async deleteTable(cmd: {
+    store: string, tableKey: string
+  }) {
+    const { store, tableKey } = cmd
 
-  async deleteTable(tableId: string) {
-    await this.repo.delete(tableId);
-    this.tables.delete(tableId);
+    await this.repo.delete(store, tableKey);
+    this.tables.delete(tableKey);
   }
-  async resetTable(tableId: string, newTable: Table) {
-    const store = this.tables.get(tableId);
+  private disposeTable(tableKey: string) {
+    this.tables.delete(tableKey);
+  }
+  private async resetTable(cmd: {
+    store: string, tableKey: string
+  }) {
+    const { store, tableKey } = cmd
+
+    const table = this.tables.get(tableKey);
     if (store) {
-      store.resetTable()
-      await this.repo.resetTable(tableId);
+      table.resetTable()
+      await this.repo.resetTable(store, tableKey);
     }
   }
-
-  private getStore(tableId: string): TableStore<TableState> {
-    const exist = this.tables.has(tableId);
-    if (exist) {
-      return this.tables.get(tableId);
+  private getStore(tableKey: string): TableStore<TableState> {
+    const store = this.tables.get(tableKey);
+    if (!store) {
+      throw new Error(`Table ${tableKey} is not registered`);
     }
+    return store;
   }
 
+  private moveActiveCell(cmd: {
+    tableKey: string;
+    rowId: number;
+    columnId: string;
+    direction: 'next' | 'prev';
+  }) {
+    const store = this.getStore(cmd.tableKey);
+    const state = store.getState();
+    const table = state.table;
 
-  getViewState(tableId: string): TableViewState {
-    const { table, version, expanded } = this.getStore(tableId).getState();
+    const columns = table
+      .getColumns()
+      .filter(c => !c.hidden && c.editable && c.id !== 'index');
+
+    const colIndex = columns.findIndex(c => c.id === cmd.columnId);
+    if (colIndex === -1) return;
+
+    const nextIndex =
+      cmd.direction === 'next' ? colIndex + 1 : colIndex - 1;
+
+    const nextCol = columns[nextIndex];
+    if (!nextCol) return;
+
+    store.setState({
+      ...state,
+      activeCell: {
+        rowId: cmd.rowId,
+        columnId: nextCol.id,
+      },
+    });
+  }
+  private activateFirstCell(cmd: {
+    tableKey: string;
+    rowId: number;
+  }) {
+    const store = this.getStore(cmd.tableKey);
+    const state = store.getState();
+    const table = state.table;
+
+    const firstEditable = table
+      .getColumns()
+      .find(c => c.editable && c.id !== 'index' && !c.hidden);
+
+    if (!firstEditable) return;
+
+    store.setState({
+      ...state,
+      activeCell: {
+        rowId: cmd.rowId,
+        columnId: firstEditable.id,
+      },
+    });
+  }
+  getViewState(tableKey: string): TableViewState {
+    const { table, expanded, activeCell, selectedRows } = this.getStore(tableKey).getState();
     const pagination = table.getPagination();
     const totalRows = table.getRows().length;
     const totalPages = Math.max(
@@ -66,7 +133,9 @@ export class TableEngine {
     );
     return {
       table,
-      version,
+
+      activeCell,
+      selectedRows,
       rows: table.getVisibleRows().sort((a, b) => a.id.value - b.id.value).map((row) => {
         const cells: Record<string, TCell> = {};
         const columns = table.getColumns();
@@ -106,10 +175,10 @@ export class TableEngine {
         canPrev: pagination.page > 1,
         canNext: pagination.page < totalPages,
       },
-    };
+    }
   }
-  getSnapShot(tableId: string): TableSnapShot {
-    const { table } = this.getStore(tableId).getState();
+  getSnapShot(tableKey: string): TableSnapShot {
+    const { table } = this.getStore(tableKey).getState();
     return {
       table,
       rows: table.getVisibleRows().map(row => ({
@@ -123,23 +192,93 @@ export class TableEngine {
       deletedRows: [],
 
     };
-  }
-  getExpandedRowData(tableId: string, rowId: number) {
-    const { table } = this.getStore(tableId).getState();
-    if (!table) return null;
 
+  }
+  getExpandedRowData(tableKey: string, rowId: number) {
+    const { table } = this.getStore(tableKey).getState();
+    if (!table) return null;
     const row = table.getRows().find(r => r.id.value === rowId);
     if (!row) return null;
-
     const rowValues: Record<string, unknown> = {};
     for (const [colId, cell] of row.getCells().entries()) {
       rowValues[colId] = cell.getValue().value;
     }
-
     return rowValues;
   }
-  setRowExpanded(tableId: string, rowId: number, value: boolean) {
-    const store = this.getStore(tableId);
+  getActiveCell(tableKey: string) {
+    const store = this.getStore(tableKey).getState();
+    if (!store) return null;
+
+    return store.activeCell;
+  }
+  getActiveRow(tableKey: string) {
+    const store = this.getStore(tableKey).getState();
+    if (!store) return null;
+
+    return store.activeRow;
+  }
+  isActiveCell(
+    tableKey: string,
+    rowId: number,
+    columnId: string
+  ): boolean {
+    try {
+      const { activeCell } = this.getStore(tableKey).getState();
+      return !!activeCell &&
+        activeCell.rowId === rowId &&
+        activeCell.columnId === columnId;
+    } catch {
+      return false;
+    }
+  }
+  isActiveRow(
+    tableKey: string,
+    rowId: number,
+  ): boolean {
+
+    try {
+      const { activeRow } = this.getStore(tableKey).getState();
+      return !!activeRow &&
+        activeRow.rowId === rowId
+    } catch {
+      return false;
+    }
+  }
+  isSelectedRow(tableKey: string, rowId: number): boolean {
+    try {
+      const { selectedRows } = this.getStore(tableKey).getState();
+      return !!selectedRows && !!selectedRows[rowId];
+    } catch {
+      return false;
+    }
+  }
+
+  private activeCell(cmd: {
+    tableKey: string,
+    rowId: number,
+    columnId: string
+  }) {
+    const { tableKey, rowId, columnId } = cmd
+    const table = this.getStore(tableKey).getState();
+    table.activeCell = { rowId, columnId }
+
+  }
+  private activeRow(cmd: {
+    tableKey: string,
+    rowId: number,
+
+  }) {
+    const { tableKey, rowId } = cmd
+    const table = this.getStore(tableKey).getState();
+    table.activeRow = { rowId }
+  }
+
+
+  private setRowExpanded(cmd: {
+    tableKey: string, rowId: number, value: boolean
+  }) {
+    const { rowId, tableKey, value } = cmd
+    const store = this.getStore(tableKey);
     const state = store.getState();
     const key = String(rowId);
     if (!!state.expanded[rowId] === value) return;
@@ -153,10 +292,14 @@ export class TableEngine {
     });
   }
 
-  toggleRowExpanded(tableId: string, rowId: number) {
+  private toggleRowExpanded(cmd: {
+    tableKey: string, rowId: number
+  }) {
+    const { rowId, tableKey } = cmd
+
     const key = String(rowId);
 
-    const store = this.getStore(tableId);
+    const store = this.getStore(tableKey);
     const state = store.getState();
     const next = !state.expanded[key];
 
@@ -169,8 +312,8 @@ export class TableEngine {
     });
   }
 
-  collapseAll(tableId: string) {
-    const store = this.getStore(tableId);
+  private collapseAll(tableKey: string) {
+    const store = this.getStore(tableKey);
     const state = store.getState();
     if (!state.expanded || Object.keys(state.expanded).length === 0) return;
 
@@ -179,23 +322,165 @@ export class TableEngine {
       expanded: {},
     });
   }
-  async dispatch(command: TableCommand) {
-    await this.app.execute(command, this.actor);
-    const updated = await this.repo.getById(command.tableId);
-    const store = this.getStore(command.tableId);
-    const prev = store.getState();
-    const nextVersion = updated.getVersion();
-    if (prev.version === nextVersion) {
-      return;
+  private toggleRowSelection(cmd: {
+    tableKey: string;
+    rowId: number;
+  }) {
+    const store = this.getStore(cmd.tableKey);
+    const state = store.getState();
+
+    const selected = { ...state.selectedRows };
+
+    if (selected[cmd.rowId]) {
+      delete selected[cmd.rowId];
+    } else {
+      selected[cmd.rowId] = true;
     }
+
     store.setState({
-      ...prev,
-      table: updated,
-      version: nextVersion,
+      ...state,
+      selectedRows: selected,
+    });
+  }
+  private selectAllVisibleRows(cmd: {
+    tableKey: string;
+  }) {
+    const store = this.getStore(cmd.tableKey);
+    const state = store.getState();
+
+    const rows = state.table.getVisibleRows();
+
+    const selected: Record<number, true> = {};
+    for (const row of rows) {
+      selected[row.id.value] = true;
+    }
+
+    store.setState({
+      ...state,
+      selectedRows: selected,
+    });
+  }
+  private clearRowSelection(cmd: {
+    tableKey: string;
+  }) {
+    const store = this.getStore(cmd.tableKey);
+    const state = store.getState();
+
+    store.setState({
+      ...state,
+      selectedRows: {},
+    });
+  }
+  private moveActiveCellVertical(cmd: {
+    tableKey: string;
+    rowId: number;
+    columnId: string;
+    direction: 'up' | 'down';
+  }) {
+    const store = this.getStore(cmd.tableKey);
+    const state = store.getState();
+    const rows = state.table.getVisibleRows();
+
+    const rowIndex = rows.findIndex(r => r.id.value === cmd.rowId);
+    if (rowIndex === -1) return;
+
+    const nextIndex =
+      cmd.direction === 'down' ? rowIndex + 1 : rowIndex - 1;
+
+    const nextRow = rows[nextIndex];
+    if (!nextRow) return;
+
+    store.setState({
+      ...state,
+
+      activeRow: {
+        rowId: nextRow.id.value,
+      },
+    });
+    // آیا این ستون در سطر مقصد وجود دارد؟
+    const cell = nextRow.getCells().get(cmd.columnId);
+    if (!cell) return;
+    store.setState({
+      ...state,
+      activeCell: {
+        rowId: nextRow.id.value,
+        columnId: cmd.columnId,
+      },
     });
   }
 
-  subscribe(tableId: string, cb: () => void) {
-    return this.getStore(tableId).subscribe(cb);
+
+  async dispatch(command: TableCommand) {
+
+    switch (command.type) {
+      case 'ACTIVE_CELL':
+        this.activeCell(command);
+        return;
+      case 'ACTIVE_ROW':
+        this.activeRow(command);
+        return;
+      case 'MOVE_ACTIVE_CELL':
+        this.moveActiveCell(command);
+        return;
+      case 'MOVE_ACTIVE_CELL_VERTICAL':
+        this.moveActiveCellVertical(command);
+        return;
+      case 'ACTIVATE_FIRST_CELL':
+        this.activateFirstCell(command);
+        return;
+      case 'ROW_SELECTION_TOGGLED':
+        this.toggleRowSelection(command);
+        return;
+      case 'SELECT_ALL_ROWS':
+        this.selectAllVisibleRows(command);
+        return;
+      case 'CLEAR_ROW_SELECTION':
+        this.clearRowSelection(command);
+        return;
+      case 'TABLE_REGISTERED':
+        await this.registerTable(command);
+        return;
+
+      case 'TABLE_DELETED':
+        await this.deleteTable(command);
+        return;
+
+      case 'ROW_EXPANDED':
+        this.setRowExpanded(command);
+        return;
+      case 'TABLE_DISPOSED':
+        this.disposeTable(command.tableKey);
+        return;
+      case 'COLLAPSE_ALL_ROWS':
+        this.collapseAll(command.tableKey);
+        return;
+      case 'ROW_TOGGLED':
+        this.toggleRowExpanded(command);
+        return;
+      case 'TABLE_RESET':
+        this.resetTable(command);
+        return;
+      default:
+        await this.app.execute(command, this.actor);
+        const updated = await this.repo.getById(command.store, command.tableKey);
+        const store = this.getStore(command.tableKey);
+        const prev = store.getState();
+
+        store.setState({
+          ...prev,
+          table: updated,
+        });
+
+    }
+
+  }
+
+  subscribe(tableKey: string, cb: () => void) {
+    const table = this.getStore(tableKey).subscribe(cb);
+    try {
+      return table
+    } catch {
+      return null;
+    }
   }
 }

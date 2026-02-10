@@ -1,8 +1,8 @@
-import { Spin } from "antd";
+import { Spin } from 'antd';
 
-import { LoadingOutlined } from "@ant-design/icons";
+import { LoadingOutlined } from '@ant-design/icons';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export const CustomSpin = ({...props}: IProps) => {
   const{children,indicator,className}=props

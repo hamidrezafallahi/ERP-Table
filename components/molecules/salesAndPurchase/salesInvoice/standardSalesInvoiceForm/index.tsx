@@ -5,40 +5,15 @@ import {
   DynamicSelect,
   NewDatePicker,
 } from "@components/atoms/defaultElements";
-import InputNumber from "@components/atoms/defaultElements/inputNumber";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
 import InputText from "@components/atoms/defaultElements/inputText";
 import type { IRequestConfig } from "@type/elementType";
 import { SystemEnum } from "@type/enum";
+import { useSaleConfigs } from "../../saleConfigsHook";
 
 export const StandardSalesInvoiceForm = ({ form }) => {
   const t = useTranslations();
-
-  // const referenceConfig: IRequestConfig = {
-  //   addWebUrl: "",
-  //   endpoint: "",
-  //   repoViewId: null,
-  // };
-  const customerConfig: IRequestConfig = {
-    addWebUrl: "api/sale/select/customer4SelectOption/elk",
-    endpoint: "api/sale/select/customer4SelectOption/elk",
-    repoViewId: 130045,
-    addButton: {
-      url: "sale/customer",
-      RepoId: 1012,
-      SystemId: SystemEnum.sale,
-    },
-  };
-
-  const salesTypeConfig: IRequestConfig = {
-    addWebUrl: "api/sale/select/type4SelectOption",
-    endpoint: "api/sale/select/type4SelectOption",
-    repoViewId: 130044,
-    addButton: {
-      url: "sale/saleType",
-      RepoId: 1006,
-      SystemId: SystemEnum.sale,
-    },
-  };
+  const { customerConfig, salesTypeConfig } = useSaleConfigs();
 
   return (
     <Form
@@ -53,7 +28,7 @@ export const StandardSalesInvoiceForm = ({ form }) => {
 
         className="flex flex-col !mb-0 !pb-0 text-xs"
       >
-        <InputNumber
+        <CustomInputNumber
           controls={false}
           min={0}
           config={{
@@ -112,7 +87,7 @@ export const StandardSalesInvoiceForm = ({ form }) => {
         rules={[]}
         className="flex flex-col !mb-0 !pb-0 text-xs"
       >
-        <InputNumber
+        <CustomInputNumber
           controls={false}
           min={0}
           config={{

@@ -329,7 +329,7 @@ export const SalesCircularForm = ({ activePage, form }: IProps) => {
             dynamicValue={{
               addWebUrl: "api/sale/select/customerGroup4SelectOption",
               endpoint: "api/sale/select/customerGroup4SelectOption",
-              repoViewId: 1061,
+              repoViewId: 130054,
               addButton: {
                 url: "sale/customerGroup",
                 RepoId: 1018,

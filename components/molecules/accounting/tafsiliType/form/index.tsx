@@ -7,9 +7,14 @@ import CustomCheckbox from "@components/atoms/defaultElements/checkbox";
 import InputText from "@components/atoms/defaultElements/inputText";
 import type { IPlaceConfig } from "@services/auth/base/type";
 import { useGetData } from "@services/base";
+import { setPageData } from "@slice/pages";
+import { useDispatch } from "react-redux";
 
 export const TafsiliTypeForm = ({ form }) => {
   const t = useTranslations();
+  const dispatch = useDispatch();
+
+  const formValues = Form.useWatch([], form);
 
   const [accessLevel, setAccessLevel] = useState(null);
 
@@ -38,6 +43,17 @@ export const TafsiliTypeForm = ({ form }) => {
       setAccessLevel(accessLevel);
     }
   }, [access?.Data]);
+
+  useEffect(() => {
+    if (formValues) {
+      dispatch(
+        setPageData({
+          name: "AllData",
+          value: formValues,
+        })
+      );
+    }
+  }, [formValues]);
 
   return (
     <Form

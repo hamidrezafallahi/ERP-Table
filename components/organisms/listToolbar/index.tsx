@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import Notification from "@components/molecules/notification";
 import { Drawer, Menu, MenuProps } from "antd";
 import DOMPurify from "dompurify";
 import { useTranslations } from "next-intl";
 import { shallowEqual, useDispatch } from "react-redux";
-import Notification from "@components/molecules/notification";
 
 import {
   CustomButton,
@@ -19,7 +19,6 @@ import {
   Close,
   Dots,
   DownChevron,
-  FinalizeVoucherIcon,
   GroupActionIcon,
   ListIcon,
   MenuArrowBack,
@@ -28,7 +27,6 @@ import {
   Reload,
   RemindMeIcon,
   ReportIcon,
-  SortingVoucherIcon,
   TagIcon,
 } from "@components/atoms/iconComponents";
 import CloseButton from "@components/molecules/closeButton";
@@ -68,13 +66,9 @@ import { getColoredIcon, showInfoToast, showSuccessToast } from "@utils/core";
 
 import { ActionLabelsEnum } from "../list/enum";
 
-import ListSelectMode from "./listSelectMode";
 import ChatWidget from "../chat";
-import {
-  FinalizeVoucher,
-  SortingVoucher,
-} from "@components/molecules/accounting";
 import { ShowPrinter, ShowReport } from "../managementSystem";
+import ListSelectMode from "./listSelectMode";
 
 export default function ListToolbar({
   formUrl,
@@ -105,12 +99,12 @@ export default function ListToolbar({
         selectedItems: state.withPersist.listItems,
         data: state.withPersist.init?.data,
         activePage: state.withPersist.pages.find(
-          (item) => item.isActive === true
+          (item) => item.isActive === true,
         ),
         match: state.withPersist.config.initMatch,
         userId: state.withPersist.config.userSession.UserInfo.UserId,
       }),
-      shallowEqual
+      shallowEqual,
     );
 
   const quickFilterRef = useRef<QuickFilterRef>(null);
@@ -132,7 +126,7 @@ export default function ListToolbar({
   // const [isPanelModalOpen, setIsPanelModalOpen] = useState(false);
   const [isMobileMenuDrawerOpen, setIsMobileMenuDrawerOpen] = useState(false);
   const [confirmMode, setConfirmMode] = useState<"Delete" | "Confirm">(
-    "Delete"
+    "Delete",
   );
   const displayListItems = useMemo(() => {
     if (!toolbarData?.List?.ListProp) return [];
@@ -143,7 +137,7 @@ export default function ListToolbar({
         setViewData({
           ...activePage.viewData,
           RepoViewId: listItem.Id,
-        })
+        }),
       );
 
       if (activePage?.type !== listItem?.Type) {
@@ -192,7 +186,7 @@ export default function ListToolbar({
     const correctReportItems = toolbarData?.ReportPosition?.filter(
       (item: IReportPosition) =>
         item.RepoViewId === activePage?.viewData?.RepoViewId &&
-        item.Type !== ReportTypeEnum.Print
+        item.Type !== ReportTypeEnum.Print,
     );
 
     if (!correctReportItems || toolbarData === undefined) {
@@ -219,7 +213,7 @@ export default function ListToolbar({
       } else {
         showInfoToast(
           t("toast.minOneItemToast"),
-          ActionLabelsEnum.Print as string
+          ActionLabelsEnum.Print as string,
         );
       }
     };
@@ -227,7 +221,7 @@ export default function ListToolbar({
     const correctPrintItems = toolbarData?.ReportPosition?.filter(
       (item: IReportPosition) =>
         item.RepoViewId === activePage?.viewData?.RepoViewId &&
-        item.Type === ReportTypeEnum.Print
+        item.Type === ReportTypeEnum.Print,
     );
 
     if (!correctPrintItems || toolbarData === undefined) {
@@ -266,7 +260,7 @@ export default function ListToolbar({
             } else {
               showInfoToast(
                 t("toast.minOneItemToast"),
-                ActionLabelsEnum.Delete as string
+                ActionLabelsEnum.Delete as string,
               );
             }
             break;
@@ -297,7 +291,7 @@ export default function ListToolbar({
             } else {
               showInfoToast(
                 t("toast.minOneItemToast"),
-                ActionLabelsEnum.AddTag as string
+                ActionLabelsEnum.AddTag as string,
               );
             }
             break;
@@ -371,7 +365,7 @@ export default function ListToolbar({
             } else {
               showInfoToast(
                 t("toast.remindMeToast"),
-                ActionLabelsEnum.RemindMe as string
+                ActionLabelsEnum.RemindMe as string,
               );
             }
             break;
@@ -477,7 +471,7 @@ export default function ListToolbar({
   const correctItem = gridData?.Data?.find(
     (item) =>
       item[rowFieldKey] ===
-      selectedItems?.itemsByPage?.[activePage?.pageId]?.[0]
+      selectedItems?.itemsByPage?.[activePage?.pageId]?.[0],
   );
   const nameI = correctItem?.[staticKey];
   const nameII = staticKeyII ? ` - ${correctItem?.[staticKeyII]}` : "";
@@ -496,7 +490,7 @@ export default function ListToolbar({
 
   const handleConfirmation = async () => {
     const isArray = Array.isArray(
-      selectedItems?.itemsByPage?.[activePage?.pageId]
+      selectedItems?.itemsByPage?.[activePage?.pageId],
     );
     const idsToConfirm =
       isArray && selectedItems?.itemsByPage?.[activePage?.pageId]?.length > 1
@@ -513,7 +507,7 @@ export default function ListToolbar({
       if (confirmMode === "Delete") {
         if (
           confirmationResult.DeleteResults.every(
-            (result) => result.IsDelete === true
+            (result) => result.IsDelete === true,
           )
         ) {
           dispatch(
@@ -527,7 +521,7 @@ export default function ListToolbar({
                   ? t("general.groupDelete")
                   : name,
               pageIcon: activePage?.icon,
-            })
+            }),
           );
 
           showSuccessToast(t("toast.successTitle"));
@@ -543,7 +537,7 @@ export default function ListToolbar({
             setPageState({
               ...activePage,
               pageState: PageStateEnum.NeedReload,
-            })
+            }),
           );
         } else {
           const failedItems = confirmationResult.DeleteResults.map((item) => {
@@ -552,7 +546,7 @@ export default function ListToolbar({
                 setPageState({
                   ...activePage,
                   pageState: PageStateEnum.NeedReload,
-                })
+                }),
               );
             }
             return item.IsDelete === false ? item.Key : null;
@@ -568,10 +562,10 @@ export default function ListToolbar({
                   ? t("general.groupDelete")
                   : name,
               pageIcon: activePage?.icon,
-            })
+            }),
           );
           dispatch(
-            setItems({ pageId: activePage?.pageId, items: failedItems })
+            setItems({ pageId: activePage?.pageId, items: failedItems }),
           );
           if (isConfirmDrawerOpen) {
             setIsConfirmDrawerOpen(false);
@@ -595,7 +589,7 @@ export default function ListToolbar({
             setPageState({
               ...activePage,
               pageState: PageStateEnum.NeedReload,
-            })
+            }),
           );
         }
         if (isConfirmDrawerOpen) {
@@ -611,14 +605,13 @@ export default function ListToolbar({
   };
 
   const handleRefreshData = () => {
-    // dispatch(apiService.util.resetApiState());
     invalidate(activePage?.viewData?.url);
 
     dispatch(
       setPageState({
         ...activePage,
         pageState: PageStateEnum.Opened,
-      })
+      }),
     );
     dispatch(
       setViewData({
@@ -629,7 +622,7 @@ export default function ListToolbar({
           PageNumber: 1,
           PageRecordCount: activePage?.viewData?.PagingInfo?.PageRecordCount,
         },
-      })
+      }),
     );
   };
 
@@ -657,7 +650,7 @@ export default function ListToolbar({
           } else {
             showInfoToast(
               t("toast.minOneItemToast"),
-              ActionLabelsEnum.Delete as string
+              ActionLabelsEnum.Delete as string,
             );
           }
         }

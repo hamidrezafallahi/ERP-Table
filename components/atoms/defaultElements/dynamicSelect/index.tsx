@@ -1,3 +1,4 @@
+
 import {
   FC,
   useEffect,
@@ -70,7 +71,7 @@ export const DynamicSelect: FC<IProps> = ({
     setPageNumber(1);
     if(dependOn && !dependOn.value){
         console.log(dynamicValue)
-      console.log('هنوز وابستگی dependOn پر نشده که بخواهد داده واکشی کند  skip فعال هست هنوز')
+      console.log('هنوز وابستگی dependOn پر نشده که بخواهد داده واکشی کند  skip ٝعال هست هنوز')
     }else{
       refetch();
     }

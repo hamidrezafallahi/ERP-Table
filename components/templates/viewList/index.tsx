@@ -44,14 +44,13 @@ export default function ViewList<T extends IBaseDto, K>({
   customColumns,
   bodyKey,
   renderCustomActions,
+  titleKey
 }: IProps<T, K>) {
   const dispatch = useDispatch();
   const { invalidate } = useInvalidateTag();
 
   const { activePage, pages, initPage } = useAppSelector((state) => {
-    const activePage = state.withPersist.pages?.find(
-      (item) => item.isActive === true
-    );
+    const activePage = state.withPersist.pages?.find((item) => item.isActive);
     const initPage = state.withPersist.init;
     const pages = state.withPersist.pages;
     return { activePage, pages, initPage };
@@ -100,7 +99,7 @@ export default function ViewList<T extends IBaseDto, K>({
     });
 
   const nestedListConfig = dataToolbar?.Data?.List?.ListProp?.find(
-    (item) => item?.Type === PageTypeEnum.NestedList
+    (item) => item?.Type === PageTypeEnum.NestedList,
   )?.Config;
   // const nestedListConfig = dataToolbar?.Data?.List?.ListProp?.[0]?.Config;
 
@@ -125,14 +124,14 @@ export default function ViewList<T extends IBaseDto, K>({
               PageRecordCount:
                 activePage?.viewData?.PagingInfo?.PageRecordCount,
             },
-          })
+          }),
         );
 
         dispatch(
           setPageState({
             ...activePage,
             pageState: PageStateEnum.Opened,
-          })
+          }),
         );
       }, 800);
 
@@ -151,7 +150,7 @@ export default function ViewList<T extends IBaseDto, K>({
     ) {
       try {
         const Config: IPageConfig = JSON.parse(
-          dataToolbar?.Data?.List?.ListProp[0]?.Config
+          dataToolbar?.Data?.List?.ListProp[0]?.Config,
         );
 
         const info = {
@@ -205,7 +204,7 @@ export default function ViewList<T extends IBaseDto, K>({
               ShowTags: false,
               data: initPage.data,
             },
-          })
+          }),
         );
         SetFetchToolbarData(false);
       } catch (error) {
@@ -254,6 +253,7 @@ export default function ViewList<T extends IBaseDto, K>({
               config={JSON.parse(nestedListConfig)}
               addChildCondition={nestedListAddChildCondition}
               withoutActivation={withoutActivation}
+              titleKey={titleKey}
             />
           ) : null}
         </>

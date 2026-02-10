@@ -7,12 +7,14 @@ import {
 
 interface Props {
   controller: UITableController;
-  tableId: string;
+  tableKey: string;
+  store: string;
 }
 
-export default function ERPTablePagination({ controller, tableId }: Props) {
-  const { pagination } = controller.getViewState(tableId);
-  const { page, pageSize, canPrev, canNext } = pagination;
+export default function ERPTablePagination({ controller,store, tableKey }: Props) {
+  const  table = controller.getViewState(tableKey);
+  if(!table)return null
+  const { page, pageSize, canPrev, canNext } = table.pagination;
 const onPageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
   const nextSize = Number(e.target.value);
 

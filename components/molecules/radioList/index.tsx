@@ -1,21 +1,18 @@
-import {
-  useEffect,
-  useState,
-} from 'react';
+import { useEffect, useState } from "react";
 
-import { Radio } from 'antd';
-import { RadioButtonProps } from 'antd/es/radio/radioButton';
-import { RadioChangeEvent } from 'antd/lib';
-import { useDispatch } from 'react-redux';
+import { Radio } from "antd";
+import { RadioButtonProps } from "antd/es/radio/radioButton";
+import { RadioChangeEvent } from "antd/lib";
+import { useDispatch } from "react-redux";
 
-import { CustomRadio } from '@components/atoms/defaultElements';
-import { useAppSelector } from '@redux/index';
-import { setPageData } from '@slice/pages';
+import { CustomRadio } from "@components/atoms/defaultElements";
+import { useAppSelector } from "@redux/index";
+import { setPageData } from "@slice/pages";
 
-import type { IProps } from './type';
+import type { IProps } from "./type";
 
 function RadioList({ ...props }: IProps) {
-  const { className, onChange, options, config,value } = props;
+  const { className, onChange, options, config, value } = props;
   const dispatch = useDispatch();
   const initElement = useAppSelector((state) => {
     if (config) {
@@ -46,7 +43,6 @@ function RadioList({ ...props }: IProps) {
     setInit(value);
   }, [value]);
 
-
   const defaultClass = `w-full flex gap-4 flex-wrap ${className} `;
   const radioChanges = (e: RadioChangeEvent) => {
     const value = e.target.value;
@@ -74,26 +70,41 @@ function RadioList({ ...props }: IProps) {
           type,
           selectEndpoint,
           value: value,
-        })
+        }),
       );
     }
   };
-
-  return (
-    <Radio.Group
-      {...(props as RadioButtonProps)}
-      className={defaultClass}
-      name={config?.name}
-      onChange={radioChanges}
-      value={init}
-    >
-      {options.map((option, index) => (
-        <CustomRadio {...props} key={index} value={option.value}>
-          {option.label}
-        </CustomRadio>
-      ))}
-    </Radio.Group>
-  );
+  if (config) {
+    return (
+      <Radio.Group
+        {...(props as RadioButtonProps)}
+        className={defaultClass}
+        name={config?.name}
+        onChange={radioChanges}
+        value={init}
+      >
+        {options.map((option, index) => (
+          <CustomRadio {...props} key={index} value={option.value}>
+            {option.label}
+          </CustomRadio>
+        ))}
+      </Radio.Group>
+    );
+  } else {
+    return (
+      <Radio.Group
+        {...(props as RadioButtonProps)}
+        className={defaultClass}
+        onChange={radioChanges}
+      >
+        {options.map((option, index) => (
+          <CustomRadio {...props} key={index} value={option.value}>
+            {option.label}
+          </CustomRadio>
+        ))}
+      </Radio.Group>
+    );
+  }
 }
 
 export default RadioList;

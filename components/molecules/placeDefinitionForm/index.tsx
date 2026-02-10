@@ -34,6 +34,7 @@ interface PlaceDefinitionFormProps<T> {
   id: number | null;
   level: number;
   onClose: () => void;
+  onGetDefault?:(e)=>void;
 }
 
 const onlyNumbers = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -59,6 +60,7 @@ export const PlaceDefinitionForm = <T, K>({
   fatherId,
   onClose,
   config,
+  onGetDefault
 }: PlaceDefinitionFormProps<T>) => {
   const t = useTranslations();
 
@@ -91,6 +93,7 @@ export const PlaceDefinitionForm = <T, K>({
   useEffect(() => {
     if (form && defaultValueSuccess && data.Data.length > 0) {
       form?.setFieldsValue(defaultValue);
+      onGetDefault?.(defaultValue);
     }
     return () => form?.resetFields();
   }, [defaultValue, data, form, defaultValueSuccess]);

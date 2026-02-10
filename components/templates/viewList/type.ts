@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 
 export interface IProps<T, K> {
   url: string;
@@ -18,6 +18,7 @@ export interface IProps<T, K> {
   conditionalActions?: {
     conditionalProperty: keyof T;
     conditionallyAction?: string;
+    opposite?: boolean;
   }[];
   EditField?: string;
   isNested?: boolean;
@@ -26,4 +27,4 @@ export interface IProps<T, K> {
   rangeFilterKey?: string | null;
   customColumns?: any;
   renderCustomActions?: () => ReactNode;
-}
+ titleKey?:string[];}

@@ -1,2 +1,2 @@
-export { MainInfoCard } from "./mainInfoCard";
+export { MainInfoCard } from "../mainInfoCard";
 export { InventoryVoucherHeaderForm } from "./headerForm";

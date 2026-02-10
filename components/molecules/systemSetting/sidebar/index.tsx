@@ -61,12 +61,12 @@ export const SystemSettingSidebar = ({ activeItem, handleChange }: IProps) => {
       label: "فروش",
       children: [
         {
-          id: `${SystemSettingEnum.Sales}-1`,
-          label: "تسویه فاکتور",
+          id: `${SystemSettingEnum.Sales}-2`,
+          label: "عمومی",
         },
         {
-          id: `${SystemSettingEnum.Sales}-2`,
-          label: "مورد 2",
+          id: `${SystemSettingEnum.Sales}-1`,
+          label: "تسویه فاکتور",
         },
         {
           id: `${SystemSettingEnum.Sales}-3`,

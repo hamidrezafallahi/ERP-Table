@@ -4,7 +4,10 @@ import {
   Actor,
   TableCommand,
 } from './commands';
-import { ChangeCellValueHandler } from './handlers/cellCommandsHandler';
+import {
+  ChangeCellDisplayValueHandler,
+  ChangeCellValueHandler,
+} from './handlers/cellCommandsHandler';
 import {
   AddNewRowCommandHandler,
   DeleteRowCommandHandler,
@@ -22,6 +25,7 @@ import {
 export class TableAppService {
   constructor(
     private readonly changeCellValue: ChangeCellValueHandler,
+    private readonly changeCellDisplayValue: ChangeCellDisplayValueHandler,
     private readonly addEmptyRow: AddNewRowCommandHandler,
     private readonly duplicateRow: DuplicateRowCommandHandler,
     private readonly deleteRow: DeleteRowCommandHandler,
@@ -38,6 +42,8 @@ export class TableAppService {
     switch (command.type) {
       case 'CHANGE_CELL_VALUE':
         return this.changeCellValue.execute(command, actor);
+      case 'CHANGE_CELL_DISPLAY_VALUE':
+        return this.changeCellDisplayValue.execute(command, actor);
       case 'ADD_EMPTY_ROW':
         return this.addEmptyRow.execute(command, actor);
       case 'DUPLICATE_ROW':

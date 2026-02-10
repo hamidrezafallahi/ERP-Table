@@ -1,15 +1,8 @@
-import {
-  useEffect,
-  useState,
-} from 'react';
+import { useEffect, useState } from "react";
 
-import {
-  Checkbox,
-  Form,
-  Spin,
-} from 'antd';
-import { useTranslations } from 'next-intl';
-import { useDispatch } from 'react-redux';
+import { Checkbox, Form, Spin } from "antd";
+import { useTranslations } from "next-intl";
+import { useDispatch } from "react-redux";
 
 import {
   CustomButton,
@@ -17,25 +10,15 @@ import {
   DynamicMultiSelect,
   DynamicSelect,
   NewDatePicker,
-} from '@components/atoms/defaultElements';
-import { DynamicTree } from '@components/atoms/defaultElements/dynamicTree';
-import InputNumber from '@components/atoms/defaultElements/inputNumber';
-import InputText from '@components/atoms/defaultElements/inputText';
-import { NewTimePicker } from '@components/atoms/defaultElements/newTimePicker';
-import {
-  PlusOutline,
-  SpinIcon,
-} from '@components/atoms/iconComponents';
-import {
-  apiService,
-  useCUDDataMutation,
-  useGetData,
-} from '@services/base';
-import type { IRequestConfig } from '@type/elementType';
-import {
-  showSuccessToast,
-  transformDotNotationToNested,
-} from '@utils/core';
+} from "@components/atoms/defaultElements";
+import { DynamicTree } from "@components/atoms/defaultElements/dynamicTree";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
+import InputText from "@components/atoms/defaultElements/inputText";
+import { NewTimePicker } from "@components/atoms/defaultElements/newTimePicker";
+import { PlusOutline, SpinIcon } from "@components/atoms/iconComponents";
+import { apiService, useCUDDataMutation, useGetData } from "@services/base";
+import type { IRequestConfig } from "@type/elementType";
+import { showSuccessToast, transformDotNotationToNested } from "@utils/core";
 
 function combineValues(defaultValue, dateFields) {
   const finalObject = { ...defaultValue };
@@ -207,7 +190,15 @@ export const FormDynamicModal = ({
 
   const renderField = (item) => {
     if (item.type === "date") {
-      return <NewDatePicker defaultValue={new Date(formValues?.[item.name]).getTime()}  placeholder={t("general.chooseDate")} onChange={(e)=>{form.setFieldValue(item.name,e)} }/>;
+      return (
+        <NewDatePicker
+          defaultValue={new Date(formValues?.[item.name]).getTime()}
+          placeholder={t("general.chooseDate")}
+          onChange={(e) => {
+            form.setFieldValue(item.name, e);
+          }}
+        />
+      );
     }
 
     if (item.type === "time") {
@@ -257,7 +248,7 @@ export const FormDynamicModal = ({
       return <DynamicTree dynamicValue={dynamicValue} showSearch allowClear />;
     }
     if (item.type === "number") {
-      return <InputNumber keyboard={false} controls={false} min={0} />;
+      return <CustomInputNumber keyboard={false} controls={false} min={0} />;
     }
 
     if (item.type === "text" && item.name === "Time") {
@@ -295,7 +286,7 @@ export const FormDynamicModal = ({
 
     if (item.type === "price") {
       return (
-        <InputNumber
+        <CustomInputNumber
           min={0}
           controls={false}
           parser={(value) =>
@@ -355,7 +346,7 @@ export const FormDynamicModal = ({
         <div className="flex justify-end items-center gap-2 pt-2">
           <CustomTooltip title={t("general.addNew")}>
             <span
-              className="px-2 py-[2.8px] bg-gray-gray3 rounded cursor-pointer"
+              className="bg-gray-gray3 px-2 py-[2.8px] rounded cursor-pointer"
               onClick={() => {
                 clearId();
                 form.resetFields();

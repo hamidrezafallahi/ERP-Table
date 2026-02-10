@@ -7,7 +7,7 @@ import {
   DynamicSelect,
   NewDatePicker,
 } from "@components/atoms/defaultElements";
-import InputNumber from "@components/atoms/defaultElements/inputNumber";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
 import type { IRequestConfig } from "@type/elementType";
 
 import type { IProps } from "./type";
@@ -83,7 +83,7 @@ export const AdvancedCashWithdrawalForm = ({ activePage }: IProps) => {
         rules={[{ required: true, message: t("form.required") }]}
         className="flex flex-col !mb-0 !pb-0 text-xs"
       >
-        <InputNumber
+        <CustomInputNumber
             controls={false}
             min={0}
             disabled
@@ -145,7 +145,7 @@ export const AdvancedCashWithdrawalForm = ({ activePage }: IProps) => {
           rules={[{ required: true, message: t("form.required") }]}
           className="flex flex-col !mb-0 !pb-0 text-xs"
         >
-          <InputNumber
+          <CustomInputNumber
             min={0}
             className=""
             controls={false}

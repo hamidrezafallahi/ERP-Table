@@ -6,7 +6,7 @@ import {
   DynamicSelect,
   NewDatePicker,
 } from "@components/atoms/defaultElements";
-import InputNumber from "@components/atoms/defaultElements/inputNumber";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
 import InputText from "@components/atoms/defaultElements/inputText";
 import type { IRequestConfig } from "@type/elementType";
 
@@ -35,7 +35,7 @@ export const BuyRequestForm = ({ form }) => {
           name="VoucherNumber"
           className="flex flex-col !mb-0 !pb-0 text-xs"
         >
-          <InputNumber
+          <CustomInputNumber
             controls={false}
             min={0}
             disabled

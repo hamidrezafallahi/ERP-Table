@@ -1,3 +1,8 @@
+import {
+  useEffect,
+  useState,
+} from 'react';
+
 import { Dropdown } from 'antd';
 import { ItemType } from 'antd/es/menu/interface';
 
@@ -16,7 +21,7 @@ import { TCell } from '../../engine/type';
 import { CellMeta } from './cellRenderer';
 
 interface IndexColProps {
-  tableId: string;
+  tableKey: string;
   row: {
     id: number;
     cells: Record<string, TCell>;
@@ -28,12 +33,15 @@ interface IndexColProps {
 }
 
 export const IndexCol: React.FC<IndexColProps> = ({
-  tableId,
+  tableKey,
   row,
   controller,
   meta,
 }) => {
+  const [, forceUpdate] = useState(0);
   const rowId = row.cells["index"].value as number;
+    const isActiveRow = controller.isActiveRow(tableKey, row.id);
+  const selectedRow = controller.isSelectedRow(tableKey,row.id)
   const handleDeleteRow = () => {
     controller.dispatch({ type: "ROW_DELETED", rowId });
   };
@@ -43,7 +51,7 @@ export const IndexCol: React.FC<IndexColProps> = ({
   };
 
   const items = [
-    ...((meta.indexOptions?.(tableId, rowId, row, controller) as ItemType[]) ||
+    ...((meta.indexOptions?.(tableKey, rowId, row, controller) as ItemType[]) ||
       []),
   ].concat([
     {
@@ -67,16 +75,21 @@ export const IndexCol: React.FC<IndexColProps> = ({
   const handleExpandRow = () => {
     controller.dispatch({ type: "TOGGLE_ROW_EXPANDED", rowId });
   };
-
   const isDeleted = row.rowState === RowStateEnum.Deleted;
-
+  useEffect(() => {
+    if (!controller) return;
+    const unsubscribe = controller.subscribeRow(rowId, () => {
+      forceUpdate(t => t + 1);
+    });
+    return () => unsubscribe?.();
+  }, [controller, rowId]);
   return (
     <div
       className={` ${
         isDeleted && "cursor-not-allowed"
       }  flex justify-around items-center gap-2 px-2 w-36`}
     >
-      <CustomCheckbox disabled={isDeleted} />
+      <CustomCheckbox disabled={isDeleted} checked={selectedRow}/>
       <div className="w-[18px] text-xs text-center">{rowId}</div>
 
       {!isDeleted ? (

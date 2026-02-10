@@ -31,7 +31,7 @@ const InputSearch = forwardRef<QuickFilterRef, IProps>(
     const { invalidate } = useInvalidateTag();
 
     const [searchTerm, setSearchTerm] = useState(
-      active?.viewData?.FullSearchPhrase || ""
+      active?.viewData?.FullSearchPhrase || "",
     );
     const prevViewDataRef = useRef(active?.viewData);
     const inputRef = useRef<any>(null);
@@ -59,9 +59,9 @@ const InputSearch = forwardRef<QuickFilterRef, IProps>(
                 ...active?.viewData?.PagingInfo,
                 PageNumber: 1,
               },
-            })
+            }),
           );
-          // dispatch(apiService.util.resetApiState());
+
           invalidate(active?.viewData?.url);
         }
       }, 500);
@@ -114,7 +114,7 @@ const InputSearch = forwardRef<QuickFilterRef, IProps>(
         autoFocus={isActive}
       />
     );
-  }
+  },
 );
 
 InputSearch.displayName = "InputSearch";

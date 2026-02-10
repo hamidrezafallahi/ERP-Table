@@ -32,7 +32,7 @@ export const FilterData = ({ dataSources }) => {
       locale: state.withPersist.config.lang,
       modalIsFullScreen: state.withPersist.config.modalIsFullscreen,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   interface IReportFilter {
@@ -78,24 +78,24 @@ export const FilterData = ({ dataSources }) => {
     fieldName: string,
     value: string,
     fieldType: IFilter["FilterType"],
-    dataSourceName: string
+    dataSourceName: string,
   ) => {
     setDataFilters((prev) => {
       // find the target dataSource entry
       const existingSource = prev.find(
-        (el) => el.dataSourceName === dataSourceName
+        (el) => el.dataSourceName === dataSourceName,
       );
 
       if (existingSource) {
         const existingFilter = existingSource.filters.find(
-          (f) => f.ColName === fieldName
+          (f) => f.ColName === fieldName,
         );
 
         let updatedFilters: IFilter[];
         if (existingFilter) {
           // update existing filter
           updatedFilters = existingSource.filters.map((f) =>
-            f.ColName === fieldName ? { ...f, Value: value } : f
+            f.ColName === fieldName ? { ...f, Value: value } : f,
           );
         } else {
           // add new filter
@@ -109,7 +109,7 @@ export const FilterData = ({ dataSources }) => {
         return prev.map((el) =>
           el.dataSourceName === dataSourceName
             ? { ...el, filters: updatedFilters }
-            : el
+            : el,
         );
       } else {
         // create a new dataSource entry with this filter
@@ -133,8 +133,8 @@ export const FilterData = ({ dataSources }) => {
               ...ds,
               filters: ds.filters.filter((f) => f.ColName !== field.fieldName),
             }
-          : ds
-      )
+          : ds,
+      ),
     );
   };
 
@@ -148,7 +148,7 @@ export const FilterData = ({ dataSources }) => {
           body: {
             Filters: {
               FilterInfo: dataFilters?.find(
-                (item) => item.dataSourceName === DataSourceName
+                (item) => item.dataSourceName === DataSourceName,
               )?.filters,
               ShowOnlyBookmarked: false,
               TagIdsFilter: null,
@@ -173,11 +173,11 @@ export const FilterData = ({ dataSources }) => {
               reportData?.Result === "Success" && reportData?.Data?.length > 0
                 ? reportData.Data
                 : [],
-          })
+          }),
         );
       } catch {
         dispatch(
-          setReportData({ dataSourceName: DataSourceName, reportData: [] })
+          setReportData({ dataSourceName: DataSourceName, reportData: [] }),
         );
       }
     }
@@ -209,7 +209,7 @@ export const FilterData = ({ dataSources }) => {
                   field.fieldName,
                   event.target.value,
                   field.fieldType as any,
-                  dataSourceName
+                  dataSourceName,
                 );
               }
             }}
@@ -240,7 +240,7 @@ export const FilterData = ({ dataSources }) => {
                   field.fieldName,
                   event.target.value,
                   field.fieldType as any,
-                  dataSourceName
+                  dataSourceName,
                 );
               }
             }}
@@ -261,7 +261,7 @@ export const FilterData = ({ dataSources }) => {
                 field.fieldName,
                 date as any,
                 field.fieldType as any,
-                dataSourceName
+                dataSourceName,
               );
             }}
             defaultValue={temp}
@@ -280,7 +280,7 @@ export const FilterData = ({ dataSources }) => {
           });
 
           const currentValue = filters.find(
-            (i) => i.ColName === field.fieldName
+            (i) => i.ColName === field.fieldName,
           )?.Value;
 
           const defaultValue = options.find((i) => i.value === currentValue);
@@ -295,7 +295,7 @@ export const FilterData = ({ dataSources }) => {
                     field.fieldName,
                     value,
                     field.fieldType as any,
-                    dataSourceName
+                    dataSourceName,
                   );
                 }
               }}
@@ -317,9 +317,9 @@ export const FilterData = ({ dataSources }) => {
               if (value) {
                 handleChange(
                   field.fieldName,
-                  value.toString(),
+                  value?.toString(),
                   field.fieldType as any,
-                  dataSourceName
+                  dataSourceName,
                 );
               }
             }}

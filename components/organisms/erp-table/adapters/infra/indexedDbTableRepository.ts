@@ -1,4 +1,5 @@
-//adapters/infra/indexedDbTableRepository.ts
+// adapters/infra/indexedDbTableRepository.ts
+
 import { TableRepository } from '../../application/ports/TableRepository';
 import { Cell } from '../../domain/entities/Cell';
 import { Row } from '../../domain/entities/Row';
@@ -9,7 +10,6 @@ import {
   RowId,
   RowState,
   RowStateEnum,
-  TableId,
 } from '../../domain/value-objects';
 
 interface SerializedCell {
@@ -26,40 +26,34 @@ interface SerializedRow {
 }
 
 interface SerializedTable {
-  id: string;
+  id: string | null;
+  pages: string[];
   rows: SerializedRow[];
 }
 
 export class IndexedDbTableRepository implements TableRepository {
   private dbName = 'ERP_TABLE_DB';
-  private storeName = 'tables';
-  private dbReady: Promise<void>;
+  private DB_VERSION = 1;
+  private dbPromise: Promise<IDBDatabase>;
 
   constructor() {
-    this.dbReady = this.initDb();
+    this.dbPromise = this.initDb();
   }
 
-  private initDb(): Promise<void> {
+  private initDb(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, 1);
+      const request = indexedDB.open(this.dbName);
       request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        if (!db.objectStoreNames.contains(this.storeName)) {
-          db.createObjectStore(this.storeName, { keyPath: 'id' });
-        }
+        // هیچ store پیش‌فرضی ایجاد نمی‌کنیم، داینامیک خواهد بود
       };
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+
+      request.onsuccess = () => resolve(request.result)
+      request.onerror = () => reject(request.error)
     });
   }
 
   private async getDb(): Promise<IDBDatabase> {
-    await this.dbReady;
-    return new Promise((resolve, reject) => {
-      const req = indexedDB.open(this.dbName, 1);
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
+    return this.dbPromise;
   }
 
   private serializeRows(rows: Row[]): SerializedRow[] {
@@ -71,7 +65,7 @@ export class IndexedDbTableRepository implements TableRepository {
         value: cell.getValue().value,
         originalValue: cell.getOriginalValue().value,
         display: cell.getDisplay().value,
-      }))
+      })),
     }));
   }
 
@@ -80,89 +74,122 @@ export class IndexedDbTableRepository implements TableRepository {
     data.forEach(r => {
       const cells = new Map<string, Cell>();
       r.cells.forEach(c => {
-        cells.set(c.colId, new Cell(
-          new RowId(r.rowId),
-          new ColumnId(c.colId),
-          new CellValue(c.value),
-          new CellValue(c.originalValue),
-          new CellValue(c.display)
-        ));
+        cells.set(
+          c.colId,
+          new Cell(
+            new RowId(r.rowId),
+            new ColumnId(c.colId),
+            new CellValue(c.value),
+            new CellValue(c.originalValue),
+            new CellValue(c.display)
+          )
+        );
       });
-      rowMap.set(r.rowId, new Row(new RowId(r.rowId), cells, new RowState(r.rowState), new Set()));
+      rowMap.set(
+        r.rowId,
+        new Row(new RowId(r.rowId), cells, new RowState(r.rowState), new Set())
+      );
     });
     return rowMap;
   }
 
-  async save(table: Table): Promise<void> {
-    const db = await this.getDb();
+  private async ensureStore(db: IDBDatabase, storeName: string): Promise<IDBDatabase> {
+    if (db.objectStoreNames.contains(storeName)) return db;
+    db.close();
+    const newDb = await new Promise<IDBDatabase>((resolve, reject) => {
+      const req = indexedDB.open(this.dbName, db.version + 1);
+      req.onupgradeneeded = (event) => {
+        const upgradedDb = (event.target as IDBOpenDBRequest).result;
+        if (!upgradedDb.objectStoreNames.contains(storeName)) {
+          upgradedDb.createObjectStore(storeName, { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    return newDb;
+  }
+
+  async save(storeName: string, table: Table): Promise<void> {
+    let db = await this.getDb();
+    db = await this.ensureStore(db, storeName);
     const serialized: SerializedTable = {
-      id: table.id.value,
+      id: table.id,
+      pages: [table.id],
       rows: this.serializeRows(table.getRows()),
     };
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(this.storeName, 'readwrite');
-      const store = tx.objectStore(this.storeName);
-      const req = store.put(serialized);
+      const tx = db.transaction(storeName, 'readwrite');
+      const objectStore = tx.objectStore(storeName);
+      const req = objectStore.put(serialized);
       req.onsuccess = () => resolve();
       req.onerror = () => reject(req.error);
     });
   }
 
-  async getById(tableId: string): Promise<Table> {
+  async getById(storeName: string, tableId: string): Promise<Table> {
     const db = await this.getDb();
+    if (!db.objectStoreNames.contains(storeName)) {
+      throw new Error(`Store ${storeName} not found`);
+    }
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(this.storeName, 'readonly');
-      const store = tx.objectStore(this.storeName);
-      const req = store.get(tableId);
+      const tx = db.transaction(storeName, 'readonly');
+      const objectStore = tx.objectStore(storeName);
+      const req = objectStore.get(tableId);
       req.onsuccess = () => {
-        if (!req.result) reject(new Error(`Table ${tableId} not found`));
-        else resolve(new Table(new TableId(tableId), this.deserializeRows(req.result.rows), new Map()));
+        if (!req.result) {
+          reject(new Error(`Table ${tableId} not found`));
+          return;
+        }
+        resolve(new Table(tableId, this.deserializeRows(req.result.rows), new Map()));
       };
       req.onerror = () => reject(req.error);
     });
   }
-
-  async exists(tableId: string): Promise<boolean> {
+  async exists(storeName: string, tableId: string): Promise<boolean> {
+    if (!tableId) return false;
     const db = await this.getDb();
-    return new Promise((resolve) => {
-      const tx = db.transaction(this.storeName, 'readonly');
-      const store = tx.objectStore(this.storeName);
-      const req = store.get(tableId);
+    if (!db.objectStoreNames.contains(storeName)) return false;
+    return new Promise(resolve => {
+      const tx = db.transaction(storeName, 'readonly');
+      const objectStore = tx.objectStore(storeName);
+      const req = objectStore.get(tableId);
       req.onsuccess = () => resolve(!!req.result);
       req.onerror = () => resolve(false);
     });
   }
-async delete(tableId: string): Promise<void> {
+
+  async delete(storeName: string, tableId: string): Promise<void> {
     const db = await this.getDb();
+    if (!db.objectStoreNames.contains(storeName)) return;
+
     return new Promise((resolve, reject) => {
-        const tx = db.transaction(this.storeName, 'readwrite');
-        const store = tx.objectStore(this.storeName);
-        const req = store.delete(tableId);
-        req.onsuccess = () => resolve();
-        req.onerror = () => reject(req.error);
+      const tx = db.transaction(storeName, 'readwrite');
+      const objectStore = tx.objectStore(storeName);
+      const req = objectStore.delete(tableId);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
     });
-}
-async resetTable(tableId: string): Promise<void> {
+  }
+  async resetTable(storeName: string, tableId: string): Promise<void> {
     const db = await this.getDb();
+    if (!db.objectStoreNames.contains(storeName)) return;
+
     return new Promise((resolve, reject) => {
-        const tx = db.transaction(this.storeName, 'readwrite');
-        const store = tx.objectStore(this.storeName);
-        const req = store.get(tableId);
-        req.onsuccess = () => {
-            if (!req.result) {
-                reject(new Error(`Table ${tableId} not found`));
-                return;
-            }
-            const resetTable: SerializedTable = {
-                id: tableId,
-                rows: []  
-            };
-            const putReq = store.put(resetTable);
-            putReq.onsuccess = () => resolve();
-            putReq.onerror = () => reject(putReq.error);
-        };
-        
-        req.onerror = () => reject(req.error);
+      const tx = db.transaction(storeName, 'readwrite');
+      const objectStore = tx.objectStore(storeName);
+      const getReq = objectStore.get(tableId);
+      getReq.onsuccess = () => {
+        if (!getReq.result) {
+          reject(new Error(`Table ${tableId} not found`));
+          return;
+        }
+        const resetTable: SerializedTable = { id: tableId, pages: [tableId], rows: [] };
+        const putReq = objectStore.put(resetTable);
+        putReq.onsuccess = () => resolve();
+        putReq.onerror = () => reject(putReq.error);
+      };
+      getReq.onerror = () => reject(getReq.error);
     });
-}
+  }
 }

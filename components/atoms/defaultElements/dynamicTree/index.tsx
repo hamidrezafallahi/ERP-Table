@@ -1,3 +1,4 @@
+
 import { FC, useEffect, useState } from "react";
 
 import { useTranslations } from "next-intl";
@@ -66,7 +67,7 @@ export const DynamicTree: FC<IProps> = ({
   };
 
   const existBody = Object.fromEntries(
-    Object.entries(body).filter(([key, value]) => value !== null)
+    Object.entries(body).filter(([key, value]) => value !== null),
   );
 
   const { data, refetch, isFetching } = useGetData<ISelectOption[], null>({
@@ -155,7 +156,7 @@ export const DynamicTree: FC<IProps> = ({
           if (onSearchPhrase) {
             return onSearchPhrase(
               correctOption[0].value,
-              correctOption[0]?.title
+              correctOption[0]?.title,
             );
           }
         }

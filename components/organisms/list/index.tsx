@@ -1,47 +1,37 @@
 "use client";
-import {
-  useEffect,
-  useReducer,
-  useRef,
-  useState,
-} from 'react';
+import { useEffect, useReducer, useRef, useState } from "react";
 
-import { useTranslations } from 'next-intl';
-import {
-  shallowEqual,
-  useDispatch,
-} from 'react-redux';
+import { useTranslations } from "next-intl";
+import { shallowEqual, useDispatch } from "react-redux";
 
-import { CustomModal } from '@components/atoms/defaultElements';
-import { CustomDrawer } from '@components/atoms/defaultElements/drawer';
+import { CustomModal } from "@components/atoms/defaultElements";
+import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
 import {
   ExceptionIcon,
   New,
   PhysicalCharacteristicsIcon,
   SettlementIcon,
   TagIcon,
-} from '@components/atoms/iconComponents';
-import Card from '@components/molecules/card';
-import Confirmation from '@components/molecules/confirmation';
-import ContactInfo from '@components/molecules/contactInfo';
-import DataGrid from '@components/molecules/dataGrid';
-import { ExceptionsModal } from '@components/molecules/exceptionsModal';
-import {
-  ExpireDateAccountList,
-} from '@components/molecules/expireDateAccountList';
-import GoodExtraInfo from '@components/molecules/goodExtraInfo';
-import { GoodPrice } from '@components/molecules/goodPrice';
-import { GoodQc } from '@components/molecules/goodQc';
-import { GoodSettings } from '@components/molecules/goodSettings';
-import GoodVariantValues from '@components/molecules/goodVariantValues';
-import { InventoryControl } from '@components/molecules/inventoryControl';
-import { InventoryInspection } from '@components/molecules/inventoryInspection';
-import { UserReport } from '@components/molecules/managementSystem/reports';
+} from "@components/atoms/iconComponents";
+import Card from "@components/molecules/card";
+import Confirmation from "@components/molecules/confirmation";
+import ContactInfo from "@components/molecules/contactInfo";
+import DataGrid from "@components/molecules/dataGrid";
+import { ExceptionsModal } from "@components/molecules/exceptionsModal";
+import { ExpireDateAccountList } from "@components/molecules/expireDateAccountList";
+import GoodExtraInfo from "@components/molecules/goodExtraInfo";
+import { GoodPrice } from "@components/molecules/goodPrice";
+import { GoodQc } from "@components/molecules/goodQc";
+import { GoodSettings } from "@components/molecules/goodSettings";
+import GoodVariantValues from "@components/molecules/goodVariantValues";
+import { InventoryControl } from "@components/molecules/inventoryControl";
+import { InventoryInspection } from "@components/molecules/inventoryInspection";
+import { UserReport } from "@components/molecules/managementSystem/reports";
 import {
   ChangeInvoiceCurrency,
   ChangeInvoiceCurrencyRate,
   Settlement,
-} from '@components/molecules/salesAndPurchase/salesInvoice';
+} from "@components/molecules/salesAndPurchase/salesInvoice";
 import {
   Education,
   History,
@@ -50,52 +40,35 @@ import {
   Sponsor,
   TrainingCourse,
   WorkHistory,
-} from '@components/molecules/staff';
-import { FormulaParameter } from '@components/molecules/staff/formulaParameter';
-import { StockWarehouse } from '@components/molecules/stockWarehouse';
-import { TagManagement } from '@components/molecules/tag';
-import { TaxSettings } from '@components/molecules/taxSettings';
-import ListToolbar from '@components/organisms/listToolbar';
-import {
-  useDarkMode,
-  useInitializePage,
-} from '@hooks/custom';
-import Uploader from '@layout/baseLayout/desktop/actionBar/panelForm/uploader';
-import { useAppSelector } from '@redux/index';
-import {
-  useCUDDataMutation,
-  useGetData,
-} from '@services/base';
-import {
-  type IBaseDto,
-  PendingStatusEnum,
-} from '@services/base/type';
-import { addSpecificTags } from '@slice/container';
-import { addHistory } from '@slice/history';
-import { HistoryTypeEnum } from '@slice/history/enum';
-import {
-  setPageState,
-  setStatusItemsList,
-  setViewData,
-} from '@slice/pages';
-import { PageStateEnum } from '@slice/pages/enum';
-import { SystemEnum } from '@type/enum';
-import type { IToolbarMenu } from '@type/toolbar';
+} from "@components/molecules/staff";
+import { FormulaParameter } from "@components/molecules/staff/formulaParameter";
+import { StockWarehouse } from "@components/molecules/stockWarehouse";
+import { TagManagement } from "@components/molecules/tag";
+import { TaxSettings } from "@components/molecules/taxSettings";
+import ListToolbar from "@components/organisms/listToolbar";
+import { useDarkMode, useInitializePage } from "@hooks/custom";
+import Uploader from "@layout/baseLayout/desktop/actionBar/panelForm/uploader";
+import { useAppSelector } from "@redux/index";
+import { useCUDDataMutation, useGetData } from "@services/base";
+import { type IBaseDto, PendingStatusEnum } from "@services/base/type";
+import { addSpecificTags } from "@slice/container";
+import { addHistory } from "@slice/history";
+import { HistoryTypeEnum } from "@slice/history/enum";
+import { setPageState, setStatusItemsList, setViewData } from "@slice/pages";
+import { PageStateEnum } from "@slice/pages/enum";
+import { SystemEnum } from "@type/enum";
+import type { IToolbarMenu } from "@type/toolbar";
 import {
   findingPageState,
   getColoredIcon,
   showInfoToast,
   showSuccessToast,
-} from '@utils/core';
+} from "@utils/core";
 
-import DynamicModal from '../dynamicModal';
-import { GridToolbar } from '../gridToolbar';
-import { ActionLabelsEnum } from './enum';
-import type {
-  Action,
-  IProps,
-  IState,
-} from './type';
+import DynamicModal from "../dynamicModal";
+import { GridToolbar } from "../gridToolbar";
+import { ActionLabelsEnum } from "./enum";
+import type { Action, IProps, IState } from "./type";
 
 export default function List<T extends IBaseDto, K>({
   url,
@@ -137,7 +110,7 @@ export default function List<T extends IBaseDto, K>({
   const { activePage, direction, isFullScreen, match } = useAppSelector(
     (state) => {
       const activePage = state.withPersist.pages.find(
-        (item) => item.isActive === true
+        (item) => item.isActive === true,
       );
       const direction = state.withPersist.config.direction;
       const isFullScreen = state.withPersist.config.fullScreen;
@@ -145,39 +118,12 @@ export default function List<T extends IBaseDto, K>({
 
       return { activePage, direction, isFullScreen, match };
     },
-    shallowEqual
+    shallowEqual,
   );
 
   const toolbarData = activePage?.toolbarData;
   const mobilePerPageCount = 100;
 
-  useEffect(() => {
-    if (toolbarData?.List?.Config) {
-      setToolbarConfig(JSON.parse(toolbarData?.List?.Config));
-    }
-    const repoViewConfig =
-      toolbarData?.List?.ListProp &&
-      toolbarData?.List?.ListProp?.find(
-        (item) => item.Id === activePage?.viewData?.RepoViewId
-      );
-    if (repoViewConfig?.Config) {
-      let finalColumns;
-      const currentColumns = JSON.parse(repoViewConfig?.Config);
-
-      finalColumns = currentColumns;
-      if (currentColumns && customColumns) {
-        finalColumns = {
-          ...currentColumns,
-          column: [...currentColumns.column, ...customColumns],
-        };
-      }
-      setColumnsList(finalColumns);
-    }
-  }, [
-    activePage?.viewData?.RepoViewId,
-    toolbarData?.List?.Config,
-    toolbarData?.List?.ListProp,
-  ]);
   const {
     data: gridTotal,
     isFetching: totalIsFetching,
@@ -212,8 +158,8 @@ export default function List<T extends IBaseDto, K>({
         PageRecordCount: !match
           ? mobilePerPageCount
           : activePage?.viewData?.PagingInfo?.PageRecordCount
-          ? activePage?.viewData?.PagingInfo?.PageRecordCount
-          : 10,
+            ? activePage?.viewData?.PagingInfo?.PageRecordCount
+            : 10,
 
         OnlyTotalCount: true,
       },
@@ -262,8 +208,8 @@ export default function List<T extends IBaseDto, K>({
         PageRecordCount: !match
           ? mobilePerPageCount
           : activePage?.viewData?.PagingInfo?.PageRecordCount
-          ? activePage?.viewData?.PagingInfo?.PageRecordCount
-          : 10,
+            ? activePage?.viewData?.PagingInfo?.PageRecordCount
+            : 10,
       },
       FullSearchPhrase: activePage?.viewData?.FullSearchPhrase
         ? activePage?.viewData?.FullSearchPhrase
@@ -291,7 +237,7 @@ export default function List<T extends IBaseDto, K>({
             PageNumber: activePage?.viewData?.PagingInfo?.PageNumber,
             PageRecordCount: recordsPerPage,
           },
-        })
+        }),
       );
     } else {
       const recordsPerPage = Math.floor((deviceHeight - 240) / recordHeight);
@@ -303,10 +249,38 @@ export default function List<T extends IBaseDto, K>({
             PageNumber: activePage?.viewData?.PagingInfo?.PageNumber,
             PageRecordCount: recordsPerPage,
           },
-        })
+        }),
       );
     }
   }, [isFullScreen]);
+
+  useEffect(() => {
+    if (toolbarData?.List?.Config) {
+      setToolbarConfig(JSON.parse(toolbarData?.List?.Config));
+    }
+    const repoViewConfig =
+      toolbarData?.List?.ListProp &&
+      toolbarData?.List?.ListProp?.find(
+        (item) => item.Id === activePage?.viewData?.RepoViewId,
+      );
+    if (repoViewConfig?.Config) {
+      let finalColumns;
+      const currentColumns = JSON.parse(repoViewConfig?.Config);
+
+      finalColumns = currentColumns;
+      if (currentColumns && customColumns) {
+        finalColumns = {
+          ...currentColumns,
+          column: [...currentColumns.column, ...customColumns],
+        };
+      }
+      setColumnsList(finalColumns);
+    }
+  }, [
+    activePage?.viewData?.RepoViewId,
+    toolbarData?.List?.Config,
+    toolbarData?.List?.ListProp,
+  ]);
 
   const [confirmationItem, { isLoading: confirmationIsLoading }] =
     useCUDDataMutation();
@@ -684,10 +658,10 @@ export default function List<T extends IBaseDto, K>({
   useEffect(() => {
     if (activePage && gridData?.Data?.length < 1) {
       const pageNumberCount = Number(
-        activePage?.viewData?.PagingInfo?.PageNumber
+        activePage?.viewData?.PagingInfo?.PageNumber,
       );
       const pageRecordCount = Number(
-        activePage?.viewData?.PagingInfo?.PageRecordCount
+        activePage?.viewData?.PagingInfo?.PageRecordCount,
       );
       if (pageNumberCount > 1) {
         dispatch(
@@ -697,7 +671,7 @@ export default function List<T extends IBaseDto, K>({
               PageNumber: pageNumberCount ? pageNumberCount - 1 : 1,
               PageRecordCount: pageRecordCount ? pageRecordCount : 10,
             },
-          })
+          }),
         );
       }
     }
@@ -710,8 +684,8 @@ export default function List<T extends IBaseDto, K>({
               RepoId: repoId,
               RefId: Number(item[rowFieldKey]),
               tags: item?.TagsInfo,
-            })
-          )
+            }),
+          ),
         );
       }
     }
@@ -725,7 +699,7 @@ export default function List<T extends IBaseDto, K>({
     additionalId: number | null,
     PendingStatusId: number | null,
     formViewId: number | null,
-    correctUniqueId?: string | null
+    correctUniqueId?: string | null,
   ) => {
     const deletedItems = activePage?.viewData?.deletedItems;
     const isDeleted = deletedItems?.find((item) => item === id);
@@ -734,7 +708,7 @@ export default function List<T extends IBaseDto, K>({
     setUniqueId(correctUniqueId);
     additionalFieldKey && additionalId && setAdditionalValue(additionalId);
     const correctData: any = gridData?.Data?.find(
-      (item) => item[rowFieldKey] === id
+      (item) => item[rowFieldKey] === id,
     );
     if (isDeleted) {
       showInfoToast(t("toast.needReload"));
@@ -1012,12 +986,12 @@ export default function List<T extends IBaseDto, K>({
 
   const handleConfirmation = async (
     PendingStatusId?: number | null,
-    formViewId?: number | null
+    formViewId?: number | null,
   ) => {
     const pageName = transformKey(activePage?.caption);
 
     const correctItem = gridData?.Data?.find(
-      (item) => item[rowFieldKey] === selectedId
+      (item) => item[rowFieldKey] === selectedId,
     );
     const nameI = correctItem?.[staticKey];
     const nameII = staticKeyII ? ` - ${correctItem?.[staticKeyII]}` : "";
@@ -1028,10 +1002,10 @@ export default function List<T extends IBaseDto, K>({
           confirmMode === "Delete"
             ? deleteUrl
             : confirmMode === "Confirm"
-            ? confirmUrl
-            : confirmMode === "createNewEdit"
-            ? "api/prd/insert/yearPlan/updateVersion"
-            : null,
+              ? confirmUrl
+              : confirmMode === "createNewEdit"
+                ? "api/prd/insert/yearPlan/updateVersion"
+                : null,
         body: { Id: selectedId },
       }).unwrap();
 
@@ -1049,13 +1023,13 @@ export default function List<T extends IBaseDto, K>({
           setViewData({
             ...activePage?.viewData,
             deletedItems: [...prevDeletedItems, selectedId],
-          })
+          }),
         );
         dispatch(
           setPageState({
             ...activePage,
             pageState: PageStateEnum.NeedReload,
-          })
+          }),
         );
         dispatch(
           setStatusItemsList({
@@ -1064,7 +1038,7 @@ export default function List<T extends IBaseDto, K>({
               id: selectedId,
               status: PendingStatusEnum.Pending3,
             },
-          })
+          }),
         );
         dispatch(
           addHistory({
@@ -1074,7 +1048,7 @@ export default function List<T extends IBaseDto, K>({
             pageName: pageName,
             name: name,
             pageIcon: activePage?.icon,
-          })
+          }),
         );
         showInfoToast(t("toast.Pending"));
         setSelectedId(null);
@@ -1096,7 +1070,7 @@ export default function List<T extends IBaseDto, K>({
             setPageState({
               ...activePage,
               pageState: PageStateEnum.NeedReload,
-            })
+            }),
           );
 
           dispatch(
@@ -1107,7 +1081,7 @@ export default function List<T extends IBaseDto, K>({
               pageName: pageName,
               name: name,
               pageIcon: activePage?.icon,
-            })
+            }),
           );
         }
         if (confirmMode === "createNewEdit") {
@@ -1141,7 +1115,7 @@ export default function List<T extends IBaseDto, K>({
               pageName: pageName,
               name: name,
               pageIcon: activePage?.icon,
-            })
+            }),
           );
           if (state.confirmDrawerIsOpen) {
             dispatchState({ type: "CLOSE_CONFIRM_DRAWER" });
@@ -1153,14 +1127,14 @@ export default function List<T extends IBaseDto, K>({
             setPageState({
               ...activePage,
               pageState: PageStateEnum.NeedReload,
-            })
+            }),
           );
           const prevDeletedItems = activePage?.viewData?.deletedItems;
           dispatch(
             setViewData({
               ...activePage?.viewData,
               deletedItems: [...prevDeletedItems, selectedId],
-            })
+            }),
           );
           showSuccessToast("", t("toast.successTitle"), 500);
           setSelectedId(null);
@@ -1351,21 +1325,26 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
               closeModal={() => dispatchState({ type: "CLOSE_DYNAMIC_MODAL" })}
               isModalOpen={state.dynamicModalIsOpen}
-              content={<>
-                {state.actionConfig.Config ?<DynamicModal
-                  id={selectedId}
-                  sourceKey={rowFieldKey as string}
-                  additionalId={additionalValue}
-                  additionalFieldKey={additionalFieldKey}
-                  config={ JSON.parse(state.actionConfig.Config) }
-                  />:<>کانفیگ این مدال وجود ندارد</>}
-                  </>
+              content={
+                <>
+                  {state.actionConfig.Config ? (
+                    <DynamicModal
+                      id={selectedId}
+                      sourceKey={rowFieldKey as string}
+                      additionalId={additionalValue}
+                      additionalFieldKey={additionalFieldKey}
+                      config={JSON.parse(state.actionConfig.Config)}
+                    />
+                  ) : (
+                    <>کانفیگ این مدال وجود ندارد</>
+                  )}
+                </>
               }
             />
           )}
@@ -1385,7 +1364,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1417,7 +1396,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1449,7 +1428,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1478,7 +1457,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1514,7 +1493,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1536,7 +1515,7 @@ export default function List<T extends IBaseDto, K>({
               headerName={attachmentTitle}
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1584,7 +1563,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1622,7 +1601,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1657,7 +1636,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1724,7 +1703,7 @@ export default function List<T extends IBaseDto, K>({
                   id={selectedId}
                   rowData={
                     gridData?.Data?.find(
-                      (item) => item[rowFieldKey] === selectedId
+                      (item) => item[rowFieldKey] === selectedId,
                     ) as any
                   }
                   handleClose={() =>
@@ -1750,7 +1729,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1777,7 +1756,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1809,7 +1788,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )?.[staticKey]
               }
               `}
@@ -1843,7 +1822,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1878,7 +1857,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1905,7 +1884,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1932,7 +1911,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1960,7 +1939,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -1985,7 +1964,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -2010,7 +1989,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -2037,7 +2016,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -2064,7 +2043,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}
@@ -2099,7 +2078,7 @@ export default function List<T extends IBaseDto, K>({
               }
               headerDescription={`${
                 gridData?.Data?.find(
-                  (item) => item[rowFieldKey] === selectedId
+                  (item) => item[rowFieldKey] === selectedId,
                 )[staticKey]
               }
               `}

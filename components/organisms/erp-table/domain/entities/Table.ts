@@ -19,28 +19,27 @@ import {
   RowId,
   RowState,
   RowStateEnum,
-  TableId,
 } from '../value-objects';
 import { Cell } from './Cell';
 import { Row } from './Row';
 
 export class Table {
   private pagination: Pagination = new Pagination(1, 10);
-  private version: number;
+
   constructor(
-    public readonly id: TableId,
+    public readonly id: string,
     private rows: Map<number, Row>,
     private columns: Map<string, ColumnSchema>,
-    version = 0
+
   ) {
-    this.version = version;
+
   }
   getColumnSchema(columnId: ColumnId): ColumnSchema | undefined {
     return this.columns.get(columnId.value);
   }
   setColumnSchema(columnId: ColumnId, columnSchema: ColumnSchema): ColumnSchema | undefined {
-    const prev = this.columns.get(columnId.value); 
-    this.columns.set(columnId.value, columnSchema); 
+    const prev = this.columns.get(columnId.value);
+    this.columns.set(columnId.value, columnSchema);
     return prev;
   }
   getColumns(): ColumnSchema[] {
@@ -56,8 +55,6 @@ export class Table {
       });
     }
     this.columns = updatedColumns;
-
-    // اطمینان از اینکه همه سطرها سلول مربوط به ستون جدید را دارند
     for (const row of this.rows.values()) {
       for (const col of newColumns) {
         if (!row.getCells().has(col.id)) {
@@ -69,15 +66,8 @@ export class Table {
         }
       }
     }
+  }
 
-    this.bumpVersion();
-  }
-  getVersion() {
-    return this.version;
-  }
-  private bumpVersion() {
-    this.version += 1;
-  }
   changeCell(
     rowId: RowId,
     columnId: ColumnId,
@@ -88,7 +78,6 @@ export class Table {
     const ev = row.changeCell(columnId, value);
     if (ev) {
       row.updateChangeFields(columnId);
-      this.bumpVersion();
     }
     return ev;
   }
@@ -124,7 +113,7 @@ export class Table {
         )
       );
     }
- 
+
     const newRow = new Row(newRowId, newCells, new RowState(RowStateEnum.Added));
     rowsArray.splice(target.id.value, 0, newRow);
     const rebuilt = new Map<number, Row>();
@@ -138,12 +127,12 @@ export class Table {
       rebuilt.set(i + 1, row);
     });
     this.rows = rebuilt;
-    this.bumpVersion();
+
 
     return new RowAdded(newRowId);
   }
   addNewRow(): RowAdded {
- 
+
     const newRowId = new RowId(this.rows.size + 1);
     const cells = new Map<string, Cell>();
     const rowId = new RowId(newRowId.value);
@@ -156,7 +145,7 @@ export class Table {
         new ColumnId(columnId),
         cellValue,
         cellValue,
-      cellDisplay
+        cellDisplay
       );
       cells.set(columnId, cell);
     });
@@ -166,7 +155,7 @@ export class Table {
     const pageSize = this.pagination.pageSize;
     const lastPage = Math.ceil(totalRows / pageSize);
     this.changePage(lastPage);
-    this.bumpVersion();
+
     return new RowAdded(newRowId);
   }
   addColumns(newColumns: ColumnSchema[]): { added: ColumnId[] } {
@@ -206,12 +195,12 @@ export class Table {
           incoming.renderType === "number"
             ? new CellValue(0)
             : new CellValue("");
-        row.ensureCell(new ColumnId(incoming.id), defaultValue,defaultDisplay);
+        row.ensureCell(new ColumnId(incoming.id), defaultValue, defaultDisplay);
       }
     }
 
-    if (added.length > 0) this.bumpVersion();
-    return { added };
+    if (added.length > 0)
+      return { added };
   }
   removeColumns(columnIds: ColumnId[]): { removed: ColumnId[] } {
     const removed: ColumnId[] = [];
@@ -228,8 +217,6 @@ export class Table {
       this.columns.set(key, { ...schema, hidden: true });
       removed.push(colId);
     }
-
-    if (removed.length > 0) this.bumpVersion();
     return { removed };
   }
   getRows(): Row[] {
@@ -240,13 +227,13 @@ export class Table {
   }
   changePage(page: number) {
     this.pagination = this.pagination.changePage(page);
-    this.bumpVersion();
+
   }
   changePageSize(size: number) {
     this.pagination = this.pagination
       .changePageSize(size)
       .changePage(1);
-    this.bumpVersion();
+
   }
   getVisibleRows() {
     const start = (this.pagination.page - 1) * this.pagination.pageSize;
@@ -257,37 +244,41 @@ export class Table {
     newRows.forEach((r) => {
       this.rows.set(r.id.value, r)
     });
-    this.bumpVersion();
- 
+
+
   }
-  deleteRow(rowId: RowId): RowDeleted |RowRestored|RowRemoved|MinimumRowConstraintViolated| null {
+  deleteRow(rowId: RowId): RowDeleted | RowRestored | RowRemoved | MinimumRowConstraintViolated | null {
     const row = this.rows.get(rowId.value);
-    if (!row ) return null
-    if (row.rowState.value == RowStateEnum.Added &&  this.rows.size == 1) return new MinimumRowConstraintViolated(rowId);
-    if (row.rowState.value == RowStateEnum.Added &&  this.rows.size > 1) {
+    if (!row) return null
+    if (row.rowState.value == RowStateEnum.Added && this.rows.size == 1) {
       this.rows.delete(rowId.value);
-      this.bumpVersion();
+      this.addNewRow()
+      return new MinimumRowConstraintViolated(rowId);
+    }
+    if (row.rowState.value == RowStateEnum.Added && this.rows.size > 1) {
+      this.rows.delete(rowId.value);
+
       return new RowRemoved(rowId);
     } else if (row.rowState.value == RowStateEnum.Unchanged) {
       row.rowState = new RowState(RowStateEnum.Deleted)
       row.updateChangeFields(new ColumnId("RowState"))
-      this.bumpVersion();
+
       return new RowDeleted(rowId);
     } else {
-      if(row.getChangeFields().length>0){
-         row.rowState = new RowState(RowStateEnum.Modified) 
+      if (row.getChangeFields().length > 0) {
+        row.rowState = new RowState(RowStateEnum.Modified)
         row.updateChangeFields(new ColumnId("RowState"))
-        this.bumpVersion();
+
         return new RowRestored(rowId);
-      }else{
-        row.rowState = new RowState(RowStateEnum.Unchanged) 
+      } else {
+        row.rowState = new RowState(RowStateEnum.Unchanged)
         row.updateChangeFields(new ColumnId("RowState"))
-        this.bumpVersion();
+
         return new RowRestored(rowId);
       }
     }
   }
-  reorderRows(draggedRowId: number, droppedRowId: number): RowReordered {
+  reorderRows(draggedRowId: number, droppedRowId: number,position: 'before' | 'after' = 'after' ): RowReordered {
     if (draggedRowId === droppedRowId) {
       return new RowReordered(draggedRowId, droppedRowId);
     }
@@ -298,8 +289,16 @@ export class Table {
       throw new Error(`Row ${draggedRowId} or ${droppedRowId} does not exist`);
     }
     const [moved] = rowsArray.splice(fromIndex, 1);
-    const insertIndex = fromIndex < toIndex ? (toIndex - 1) : toIndex;
-    rowsArray.splice(insertIndex, 0, moved);
+    let insertIndex = toIndex;
+  if (position === 'after') {
+    insertIndex = toIndex + 1;
+    if (fromIndex < toIndex) insertIndex -= 1;
+  } else {
+    // قبل → منطق قدیمی
+    if (fromIndex < toIndex) insertIndex -= 1;
+  }
+
+  rowsArray.splice(insertIndex, 0, moved);
     const rebuilt = new Map<number, Row>();
     rowsArray.forEach((row, i) => {
       const newId = i + 1;
@@ -309,7 +308,7 @@ export class Table {
       rebuilt.set(newId, row);
     });
     this.rows = rebuilt;
-    this.bumpVersion();
+
     return new RowReordered(draggedRowId, droppedRowId);
   }
   reorderColumns(sourceIndex: number, destIndex: number): ColumnReordered {
@@ -317,7 +316,7 @@ export class Table {
     const [moved] = colsArray.splice(sourceIndex, 1);
     colsArray.splice(destIndex, 0, moved);
     this.columns = new Map(colsArray.map((c) => [c.id, c]));
-    this.bumpVersion();
+
     return new ColumnReordered(sourceIndex, destIndex);
   }
   clone(): Table {
@@ -327,7 +326,7 @@ export class Table {
     }
 
     const clonedColumns = new Map(this.columns);
-    const cloned = new Table(this.id, clonedRows, clonedColumns, this.version);
+    const cloned = new Table(this.id, clonedRows, clonedColumns);
     cloned.pagination = this.pagination; // Value Object → safe
     return cloned;
   }

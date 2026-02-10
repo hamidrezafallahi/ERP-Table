@@ -41,8 +41,8 @@ export interface IProps {
   url: string;
   listUrl: string;
   fieldKey: string;
-  titleKey: string;
-  pageIcon?: string;
+ titleKey?:string[] |string;
+   pageIcon?: string;
   conditionalActions?: {
     conditionalProperty: string;
     conditionallyAction?: string;
@@ -55,4 +55,5 @@ export interface IProps {
   extraFunction?: (x: any) => void;
   withImage?: boolean;
   submitCaption?: string;
+  withSubmitButton?: boolean;
 }

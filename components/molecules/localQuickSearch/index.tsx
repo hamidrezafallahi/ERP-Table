@@ -1,19 +1,10 @@
-import {
-  memo,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { memo, useEffect, useRef, useState } from "react";
 
-import { useTranslations } from 'next-intl';
-import { useDispatch } from 'react-redux';
+import { useTranslations } from "next-intl";
+import { useDispatch } from "react-redux";
 
-import InputText from '@components/atoms/defaultElements/inputText';
-import {
-  CloseCircle,
-  Magnifier,
-} from '@components/atoms/iconComponents';
-import { apiService } from '@services/base';
+import InputText from "@components/atoms/defaultElements/inputText";
+import { CloseCircle, Magnifier } from "@components/atoms/iconComponents";
 
 function InputSearch({ quickSearch, setQuickSearch, setPageNumber }) {
   const t = useTranslations();
@@ -33,8 +24,6 @@ function InputSearch({ quickSearch, setQuickSearch, setPageNumber }) {
       if (prevViewDataRef.current !== searchTerm) {
         setQuickSearch(searchTerm);
         setPageNumber(1);
-
-        dispatch(apiService.util.resetApiState());
       }
     }, 500);
 

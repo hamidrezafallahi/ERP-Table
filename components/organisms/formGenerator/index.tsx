@@ -1,5 +1,5 @@
 "use client";
-import './style.css';
+import "./style.css";
 
 import React, {
   useCallback,
@@ -7,46 +7,30 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from 'react';
+} from "react";
 
-import {
-  Drawer,
-  Form,
-} from 'antd';
-import { useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
-import {
-  shallowEqual,
-  useDispatch,
-} from 'react-redux';
+import { Drawer, Form } from "antd";
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { shallowEqual, useDispatch } from "react-redux";
 
-import { CustomButton } from '@components/atoms/defaultElements';
-import { MenuDrawerIcon } from '@components/atoms/iconComponents';
-import Title from '@components/atoms/Title';
-import Comments from '@components/molecules/comments';
-import FormToolbar from '@components/organisms/formToolbar';
-import DynamicLoaderComponent
-  from '@components/templates/dynamicLoaderComponent';
-import {
-  useFormHandlers,
-  useFullScreen,
-} from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
-import {
-  useGetConditionallyMutation,
-  useGetData,
-} from '@services/base';
-import { addNewPage } from '@slice/pages';
-import { PageStateEnum } from '@slice/pages/enum';
-import type { IPageConfig } from '@type/elementType';
-import { PageTypeEnum } from '@type/enum';
-import type { IToolbar } from '@type/toolbar';
-import {
-  formRulesReturner,
-  renderFormField,
-} from '@utils/core';
+import { CustomButton } from "@components/atoms/defaultElements";
+import { MenuDrawerIcon } from "@components/atoms/iconComponents";
+import Title from "@components/atoms/Title";
+import Comments from "@components/molecules/comments";
+import FormToolbar from "@components/organisms/formToolbar";
+import DynamicLoaderComponent from "@components/templates/dynamicLoaderComponent";
+import { useFormHandlers, useFullScreen } from "@hooks/custom";
+import { useAppSelector } from "@redux/index";
+import { useGetConditionallyMutation, useGetData } from "@services/base";
+import { addNewPage } from "@slice/pages";
+import { PageStateEnum } from "@slice/pages/enum";
+import type { IPageConfig } from "@type/elementType";
+import { PageTypeEnum } from "@type/enum";
+import type { IToolbar } from "@type/toolbar";
+import { formRulesReturner, renderFormField } from "@utils/core";
 
-import type { IProps } from './type';
+import type { IProps } from "./type";
 
 const safeParse = (s: any) => {
   try {
@@ -71,6 +55,7 @@ export default function FormGenerator<T, K>({
   setConditionalFields,
   withImage,
   submitCaption,
+  withSubmitButton = true,
 }: IProps) {
   const t = useTranslations();
   const dispatch = useDispatch();
@@ -89,7 +74,7 @@ export default function FormGenerator<T, K>({
       pages: state?.withPersist?.pages,
       match: state.withPersist.config.initMatch,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const pageType = PageTypeEnum.Form;
@@ -130,10 +115,10 @@ export default function FormGenerator<T, K>({
     } else {
       return {} as IPageConfig;
     }
-  }, [toolbar,activePage?.selectedViewIndex]);
+  }, [toolbar, activePage?.selectedViewIndex]);
 
   let formData = useMemo(() => {
-    if (Object.keys(Config).length > 0) {
+    if (Config && Object.keys(Config).length > 0) {
       return Config?.fields ?? [];
     } else {
       return [];
@@ -166,7 +151,7 @@ export default function FormGenerator<T, K>({
         setOpenMobileDrawer(false);
       }
     },
-    [setOpenMobileDrawer]
+    [setOpenMobileDrawer],
   );
   const handleKeyAction = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.altKey === true) {
@@ -194,29 +179,26 @@ export default function FormGenerator<T, K>({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
-
   useEffect(() => {
-    if (conditionalFields && toolbar) {
-      const Config: IPageConfig =
-        safeParse(
-          toolbar.List?.ListProp?.[activePage?.selectedViewIndex??0]?.Config
-        ) || ({} as IPageConfig);
-      setConditionalFields(Config.fields);
+    if (conditionalFields) {
+      setConditionalFields(formData);
     }
-
+  }, [formData]);
+  useEffect(() => {
     if (
       typeof conditionalFields !== "boolean" &&
       conditionalFields?.length > 0
     ) {
       setFields(conditionalFields);
     } else {
-      setFields(Config.fields);
+      setFields(formData);
     }
-  }, [toolbar]);
-  useEffect(()=>{
-    if(toolbar?.List?.ListProp){
-       extraFunction?.(safeParse(toolbar.List?.ListProp?.[0]?.Config).fields)}
-  },[Config])
+  }, [formData, conditionalFields, isSuccess]);
+  useEffect(() => {
+    if (extraFunction) {
+      extraFunction(formData);
+    }
+  }, [formData, activePage?.pageData]);
   useEffect(() => {
     const setNewPage = async () => {
       let pageData = [];
@@ -231,56 +213,79 @@ export default function FormGenerator<T, K>({
         let TagsInfo = undefined;
         if (id) {
           const config = safeParse(
-            toolbar?.List?.ListProp?.[activePage?.selectedViewIndex ?? 0]?.Config
+            toolbar?.List?.ListProp?.[activePage?.selectedViewIndex ?? 0]
+              ?.Config,
           );
-          const res = await getDefaults({
-            url: url,
-            body: {
-              RepoViewId: config.repoViewId,
-              Id: id,
-              ShowBookmarked: true,
-              ShowTags: true,
-            },
-            id: id,
-          }).unwrap();
+          if (!Config.data) {
+            const res = await getDefaults({
+              url: url,
+              body: {
+                RepoViewId: config.repoViewId,
+                Id: id,
+                ShowBookmarked: true,
+                ShowTags: true,
+              },
+              id: id,
+            }).unwrap();
 
-          if (res.Result === "Success" && res.Data?.[0]) {
-            console.log(res.Data)
-            defaultValue = res.Data[0];
-            TagsInfo = defaultValue.TagsInfo;
+            if (res.Result === "Success" && res.Data?.[0]) {
+              defaultValue = res.Data[0];
+              TagsInfo = defaultValue.TagsInfo;
+            }
           }
         }
         if (defaultValue) {
           pageData = formData.map((item) => {
+            const undefinedValue =
+              item.type === "checkBox"
+                ? false
+                : item.type === "bool"
+                  ? false
+                  : item.type === "radio"
+                    ? item.radioValues?.[0]?.value
+                    : item.type === "array"
+                      ? []
+                      : undefined;
             return {
               ...item,
-              value: defaultValue[item.name],
-              originalValue: defaultValue[item.name],
-              isTitleField: item.name === titleKey,
+              value: defaultValue[item.name] ?? undefinedValue,
+              originalValue: defaultValue[item.name] ?? undefinedValue,
+              isTitleField: Array.isArray(titleKey)
+                ? titleKey.includes(item.name)
+                : item.name === titleKey,
             };
           });
         } else if (formData.length > 0) {
           pageData = formData.map((item) => {
-            let value = undefined;
-            let originalValue = undefined;
+            const undefinedValue =
+              item.type === "checkBox"
+                ? false
+                : item.type === "bool"
+                  ? false
+                  : item.type === "radio"
+                    ? item.radioValues?.[0]?.value
+                    : item.type === "array"
+                      ? []
+                      : undefined;
             return {
               ...item,
-              value,
-              originalValue,
-              isTitleField: item.name === titleKey,
+              value: undefinedValue,
+              originalValue: undefinedValue,
+              isTitleField: Array.isArray(titleKey)
+                ? titleKey.includes(item.name)
+                : item.name === titleKey,
             };
           });
         }
-        if (id && formData.length > 0) {
-          pageData.push({
-            name: fieldKey,
-            caption: "MainIdField",
-            value: id,
-            originalValue: id,
-            type: "hidden",
-          });
-        }
-       
+
+        pageData.push({
+          name: fieldKey,
+          caption: "MainIdField",
+          value: id,
+          originalValue: id,
+          type: "hidden",
+        });
+
         dispatch(
           addNewPage({
             pageId,
@@ -309,16 +314,16 @@ export default function FormGenerator<T, K>({
             selectedView: selectedView,
             selectedViewIndex: 0,
             data: data,
-          })
+          }),
         );
       } catch (error) {
-        console.error("خطا در دریافت داده‌های پیش‌فرض:", error);
+        null;
       }
     };
     if (formData?.length > 0 || Config?.data) {
       setNewPage();
     }
-  }, [formData]);
+}, [formData, titleKey, id, Config?.data]);
 
   useEffect(() => {
     window.addEventListener("click", handleOutsideClick);
@@ -357,12 +362,13 @@ export default function FormGenerator<T, K>({
             }}
             mutationSystemId={mutationSystemId}
             submitCaption={submitCaption}
+            withSubmitButton={withSubmitButton}
           />
         </div>
         <div className="hidden-show-scrollBar flex flex-col gap-10 mt-4 lg:mt-0 h-full max-h-[calc(100dvh-160px)] overflow-auto">
-          {Config.data ? (
+          {Config?.data ? (
             <DynamicLoaderComponent
-              componentName={Config.data}
+              componentName={Config?.data}
               props={{ setMobileDrawerContent, setMobileDrawerHeight, form }}
             />
           ) : (
@@ -371,7 +377,9 @@ export default function FormGenerator<T, K>({
               className="gap-5 s:gap-y-16 xs:gap-8 grid grid-cols-4"
               form={form}
             >
-              {Config?.fields?.filter((item) => item.type !== "info")
+              {Config?.fields &&
+                fields
+                  ?.filter((item) => item.type !== "info")
                   .sort((a, b) => a.order - b.order)
                   .map((item, index) => {
                     const colSpan = `lg:col-span-${item?.colSpan}`;
@@ -395,11 +403,11 @@ export default function FormGenerator<T, K>({
                           item.type == "checkBox"
                             ? e.target.checked
                             : item.type === "number" ||
-                              item.type === "price" ||
-                              item.type === "selectOption" ||
-                              item.type === "date"
-                            ? e
-                            : e?.target?.value
+                                item.type === "price" ||
+                                item.type === "selectOption" ||
+                                item.type === "date"
+                              ? e
+                              : e?.target?.value
                         }
                         className={`m-0 p-0 col-span-4
                       ${item.type === "checkBox" ? "content-end" : ""}
@@ -407,7 +415,7 @@ export default function FormGenerator<T, K>({
                       ${item.colSpan ? `${colSpan}` : `lg:col-span-2`}
                        `}
                       >
-                        {renderFormField(item, form, !!id)}
+                        {renderFormField(item, form, !!id, index === 0)}
                       </Form.Item>
                     );
                   })}

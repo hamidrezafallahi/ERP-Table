@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 
-import { InputNumber, Spin, Table, TableColumnsType } from "antd";
+import { Spin, Table, TableColumnsType } from "antd";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { shallowEqual, useDispatch } from "react-redux";
@@ -23,6 +23,7 @@ import {
   CustomTooltip,
 } from "@components/atoms/defaultElements";
 import InputText from "@components/atoms/defaultElements/inputText";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
 import {
   Dots,
   NoData,
@@ -1159,7 +1160,7 @@ export const YearPlanDataGrid: FC<IProps> = ({
       typeof rowData[field] === "number" ? rowData[field] : undefined;
 
     return isEditing ? (
-      <InputNumber
+      <CustomInputNumber
         controls={false}
         prefix=""
         min={0}
@@ -1176,7 +1177,7 @@ export const YearPlanDataGrid: FC<IProps> = ({
             if (!rowData.AccountId) {
               handleEdit(index, "AccountId");
             } else {
-              onNumberChangeDebtorCreditor(value, field, index);
+              onNumberChangeDebtorCreditor(value as number, field, index);
             }
           } else {
             onNumberChange(value, field, index);

@@ -9,7 +9,7 @@ export const MainInfoSection = ({ data }) => {
       {data.map((item, idx) => (
         <div className="flex flex-col gap-2 col-span-2" key={idx}>
           <div
-            className={`bg-gray-gray2 text-gray-gray10 text-sm !h-9 !w-full rounded-lg flex items-center justify-center p-1  whitespace-nowrap text-ellipsis overflow-hidden`}
+            className={`bg-gray-gray2 text-gray-gray10 text-sm h-[3.125rem] !w-full rounded-lg flex items-center justify-center p-1 whitespace-nowrap text-ellipsis overflow-hidden`}
           >
             {item.title}
           </div>

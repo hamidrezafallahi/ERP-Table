@@ -8,7 +8,8 @@ import { RowStateEnum } from '../domain/value-objects';
 
 export type TableViewState = {
   table: Table
-  version: number;
+  activeCell:ActiveCell;
+  selectedRows: Record<number, true>;
   rows: Array<{
     id: number;
     rowState: RowStateEnum
@@ -54,10 +55,21 @@ export type ViewColumn = {
   dynamicValue?: IRequestConfig;
   indexOptions?: any
 };
+export type ActiveCell = {
+  rowId: number;
+  columnId: string;
+} | null;
+export type ActiveRow = {
+  rowId: number;
+ 
+} | null;
+
 export type TableState = {
   table: Table;
-  version: number;
   expanded: Record<string, boolean>;
+  activeRow?: ActiveRow;
+  activeCell?: ActiveCell;
+  selectedRows: Record<number, true>;
 };
 
 

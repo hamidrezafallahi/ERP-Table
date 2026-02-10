@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { shallowEqual, useDispatch } from "react-redux";
 
@@ -37,7 +37,7 @@ export default function RepoAssignTemplate() {
         RepoId: RepoId,
         SystemId: SystemId,
         url,
-      })
+      }),
     );
   }, []);
 

@@ -30,11 +30,11 @@ export default function Notification() {
       locale: state.withPersist.config.lang,
       match: state.withPersist.config.initMatch,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const notifications = useAppSelector(
-    (state: RootState) => state.withoutPersist.notification.list
+    (state: RootState) => state.withoutPersist.notification.list,
   );
 
   const [refetchStop, setRefetchStop] = useState(notifications.length === 0);
@@ -47,12 +47,13 @@ export default function Notification() {
 
   const { data: countData, refetch: refetchCount } = useNotificationsData(
     true,
-    false
+    false,
   );
 
   useEffect(() => {
     if (listData?.Data?.length) {
-      dispatch(setNotifications(listData.Data));
+      const notif = listData.Data.slice(0, 20);
+      dispatch(setNotifications(notif));
     }
   }, [listData]);
 
@@ -61,7 +62,6 @@ export default function Notification() {
       refetchList?.();
     }
   }, [isNotificationOpen, refetchStop]);
-
 
   useEffect(() => {
     if (isNotificationOpen) {

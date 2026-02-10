@@ -53,7 +53,7 @@ export const Details = ({
 
   const { activePage } = useAppSelector((state) => {
     const activePage = state.withPersist.pages.find(
-      (item) => item.isActive === true
+      (item) => item.isActive === true,
     );
 
     return { activePage };
@@ -84,7 +84,7 @@ export const Details = ({
             RefId: item[rowFieldKey],
             tags: repoTagsResponse.Data,
             revalidated: true,
-          })
+          }),
         );
       }
     } catch (err) {
@@ -117,7 +117,7 @@ export const Details = ({
     currentChanges &&
     currentChanges.find((item) => item.id === item[rowFieldKey]);
   const [bookmarked, setBookmarked] = useState(
-    defaultBookmark?.HasBookMark ? defaultBookmark?.HasBookMark : false
+    defaultBookmark?.HasBookMark ? defaultBookmark?.HasBookMark : false,
   );
 
   let finallyActions = actions;
@@ -127,13 +127,17 @@ export const Details = ({
       let isDisabled = act.disabled || false;
 
       conditionalActions.forEach(
-        ({ conditionalProperty, conditionallyAction }) => {
-          if (conditionallyAction && !item[conditionalProperty]) {
+        ({ conditionalProperty, conditionallyAction, opposite }) => {
+          if (
+            conditionallyAction && opposite
+              ? !!item[conditionalProperty]
+              : !item[conditionalProperty]
+          ) {
             if (act.MenuDesc === conditionallyAction) {
               isDisabled = true;
             }
           }
-        }
+        },
       );
 
       return {
@@ -207,7 +211,7 @@ export const Details = ({
                           item[additionalFieldKey],
                           item["PendingStatusId"],
                           item["FormViewId"],
-                          item["UniqueId"]
+                          item["UniqueId"],
                         );
                       }}
                     >
@@ -215,7 +219,7 @@ export const Details = ({
                         dangerouslySetInnerHTML={{
                           __html: getColoredIcon(
                             action.Icon.replaceAll(`="18"`, `="20"`),
-                            mode
+                            mode,
                           ),
                         }}
                         style={{
@@ -242,7 +246,7 @@ export const Details = ({
                           item[additionalFieldKey],
                           item["PendingStatusId"],
                           item["FormViewId"],
-                          item["UniqueId"]
+                          item["UniqueId"],
                         );
                       }}
                     >
@@ -250,7 +254,7 @@ export const Details = ({
                         dangerouslySetInnerHTML={{
                           __html: getColoredIcon(
                             action.Icon.replaceAll(`="18"`, `="20"`),
-                            mode
+                            mode,
                           ),
                         }}
                         style={{
@@ -291,7 +295,7 @@ export const Details = ({
                   item[additionalFieldKey],
                   item["PendingStatusId"],
                   item["FormViewId"],
-                  item["UniqueId"]
+                  item["UniqueId"],
                 )
               }
             >
@@ -346,7 +350,7 @@ export const Details = ({
                       item[additionalFieldKey],
                       item["PendingStatusId"],
                       item["FormViewId"],
-                      item["UniqueId"]
+                      item["UniqueId"],
                     );
                     setActionDrawerIsOpen(false);
                   }}
@@ -355,7 +359,7 @@ export const Details = ({
                     dangerouslySetInnerHTML={{
                       __html: getColoredIcon(
                         action.Icon.replaceAll(`="18"`, `="20"`),
-                        mode
+                        mode,
                       ),
                     }}
                     style={{

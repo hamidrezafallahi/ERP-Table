@@ -59,6 +59,7 @@ export default function NestedList<T extends IBaseDto, K>({
   customAction,
   withoutActivation,
   conditionalActivation = () => true,
+  titleKey,
 }: IProps<T>) {
   const t = useTranslations();
   const pathname = usePathname();
@@ -94,13 +95,13 @@ export default function NestedList<T extends IBaseDto, K>({
     },
   });
   const [trigger, { isLoading: triggerIsLoading }] = useCUDDataMutation();
-
+  const [title, setTitle] = useState<string | null>(null);
   const [isDeleteDrawerVisible, setIsDeleteDrawerVisible] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false);
   const [attachmentModalDesc, setAttachmentModalDesc] = useState(
-    t("sidebar.drag")
+    t("sidebar.drag"),
   );
   const [isDynamicModalOpen, setIsDynamicModalOpen] = useState(false);
   const [dynamicAction, setDynamicAction] = useState<{
@@ -111,6 +112,7 @@ export default function NestedList<T extends IBaseDto, K>({
   const [id, setId] = useState<number>(null);
   const [fatherId, setFatherId] = useState<number>(null);
   const [level, setLevel] = useState<number>(null);
+  const [draggedKey, setDraggedKey] = useState<number | string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedKeys, setExpandedKeys] = useState<number[]>([]);
@@ -218,7 +220,7 @@ export default function NestedList<T extends IBaseDto, K>({
                 <span
                   dangerouslySetInnerHTML={{
                     __html: DOMPurify.sanitize(
-                      getColoredIcon(menuItem.Icon, mode)
+                      getColoredIcon(menuItem.Icon, mode),
                     ),
                   }}
                 />
@@ -319,7 +321,7 @@ export default function NestedList<T extends IBaseDto, K>({
                         handleAddAction(
                           item[uniqueKey],
                           item[fatherKey],
-                          "addSide"
+                          "addSide",
                         );
                       }}
                       style={{ padding: 0 }}
@@ -445,7 +447,7 @@ export default function NestedList<T extends IBaseDto, K>({
 
         const filteredChildren = handleFilterTreeData(
           item.children || [],
-          searchTerm
+          searchTerm,
         );
 
         if (isMatch) {
@@ -469,7 +471,7 @@ export default function NestedList<T extends IBaseDto, K>({
 
   const filteredTreeData = handleFilterTreeData(
     transformedTreeData,
-    searchTerm
+    searchTerm,
   );
   const expandAll = () => {
     const keysToExpand = getAllKeys(filteredTreeData);
@@ -496,7 +498,7 @@ export default function NestedList<T extends IBaseDto, K>({
   const handleAddAction = (
     id: number,
     fatherId: number,
-    type: "addSide" | "addChild" | "firstItem"
+    type: "addSide" | "addChild" | "firstItem",
   ) => {
     if (type === "firstItem") {
       setFatherId(null);
@@ -558,7 +560,7 @@ export default function NestedList<T extends IBaseDto, K>({
   };
 
   const onDrop: TreeProps["onDrop"] = async (info) => {
-    const dragKey = info.dragNode.key;
+    const dragKey = info.dragNode.key as number | string;
     const dropKey = info.node.key;
 
     const newFatherId = dropKey
@@ -567,6 +569,21 @@ export default function NestedList<T extends IBaseDto, K>({
         ]
       : null;
 
+    await handleDropAction(dragKey, newFatherId);
+    setDraggedKey(null);
+  };
+
+  const handleWhiteSpaceDrop = async () => {
+    if (draggedKey) {
+      await handleDropAction(draggedKey, null);
+      setDraggedKey(null);
+    }
+  };
+
+  const handleDropAction = async (
+    dragKey: number | string,
+    newFatherId: number | null,
+  ) => {
     try {
       const triggerFormResponse = await trigger({
         url: config.updateUrl,
@@ -579,6 +596,7 @@ export default function NestedList<T extends IBaseDto, K>({
 
       if (triggerFormResponse?.Result !== "Failed") {
         showSuccessToast(t("toast.successTitle"));
+        refetch();
       }
     } catch (error) {
       null;
@@ -606,7 +624,16 @@ export default function NestedList<T extends IBaseDto, K>({
             }}
             className="flex items-center !bg-gray-gray5 rounded w-full text-xs"
           />
-          <div className="hidden-show-scrollBar h-[540px] overflow-scroll">
+          <div
+            className="hidden-show-scrollBar h-[540px] overflow-scroll"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (draggedKey) {
+                handleWhiteSpaceDrop();
+              }
+            }}
+          >
             {isFetching ? (
               <div className="flex items-center w-full h-[400px]">
                 <CustomSpin className="w-full" size="large" />
@@ -622,6 +649,9 @@ export default function NestedList<T extends IBaseDto, K>({
                 expandedKeys={expandedKeys}
                 onExpand={onExpand}
                 draggable
+                onDragStart={(info) => {
+                  setDraggedKey(info.node.key as number | string);
+                }}
                 onDrop={onDrop}
               />
             ) : (
@@ -646,7 +676,22 @@ export default function NestedList<T extends IBaseDto, K>({
       {isFormModalOpen && (
         <CustomModal
           contentClassName={`${match ? "!min-w-[520px] h-full" : ""}`}
-          headerName={id ? t("general.update") : t("general.addNew")}
+          headerName={
+            id ? (
+              <div className="flex flex-col justify-between gap-1 max-h-20">
+                {t("general.update")}
+                {title && (
+                  <>
+                    <span className="font-light text-gray-gray85 text-xs">
+                      {title}
+                    </span>
+                  </>
+                )}
+              </div>
+            ) : (
+              t("general.addNew")
+            )
+          }
           closeModal={() => setIsFormModalOpen(false)}
           isModalOpen={isFormModalOpen}
           content={
@@ -657,11 +702,39 @@ export default function NestedList<T extends IBaseDto, K>({
                 id={id}
                 level={level}
                 onClose={() => setIsFormModalOpen(false)}
+                onGetDefault={(e) => {
+                  if (!titleKey) return;
+
+                  if (Array.isArray(titleKey)) {
+                    const combinedTitle = titleKey
+                      .map((key) => e?.[key])
+                      .filter(Boolean)
+                      .join(" - ");
+
+                    setTitle(combinedTitle || null);
+                  } else {
+                    setTitle(e?.[titleKey] ?? null);
+                  }
+                }}
               />
             ) : (
               <NestedListForm
                 config={config}
                 fatherId={fatherId}
+                onGetDefault={(e) => {
+                  if (!titleKey) return;
+
+                  if (Array.isArray(titleKey)) {
+                    const combinedTitle = titleKey
+                      .map((key) => e?.[key])
+                      .filter(Boolean)
+                      .join(" - ");
+
+                    setTitle(combinedTitle || null);
+                  } else {
+                    setTitle(e?.[titleKey] ?? null);
+                  }
+                }}
                 id={id}
                 level={level}
                 onClose={() => setIsFormModalOpen(false)}
@@ -725,7 +798,7 @@ export default function NestedList<T extends IBaseDto, K>({
             <span
               dangerouslySetInnerHTML={{
                 __html: DOMPurify.sanitize(
-                  getColoredIcon(dynamicAction.icon, mode)
+                  getColoredIcon(dynamicAction.icon, mode),
                 ),
               }}
             />

@@ -7,7 +7,7 @@ import {
   DynamicSelect,
   NewDatePicker,
 } from "@components/atoms/defaultElements";
-import InputNumber from "@components/atoms/defaultElements/inputNumber";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
 import type { IRequestConfig } from "@type/elementType";
 import { SystemEnum } from "@type/enum";
 
@@ -156,7 +156,7 @@ export const AdvancedBankWithdrawalForm = ({ activePage, form }: IProps) => {
           rules={[{ required: true, message: t("form.required") }]}
           className="!mb-0 !pb-0 text-xs"
         >
-          <InputNumber
+          <CustomInputNumber
             min={0}
             name="Price"
             className=""

@@ -101,7 +101,7 @@ export const CustomModal = ({
             }}
             onFocus={() => {}}
             onBlur={() => {}}
-            className={`flex ps-4 pe-2 py-4 h-[3.563rem] items-center rounded-lg bg-gray-gray1 ${
+            className={`flex ps-4 pe-2 py-4 items-center rounded-lg bg-gray-gray1 ${
               !match ? "justify-start" : "justify-between"
             }`}
           >
@@ -176,7 +176,7 @@ export const CustomModal = ({
       wrapClassName={(!match || modalIsFullScreen) && "full-screen-modal"}
       classNames={{
         content: "overflow-x-hidden overflow-y-hidden",
-        header: "h-[3.563rem] !bg-[#FBFBFB]",
+        header: "h-auto !bg-[#FBFBFB]",
       }}
     >
       <Divider className="hidden lg:block !m-0 border-gray-gray6 border-t-[0.063rem] h-0" />

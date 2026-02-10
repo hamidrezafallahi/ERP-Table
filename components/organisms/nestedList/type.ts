@@ -4,6 +4,7 @@ import type { IRequestConfig } from "@type/elementType";
 
 export interface IProps<T> {
   config: INestedListConfig;
+  titleKey?:string[];
   addChildCondition?: (item: T) => boolean;
   caption: string;
   customAction?: (item: T) => ReactNode | null;

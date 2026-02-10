@@ -1,7 +1,4 @@
-// InfiniteScrollGoodList.tsx
-import React from "react";
-
-import { Skeleton } from "antd";
+// InfiniteScrollGoodList.tsimport { Skeleton } from "antd";
 import { useTranslations } from "next-intl";
 import { shallowEqual, useDispatch } from "react-redux";
 
@@ -9,6 +6,7 @@ import { CustomButton } from "@components/atoms/defaultElements";
 import { useAppSelector } from "@redux/index";
 import { setPageData } from "@slice/pages";
 import { IRepoEntityData } from "@type/elementType";
+import { Skeleton } from "antd";
 
 interface IProps {
   goodList: IRepoEntityData[];

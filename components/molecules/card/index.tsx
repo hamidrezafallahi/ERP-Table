@@ -54,7 +54,7 @@ const Card = forwardRef(function Card<T>(
     loading,
     withoutActivation,
   }: IProps<T> & { containerRef?: Ref<HTMLDivElement> },
-  ref: RefAttributes<HTMLDivElement>["ref"]
+  ref: RefAttributes<HTMLDivElement>["ref"],
 ) {
   const t = useTranslations();
   const dispatch = useDispatch();
@@ -80,7 +80,7 @@ const Card = forwardRef(function Card<T>(
 
   const tagsDataFinder = (id) => {
     const tagsData = tagsInfo?.find(
-      (item) => item.RepoId === repoId && item.RefId === id
+      (item) => item.RepoId === repoId && item.RefId === id,
     )?.tags;
     if (tagsData?.length > 0) return tagsData;
     return [];
@@ -105,14 +105,14 @@ const Card = forwardRef(function Card<T>(
         setItems({
           pageId: activePage?.pageId,
           items: selectedItems.filter((i) => i !== item),
-        })
+        }),
       );
     } else {
       dispatch(
         setItems({
           pageId: activePage?.pageId,
           items: [...selectedItems, item],
-        })
+        }),
       );
     }
   };
@@ -124,7 +124,7 @@ const Card = forwardRef(function Card<T>(
           PageNumber: page,
           PageRecordCount: viewData.PagingInfo.PageRecordCount,
         },
-      })
+      }),
     );
   };
   const handleSelectAll = (checked: boolean) => {
@@ -133,7 +133,7 @@ const Card = forwardRef(function Card<T>(
         setItems({
           pageId: activePage?.pageId,
           items: processedData.map((item) => item[rowFieldKey]),
-        })
+        }),
       );
     } else {
       dispatch(resetItemsByPage({ pageId: activePage?.pageId }));
@@ -170,7 +170,7 @@ const Card = forwardRef(function Card<T>(
             return prevState.map((item) =>
               item.id === id
                 ? { ...item, HasBookMark: isBookmarked ? false : true }
-                : item
+                : item,
             );
           }
 
@@ -182,7 +182,6 @@ const Card = forwardRef(function Card<T>(
             },
           ];
         });
-        // dispatch(apiService.util.resetApiState());
       }
     } catch (error) {
       null;
@@ -209,7 +208,7 @@ const Card = forwardRef(function Card<T>(
     const displayStaticDataII: ReactNode = item[staticKeyII] as ReactNode;
 
     const isDeleted = activePage?.viewData?.deletedItems?.find(
-      (el) => el === item[rowFieldKey]
+      (el) => el === item[rowFieldKey],
     );
 
     return (
@@ -492,7 +491,7 @@ const Card = forwardRef(function Card<T>(
                         } flex justify-center bg-white items-center rounded w-[36px] h-[36px]`}
                         onClick={() => {
                           const lastPageNumber = Math.floor(
-                            totalCount / mobilePerPageCount
+                            totalCount / mobilePerPageCount,
                           );
 
                           if (lastPageNumber) {

@@ -1,21 +1,23 @@
-import { SelectProps } from 'antd';
+import { SelectProps } from "antd";
 
-import type { IFormFieldConfig } from '@type/elementType';
+import type { IFormFieldConfig } from "@type/elementType";
 
-import RadioList from '../radioList';
+import RadioList from "../radioList";
+import { RadioButtonProps } from "antd/es/radio/radioButton";
 
+interface IProps extends RadioButtonProps {
+  item: IFormFieldConfig;
+  config?: IFormFieldConfig;
+  className?: string;
+  disabled?: boolean;
+}
 export default function DynamicRadio({
   item,
   config,
   disabled = false,
   ...rest
-}: {
-  item: IFormFieldConfig;
-  config?: IFormFieldConfig;
-  className?: string;
-  disabled?: boolean;
-}) {
-  const options:SelectProps["options"] = item?.radioValues?.map((item) => {
+}: IProps) {
+  const options: SelectProps["options"] = item?.radioValues?.map((item) => {
     return {
       label: item.caption,
       value: item.value,

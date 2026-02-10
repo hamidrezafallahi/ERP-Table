@@ -31,7 +31,7 @@ export const useFiltersAndSorts = ({ viewData, config }: IProps) => {
     isFilterModalOpen: false,
   };
   const activePage = useAppSelector((state) =>
-    state.withPersist.pages.find((page) => page.isActive)
+    state.withPersist.pages.find((page) => page.isActive),
   );
 
   function reducer(state: IState, action: Action): IState {
@@ -56,11 +56,11 @@ export const useFiltersAndSorts = ({ viewData, config }: IProps) => {
 
   const newFilterFields = useMemo(
     () => config?.filter((item) => item.inFilter),
-    [config]
+    [config],
   );
   const newSortFields = useMemo(
     () => config?.filter((item) => item.inSort),
-    [config]
+    [config],
   );
 
   const filterFields = useMemo(
@@ -71,7 +71,7 @@ export const useFiltersAndSorts = ({ viewData, config }: IProps) => {
         type: item.fieldType,
         valueOption: item.valueOption,
       })),
-    [newFilterFields]
+    [newFilterFields],
   );
 
   const sortFields = useMemo(
@@ -82,7 +82,7 @@ export const useFiltersAndSorts = ({ viewData, config }: IProps) => {
         type: item.fieldType,
         valueOption: item.valueOption,
       })),
-    [newSortFields]
+    [newSortFields],
   );
 
   const applySorts = (appliedSorts: { field: string; order: string }[]) => {
@@ -97,16 +97,15 @@ export const useFiltersAndSorts = ({ viewData, config }: IProps) => {
           PageNumber: 1,
           PageRecordCount: viewData?.PagingInfo?.PageRecordCount,
         },
-      })
+      }),
     );
 
-    // dispatch(apiService.util.resetApiState());
     invalidate(activePage?.viewData?.url);
     dispatchState({ type: "CLOSE_SORT_MODAL" });
   };
 
   const applyFilters = (
-    appliedFilters: { field: string; value: any; type: any }[]
+    appliedFilters: { field: string; value: any; type: any }[],
   ) => {
     dispatch(
       setViewData({
@@ -123,9 +122,9 @@ export const useFiltersAndSorts = ({ viewData, config }: IProps) => {
           PageNumber: 1,
           PageRecordCount: viewData?.PagingInfo?.PageRecordCount,
         },
-      })
+      }),
     );
-    // dispatch(apiService.util.resetApiState());
+
     invalidate(activePage?.viewData?.url);
     dispatchState({ type: "CLOSE_FILTER_MODAL" });
   };
@@ -143,9 +142,9 @@ export const useFiltersAndSorts = ({ viewData, config }: IProps) => {
           PageNumber: 1,
           PageRecordCount: viewData?.PagingInfo?.PageRecordCount,
         },
-      })
+      }),
     );
-    // dispatch(apiService.util.resetApiState());
+
     invalidate(activePage?.viewData?.url);
     dispatchState({ type: "CLOSE_FILTER_MODAL" });
   };
@@ -159,25 +158,23 @@ export const useFiltersAndSorts = ({ viewData, config }: IProps) => {
           PageNumber: 1,
           PageRecordCount: viewData?.PagingInfo?.PageRecordCount,
         },
-      })
+      }),
     );
-    // dispatch(apiService.util.resetApiState());
+
     invalidate(activePage?.viewData?.url);
     dispatchState({ type: "CLOSE_SORT_MODAL" });
   };
 
   const handleRefresh = () => {
-    // dispatch(apiService.util.resetApiState());
     invalidate(activePage?.viewData?.url);
     dispatch(
       setPageState({
         ...activePage,
         pageState: PageStateEnum.Opened,
-      })
+      }),
     );
   };
   const onReload = () => {
-    // dispatch(apiService.util.resetApiState());
     invalidate(activePage?.viewData?.url);
 
     dispatch(
@@ -193,13 +190,13 @@ export const useFiltersAndSorts = ({ viewData, config }: IProps) => {
           PageNumber: 1,
           PageRecordCount: viewData?.PagingInfo?.PageRecordCount,
         },
-      })
+      }),
     );
     dispatch(
       setPageState({
         ...activePage,
         pageState: PageStateEnum.Opened,
-      })
+      }),
     );
   };
 

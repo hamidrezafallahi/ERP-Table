@@ -25,7 +25,8 @@ export class FetchRemoteApi implements RemoteApi {
       dispatch: () => { }, 
     } as any;
     const res = await baseQueryByToken(args, api, {});
-    if (res.data.Result !== "Success") throw new Error(`RemoteApi POST failed: ${res.status} ${res.statusText}`);
+    // if (!res.data.Result !== "Success") throw new Error(`RemoteApi POST failed: ${res.status} ${res.statusText}`);
+    if (!res) throw new Error(`RemoteApi POST failed: ${res.status} ${res.statusText}`);
     return (res.data) as TResponse;
   }
 }

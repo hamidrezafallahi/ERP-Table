@@ -1,10 +1,11 @@
+import { UITableController } from '../adapters/ui/UITableController';
 import { AuditLogger } from '../application/ports/AuditLogger';
+import { RemoteApi } from '../application/ports/RemoteApi';
 import { TableRepository } from '../application/ports/TableRepository';
 import {
   Actor,
   PermissionPolicy,
 } from '../domain/policies';
-import { TableEngine } from '../engine/tableEngine';
 import {
   ItemType,
   TCell,
@@ -16,7 +17,7 @@ export interface DynamicValueConfig {
     buildParams?: (row: Record<string, unknown>) => Record<string, string | number>;
 }
 
-export type FieldType = 'index' | 'text' | 'number' | 'select' | 'selectOption' | 'date'|'static' ;
+export type FieldType = 'index' | 'text' | 'number' | 'select' | 'selectOption' | 'date' | 'static';
 
 export type RowInput = { id: number; values?: Record<string, unknown> };
 
@@ -31,6 +32,7 @@ export interface ResolveOnConfig {
     // flags:  string[];
     fieldName: string;
     buildParams: (row: Record<string, unknown>) => Record<string, string | number>;
+    getResponse?: (response: any) => unknown;
     mapFlags?: (response: any) => Record<string, boolean>;
 }
 export interface IDetailColumnConfig {
@@ -52,21 +54,26 @@ export interface IDetailColumnConfig {
     resolveOn?: ResolveOnConfig;
     computed?: {
         dependsOn: readonly string[];
-        compute: (row: Record<string, unknown>) => unknown;
+        compute: (
+            row: Record<string, unknown>,
+            remoteApi: RemoteApi
+        ) => Promise<unknown>;
+
         id?: number;
         name?: string;
         age?: number;
         children?: [] | undefined;
     };
-    selectOptions?:{label:string,value:string}[]
-    indexOptions?:(tableId:string,rowId:number,row:{id: string|number;cells: Record<string, TCell>;isExpanded: boolean},engine:TableEngine) =>ItemType[]
+    selectOptions?: { label: string, value: string }[]
+    indexOptions?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => ItemType[]
     displayFormat?: (value: unknown) => unknown;
 
 }
 
 
 export type CreateERPTableConfig = {
-    tableId: string;
+    store: string;
+    tableKey: string;
     actor: Actor;
     columns: IDetailColumnConfig[];
     rows?: Array<{ id: number; values?: Record<string, unknown> }>;

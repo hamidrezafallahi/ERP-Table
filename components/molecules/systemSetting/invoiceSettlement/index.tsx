@@ -46,7 +46,8 @@ export const InvoiceSettlement = () => {
         const mutateResult = await mutateItem({
           url: "api/sale/update/setting",
           body: {
-            ChangeFields: changedFields,
+            ...values,
+            // ChangeFields: changedFields,
           },
         }).unwrap();
 
@@ -61,8 +62,18 @@ export const InvoiceSettlement = () => {
 
   useEffect(() => {
     if (defaultValue?.Data?.[0]) {
-      const data = defaultValue.Data[0];
-      form.setFieldsValue(data);
+      const data = defaultValue.Data;
+
+      const cashValue = data.find((el) => el.Key === 0);
+      const bankValue = data.find((el) => el.Key === 1);
+      const chequeValue = data.find((el) => el.Key === 2);
+      const defaults = {
+        2: chequeValue?.Value ? Number(chequeValue?.Value) : undefined,
+        1: bankValue?.Value ? Number(bankValue?.Value) : undefined,
+        0: cashValue?.Value ? Number(cashValue?.Value) : undefined,
+      };
+
+      form.setFieldsValue(defaults);
       initialValuesRef.current = data;
     }
   }, [defaultValue]);

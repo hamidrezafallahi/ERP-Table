@@ -38,17 +38,17 @@ export class ChangeUnitLevelHandler {
     actor: Actor
   ): Promise<TableEvent[]> {
 
-    const table = await this.repo.getById(command.tableId);
+    const table = await this.repo.getById(command.store,command.tableKey);
 
     try {
 
       table.addColumns([]);
 
-      await this.repo.save(table);
+      await this.repo.save(command.store,table);
 
       const out: TableEvent = {
         type: 'UNIT_COLUMN_ADDED',
-        tableId: command.tableId,
+        tableId: command.tableKey,
         reason: 'UNIT_LEVEL_UPDATED',
         details: { level: command.level },
       };
@@ -59,7 +59,7 @@ export class ChangeUnitLevelHandler {
     } catch (e: any) {
       const failed: TableEvent = {
         type: 'VALIDATION_FAILED',
-        tableId: command.tableId,
+        tableId: command.tableKey,
         reason: e?.message ?? 'Unknown error',
         details: e?.details ?? String(e),
       };
@@ -85,15 +85,15 @@ export class ChangePageCommandHandler {
     actor: Actor
   ): Promise<TableEvent[]> {
 
-    const table = await this.repo.getById(command.tableId);
+    const table = await this.repo.getById(command.store,command.tableKey);
     try {
       table.changePage(command.page);
 
-      await this.repo.save(table);
+      await this.repo.save(command.store,table);
 
       const out: TableEvent = {
         type: 'PAGE_CHANGED',
-        tableId: command.tableId,
+        tableId: command.tableKey,
         page: command.page
       };
 
@@ -103,7 +103,7 @@ export class ChangePageCommandHandler {
     } catch (e: any) {
       const failed: TableEvent = {
         type: 'VALIDATION_FAILED',
-        tableId: command.tableId,
+        tableId: command.tableKey,
         reason: e?.message ?? 'Unknown error',
         details: e?.details ?? String(e),
       };
@@ -128,13 +128,13 @@ export class ChangePageSizeCommandHandler {
     command: ChangePageSizeCommand,
     actor: Actor
   ): Promise<TableEvent[]> {
-    const table = await this.repo.getById(command.tableId);
+    const table = await this.repo.getById(command.store,command.tableKey);
     try {
       table.changePageSize(command.pageSize);
-      await this.repo.save(table);
+      await this.repo.save(command.store,table);
       const out: TableEvent = {
         type: 'PAGE_SIZE_CHANGED',
-        tableId: command.tableId,
+        tableId: command.tableKey,
         pageSize: command.pageSize
       };
 
@@ -143,7 +143,7 @@ export class ChangePageSizeCommandHandler {
     } catch (e: any) {
       const failed: TableEvent = {
         type: 'VALIDATION_FAILED',
-        tableId: command.tableId,
+        tableId: command.tableKey,
         reason: e?.message ?? 'Unknown error',
         details: e?.details ?? String(e),
       };
@@ -167,13 +167,13 @@ export class DeleteTableCommandHandler {
     command: DeleteTableCommand,
     actor: Actor
   ): Promise<TableEvent[]> {
-    const table = await this.repo.getById(command.tableId);
+    const table = await this.repo.getById(command.store,command.tableKey);
     try {
-      this.repo.delete(command.tableId)
-      await this.repo.save(table);
+      this.repo.delete(command.store,command.tableKey)
+      await this.repo.save(command.store,table);
       const out: TableEvent = {
         type: 'TABLE_DELETED',
-        tableId: command.tableId,
+        tableId: command.tableKey,
       };
 
       this.audit.log(out);
@@ -181,7 +181,7 @@ export class DeleteTableCommandHandler {
     } catch (e: any) {
       const failed: TableEvent = {
         type: 'VALIDATION_FAILED',
-        tableId: command.tableId,
+        tableId: command.tableKey,
         reason: e?.message ?? 'Unknown error',
         details: e?.details ?? String(e),
       };
@@ -206,13 +206,13 @@ export class ResetTableCommandHandler {
     command: ResetTableCommand,
     actor: Actor
   ): Promise<TableEvent[]> {
-    const table = await this.repo.getById(command.tableId);
+    const table = await this.repo.getById(command.store,command.tableKey);
     try {
-      this.repo.delete(command.tableId)
-      await this.repo.save(table);
+      this.repo.delete(command.store,command.tableKey)
+      await this.repo.save(command.store,table);
       const out: TableEvent = {
         type: 'TABLE_RESET',
-        tableId: command.tableId,
+        tableId: command.tableKey,
       };
 
       this.audit.log(out);
@@ -220,7 +220,7 @@ export class ResetTableCommandHandler {
     } catch (e: any) {
       const failed: TableEvent = {
         type: 'VALIDATION_FAILED',
-        tableId: command.tableId,
+        tableId: command.tableKey,
         reason: e?.message ?? 'Unknown error',
         details: e?.details ?? String(e),
       };

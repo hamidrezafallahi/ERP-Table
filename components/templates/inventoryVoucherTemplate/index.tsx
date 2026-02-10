@@ -22,16 +22,11 @@ import {
   useNavigatePage,
 } from '@hooks/custom';
 import { useAppSelector } from '@redux/index';
-import { IPlaceConfig } from '@services/auth/base/type';
-import {
-  useGetConditionallyMutation,
-  useGetData,
-} from '@services/base';
+import { useGetConditionallyMutation } from '@services/base';
 import { addNewPage } from '@slice/pages';
 import { PageStateEnum } from '@slice/pages/enum';
 import { IPageConfig } from '@type/elementType';
 import { PageTypeEnum } from '@type/enum';
-import { IToolbar } from '@type/toolbar';
 import { showSuccessToast } from '@utils/core';
 
 import {
@@ -42,9 +37,11 @@ import { IProps } from './type';
 
 export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
   const { caption, url, listUrl, pageIcon } = props;
+  const [pageReady, setPageReady] = React.useState(false);
   const t = useTranslations();
   const dispatch = useDispatch();
   const toggleFullScreen = useFullScreen();
+  const [form] = Form.useForm();
   const params = useSearchParams();
   const id = Number(params.get("id"));
   const [fetchDefault] = useGetConditionallyMutation();
@@ -55,11 +52,14 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
       pages: state?.withPersist?.pages,
       match: state.withPersist.config.initMatch,
     }),
-    shallowEqual
+    shallowEqual,
   );
   const vti = activePage?.data?.voucherTypeId;
   const internal = activePage?.data?.InOut == 0 || activePage?.data?.InOut == 1;
   const NeedReference = activePage?.data?.NeedReference;
+  const StockId = activePage?.pageData?.find(d=>d.name == 'StockId')?.value
+  const InvoiceHeaderId = activePage?.pageData?.find(d=>d.name == 'InvoiceHeaderId')?.value
+  const voucherTypeId = vti ? Number(vti) : null;
   const titleKey = "VoucherNumber";
   const fieldKey = "VoucherHeaderId";
   const getUrl = "api/inv/select/voucher/header";
@@ -90,13 +90,7 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
     pageState,
     originalPageState,
   } = initPage;
-  const [form] = Form.useForm();
-  const { data: dataToolbar, isSuccess } = useGetData<IToolbar, null>({
-    url: "/api/menu/getToolbarData",
-    body: { RepoId, SystemId, Type: pageType },
-    id: RepoId,
-    skip: !RepoId,
-  });
+
   const safeParse = (s: any) => {
     try {
       return typeof s === "string" && s.trim() !== "" ? JSON.parse(s) : null;
@@ -104,8 +98,11 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
       return null;
     }
   };
+
+  const [getToolbarData] = useGetConditionallyMutation();
   const [itemMutate] = useGetConditionallyMutation();
   const { navigateBack } = useNavigatePage();
+  const tableApiRef = useRef(null);
   const fetchDefaultValues = async (id) => {
     let defaultData = [];
     const res = await fetchDefault({
@@ -133,7 +130,7 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
         };
         defaultData = formConfig.map((item) => {
           const storedDataValue = storedData?.find(
-            (i) => i.name === item.name
+            (i) => i.name === item.name,
           )?.value;
 
           const correctValue = storedDataValue
@@ -141,7 +138,7 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
             : correctDefaultValue[item.name];
 
           const storedDataOriginalValue = storedData?.find(
-            (i) => i.name === item.name
+            (i) => i.name === item.name,
           )?.originalValue;
           const correctOriginalValue = storedDataOriginalValue
             ? storedDataOriginalValue
@@ -151,11 +148,11 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
             value:
               item.name == "Details"
                 ? detailRes.Data
-                : correctValue ?? item?.value,
+                : (correctValue ?? item?.value),
             originalValue:
               item.name == "Details"
                 ? detailRes.Data
-                : correctOriginalValue ?? item?.originalValue,
+                : (correctOriginalValue ?? item?.originalValue),
             isTitleField: item.name === titleKey,
           };
           return newValue;
@@ -184,10 +181,15 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
   };
   useEffect(() => {
     const fetchData = async () => {
-      if (isSuccess && dataToolbar?.Result) {
+      const res = await getToolbarData({
+        url: "/api/menu/getToolbarData",
+        body: { RepoId, SystemId, Type: pageType },
+        id: RepoId,
+      }).unwrap();
+      if (res.Result) {
         let formData = [];
         const Config: IPageConfig =
-          safeParse(dataToolbar?.Data?.List?.ListProp?.[0]?.Config) ||
+          safeParse(res?.Data?.List?.ListProp?.[0]?.Config) ||
           ({} as IPageConfig);
         const info = {
           addEndpoint: Config.addEndpoint,
@@ -222,42 +224,21 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
             url: BaseUrl,
             pageInfo: info,
             listUrl,
-          })
+          }),
         );
+        setPageReady(true);
       }
     };
 
     fetchData();
-  }, [isSuccess, id, pageId]);
-  const tableApiRef = useRef(null);
-  // useEffect(() => {
-  //   const handleKeyDown = (e: KeyboardEvent) => {
-  //     if (e.altKey) {
-  //       e.preventDefault();
-  //       if (e.altKey === true) {
-  //         //   if (e.key === "s") handleSubmit();
-  //         //   if (e.key === "r") handleReset();
-  //         //   if (e.key === "n") handleAdd();
-  //         //   if (e.key === "c") handleSubmitAndClean();
-  //         if (e.key === "b") containerRef.current.focus();
-  //         if (e.key === "y") {
-  //           toggleFullScreen();
-  //         }
-  //       }
-  //     }
-  //   };
-
-  //   window.addEventListener("keydown", handleKeyDown);
-  //   return () => window.removeEventListener("keydown", handleKeyDown);
-  // }, []);
-
+  }, []);
   const { Details } = useAppSelector(
     (state) => ({
       Details: state?.withPersist?.pages
         ?.find((item) => item.isActive)
         ?.pageData?.find((i) => i.name === "Details")?.value,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const rows = useMemo(() => {
@@ -269,10 +250,12 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
     }));
     return correctArray ?? [];
   }, [Details]);
+  const colConfigs = useMemo(() => {
+    return columnConfig(vti, internal, NeedReference, StockId, InvoiceHeaderId);
+  }, [vti, internal, NeedReference, StockId, InvoiceHeaderId]);
   const testActor = { userId: "12", roles: ["ADMIN"] };
 
   function mapSnapshotToDetailsDynamic(snapshot: any) {
- 
     return snapshot.rows.map((row: any) => {
       const detail: Record<string, any> = {};
       detail.RowState = row.rowState;
@@ -300,7 +283,6 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
       VoucherTypeId: voucherTypeId,
       Details: mapSnapshotToDetailsDynamic(tableApiRef.current),
     };
-    console.log(payload)
     const res = await itemMutate({
       url: addUrl,
       body: payload,
@@ -311,25 +293,22 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
     }
   };
 
-  const { data: renderUnitData } = useGetData<IPlaceConfig[], null>({
-    url: `/api/mng/select/placeConfigValue`,
-    body: {},
-  });
-  const StockId = Form.useWatch("StockId", form);
-  const InvoiceHeaderId = Form.useWatch("InvoiceHeaderId", form);
-  const voucherTypeId = vti ? Number(vti) : null;
-  const prop = {
-    actor: testActor,
-    tableId: activePage?.pageId,
-    rows,
-    columns: columnConfig(
-      vti,
-      internal,
-      NeedReference,
-      StockId,
-      InvoiceHeaderId
-    ),
-  };
+  // const { data: renderUnitData } = useGetData<IPlaceConfig[], null>({
+  //   url: `/api/mng/select/placeConfigValue`,
+  //   body: {},
+  // });
+
+  const prop = useMemo(() => {
+    return {
+      actor: testActor,
+      store: "inventoryVoucher",
+      tableKey: params.get("id") ?? activePage?.pageId,
+      rows,
+      columns: colConfigs,
+    };
+  }, [activePage?.pageId, colConfigs]);
+
+
   return (
     <div className="relative">
       <button
@@ -339,10 +318,14 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
         {t("general.submit")}
       </button>
       <InventoryVoucherHeaderForm form={form} />
-      <ERPTable
-        {...prop}
-        onReady={(api) => {tableApiRef.current = api.getSnapshot() }}
-      />
+      {pageReady && activePage?.pageId && StockId && InvoiceHeaderId && (
+        <ERPTable
+          {...prop}
+          onReady={(api) => {
+            tableApiRef.current = api.getSnapshot();
+          }}
+        />
+      )}
     </div>
   );
 }

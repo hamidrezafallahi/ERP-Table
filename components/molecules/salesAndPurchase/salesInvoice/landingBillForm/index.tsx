@@ -7,13 +7,15 @@ import {
   DynamicSelect,
   NewDatePicker,
 } from "@components/atoms/defaultElements";
-import InputNumber from "@components/atoms/defaultElements/inputNumber";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
 import InputText from "@components/atoms/defaultElements/inputText";
 import type { IRequestConfig } from "@type/elementType";
 import { SystemEnum } from "@type/enum";
+import { useSaleConfigs } from "../../saleConfigsHook";
 
 export const LandingBillForm = ({ form, currency }) => {
   const t = useTranslations();
+  const { customerConfig, salesTypeConfig } = useSaleConfigs();
 
   const params = useSearchParams();
   const id = Number(params.get("id"));
@@ -43,27 +45,6 @@ export const LandingBillForm = ({ form, currency }) => {
     endpoint: "api/sale/select/settlementWay",
     repoViewId: null,
   };
-  const customerConfig: IRequestConfig = {
-    addWebUrl: "api/sale/select/customer4SelectOption/elk",
-    endpoint: "api/sale/select/customer4SelectOption/elk",
-    repoViewId: 130045,
-    addButton: {
-      url: "sale/customer",
-      RepoId: 1012,
-      SystemId: SystemEnum.sale,
-    },
-  };
-
-  const salesTypeConfig: IRequestConfig = {
-    addWebUrl: "api/sale/select/type4SelectOption",
-    endpoint: "api/sale/select/type4SelectOption",
-    repoViewId: 130044,
-    addButton: {
-      url: "sale/saleType",
-      RepoId: 1006,
-      SystemId: SystemEnum.sale,
-    },
-  };
 
   return (
     <Form
@@ -78,7 +59,7 @@ export const LandingBillForm = ({ form, currency }) => {
           name="VoucherNumber"
           className="flex flex-col !mb-0 !pb-0 text-xs"
         >
-          <InputNumber
+          <CustomInputNumber
             controls={false}
             min={0}
             disabled
@@ -139,7 +120,7 @@ export const LandingBillForm = ({ form, currency }) => {
         rules={[]}
         className="flex flex-col !mb-0 !pb-0 text-xs"
       >
-        <InputNumber
+        <CustomInputNumber
           controls={false}
           min={0}
           config={{

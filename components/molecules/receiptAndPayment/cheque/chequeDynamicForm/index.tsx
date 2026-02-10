@@ -1,29 +1,25 @@
-import {
-  Checkbox,
-  Form,
-  InputNumber,
-  Spin,
-} from 'antd';
-import { useTranslations } from 'next-intl';
+import { Checkbox, Form, Spin } from "antd";
+import { useTranslations } from "next-intl";
 
 import {
   CustomButton,
   DynamicSelect,
   NewDatePicker,
-} from '@components/atoms/defaultElements';
-import { DynamicTree } from '@components/atoms/defaultElements/dynamicTree';
-import InputText from '@components/atoms/defaultElements/inputText';
-import { SpinIcon } from '@components/atoms/iconComponents';
-import { useCUDDataMutation } from '@services/base';
-import type { IRequestConfig } from '@type/elementType';
+} from "@components/atoms/defaultElements";
+import { DynamicTree } from "@components/atoms/defaultElements/dynamicTree";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
+import InputText from "@components/atoms/defaultElements/inputText";
+import { SpinIcon } from "@components/atoms/iconComponents";
+import { useCUDDataMutation } from "@services/base";
+import type { IRequestConfig } from "@type/elementType";
 import {
   showErrorToast,
   showSuccessToast,
   transformDotNotationToNested,
-} from '@utils/core';
+} from "@utils/core";
 
-import { ConditionalFields } from './conditionalFields';
-import type { IProps } from './type';
+import { ConditionalFields } from "./conditionalFields";
+import type { IProps } from "./type";
 
 export const ChequeDynamicForm = ({
   sourceKey,
@@ -186,11 +182,11 @@ export const ChequeDynamicForm = ({
       return <DynamicTree dynamicValue={dynamicValue} showSearch allowClear />;
     }
     if (item.type === "number") {
-      return <InputNumber keyboard={false} controls={false} min={0} />;
+      return <CustomInputNumber keyboard={false} controls={false} min={0} />;
     }
     if (item.type === "price") {
       return (
-        <InputNumber
+        <CustomInputNumber
           min={0}
           controls={false}
           parser={(value) =>

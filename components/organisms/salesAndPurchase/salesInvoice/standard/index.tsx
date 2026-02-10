@@ -1,37 +1,24 @@
 "use client";
-import {
-  Dispatch,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { Dispatch, useEffect, useRef, useState } from "react";
 
-import { Pagination } from 'antd';
-import { useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
-import {
-  shallowEqual,
-  useDispatch,
-} from 'react-redux';
+import { Pagination } from "antd";
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { shallowEqual, useDispatch } from "react-redux";
 
-import {
-  CustomButton,
-  CustomModal,
-} from '@components/atoms/defaultElements';
+import { CustomButton, CustomModal } from "@components/atoms/defaultElements";
 import {
   DownChevron,
   LeftChevron,
   RightChevron,
   SettlementIcon,
-} from '@components/atoms/iconComponents';
-import { DetailDataGrid } from '@components/molecules/detailDataGrid';
-import type {
-  IChildHandle,
-} from '@components/molecules/detailDataGrid/mobile/type';
+} from "@components/atoms/iconComponents";
+import { DetailDataGrid } from "@components/molecules/detailDataGrid";
+import type { IChildHandle } from "@components/molecules/detailDataGrid/mobile/type";
 import type {
   IActions,
   IAdditionalAction,
-} from '@components/molecules/detailDataGrid/type';
+} from "@components/molecules/detailDataGrid/type";
 import {
   DiscountsDetail,
   DiscountsInfo,
@@ -41,42 +28,37 @@ import {
   StandardSalesInvoiceForm,
   TaxesDetail,
   TaxesInfo,
-} from '@components/molecules/salesAndPurchase/salesInvoice';
-import { useAppSelector } from '@redux/index';
-import type { IPlaceConfig } from '@services/auth/base/type';
+} from "@components/molecules/salesAndPurchase/salesInvoice";
+import { useAppSelector } from "@redux/index";
+import type { IPlaceConfig } from "@services/auth/base/type";
 import {
   useCUDDataMutation,
   useGetConditionallyMutation,
   useGetData,
-} from '@services/base';
-import type { IBaseQueryResponse } from '@services/base/type';
-import { RowStateEnum } from '@services/generalType/type';
-import type {
-  ISalesInvoiceDetails,
-} from '@services/sale/salesInvoiceDetails/type';
+} from "@services/base";
+import type { IBaseQueryResponse } from "@services/base/type";
+import { RowStateEnum } from "@services/generalType/type";
+import type { ISalesInvoiceDetails } from "@services/sale/salesInvoiceDetails/type";
 import type {
   IRequest,
   IStandardSalesInvoice,
-} from '@services/sale/standardSalesInvoice/type';
+} from "@services/sale/standardSalesInvoice/type";
 import {
   setAllPageData,
   setPageData,
   setPageInfo,
   setPageState,
   setSavePageData,
-} from '@slice/pages';
-import { PageStateEnum } from '@slice/pages/enum';
+} from "@slice/pages";
+import { PageStateEnum } from "@slice/pages/enum";
 import {
   findingPageState,
   showInfoToast,
   showSuccessToast,
   transformDotNotationToNested,
-} from '@utils/core';
+} from "@utils/core";
 
-import {
-  columnConfig,
-  formConfig,
-} from './config';
+import { columnConfig, formConfig } from "./config";
 
 export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
   const titleKey = "VoucherNumber";
@@ -113,11 +95,11 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
         listPage: state?.withPersist?.pages?.find(
           (item) =>
             item.url ===
-            state.withPersist.pages?.find((item) => item.isActive)?.listUrl
+            state.withPersist.pages?.find((item) => item.isActive)?.listUrl,
         ),
         match: state.withPersist.config.initMatch,
       }),
-      shallowEqual
+      shallowEqual,
     );
 
   const storedData = activePage?.pageData;
@@ -131,11 +113,11 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
 
   const detailRequiredKey = "CustomerId";
   const detailRequiredValue = activePage?.pageData?.find(
-    (item) => item.name === detailRequiredKey
+    (item) => item.name === detailRequiredKey,
   );
 
   const detailInitial = activePage?.pageData?.find(
-    (item) => item.name === detailKey
+    (item) => item.name === detailKey,
   )?.value;
 
   const [headerId, setHeaderId] = useState(null);
@@ -302,7 +284,7 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
             if (item.type == "array") {
               body[item.name] = item.value;
             } else if (item.type == "text") {
-              body[item.name] = item.value.toString();
+              body[item.name] = item?.value?.toString();
             } else if (item.type == "date") {
               try {
                 body[item.name] = item.value;
@@ -352,14 +334,14 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
                 storedData.find((i) => i.isTitleField === true)?.value,
 
               pageState: findingPageState(result.PendingStatusId),
-            })
+            }),
           );
 
           dispatch(
             setPageState({
               ...listPage,
               pageState: PageStateEnum.NeedReload,
-            })
+            }),
           );
           if (result?.Key) {
             setSourceId(result.Key);
@@ -378,7 +360,7 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
   const renderConditionalColumn = (
     conditionalValue: number,
     fieldName: string,
-    initialRenderCondition: Record<string, boolean>
+    initialRenderCondition: Record<string, boolean>,
   ) => {
     if (conditionalValue) {
       if (measurementUnitsNumber === 1) {
@@ -418,7 +400,7 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
   const calcIndependentValue = async (
     rowData: ISalesInvoiceDetails,
     fieldName: string,
-    newValue: any
+    newValue: any,
   ) => {
     const requiredDependentKeys = ["GoodsId", "Quantity1", "Unit1Id", "RowNum"];
     const optionalDependentKeys = [
@@ -429,28 +411,34 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
     ];
 
     const correctRequiredKeys = requiredDependentKeys?.filter(
-      (i) => i !== fieldName
+      (i) => i !== fieldName,
     );
     const correctOptionalKeys = optionalDependentKeys?.filter(
-      (i) => i !== fieldName
+      (i) => i !== fieldName,
     );
 
-    const requiredBody = correctRequiredKeys.reduce((acc, key) => {
-      if (rowData[key] !== undefined) {
-        acc[key] = rowData[key];
-      }
-      return acc;
-    }, {} as Record<string, any>);
+    const requiredBody = correctRequiredKeys.reduce(
+      (acc, key) => {
+        if (rowData[key] !== undefined) {
+          acc[key] = rowData[key];
+        }
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
 
-    const optionalBody = correctOptionalKeys.reduce((acc, key) => {
-      if (rowData[key] !== undefined) {
-        acc[key] = rowData[key];
-      }
-      return acc;
-    }, {} as Record<string, any>);
+    const optionalBody = correctOptionalKeys.reduce(
+      (acc, key) => {
+        if (rowData[key] !== undefined) {
+          acc[key] = rowData[key];
+        }
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
 
     const hasAllRequiredValues = correctRequiredKeys.every(
-      (key) => rowData[key] !== undefined && rowData[key] !== null
+      (key) => rowData[key] !== undefined && rowData[key] !== null,
     );
     if (!hasAllRequiredValues) return;
 
@@ -637,7 +625,7 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
       };
       formData = formConfig.map((item) => {
         const storedDataValue = storedData?.find(
-          (i) => i.name === item.name
+          (i) => i.name === item.name,
         )?.value;
 
         const correctValue = storedDataValue
@@ -645,7 +633,7 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
           : correctDefaultValue[item.name];
 
         const storedDataOriginalValue = storedData?.find(
-          (i) => i.name === item.name
+          (i) => i.name === item.name,
         )?.originalValue;
         const correctOriginalValue = storedDataOriginalValue
           ? storedDataOriginalValue
@@ -748,7 +736,7 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
           name: detailKey,
           value: correctDetailData,
           originalValue: correctDetailData,
-        })
+        }),
       );
       if (detailInitial && detailInitial?.length > 0) {
         setDetailsInitialData([...correctDetailData, ...detailInitial]);
@@ -758,7 +746,7 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
             name: detailKey,
             value: [...correctDetailData, ...detailInitial],
             originalValue: [...correctDetailData, ...detailInitial],
-          })
+          }),
         );
       } else {
         setDetailsInitialData(correctDetailData);
@@ -767,7 +755,7 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
             name: detailKey,
             value: correctDetailData,
             originalValue: correctDetailData,
-          })
+          }),
         );
       }
     } else {
@@ -805,7 +793,7 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
                 decreasingValue =
                   calcAmount.reduce(
                     (total, item) => total + item["amount"],
-                    0
+                    0,
                   ) || 0;
               }
 
@@ -821,7 +809,7 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
                 increasingValue =
                   calcAmount.reduce(
                     (total, item) => total + item["amount"],
-                    0
+                    0,
                   ) || 0;
               }
 
@@ -857,7 +845,7 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
                 decreasingValue =
                   calcAmount.reduce(
                     (total, item) => total + item["amount"],
-                    0
+                    0,
                   ) || 0;
               }
 
@@ -880,7 +868,7 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
             name: detailKey,
             value: [],
             originalValue: [],
-          })
+          }),
         );
       }
     }
@@ -950,12 +938,12 @@ export const StandardSalesInvoice = ({ setMobileDrawerContent, form }) => {
                 fullScreen
                   ? "w-full"
                   : !match
-                  ? "w-full"
-                  : `${
-                      minimizePanel
-                        ? "w-fit max-w-[calc(100dvw-350px)]"
-                        : "w-fit max-w-[calc(100dvw-560px)]"
-                    }`
+                    ? "w-full"
+                    : `${
+                        minimizePanel
+                          ? "w-fit max-w-[calc(100dvw-350px)]"
+                          : "w-fit max-w-[calc(100dvw-560px)]"
+                      }`
               } ${
                 !match ? "h-full" : "h-[calc(100dvh-555px)]"
               }   flex hidden-show-scrollBar transition-all duration-200 flex-col justify-between gap-2`}

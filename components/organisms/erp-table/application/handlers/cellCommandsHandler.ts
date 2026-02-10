@@ -17,7 +17,10 @@ import {
   RowId,
   RowStateEnum,
 } from '../../domain/value-objects';
-import { ChangeCellValueCommand } from '../commands';
+import {
+  ChangeCellDisplayValueCommand,
+  ChangeCellValueCommand,
+} from '../commands';
 import { TableEvent } from '../events';
 import { AuditLogger } from '../ports/AuditLogger';
 import { RemoteApi } from '../ports/RemoteApi';
@@ -34,15 +37,18 @@ export class ChangeCellValueHandler {
     private readonly audit: AuditLogger,
     private readonly permissionPolicy: PermissionPolicy,
     private readonly dynamic?: DynamicConfig
-  ) { }
+  ) {
+    // ---------- لاگ زمان ساخت ----------
+
+  }
 
   async execute(
     command: ChangeCellValueCommand,
     actor: Actor
   ): Promise<TableEvent[]> {
-    const table = await this.repo.getById(command.tableId);
-
+    const table = await this.repo.getById(command.store, command.tableKey);
     try {
+
       const rowId = new RowId(command.rowId);
       const columnId = new ColumnId(command.columnId);
       /* ---------- 1. schema existence ---------- */
@@ -119,10 +125,11 @@ export class ChangeCellValueHandler {
 
       if (this.dynamic) {
         // Phase 2: PURE computation
-        this.applyComputedColumns({
+        await this.applyComputedColumns({
           table,
           rowId,
           changedColumnId: columnId,
+          remoteApi: this.dynamic!.remoteApi,
         });
 
         // Phase 3: remote resolution
@@ -168,12 +175,12 @@ export class ChangeCellValueHandler {
 
       /* ---------- 8. persist ---------- */
 
-      await this.repo.save(table);
+      await this.repo.save(command.store, table);
 
       /* ---------- 9. output event ---------- */
       const out: TableEvent = {
         type: 'CELL_CHANGED',
-        tableId: command.tableId,
+        tableId: command.tableKey,
         rowId: domainEvent.rowId.value,
         columnId: domainEvent.columnId.value,
         newValue: domainEvent.newValue.value,
@@ -185,7 +192,7 @@ export class ChangeCellValueHandler {
     } catch (e: any) {
       const failed: TableEvent = {
         type: 'VALIDATION_FAILED',
-        tableId: command.tableId,
+        tableId: command.tableKey,
         reason: e?.message ?? 'Unknown error',
         details: e?.details ?? String(e),
       };
@@ -207,6 +214,7 @@ export class ChangeCellValueHandler {
   }) {
     const { table, rowId, changedColumnId, newValue } = input;
     const meta = this.dynamic.columnMeta;
+
     const changedMeta = meta.get(changedColumnId.value);
     const resolveOn = changedMeta?.resolveOn;
     if (!resolveOn) return;
@@ -230,7 +238,7 @@ export class ChangeCellValueHandler {
       params,
       method: 'POST',
     });
-
+    resolveOn.getResponse?.(response)
     const flags: Record<string, boolean> =
       resolveOn.mapFlags?.(response) ?? {};
 
@@ -257,12 +265,13 @@ export class ChangeCellValueHandler {
     }
   }
 
-  private applyComputedColumns(input: {
+  private async applyComputedColumns(input: {
     table: Table;
     rowId: RowId;
     changedColumnId: ColumnId;
+    remoteApi: RemoteApi;
   }) {
-    const { table, rowId, changedColumnId } = input;
+    const { table, rowId, changedColumnId, remoteApi } = input;
     const meta = this.dynamic!.columnMeta;
 
     const computedColumns = Array.from(meta.values())
@@ -308,12 +317,19 @@ export class ChangeCellValueHandler {
         const targetColId = new ColumnId(targetField);
         const schema = table.getColumnSchema(targetColId);
         if (!schema) continue;
-        const newValue = colCfg.computed.compute(rowValues);
-        const validated = this.validateCellValue(
-          schema.renderType,
-          newValue
-        );
-        if (!validated.ok) continue;
+
+        let rawValue = colCfg.computed.compute(rowValues, remoteApi);
+        const newValue = rawValue instanceof Promise ? await rawValue : rawValue;
+
+        const validated = this.validateCellValue(schema.renderType, newValue);
+
+        if (validated.value instanceof Promise) {
+          throw new Error(
+            `Computed column "${targetField}" returned a Promise after validation`
+          );
+        }
+
+
         const prev = rowValues[targetField];
         if (Object.is(prev, validated.value)) continue;
 
@@ -322,6 +338,7 @@ export class ChangeCellValueHandler {
           targetColId,
           new CellValue(validated.value)
         );
+
         if (schema.displayFormat) {
           const validatedDisplayValue = this.validateCellValue(
             schema.renderType,
@@ -332,7 +349,6 @@ export class ChangeCellValueHandler {
             targetColId,
             new CellValue(validatedDisplayValue.value)
           );
-
         } else {
           table.changeDisplay(
             rowId,
@@ -340,12 +356,14 @@ export class ChangeCellValueHandler {
             new CellValue(validated.value)
           );
         }
+
         rowValues[targetField] = validated.value;
         queue.push(targetField);
         visited.add(targetField);
       }
     }
   }
+
   private validateCellValue(type: FieldType, value: unknown) {
     if (type === 'text' || type === 'date') {
       return typeof value === 'string'
@@ -435,3 +453,119 @@ export class ChangeCellValueHandler {
   }
 
 }
+export class ChangeCellDisplayValueHandler {
+  constructor(
+    private readonly repo: TableRepository,
+    private readonly audit: AuditLogger,
+    private readonly permissionPolicy: PermissionPolicy,
+  ) {
+    // ---------- لاگ زمان ساخت ----------
+
+  }
+
+  async execute(
+    command: ChangeCellDisplayValueCommand,
+    actor: Actor
+  ): Promise<TableEvent[]> {
+    const table = await this.repo.getById(command.store, command.tableKey);
+    try {
+
+      const rowId = new RowId(command.rowId);
+      const columnId = new ColumnId(command.columnId);
+      /* ---------- 1. schema existence ---------- */
+      const schema = table.getColumnSchema(columnId);
+      if (!schema) {
+        throw new DomainError(
+          'COLUMN_NOT_FOUND',
+          'Column does not exist',
+          { columnId: columnId.value }
+        );
+      }
+
+      /* ---------- 2. editable policy ---------- */
+      if (
+        schema.editable === false
+      ) {
+        throw new DomainError(
+          'NOT_EDITABLE',
+          'Cell is not editable',
+          { rowId: rowId.value, columnId: columnId.value }
+        );
+      }
+
+
+      /* ---------- 3. permission policy ---------- */
+      if (
+        !this.permissionPolicy.canChangeCell({
+          actor,
+          rowId,
+          columnId,
+        })
+      ) {
+        throw new DomainError(
+          'FORBIDDEN',
+          'Actor is not allowed to change this cell',
+          {
+            actor,
+            rowId: rowId.value,
+            columnId: columnId.value,
+          }
+        );
+      }
+
+
+
+      /* ---------- 5. domain mutation ---------- */
+      const domainEvent = table.changeDisplay(
+        rowId,
+        columnId,
+        new CellValue(command.newValue)
+      );
+
+      if (!domainEvent) {
+        throw new DomainError(
+          'CELL_NOT_FOUND',
+          'Cell not found or value not changed',
+          { rowId: rowId.value, columnId: columnId.value }
+        );
+      }
+
+      /* ---------- 6. application-level side effects ---------- */
+
+
+
+
+
+
+
+      await this.repo.save(command.store, table);
+
+      /* ---------- 9. output event ---------- */
+      const out: TableEvent = {
+        type: 'CELL_DISPLAY_CHANGED',
+        tableId: command.tableKey,
+        rowId: domainEvent.rowId.value,
+        columnId: domainEvent.columnId.value,
+        newValue: domainEvent.newValue.value,
+      };
+
+      this.audit.log(out);
+      return [out];
+
+    } catch (e: any) {
+      const failed: TableEvent = {
+        type: 'VALIDATION_FAILED',
+        tableId: command.tableKey,
+        reason: e?.message ?? 'Unknown error',
+        details: e?.details ?? String(e),
+      };
+
+      this.audit.log(failed);
+      return [failed];
+    }
+  }
+
+
+
+}
+

@@ -1,76 +1,74 @@
 // hooks/useERPTable.ts
 import {
   useEffect,
-  useReducer,
   useState,
 } from 'react';
 
 import {
   UITableController,
 } from '@components/organisms/erp-table/adapters/ui/UITableController';
-import {
-  createERPTable,
-} from '@components/organisms/erp-table/bootstrap/createERPTable';
+import { createERPTable } from '@components/organisms/erp-table/bootstrap';
 import { TableSnapShot } from '@components/organisms/erp-table/engine/type';
 
 export type UseERPTableResult =
   | { ready: false }
   | {
-      ready: true;
-      controller: UITableController;
-      table: TableSnapShot;
-    };
+    ready: true;
+    controller: UITableController;
+    table: TableSnapShot;
+  };
 
 export function useERPTable(config: {
-  tableId: string;
+  store: string;
+  tableKey: string;
   columns: any[];
   rows: Array<{ id: number; values?: Record<string, unknown> }>;
   actor: any;
 }): UseERPTableResult {
   const [controller, setController] =
     useState<UITableController | null>(null);
-  const [, forceUpdate] = useReducer((x) => x + 1, 0);
+  const [table, setTable] = useState<TableSnapShot | null>(null);
   // ---------- bootstrap ----------
   useEffect(() => {
     let mounted = true;
-
-    createERPTable({
-      tableId: config.tableId,
-      columns: config.columns,
-      rows: config.rows,
-      actor: config.actor,
-    }).then(({ controller }) => {
+    createERPTable(config).then(({ controller }) => {
       if (mounted) {
         setController(controller);
+      } else {
+        controller.dispose();
       }
     });
 
     return () => {
       mounted = false;
     };
-  }, [config.tableId, config.columns, config.rows, config.actor]);
+  }, [config.tableKey,config.columns]);
 
   // ---------- subscribe ----------
   useEffect(() => {
     if (!controller) return;
-
+    const table = controller.getSnapShot(config.tableKey)
+    if (table) {
+      setTable(table);
+    }
     const unsubscribe = controller.subscribe(
-      config.tableId,
-      forceUpdate
+      config.tableKey,
+      () => {
+        setTable(controller.getSnapShot(config.tableKey));
+      }
     );
 
-    return unsubscribe;
-  }, [controller, config.tableId]);
-
-  if (!controller) {
+    return () => {
+      unsubscribe?.();
+    };
+  }, [controller,config.store, config.tableKey]);
+  if (!controller || !table) {
     return { ready: false };
   }
-
-  const table = controller.getSnapShot(config.tableId);
-
   return {
     ready: true,
     controller,
     table,
   };
+
 }

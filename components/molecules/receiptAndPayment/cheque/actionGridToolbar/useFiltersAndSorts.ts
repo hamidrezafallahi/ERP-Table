@@ -3,7 +3,6 @@ import { useReducer } from "react";
 import { useDispatch } from "react-redux";
 
 import { useAppSelector } from "@redux/index";
-import { apiService } from "@services/base";
 import { setPageState } from "@slice/pages";
 import { PageStateEnum } from "@slice/pages/enum";
 
@@ -30,7 +29,7 @@ export const useFiltersAndSorts = ({
   };
 
   const activePage = useAppSelector((state) =>
-    state.withPersist.pages.find((page) => page.isActive)
+    state.withPersist.pages.find((page) => page.isActive),
   );
 
   function reducer(state: IState, action: Action): IState {
@@ -60,16 +59,15 @@ export const useFiltersAndSorts = ({
       appliedSorts.map((sort) => ({
         ColName: sort.field,
         Asc: sort.order === "asc",
-      }))
+      })),
     );
     setPageNumber(1);
 
-    dispatch(apiService.util.resetApiState());
     dispatchState({ type: "CLOSE_SORT_MODAL" });
   };
 
   const applyFilters = (
-    appliedFilters: { field: string; value: any; type: any }[]
+    appliedFilters: { field: string; value: any; type: any }[],
   ) => {
     setFilterInfo(
       ...filterInfo,
@@ -77,38 +75,33 @@ export const useFiltersAndSorts = ({
         ColName: item.field,
         Value: item.value,
         FilterType: item.type,
-      }))
+      })),
     );
     setPageNumber(1);
-    dispatch(apiService.util.resetApiState());
     dispatchState({ type: "CLOSE_FILTER_MODAL" });
   };
 
   const onResetFilters = () => {
     setFilterInfo([]);
     setPageNumber(1);
-    dispatch(apiService.util.resetApiState());
     dispatchState({ type: "CLOSE_FILTER_MODAL" });
   };
 
   const onResetSortOrder = () => {
     setOrderInfo([]);
     setPageNumber(1);
-    dispatch(apiService.util.resetApiState());
     dispatchState({ type: "CLOSE_SORT_MODAL" });
   };
 
   const handleRefresh = () => {
-    dispatch(apiService.util.resetApiState());
     dispatch(
       setPageState({
         ...activePage,
         pageState: PageStateEnum.Opened,
-      })
+      }),
     );
   };
   const onReload = () => {
-    dispatch(apiService.util.resetApiState());
     setFilterInfo([]);
     setOrderInfo([]);
     setPageNumber(1);
@@ -116,7 +109,7 @@ export const useFiltersAndSorts = ({
       setPageState({
         ...activePage,
         pageState: PageStateEnum.Opened,
-      })
+      }),
     );
   };
 

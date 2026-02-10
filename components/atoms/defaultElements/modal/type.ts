@@ -4,7 +4,7 @@ import { ModalProps } from 'antd';
 
 export interface IProps extends ModalProps {
   headerIcon?: ReactNode;
-  headerName?: string;
+  headerName?: string | React.ReactNode;
   contentClassName?: string;
   headerDescription?: string;
   disableTitle?: boolean;

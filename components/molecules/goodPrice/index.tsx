@@ -4,7 +4,7 @@ import { Form, Spin } from "antd";
 import { useTranslations } from "next-intl";
 
 import { CustomButton, DynamicSelect } from "@components/atoms/defaultElements";
-import InputNumber from "@components/atoms/defaultElements/inputNumber";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
 import { SpinIcon } from "@components/atoms/iconComponents";
 import { useCUDDataMutation, useGetData } from "@services/base";
 import type { IGood, IRequest } from "@services/com/good/type";
@@ -82,7 +82,7 @@ export const GoodPrice = ({ handleClose, sourceKey, id }) => {
         ]}
         className="flex flex-col !mb-0 !pb-0 text-xs"
       >
-        <InputNumber
+        <CustomInputNumber
           min={0}
           controls={false}
           parser={(value) =>

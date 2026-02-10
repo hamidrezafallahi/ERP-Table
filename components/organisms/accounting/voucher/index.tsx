@@ -181,8 +181,8 @@ export const Voucher = ({ setMobileDrawerContent, form }) => {
     const calculateTotals = (realDetailData: IVoucherDetails[]) => {
       return realDetailData.reduce(
         (acc, item) => {
-          acc.totalDebit += Number(item.Bes) || 0;
-          acc.totalCredit += Number(item.Bed) || 0;
+          acc.totalDebit += Number(item.Bed) || 0;
+          acc.totalCredit += Number(item.Bes) || 0;
           return acc;
         },
         { totalDebit: 0, totalCredit: 0 }
@@ -243,7 +243,6 @@ export const Voucher = ({ setMobileDrawerContent, form }) => {
     {
       label: t("general.duplicateFromUpperRow"),
       shortcutKey: "Ctrl + D",
-
       handler: ({ record, index, helpers, field }) => {
         const { detailData, dispatchDetailData } = helpers;
 
@@ -574,7 +573,7 @@ export const Voucher = ({ setMobileDrawerContent, form }) => {
       order: 21,
     },
     {
-      fieldName: "Bes",
+      fieldName: "Bed",
       fieldCaption: t("general.debit"),
       fieldType: "price",
       mobileRender: true,
@@ -583,7 +582,7 @@ export const Voucher = ({ setMobileDrawerContent, form }) => {
       order: 22,
     },
     {
-      fieldName: "Bed",
+      fieldName: "Bes",
       fieldCaption: t("general.credit"),
       fieldType: "price",
       mobileRender: true,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Form, Select } from "antd";
+import { Form } from "antd";
 import { useTranslations } from "next-intl";
 import { shallowEqual, useDispatch } from "react-redux";
 
@@ -11,33 +11,41 @@ import {
   DynamicTreeWithList,
   MultiSelectWithList,
 } from "@components/atoms/defaultElements";
+import CustomCheckbox from "@components/atoms/defaultElements/checkbox";
 import { DynamicTree } from "@components/atoms/defaultElements/dynamicTree";
 import EndDateTimePicker from "@components/atoms/defaultElements/endDateTimePicker";
 import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
 import InputText from "@components/atoms/defaultElements/inputText";
 import StartDateTimePicker from "@components/atoms/defaultElements/startDateTimePicker";
+import { PlusIcon } from "@components/atoms/iconComponents";
 import DynamicRadio from "@components/molecules/dynamicRadioList";
 import { useAppSelector } from "@redux/index";
 import { setPageData } from "@slice/pages";
 import { SystemEnum } from "@type/enum";
 import { v4 as uuid } from "uuid";
-import type { IProps } from "./type";
+import type { ConditionRow, IProps } from "./type";
 
-type ConditionRow = {
-  id: string;
-  conditionType?: string;
-  operatorType?: string;
-  value?: string;
-};
-
-export const DiscountForm = ({ defOpt, form }: IProps) => {
+export const DiscountForm = ({ defOpt, form, id }: IProps) => {
   const t = useTranslations();
   const [isNow, setIsNow] = useState(false);
   const dispatch = useDispatch();
-  const { match } = useAppSelector((state) => {
+  const { match, activePage } = useAppSelector((state) => {
     const match = state.withPersist.config.initMatch;
-    return { match };
+    const activePage = state.withPersist.pages.find((item) => item.isActive);
+    return { match, activePage };
   }, shallowEqual);
+
+  const conditionRowsInitialValue = activePage?.pageData?.find(
+    (item) => item.name === "DiscountConditions",
+  )?.originalValue;
+  const conditionRowsValue = activePage?.pageData?.find(
+    (item) => item.name === "DiscountConditions",
+  )?.value;
+
+  const isEqual =
+    JSON.stringify(conditionRowsInitialValue) ===
+    JSON.stringify(conditionRowsValue);
+
   const discountType = Form.useWatch("DiscountType", form);
   const timeEffective = Form.useWatch("timeEffectiveDate", form);
   const dateEffective = Form.useWatch("dateEffectiveDate", form);
@@ -48,85 +56,52 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
     { id: uuid() },
   ]);
 
-  const addRow = () => {
-    setConditions((prev) => [
-      ...prev,
-      {
-        id: uuid(),
-        conditionType: undefined,
-        operatorType: undefined,
-        value: undefined,
-      },
-    ]);
-  };
-
-  const removeRow = (id: string) => {
-    setConditions((prev) => prev.filter((r) => r.id !== id));
-  };
-
   const customerDef = defOpt?.[0]?.CustomerDiscounts.map((item) => ({
     name: item.CustomerName,
     value: item.CustomerId,
   }));
-
   const goodsDef = defOpt?.[0]?.GoodsDiscounts.map((item) => ({
     name: item.GoodsName,
     value: item.GoodsId,
   }));
-
   const goodsCategoryDef = defOpt?.[0]?.CustomerGroupDiscounts.map((item) => ({
     name: item.GoodsCategoryName,
     value: item.GoodsCategoryId,
   }));
-
   const customerGroupDef = defOpt?.[0]?.CustomerGroupDiscounts.map((item) => ({
     name: item.CustomerGroupName,
     value: item.CustomerGroupId,
   }));
-
   const DiscountSaleTypesDef = defOpt?.[0]?.DiscountSaleTypes.map((item) => ({
     name: item.CustomerName,
     value: item.CustomerId,
   }));
-
   const DiscountPaymentWaysIdsDef = defOpt?.[0]?.DiscountPaymentWays.map(
     (item) => ({
       name: item.PaymentWayDesc,
       value: item.PaymentWayId,
-    })
+    }),
   );
-
-  const DiscountSaleTeamssDef = defOpt?.[0]?.DiscountSaleTeams.map((item) => ({
+  const DiscountSaleTeamsDef = defOpt?.[0]?.DiscountSaleTeams.map((item) => ({
     name: item.SaleTeamDesc,
     value: item.SaleTeamId,
   }));
+  const discountLocationsDef = defOpt?.[0]?.DiscountLocations.map((item) => ({
+    name: item.DiscountName,
+    value: item.DiscountId,
+  }));
 
-  // اینو باید بعدا چک کنی مشکل بک
-
-  // const discountLocationsDef = defOpt?.[0]?.DiscountLocations.map((item) => ({
-  //   name: item.DiscountName,
-  //   value: item.DiscountId,
-  // }));
-
-  // useEffect(() => {
-  //   if (conditionValue === undefined) {
-  //     form.setFieldsValue({ DiscountType: false });
-  //   }
-  // }, []);
-
-  useEffect(() => {
-    const pureData = conditions.map(({ id, ...rest }) => rest);
-    form.setFieldValue("Conditions", pureData);
-  }, [conditions]);
-
-  useEffect(() => {
-    const conditions = form.getFieldValue("Conditions");
-    if (!conditions || conditions.length === 0) {
-      form.setFieldsValue({
-        Conditions: [{}],
-      });
-    }
-  }, []);
+  const addRow = () => {
+    setConditions((prev) => [...prev, { id: uuid() }]);
+  };
+  const removeRow = (index: number) => {
+    setConditions((prev) => prev.filter((_, i) => i !== index));
+  };
+  const changeRow = (value: any, id: string, field: keyof ConditionRow) => {
+    setConditions((prev) =>
+      prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
+    );
+  };
 
   useEffect(() => {
     const effectiveDateValue = new Date(dateEffective)?.setTime(timeEffective);
@@ -138,7 +113,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
           name: "EffectiveDate",
           value: new Date(effectiveDateValue)?.toISOString(),
           type: "date",
-        })
+        }),
       );
     }
   }, [timeEffective, dateEffective]);
@@ -153,20 +128,78 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
           name: "ExpireDate",
           value: new Date(expireDateValue)?.toISOString(),
           type: "date",
-        })
+        }),
       );
     }
   }, [timeExpire, dateExpire]);
+
+  useEffect(() => {
+    if (defOpt?.[0]?.DiscountConditions?.length > 0) {
+      const conditionsFromApi = defOpt[0].DiscountConditions.map((c) => ({
+        ConditionId: c.ConditionId,
+        Oprator: c.Oprator,
+        Value: c.Value ?? null,
+      }));
+
+      setConditions(conditionsFromApi.map((item) => ({ id: uuid(), ...item })));
+    }
+  }, [defOpt, id]);
+
+  useEffect(() => {
+    const correctValue = conditions
+      ?.filter(
+        (r: any) =>
+          r?.ConditionId &&
+          r?.Oprator &&
+          r?.Value !== undefined &&
+          r?.Value !== null,
+      )
+      ?.map((el) => ({
+        ConditionId: el.ConditionId,
+        Oprator: el.Oprator,
+        Value: el.Value,
+      }));
+
+    dispatch(
+      setPageData({
+        name: "DiscountConditions",
+        value: correctValue,
+      }),
+    );
+
+    if (conditions?.length === 0) {
+      setConditions([{ id: uuid() }]);
+    }
+  }, [conditions]);
+
+  useEffect(() => {
+    if (conditionRowsInitialValue?.length > 0) {
+      const correctValue = conditionRowsInitialValue?.map((item) => ({
+        id: uuid(),
+        ConditionId: item.ConditionId,
+        Oprator: item.Oprator,
+        Value: item.Value,
+      }));
+      setConditions(correctValue);
+    }
+    if (isEqual) {
+      const correctValue = conditionRowsInitialValue?.map((item) => ({
+        id: uuid(),
+        ConditionId: item.ConditionId,
+        Oprator: item.Oprator,
+        Value: item.Value,
+      }));
+      setConditions(correctValue);
+    }
+  }, [conditionRowsInitialValue, isEqual]);
+
   return (
     <Form
-      onValuesChange={(_, all) => {
-        console.log("FORM 👉", all);
-      }}
       form={form}
       initialValues={{
         IsSetNow: false,
         DiscountType: true,
-        Conditions: [{}],
+        DiscountConditions: [{}],
       }}
       name="discountForm"
       layout="vertical"
@@ -175,14 +208,14 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
       {/* ================= عنوان + انتخاب نوع تخفیف ================= */}
       <div className="gap-5 lg:gap-4 grid grid-cols-12 col-span-12">
         <Form.Item
-          label="عنوان"
+          label={t("discount.discountTitle")}
           name="DiscountTitle"
           className="col-span-12 lg:col-span-6 !mb-0 !pb-0 w-full text-xs"
           rules={[{ required: true, message: t("form.required") }]}
         >
           <InputText
             config={{
-              caption: "عنوان",
+              caption: t("discount.discountTitle"),
               name: "DiscountTitle",
               setFieldValue: form.setFieldValue,
             }}
@@ -190,7 +223,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
         </Form.Item>
 
         <Form.Item
-          label="انتخاب نوع تخفیف"
+          label={t("discount.discountTypeId")}
           name="DiscountTypeId"
           className="col-span-12 lg:col-span-6 !mb-0 !pb-0 w-full text-xs"
           rules={[{ required: true, message: t("form.required") }]}
@@ -202,7 +235,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
               repoViewId: 1052,
             }}
             config={{
-              caption: "انتخاب نوع تخفیف",
+              caption: t("discount.discountTypeId"),
               name: "DiscountTypeId",
               setFieldValue: form.setFieldValue,
             }}
@@ -214,19 +247,19 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
 
       <div className="gap-5 lg:gap-4 grid grid-cols-12 col-span-12">
         <Form.Item
-          label="نوع تخفیف"
+          label={t("discount.discountType")}
           name="DiscountType"
           className="col-span-12 lg:col-span-4 !mb-0 !pb-0 text-xs"
         >
           <DynamicRadio
             item={{
               radioValues: [
-                { caption: "درصدی", value: true },
-                { caption: "مبلغی", value: false },
+                { caption: t("discount.aPercentageOf"), value: true },
+                { caption: t("discount.aSumOfMoney"), value: false },
               ],
             }}
             config={{
-              caption: "نوع تخفیف",
+              caption: t("discount.discountType"),
               name: "DiscountType",
               type: "radio",
               setFieldValue: form.setFieldValue,
@@ -236,7 +269,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
 
         {discountType === true && (
           <Form.Item
-            label="درصد"
+            label={t("discount.percentage")}
             name="DiscountAmount"
             className="col-span-12 lg:col-span-4 !mb-0 !pb-0 text-xs"
             rules={[{ required: true, message: t("form.required") }]}
@@ -246,7 +279,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
               max={100}
               controls={false}
               config={{
-                caption: "درصد",
+                caption: t("discount.percentage"),
                 name: "DiscountAmount",
                 setFieldValue: form.setFieldValue,
               }}
@@ -257,7 +290,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
         {discountType === false && (
           <>
             <Form.Item
-              label="مبلغ"
+              label={t("discount.discountAmount")}
               name="DiscountAmount"
               className="col-span-12 lg:col-span-4 !mb-0 !pb-0 text-xs"
               rules={[{ required: true, message: t("form.required") }]}
@@ -272,7 +305,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                   `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
                 }
                 config={{
-                  caption: "مبلغ",
+                  caption: t("discount.discountAmount"),
                   name: "DiscountAmount",
                   setFieldValue: form.setFieldValue,
                 }}
@@ -280,7 +313,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
             </Form.Item>
 
             <Form.Item
-              label="ارز"
+              label={t("title.currency")}
               name="CurrencyId"
               className="col-span-12 lg:col-span-4 !mb-0 !pb-0 text-xs"
               style={{ display: "inline-block" }}
@@ -294,7 +327,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                     repoViewId: 130076,
                   }}
                   config={{
-                    caption: "ارز",
+                    caption: t("title.currency"),
                     name: "CurrencyId",
                     setFieldValue: form.setFieldValue,
                   }}
@@ -303,6 +336,50 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
             </Form.Item>
           </>
         )}
+      </div>
+
+      {/* =================   قابلیت ترکیب   + اولویت ================= */}
+
+      <div className="gap-5 lg:gap-4 grid grid-cols-12 col-span-12">
+        <Form.Item
+          name="IsNonStackable"
+          valuePropName="checked"
+          className="col-span-12 lg:col-span-6 !mb-0 !pb-0 w-full text-xs"
+        >
+          <CustomCheckbox
+            config={{
+              name: "IsNonStackable",
+              caption: t("discount.canBeCombinedWithOtherDiscounts"),
+              type: "checkbox",
+              selectEndpoint: {},
+              setFieldValue: form.setFieldValue,
+            }}
+          >
+            {t("discount.canBeCombinedWithOtherDiscounts")}{" "}
+          </CustomCheckbox>
+        </Form.Item>
+
+        <Form.Item
+          label={t("discount.priority")}
+          name="Priority"
+          className="col-span-12 lg:col-span-6 !mb-0 !pb-0 w-full text-xs"
+        >
+          <CustomInputNumber
+            min={0}
+            controls={false}
+            parser={(value) =>
+              value?.replace(/\$\s?|(,*)/g, "") as unknown as number
+            }
+            formatter={(value) =>
+              `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            }
+            config={{
+              caption: t("discount.priority"),
+              name: "Priority",
+              setFieldValue: form.setFieldValue,
+            }}
+          />
+        </Form.Item>
       </div>
 
       {/* ================= تاریخ شروع و پایان (بدون تغییر) ================= */}
@@ -334,9 +411,8 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
 
       {/* ================= مشتری + گروه مشتری + کالا + گروه کالا ================= */}
       <div className="gap-5 lg:gap-4 grid grid-cols-12 col-span-12">
-        {/* مشتری */}
         <Form.Item
-          label="مشتری"
+          label={t("discount.customerDiscountIds")}
           name="CustomerDiscountIds"
           className="col-span-12 lg:col-span-3 !mb-0 !pb-0 text-xs"
         >
@@ -353,7 +429,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                 },
               }}
               config={{
-                caption: "مشتری",
+                caption: t("discount.customerDiscountIds"),
                 name: "CustomerDiscountIds",
                 setFieldValue: form.setFieldValue,
               }}
@@ -367,7 +443,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                 repoViewId: 130045,
               }}
               config={{
-                caption: "مشتری",
+                caption: t("discount.customerDiscountIds"),
                 name: "CustomerDiscountIds",
                 setFieldValue: form.setFieldValue,
               }}
@@ -376,9 +452,8 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
           )}
         </Form.Item>
 
-        {/* گروه مشتری */}
         <Form.Item
-          label="گروه مشتری"
+          label={t("discount.customerGroupDiscountIds")}
           name="CustomerGroupDiscountIds"
           className="col-span-12 lg:col-span-3 !mb-0 !pb-0 text-xs"
         >
@@ -395,7 +470,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                 },
               }}
               config={{
-                caption: "گروه مشتری",
+                caption: t("discount.customerGroupDiscountIds"),
                 name: "CustomerGroupDiscountIds",
                 setFieldValue: form.setFieldValue,
               }}
@@ -409,7 +484,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                 repoViewId: 1061,
               }}
               config={{
-                caption: "گروه مشتری",
+                caption: t("discount.customerGroupDiscountIds"),
                 name: "CustomerGroupDiscountIds",
                 setFieldValue: form.setFieldValue,
               }}
@@ -418,9 +493,8 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
           )}
         </Form.Item>
 
-        {/* کالا */}
         <Form.Item
-          label="کالا"
+          label={t("discount.goodsDiscountIds")}
           name="GoodsDiscountIds"
           className="col-span-12 lg:col-span-3 !mb-0 !pb-0 text-xs"
         >
@@ -437,7 +511,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                 },
               }}
               config={{
-                caption: "کالا",
+                caption: t("discount.goodsDiscountIds"),
                 name: "GoodsDiscountIds",
                 setFieldValue: form.setFieldValue,
               }}
@@ -451,7 +525,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                 repoViewId: 130063,
               }}
               config={{
-                caption: "کالا",
+                caption: t("discount.goodsDiscountIds"),
                 name: "GoodsDiscountIds",
                 setFieldValue: form.setFieldValue,
               }}
@@ -460,9 +534,8 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
           )}
         </Form.Item>
 
-        {/* گروه کالا */}
         <Form.Item
-          label="گروه کالا"
+          label={t("discount.goodsCategoryDiscountIds")}
           name="GoodsCategoryDiscountIds"
           className="col-span-12 lg:col-span-3 !mb-0 !pb-0 text-xs"
         >
@@ -480,7 +553,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                 },
               }}
               config={{
-                caption: "گروه کالا",
+                caption: t("discount.goodsCategoryDiscountIds"),
                 name: "GoodsCategoryDiscountIds",
                 setFieldValue: form.setFieldValue,
               }}
@@ -494,7 +567,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                 repoViewId: 130061,
               }}
               config={{
-                caption: "گروه کالا",
+                caption: t("discount.goodsCategoryDiscountIds"),
                 name: "GoodsCategoryDiscountIds",
                 setFieldValue: form.setFieldValue,
               }}
@@ -506,9 +579,8 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
 
       {/* ================= نوع فروش +  نحوه پرداخت + محل جغرافیایی +  تیم فروش ================= */}
       <div className="gap-5 lg:gap-4 grid grid-cols-12 col-span-12">
-        {/* نوع فروش */}
         <Form.Item
-          label="نوع فروش "
+          label={t("discount.discountSaleTypesIds")}
           name="DiscountSaleTypesIds"
           className="col-span-12 lg:col-span-3 !mb-0 !pb-0 text-xs"
         >
@@ -518,14 +590,9 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                 addWebUrl: "api/sale/Select/Type4SelectOption",
                 endpoint: "api/sale/Select/Type4SelectOption",
                 repoViewId: 130044,
-                // addButton: {
-                //   url: "sale/...",
-                //   RepoId: 1012,
-                //   SystemId: SystemEnum.sale,
-                // },
               }}
               config={{
-                caption: "نوع فروش",
+                caption: t("discount.discountSaleTypesIds"),
                 name: "DiscountSaleTypesIds",
                 setFieldValue: form.setFieldValue,
               }}
@@ -539,7 +606,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                 repoViewId: 130044,
               }}
               config={{
-                caption: "نوع فروش ",
+                caption: t("discount.discountSaleTypesIds"),
                 name: "DiscountSaleTypesIds",
                 setFieldValue: form.setFieldValue,
               }}
@@ -547,10 +614,8 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
             />
           )}
         </Form.Item>
-
-        {/*  "نحوه پرداخت" */}
         <Form.Item
-          label="نحوه پرداخت"
+          label={t("discount.discountPaymentWaysIds")}
           name="DiscountPaymentWaysIds"
           className="col-span-12 lg:col-span-3 !mb-0 !pb-0 text-xs"
         >
@@ -560,14 +625,9 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                 addWebUrl: "api/sale/Select/PaymentWay4SelectOption",
                 endpoint: "api/sale/Select/PaymentWay4SelectOption",
                 repoViewId: 130051,
-                // addButton: {
-                //   url: "sale/..",
-                //   RepoId: 1012,
-                //   SystemId: SystemEnum.sale,
-                // },
               }}
               config={{
-                caption: "نحوه پرداخت",
+                caption: t("discount.discountPaymentWaysIds"),
                 name: "DiscountPaymentWaysIds",
                 setFieldValue: form.setFieldValue,
               }}
@@ -581,7 +641,7 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                 repoViewId: 130051,
               }}
               config={{
-                caption: "نحوه پرداخت",
+                caption: t("discount.discountPaymentWaysIds"),
                 name: "DiscountPaymentWaysIds",
                 setFieldValue: form.setFieldValue,
               }}
@@ -589,10 +649,8 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
             />
           )}
         </Form.Item>
-
-        {/* محل جغرافیایی */}
         <Form.Item
-          label="محل جغرافیایی"
+          label={t("discount.discountLocationsIds")}
           name="DiscountLocationsIds"
           className="col-span-12 lg:col-span-3 !mb-0 !pb-0 text-xs"
         >
@@ -601,28 +659,22 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
               dynamicValue={{
                 addWebUrl: "api/com/Select/Location4selectoption",
                 endpoint: "api/com/Select/Location4selectoption",
-                // repoViewId: 130045,
-                // addButton: {
-                //   url: "sale/..",
-                //   RepoId: 1012,
-                //   SystemId: SystemEnum.sale,
-                // },
               }}
               config={{
-                caption: "محل جغرافیایی",
+                caption: t("discount.discountLocationsIds"),
                 name: "DiscountLocationsIds",
                 setFieldValue: form.setFieldValue,
               }}
             />
           ) : (
             <MultiSelectWithList
-              // defOption={discountLocationsDef}
+              defOption={discountLocationsDef}
               dynamicValue={{
                 addWebUrl: "api/com/Select/Location4selectoption",
                 endpoint: "api/com/Select/Location4selectoption",
               }}
               config={{
-                caption: "محل جغرافیایی",
+                caption: t("discount.discountLocationsIds"),
                 name: "DiscountLocationsIds",
                 setFieldValue: form.setFieldValue,
               }}
@@ -630,11 +682,10 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
             />
           )}
         </Form.Item>
-        {/*  تیم فروش */}
         <Form.Item
-          label="تیم فروش"
+          label={t("discount.discountSaleTeamIds")}
           name="DiscountSaleTeamIds"
-          className="col-span-12 lg:col-span-3 !mb-0 !pb-0 text-xs "
+          className="col-span-12 lg:col-span-3 !mb-0 !pb-0 text-xs"
         >
           {!match ? (
             <DynamicMultiSelect
@@ -642,28 +693,23 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
                 addWebUrl: "api/sale/Select/SaleTeam4SelectOption",
                 endpoint: "api/sale/Select/SaleTeam4SelectOption",
                 repoViewId: 130048,
-                // addButton: {
-                //   url: "sale/..",
-                //   RepoId: 1012,
-                //   SystemId: SystemEnum.sale,
-                // },
               }}
               config={{
-                caption: " تیم فروش ",
+                caption: t("discount.discountSaleTeamIds"),
                 name: "DiscountSaleTeamIds",
                 setFieldValue: form.setFieldValue,
               }}
             />
           ) : (
             <MultiSelectWithList
-              defOption={DiscountSaleTeamssDef}
+              defOption={DiscountSaleTeamsDef}
               dynamicValue={{
                 addWebUrl: "api/sale/Select/SaleTeam4SelectOption",
                 endpoint: "api/sale/Select/SaleTeam4SelectOption",
                 repoViewId: 130048,
               }}
               config={{
-                caption: "تیم فروش",
+                caption: t("discount.discountSaleTeamIds"),
                 name: "DiscountSaleTeamIds",
                 setFieldValue: form.setFieldValue,
               }}
@@ -673,103 +719,119 @@ export const DiscountForm = ({ defOpt, form }: IProps) => {
         </Form.Item>
       </div>
 
-      {/* ================= شرط-  عملگر- مقدار================= */}
-
-      <div className="gap-5 lg:gap-4 grid grid-cols-12 col-span-12 items-center">
-        {conditions.map((row, index) => (
-          <div
-            key={row.id}
-            className="gap-5 lg:gap-4 grid grid-cols-12 col-span-12 items-center"
-          >
-            <Form.Item
-              label="شرط"
-              name="ConditionId"
-              className="col-span-12 lg:col-span-3 !mb-0 !pb-0 text-xs"
+      {/* ================= conditions ================= */}
+      <div className="items-center gap-5 lg:gap-4 grid grid-cols-12 col-span-12">
+        {conditions?.map((row, index) => {
+          const isComplete =
+            conditions[index]?.ConditionId &&
+            conditions[index]?.Oprator &&
+           (conditions[index]?.Value || conditions[index]?.Value === 0);
+          return (
+            <div
+              key={index}
+              className="items-center gap-5 grid grid-cols-12 col-span-12"
             >
-              <div className="w-full">
+              {/* condition */}
+              <div className="flex flex-col gap-2 col-span-12 lg:col-span-3">
+                <span className="text-xs text-gray-gray10">
+                  {t("discount.condition")}
+                </span>
                 <DynamicSelect
                   dynamicValue={{
                     addWebUrl: "api/com/select/CommonInfo/DiscountCondition",
                     endpoint: "api/com/select/CommonInfo/DiscountCondition",
                   }}
-                  config={{
-                    caption: "شرط",
-                    name: "ConditionId",
-                    setFieldValue: form.setFieldValue,
+                  value={conditions?.[index]?.ConditionId}
+                  onClear={() => {
+                    setConditions(
+                      conditions.map((item) =>
+                        item.id === row.id
+                          ? {
+                              ...item,
+                              ConditionId: undefined,
+                              Oprator: undefined,
+                              Value: undefined,
+                            }
+                          : row,
+                      ),
+                    );
+                  }}
+                  onChange={(value) => {
+                    changeRow(value, row.id, "ConditionId");
                   }}
                 />
               </div>
-            </Form.Item>
 
-            <Form.Item
-              label={t("discount.operator")}
-              name="Oprator"
-              className="col-span-12 lg:col-span-3 !mb-0 !pb-0 text-xs"
-            >
-              <div className="w-full">
+              {/* operator */}
+              <div className="flex flex-col gap-2 col-span-12 lg:col-span-3">
+                <span className="text-xs text-gray-gray10">
+                  {t("discount.operator")}
+                </span>
                 <CustomSelect
-                  config={{
-                    caption: t("discount.operator"),
-                    name: "Oprator",
-                    setFieldValue: form.setFieldValue,
-                  }}
                   options={[
-                    { label: t("discount.Equal"), value: "Equal" },
-                    { label: t("discount.notEqual"), value: "NotEqual" },
-                    { label: t("discount.lessThan"), value: "LessThan" },
-                    { label: t("discount.greaterThan"), value: "GreaterThan" },
-                    {
-                      label: t("discount.lessThanOrEqual"),
-                      value: "LessThanOrEqual",
-                    },
-                    {
-                      label: t("discount.greaterThanOrEqual"),
-                      value: "GreaterThanOrEqual",
-                    },
+                    { label: "=", value: "Equal" },
+                    { label: "!=", value: "NotEqual" },
+                    { label: "<", value: "LessThan" },
+                    { label: ">", value: "GreaterThan" },
+                    { label: "<=", value: "LessThanOrEqual" },
+                    { label: ">=", value: "GreaterThanOrEqual" },
                   ]}
+                  disabled={!row?.ConditionId}
+                  value={conditions?.[index]?.Oprator}
+                  onChange={(value) => {
+                    changeRow(value, row.id, "Oprator");
+                  }}
                 />
               </div>
-            </Form.Item>
 
-            <Form.Item
-              label={t("discount.value")}
-              name="Value"
-              className="col-span-12 lg:col-span-3 !mb-0 !pb-0 text-xs"
-            >
-              <InputText
-                config={{
-                  caption: t("discount.value"),
-                  name: "Value",
-                  setFieldValue: form.setFieldValue,
-                }}
-              />
-            </Form.Item>
+              {/* value */}
+              <div className="flex flex-col gap-2 col-span-12 lg:col-span-3">
+                <span className="text-xs text-gray-gray10">
+                  {t("discount.value")}
+                </span>
+                <CustomInputNumber
+                  disabled={!row?.ConditionId}
+                  min={0}
+                  controls={false}
+                  parser={(value) =>
+                    value?.replace(/\$\s?|(,*)/g, "") as unknown as number
+                  }
+                  formatter={(value) =>
+                    `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                  }
+                  value={conditions?.[index]?.Value}
+                  onChange={(value) => {
+                    changeRow(value, row.id, "Value");
+                  }}
+                />
+              </div>
 
-            <div className="col-span-6 lg:col-span-1 flex justify-center items-end ">
-              {conditions.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeRow(row.id)}
-                  className="h-9 w-9 mt-7  rounded-lg text-red-500 hover:bg-red-50"
-                >
-                  ✖
-                </button>
-              )}
+              <div className="flex justify-center col-span-1">
+                {conditions.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeRow(index)}
+                    className="hover:bg-red-50 mt-7 rounded-lg w-9 h-9 text-red-500"
+                  >
+                    ✖
+                  </button>
+                )}
+              </div>
+
+              <div className="flex justify-center col-span-1">
+                {isComplete && index === conditions.length - 1 && (
+                  <button
+                    type="button"
+                    onClick={addRow}
+                    className="flex justify-center items-center hover:bg-green-50 mt-7 p-2 rounded-lg"
+                  >
+                    <PlusIcon config={{ width: 22, height: 22 }} />
+                  </button>
+                )}
+              </div>
             </div>
-
-            <div className="col-span-6 lg:col-span-1 flex justify-center">
-              {index === conditions.length - 1 && (
-                <button
-                  type="button"
-                  onClick={addRow}
-                  className="h-9 w-9 mt-7 rounded-lg text-green-600 hover:bg-green-50"
-                >
-                  ➕
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </Form>
   );

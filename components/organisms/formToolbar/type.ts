@@ -17,4 +17,5 @@ export interface IProps {
   selectedView?: number;
   mutationSystemId?: number;
   submitCaption?: string;
+  withSubmitButton?: boolean;
 }

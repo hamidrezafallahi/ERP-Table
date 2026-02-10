@@ -1,20 +1,19 @@
-import { shallowEqual } from 'react-redux';
-
-import { MainInfoCard } from '@components/molecules/receiptAndPayment';
-import { useAppSelector } from '@redux/index';
+import { shallowEqual } from "react-redux";
+import { useAppSelector } from "@redux/index";
 
 import {
   bankInfoConfig,
   cashFundInfoConfig,
   cashInfoConfig,
   documentInfoConfig,
-} from '../../config';
+} from "../../config";
+import { MainInfoCard } from "@components/molecules/mainInfoCard";
 
 export const MainInfoSection = () => {
   const { match } = useAppSelector((state) => {
     const match = state.withPersist.config.initMatch;
     return { match };
-  },shallowEqual);
+  }, shallowEqual);
 
   return (
     <div
@@ -26,7 +25,7 @@ export const MainInfoSection = () => {
     >
       <div className="flex flex-col gap-2 col-span-2">
         <div
-          className={`bg-gray-gray2 text-gray-gray10 text-sm !h-9 !w-full rounded-lg flex items-center justify-center p-1  whitespace-nowrap text-ellipsis overflow-hidden`}
+          className={`bg-gray-gray2 text-gray-gray10 text-sm h-[3.125rem] !w-full rounded-lg flex items-center justify-center p-1  whitespace-nowrap text-ellipsis overflow-hidden`}
         >
           {documentInfoConfig.title}
         </div>
@@ -38,14 +37,18 @@ export const MainInfoSection = () => {
           }`}
         >
           {documentInfoConfig.actions.map((item, index) => (
-            <MainInfoCard temp={item} key={index} />
+            <MainInfoCard
+              temp={item}
+              key={index}
+              titleGroup="receiptsAndPayments"
+            />
           ))}
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
         <div
-          className={`bg-gray-gray2 text-gray-gray10 text-sm !h-9 !w-full rounded-lg flex items-center justify-center p-1  whitespace-nowrap text-ellipsis overflow-hidden`}
+          className={`bg-gray-gray2 text-gray-gray10 text-sm h-[3.125rem] !w-full rounded-lg flex items-center justify-center p-1  whitespace-nowrap text-ellipsis overflow-hidden`}
         >
           {bankInfoConfig.title}
         </div>
@@ -57,14 +60,18 @@ export const MainInfoSection = () => {
           }`}
         >
           {bankInfoConfig.actions.map((item, index) => (
-            <MainInfoCard temp={item} key={index} />
+            <MainInfoCard
+              temp={item}
+              key={index}
+              titleGroup="receiptsAndPayments"
+            />
           ))}
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
         <div
-          className={`bg-gray-gray2 text-gray-gray10 text-sm !h-9 !w-full rounded-lg flex items-center justify-center p-1  whitespace-nowrap text-ellipsis overflow-hidden`}
+          className={`bg-gray-gray2 text-gray-gray10 text-sm h-[3.125rem] !w-full rounded-lg flex items-center justify-center p-1  whitespace-nowrap text-ellipsis overflow-hidden`}
         >
           {cashInfoConfig.title}
         </div>
@@ -76,20 +83,28 @@ export const MainInfoSection = () => {
           }`}
         >
           {cashInfoConfig.actions.map((item, index) => (
-            <MainInfoCard temp={item} key={index} />
+            <MainInfoCard
+              temp={item}
+              key={index}
+              titleGroup="receiptsAndPayments"
+            />
           ))}
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
         <div
-          className={`bg-gray-gray2 text-gray-gray10 text-sm !h-9 !w-full rounded-lg flex items-center justify-center p-1  whitespace-nowrap text-ellipsis overflow-hidden`}
+          className={`bg-gray-gray2 text-gray-gray10 text-sm h-[3.125rem] !w-full rounded-lg flex items-center justify-center p-1 font-medium whitespace-nowrap text-ellipsis overflow-hidden`}
         >
           {cashFundInfoConfig.title}
         </div>
         <div className="gap-3 grid grid-cols-1 h-fit max-h-full">
           {cashFundInfoConfig.actions.map((item, index) => (
-            <MainInfoCard temp={item} key={index} />
+            <MainInfoCard
+              temp={item}
+              key={index}
+              titleGroup="receiptsAndPayments"
+            />
           ))}
         </div>
       </div>

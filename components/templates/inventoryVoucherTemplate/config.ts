@@ -58,15 +58,15 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
       fieldType: "index",
       order: 1,
       visibility: { kind: 'always' },
-      indexOptions: (tableId, rowId, row, engine) => {
+      indexOptions: (tableKey, rowId, row, controller) => {
         return [
           {
             key: "qwe", label: ('آپشن تست 1'), onClick: () => {
-              engine.dispatch({ type: 'CHANGE_CELL_VALUE', tableId, rowId, columnId: "Quantity1", newValue: 125 })
-              console.log(tableId, rowId, row)
+              controller.dispatch({ type: 'UI_CELL_CHANGE',value:125, rowId, columnId: "Quantity1", })
+              console.log(tableKey, rowId, row)
             }
           },
-          { key: "asd", label: (tableId), onClick: () => { console.log(tableId, rowId, row) } }
+          { key: "asd", label: (tableKey), onClick: () => { console.log(tableKey, rowId, row) } }
         ]
       },
     },
@@ -120,7 +120,7 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
       fieldType: "number",
       order: 4,
       visibility: { kind: 'always' },
- 
+
 
       // visibility: {
       //   kind: "whenFieldTruthy",
@@ -188,7 +188,6 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
         dependsOn: ["GoodsId"],//تغییر چه ستونی باعث واکشی اطلاعات جدید بشه 
         params: { VoucherTypeId: vti }, // چه پارامتر هایی از این سطر ارسال بشه  
       },
-      hidden: true,
       visibility: {
         kind: "whenFlag",
         sourceFieldName: "GoodsId",
@@ -231,22 +230,31 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
         flag: "HasLocation",
       },
     },
-    {
-      fieldName: "TotalQty",
-      fieldCaption: "جمع تعداد",
-      fieldType: "static",
-      order: 13,
-      visibility: { kind: 'always' },
-      computed: {
-        dependsOn: ["Quantity1", "Quantity2", "Quantity3"],
-        compute: (row) => {
-          const q1 = Number(row.Quantity1 ?? 0);
-          const q2 = Number(row.Quantity2 ?? 0);
-          const q3 = Number(row.Quantity3 ?? 0);
-          return q1 + q2 + q3;
-        },
-      },
+  {
+  fieldName: "TotalQty",
+  fieldCaption: "جمع تعداد",
+  fieldType: "number",
+  order: 13,
+  visibility: { kind: 'always' },
+  computed: {
+    dependsOn: ["Quantity1", "Quantity2", "Quantity3"],
+    compute: async (row, remoteApi) => {
+
+      // اگر واقعاً نیاز به API داری
+      const res = await remoteApi?.request<{ factor: number }>({
+        endpoint: '/calculate/factor',
+        params: { productId: row.ProductId },
+      });
+console.log(res)
+      const q1 = Number(row.Quantity1 ?? 0);
+      const q2 = Number(row.Quantity2 ?? 0);
+      const q3 = Number(row.Quantity3 ?? 0);
+
+      return (q1 + q2 + q3);
     },
+  },
+}
+
     // {
     //   fieldName: "FinalQtyStatus",
     //   fieldCaption: "وضعیت مقدار",

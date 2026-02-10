@@ -102,6 +102,7 @@ export default function FormToolbar({
   listPageId,
   getUrl,
   submitCaption,
+  withSubmitButton = true,
 }: IProps) {
   const t = useTranslations();
   const dispatch = useDispatch();
@@ -775,7 +776,7 @@ export default function FormToolbar({
             </div>
           ))}
 
-        {match && (
+        {match && withSubmitButton && (
           <>
             {!submitCaption ? (
               <>

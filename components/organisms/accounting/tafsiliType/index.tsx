@@ -10,8 +10,8 @@ import { useGetData } from "@services/base";
 import type { IRequest } from "@services/trh/cashFundDeposit/type";
 import { setAllPageData, setPageInfo } from "@slice/pages";
 
-import { formConfig } from "./config";
 import { TafsiliTypeForm } from "@components/molecules/accounting";
+import { formConfig } from "./config";
 
 export const TafsiliType = ({ form }) => {
   const dispatch = useDispatch();
@@ -68,20 +68,34 @@ export const TafsiliType = ({ form }) => {
         formData = formConfig.map((item) => {
           const newValue = {
             ...item,
-            value: defaultValue[item.name],
-            originalValue: defaultValue[item.name],
+            value:
+              item.type === "array" ? defaultValue : defaultValue[item.name],
+            originalValue:
+              item.type === "array" ? defaultValue : defaultValue[item.name],
             isTitleField: item.name === titleKey,
           };
           return newValue;
         });
         // tagsInfo = defaultValue.TagsInfo;
       } else {
-        formData = formConfig.map((item) => ({
-          ...item,
-          isTitleField: item.name === titleKey,
-          value: undefined,
-          originalValue: undefined,
-        }));
+        formData = formConfig.map((item) => {
+          const undefinedValue =
+            item.type === "checkBox"
+              ? false
+              : item.type === "bool"
+              ? false
+              : item.type === "radio"
+              ? item.radioValues?.[0]?.value
+              : item.type === "array"
+              ? []
+              : undefined;
+          return {
+            ...item,
+            isTitleField: item.name === titleKey,
+            value: undefinedValue,
+            originalValue: undefinedValue,
+          };
+        });
       }
 
       if (id) {

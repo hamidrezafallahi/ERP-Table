@@ -56,4 +56,9 @@ export const formConfig: IFormFieldConfig[] = [
     caption: "سطح 13",
     type: "checkbox",
   },
+  {
+    name: "AllData",
+    caption: "همه داده برای سعید",
+    type: "array",
+  },
 ];

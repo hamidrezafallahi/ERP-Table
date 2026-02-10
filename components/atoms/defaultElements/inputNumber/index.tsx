@@ -43,6 +43,7 @@ const CustomInputNumber = ({
 
   const handleChange = (e: any) => {
     setInputValue(e);
+    onChange?.(e);
     if (config) {
       const {
         caption,
@@ -66,15 +67,31 @@ const CustomInputNumber = ({
           type,
           selectEndpoint,
           value: e,
-        })
+        }),
       );
     }
-    onChange?.(e);
   };
 
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
-    const charCode = e.charCode;
-    if (charCode < 48 || charCode > 57) {
+    const allowedKeys = [
+      "Backspace",
+      "Delete",
+      "ArrowLeft",
+      "ArrowRight",
+      "Tab",
+    ];
+    if (allowedKeys.includes(e.key)) return;
+    if (!/^\d$/.test(e.key)) {
+      e.preventDefault();
+      return;
+    }
+    if (e.key === "0" && (inputValue === null || inputValue === 0)) {
+      e.preventDefault();
+      return;
+    }
+    const currentValue = Number(inputValue ?? 0);
+    const nextValue = Number(`${currentValue}${e.key}`);
+    if (rest.max !== undefined && nextValue > Number(rest.max)) {
       e.preventDefault();
     }
   };
@@ -91,7 +108,7 @@ const CustomInputNumber = ({
           minLength={rest?.minLength ? rest?.minLength : config?.minLength}
           maxLength={rest?.maxLength ? rest?.maxLength : config?.maxLength}
           className={defaultClass}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyPress}
           onChange={handleChange}
           placeholder={config?.placeHolder}
           value={inputValue}
@@ -102,9 +119,10 @@ const CustomInputNumber = ({
           minLength={rest?.minLength ? rest?.minLength : config?.minLength}
           maxLength={rest?.maxLength ? rest?.maxLength : config?.maxLength}
           className={defaultClass}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyPress}
           onChange={handleChange}
           placeholder={config?.placeHolder}
+          // value={inputValue}
         />
       )}
     </>

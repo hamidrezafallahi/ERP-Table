@@ -20,15 +20,13 @@ export class Cell {
   ) { }
 
   changeValue(newValue: CellValue): CellChanged | null {
-    if (this.value.equals(newValue)) return null;
-    this.value = newValue;
+    // if (this.value.equals(newValue)) return null;
     this.value = newValue;
     return new CellChanged(this.rowId, this.columnId, newValue);
   }
   changeDisplay(newValue: CellValue): DisplayChanged | null {
-    if (this.value.equals(newValue)) return null;
-    this.value = newValue;
-    this.value = newValue;
+    if (this.display.equals(newValue)) return null;
+    this.display = newValue;
     return new DisplayChanged(this.rowId, this.columnId, newValue);
   }
   changeOriginalValue(newValue: CellValue): CellChanged | null {

@@ -2,7 +2,7 @@ import { Form } from "antd";
 import { useTranslations } from "next-intl";
 
 import { NewDatePicker } from "@components/atoms/defaultElements";
-import InputNumber from "@components/atoms/defaultElements/inputNumber";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
 import InputText from "@components/atoms/defaultElements/inputText";
 import type { IRequestConfig } from "@type/elementType";
 
@@ -30,7 +30,7 @@ export const ReturnSalesInvoiceForm = ({ form }) => {
 
         className="flex flex-col !mb-0 !pb-0 text-xs"
       >
-         <InputNumber
+         <CustomInputNumber
             controls={false}
             min={0}
             disabled
@@ -67,7 +67,7 @@ export const ReturnSalesInvoiceForm = ({ form }) => {
         rules={[]}
         className="flex flex-col !mb-0 !pb-0 text-xs"
       >
-        <InputNumber
+        <CustomInputNumber
           controls={false}
           min={0}
           config={{

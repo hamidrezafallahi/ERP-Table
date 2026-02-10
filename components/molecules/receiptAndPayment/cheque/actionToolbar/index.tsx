@@ -31,11 +31,11 @@ import { PageStateEnum } from "@slice/pages/enum";
 import type { IToolbarMenu } from "@type/toolbar";
 import { getColoredIcon, showInfoToast } from "@utils/core";
 
+import CloseButton from "@components/molecules/closeButton";
 import { ChequeActionModal } from "../chequeActionModal";
 import { ChequeDynamicForm } from "../chequeDynamicForm";
 import { chequeDynamicConfig } from "../chequeDynamicForm/config";
 import type { Action, IState } from "./type";
-import CloseButton from "@components/molecules/closeButton";
 
 export const ActionToolbar = ({
   repoId,
@@ -58,10 +58,10 @@ export const ActionToolbar = ({
       lang: state.withPersist.config.lang,
       match: state.withPersist.config.initMatch,
       activePage: state.withPersist.pages.find(
-        (item) => item.isActive === true
+        (item) => item.isActive === true,
       ),
     }),
-    shallowEqual
+    shallowEqual,
   );
   const { navigateBack } = useNavigatePage();
 
@@ -164,14 +164,14 @@ export const ActionToolbar = ({
       ?.filter((i) => i.condition === renderGroupAction.condition)
       ?.map((menuItem: IToolbarMenu) => {
         const filteredRecords = records.filter((item) =>
-          selectedItems.includes(item[rowFieldKey])
+          selectedItems.includes(item[rowFieldKey]),
         );
         let isValid = true;
         let errorMessage = "";
 
         if (menuItem.MenuDesc === ActionLabelsEnum.CustomerReturn) {
           const alternativeValue = filteredRecords.map(
-            (item) => item.DocumentCheque.OwnerId
+            (item) => item.DocumentCheque.OwnerId,
           );
 
           if (
@@ -183,7 +183,7 @@ export const ActionToolbar = ({
           }
         } else if (menuItem.MenuDesc === ActionLabelsEnum.DirectCollect) {
           const alternativeValue = filteredRecords.map(
-            (item) => item.CheckReceiptHeader?.CashierId
+            (item) => item.CheckReceiptHeader?.CashierId,
           );
 
           if (
@@ -244,7 +244,7 @@ export const ActionToolbar = ({
             } else {
               showInfoToast(
                 t("toast.remindMeToast"),
-                ActionLabelsEnum.RemindMe as string
+                ActionLabelsEnum.RemindMe as string,
               );
             }
             break;
@@ -316,23 +316,13 @@ export const ActionToolbar = ({
     },
   ];
 
-  // const handleRefreshData = () => {
-  //   dispatch(apiService.util.resetApiState());
-  //   dispatch(
-  //     setPageState({
-  //       ...activePage,
-  //       pageState: PageStateEnum.Opened,
-  //     })
-  //   );
-  // };
   const handleRefreshData = () => {
-    // dispatch(apiService.util.resetApiState());
     invalidate(activePage?.viewData?.url);
     dispatch(
       setPageState({
         ...activePage,
         pageState: PageStateEnum.Opened,
-      })
+      }),
     );
     dispatch(
       setViewData({
@@ -343,7 +333,7 @@ export const ActionToolbar = ({
           PageNumber: 1,
           PageRecordCount: activePage?.viewData?.PagingInfo?.PageRecordCount,
         },
-      })
+      }),
     );
   };
   const pageTitle = activePage?.caption;
@@ -521,14 +511,14 @@ export const ActionToolbar = ({
                 })}
                 selectedRecords={selectedItems.map((selectedId) => {
                   const selectedRecord = records?.find(
-                    (el) => el[rowFieldKey] === selectedId
+                    (el) => el[rowFieldKey] === selectedId,
                   );
                   return selectedRecord;
                 })}
                 sourceKey={"Details"}
                 config={
                   chequeDynamicConfig.find(
-                    (item) => item.name === state?.actionConfig?.MenuDesc
+                    (item) => item.name === state?.actionConfig?.MenuDesc,
                   )?.config
                 }
               />

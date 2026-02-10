@@ -81,7 +81,6 @@ export const Discount = ({ form }) => {
           DiscountSaleTypesIds: item.DiscountSaleTypes.map(
             (item) => item.SaleTypeId
           ),
-       
         };
       });
 
@@ -101,12 +100,14 @@ export const Discount = ({ form }) => {
           return newValue;
         });
       } else {
-        formData = formConfig.map((item) => ({
-          ...item,
-          isTitleField: item.name === titleKey,
-          value: undefined,
-          originalValue: undefined,
-        }));
+        formData = formConfig.map((item) => {
+          return {
+            ...item,
+            isTitleField: item.name === titleKey,
+            value: item.type === "array" ? [] : undefined,
+            originalValue: item.type === "array" ? [] : undefined,
+          };
+        });
       }
 
       if (id) {
@@ -124,9 +125,10 @@ export const Discount = ({ form }) => {
       dispatch(setPageInfo({ pageId: pageId, pageInfo: info }));
     }
   }, [data?.Data]);
+
   return (
     <>
-      <DiscountForm defOpt={data?.Data} form={form} />
+      <DiscountForm defOpt={data?.Data} form={form} id={id} />
     </>
   );
 };

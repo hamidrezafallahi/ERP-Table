@@ -5,6 +5,9 @@ import React, {
   useState,
 } from 'react';
 
+import moment from 'moment-jalaali';
+import { useLocale } from 'next-intl';
+
 import {
   DynamicSelect,
   NewDatePicker,
@@ -28,6 +31,8 @@ export type CellMeta = {
   editable?: boolean;
   options?: { label: string; value: string }[];
   dynamicValue?: IRequestConfig;
+  // store: string;
+  // tableKey: string;
   tableId: string;
   columnId: string;
   indexOptions?: (
@@ -44,14 +49,12 @@ export type CellMeta = {
 };
 
 interface CellRendererProps {
-  tableId: string;
+  tableKey: string;
   rowId: number;
   columnId: string;
   cell: TCell;
   meta?: CellMeta;
   controller: UITableController;
-  onMouseDown: () => void;
-  onFocus: () => void;
   tabIndex: number;
   row: {
     id: number;
@@ -59,6 +62,7 @@ interface CellRendererProps {
     rowState: RowStateEnum;
     isExpanded: boolean;
   };
+  onActiveColChange(colId: string): void;
 }
 
 /* ======================================================
@@ -68,17 +72,20 @@ interface CellRendererProps {
 export const CellRenderer: React.FC<CellRendererProps> = ({
   row,
   rowId,
+  tableKey,
   columnId,
   cell,
   meta,
   controller,
-  onMouseDown,
-  onFocus,
   tabIndex,
+  onActiveColChange,
 }) => {
   const { value, display } = cell;
-
-  const dispatchChange = (newValue: unknown) => {
+  const refElement = useRef<HTMLElement>(null);
+  const [, forceUpdate] = useState(0);
+  const isActive = controller.isActiveCell(tableKey, rowId, columnId);
+  const locale = useLocale();
+  const dispatchChangeValue = (newValue: unknown) => {
     controller.dispatch({
       type: "UI_CELL_CHANGE",
       rowId,
@@ -86,11 +93,17 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
       value: newValue,
     });
   };
-
-  const [editMode, setEditMode] = useState(false);
-  const [tempValue, setTempValue] = useState<unknown>(null);
-
-  const refElement = useRef<HTMLElement>(null);
+  const dispatchChangeDisplay = (label: string | null) => {
+    controller.dispatch({
+      type: "UI_CELL_CHANGE_DISPLAY",
+      rowId,
+      columnId,
+      value: label,
+    });
+  };
+  const activeCell = () => {
+    controller.dispatch({ type: "UI_ACTIVE_CELL", rowId, columnId });
+  };
 
   const type = meta.renderType;
   const editable = meta.editable;
@@ -100,34 +113,60 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     e.preventDefault();
     e.stopPropagation();
   };
-  const closeIfNotChanged = () => {
-    if (tempValue === value) {
-      setEditMode(false);
+  const valueParser = (val) => {
+    if (val == null || val == undefined) {
+      return "—";
+    }
+    switch (type) {
+      case "text":
+      case "number":
+      case "select":
+      case "selectOption":
+      case "static":
+        return val;
+
+      case "date":
+        if (locale === "fa") {
+          return moment(val).format("jYYYY/jMM/jDD");
+        } else {
+          return moment(val).format("YYYY/MM/DD");
+        }
+
+      default:
+        return "—";
     }
   };
-
+useEffect(() => {
+  if (!controller) return;
+  const unsubscribe = controller.subscribeCell(rowId, columnId, () => {
+    forceUpdate(t => t + 1);
+  });
+  return () => unsubscribe?.();
+}, [controller, rowId, columnId]);
   /* ===== close on outside click ===== */
-  useEffect(() => {
-    if (!editMode) return;
+  // useEffect(() => {
+  //   if (!editMode) return;
 
-    const close = (e: MouseEvent) => {
-      if (!refElement.current) return;
-      if (refElement.current.contains(e.target as Node)) return;
+  //   const close = (e: MouseEvent) => {
+  //     if (!refElement.current) return;
+  //     if (refElement.current.contains(e.target as Node)) return;
 
-      setEditMode(false);
-    };
+  //     setEditMode(false);
+  //   };
 
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
-  }, [editMode]);
+  //   document.addEventListener("click", close);
+  //   return () => document.removeEventListener("click", close);
+  // }, [editMode]);
 
+  // useEffect(() => {
+  //   if (isActive && refElement.current) {
+  //     refElement.current.focus();
+  //   }
+  // }, [isActive]);
   /* ===== not editable ===== */
   if (editable == false || type == "index") {
     return (
       <span
-        // ref={refElement}
-        onMouseDown={onMouseDown}
-        onFocus={onFocus}
         className="text-xs"
       >
         {String(value ?? "")}
@@ -136,23 +175,20 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   }
 
   /* ===== view mode ===== */
-  // if (!editMode) {
-  //   return (
-  //     <span
-  //       ref={refElement as Ref<HTMLSpanElement>}
-  //       tabIndex={tabIndex}
-  //       className="flex items-center px-2 w-full h-full text-xs cursor-text"
-  //       onMouseDown={onMouseDown}
-  //       onFocus={(e) => {
-  //         onFocus();
-  //         setEditMode(true);
-  //       }}
-  //       onClick={() => setEditMode(true)}
-  //     >
-  //       {String(display ?? value ?? "") || "—"}
-  //     </span>
-  //   );
-  // }
+  if (!isActive) {
+    return (
+      <span
+        ref={refElement as Ref<HTMLSpanElement>}
+        tabIndex={tabIndex}
+        className={`flex items-center  px-2 w-full h-full text-xs cursor-text`}
+        onClick={() => {
+          activeCell();
+        }}
+      >
+        {valueParser(display ?? value)}
+      </span>
+    );
+  }
 
   /* ===== edit mode ===== */
   switch (type) {
@@ -160,7 +196,6 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
       return (
         <input
           autoFocus
-          ref={refElement as Ref<HTMLInputElement>}
           value={value === "" || value == null ? "" : Number(value)}
           disabled={isDeleted || !editable}
           className={`${isDeleted && "cursor-not-allowed"}
@@ -168,14 +203,13 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           focus-visible:outline-none focus:outline-none ring-0 focus:!ring-0 
           focus:ring-offset-0 w-36 h-8 text-xs transition-colors ]`}
           draggable={false}
-          onBlur={() => setEditMode(false)}
-          onMouseDown={onMouseDown}
-          onFocus={onFocus}
           onDragStart={blockDrag}
           onDragOver={blockDrag}
           onDrop={blockDrag}
           onChange={(e) =>
-            dispatchChange(e.target.value === "" ? "" : Number(e.target.value))
+            dispatchChangeValue(
+              e.target.value === "" ? "" : Number(e.target.value),
+            )
           }
         />
       );
@@ -186,8 +220,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           disabled={isDeleted || !editable}
           value={value ? new Date(value as string).valueOf() : undefined}
           onChange={(v) => {
-            dispatchChange(v);
-            setEditMode(false);
+            dispatchChangeValue(v);
           }}
         />
       );
@@ -195,17 +228,15 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     case "select":
       return (
         <select
-          autoFocus
-          ref={refElement as Ref<HTMLSelectElement>}
+          // autoFocus
+          // ref={refElement as Ref<HTMLSelectElement>}
           disabled={isDeleted || !editable}
           className={`!w-36 h-8 ${isDeleted && "cursor-not-allowed"}`}
           value={String(value ?? "")}
-          onMouseDown={onMouseDown}
-          onFocus={onFocus}
-          onBlur={closeIfNotChanged}
+          // onFocus={() => onActiveColChange(columnId)}
+          onClick={() => activeCell()}
           onChange={(e) => {
-            dispatchChange(e.target.value);
-            setEditMode(false);
+            dispatchChangeValue(e.target.value);
           }}
         >
           <option value="" />
@@ -220,32 +251,42 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     case "selectOption":
       return (
         <DynamicSelect
-          // autoFocus
+          autoFocus
           ref={refElement as Ref<HTMLSelectElement>}
           disabled={isDeleted || !editable}
-          value={String(value ?? "")}
-          // onBlur={closeIfNotChanged}
+          value={{ value: String(value ?? ""), label: cell.display }}
           dynamicValue={meta?.dynamicValue}
-          className={`!w-36 h-8 ${isDeleted && "cursor-not-allowed"}`}
+          onFocus={() => onActiveColChange(columnId)}
+          className={`!w-36 h-8 ${isDeleted && "cursor-not-allowed"} relative`}
           infinite
-          onChange={(v) => {
-            dispatchChange(v);
-            setEditMode(false);
+          onClick={() => activeCell()}
+          onChange={(v, o) => {
+            dispatchChangeValue(v);
+            if (!Array.isArray(o)) {
+              if (o?.label) {
+                dispatchChangeDisplay(o.label as string);
+              } else {
+                console.log("change display to null");
+                dispatchChangeDisplay(null);
+              }
+            }
           }}
         />
       );
+
     case "static":
       return (
         <span
-          ref={refElement as Ref<HTMLSpanElement>}
+          // ref={refElement as Ref<HTMLSpanElement>}
           tabIndex={tabIndex}
           className="flex items-center px-2 w-full h-full text-xs cursor-text"
-          onMouseDown={onMouseDown}
-          onFocus={(e) => {
-            onFocus();
-            setEditMode(true);
-          }}
-          onClick={() => setEditMode(true)}
+          onClick={() => activeCell()}
+
+          // onFocus={(e) => {
+          //   activeCell();
+
+          //   onActiveColChange(columnId);
+          // }}
         >
           {String(display ?? value ?? "") || "—"}
         </span>
@@ -255,21 +296,22 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     default:
       return (
         <input
-          autoFocus
-          ref={refElement as Ref<HTMLInputElement>}
+          // autoFocus
+          // ref={refElement as Ref<HTMLInputElement>}
           disabled={isDeleted || !editable}
           value={value == null ? "" : String(value)}
           className={`${isDeleted && "cursor-not-allowed"}
             flex items-center bg-transparent px-2 outline-none focus-visible:outline-none
            focus:outline-none ring-0 focus:!ring-0 focus:ring-offset-0 w-36 h-8 transition-colors ]`}
           draggable={false}
-          onBlur={() => setEditMode(false)}
-          onMouseDown={onMouseDown}
-          onFocus={onFocus}
+          // onBlur={() => activeCell()}
           onDragStart={blockDrag}
           onDragOver={blockDrag}
           onDrop={blockDrag}
-          onChange={(e) => dispatchChange(e.target.value)}
+          onChange={(e) => dispatchChangeValue(e.target.value)}
+          // onFocus={() => onActiveColChange(columnId)}
+                    onClick={() => activeCell()}
+
         />
       );
   }

@@ -1,12 +1,8 @@
-import { useState } from 'react';
+import { useState } from "react";
 
-import { CustomButton } from '@components/atoms/defaultElements';
-import {
-  Downtrend,
-  Update,
-  Uptrend,
-} from '@components/atoms/iconComponents';
-import { useDarkMode } from '@hooks/custom';
+import { CustomButton } from "@components/atoms/defaultElements";
+import { Downtrend, Update, Uptrend } from "@components/atoms/iconComponents";
+import { useDarkMode } from "@hooks/custom";
 
 export const MainHeaderCard = ({ item }) => {
   const { mode = "light" } = useDarkMode();
@@ -17,14 +13,14 @@ export const MainHeaderCard = ({ item }) => {
     setLoading(!loading);
   };
   return (
-    <div className="flex flex-col px-4 border border-gray-gray6 rounded-lg w-full h-20">
-      <div className="flex justify-between items-center">
-        <div className="text-gray-gray9 dark:text-white text-xs">
+    <div className="flex flex-col p-4 border border-gray-gray4 gap-2 rounded-lg w-full">
+      <div className="flex justify-between gap-2 items-center">
+        <div className="text-gray-gray9 dark:text-white text-xs truncate">
           {item.label}
         </div>
         <CustomButton
           type="text"
-          className={`h-fit !bg-transparent active:!bg-transparent !m-0 !p-2 flex justify-center items-center rounded-full ${
+          className={`h-fit !bg-transparent active:!bg-transparent !m-0 !p-0 flex justify-center items-center rounded-full ${
             loading ? "animate-rotate" : ""
           }`}
           onClick={() => {
@@ -41,26 +37,24 @@ export const MainHeaderCard = ({ item }) => {
         </CustomButton>
       </div>
       <div className="flex justify-between items-center">
-        <div className="flex">
-          <div
-            className={`flex items-center  ${
-              item.value < 0
-                ? "text-state-error1"
-                : item.value == 0
+        <div
+          className={`flex items-center gap-1 ${
+            item.value < 0
+              ? "text-state-error1"
+              : item.value == 0
                 ? "text-gray-gray10"
                 : "text-state-success3"
-            }`}
-          >
-            {item.value}
-            {item.value < 0 ? (
-              <Downtrend />
-            ) : item.value == 0 ? null : (
-              <Uptrend />
-            )}
-          </div>
+          }`}
+        >
+          {item.value < 0 ? (
+            <Downtrend />
+          ) : item.value == 0 ? null : (
+            <Uptrend />
+          )}
+          {item.value}%
         </div>
         <div className="flex items-center gap-1">
-          <div className="p-1 text-gray-gray9 dark:!text-white text-sm">
+          <div className="p-1 text-gray-gray9 dark:!text-white font-medium text-sm">
             {item.price?.toLocaleString("fa-IR")}
           </div>
           {/* <div className="text-3xs text-gray-gray7">تومان</div> */}

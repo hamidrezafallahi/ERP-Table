@@ -1,23 +1,23 @@
-import moment from 'moment-jalaali';
-import { shallowEqual } from 'react-redux';
+import moment from "moment-jalaali";
+import { shallowEqual } from "react-redux";
 
 import {
   CustomSelect,
   DynamicSelect,
   NewDatePicker,
-} from '@components/atoms/defaultElements';
-import InputText from '@components/atoms/defaultElements/inputText';
-import { CloseCircle } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
-import type { IFormField } from '@type/elementType';
+} from "@components/atoms/defaultElements";
+import InputText from "@components/atoms/defaultElements/inputText";
+import { CloseCircle } from "@components/atoms/iconComponents";
+import { useAppSelector } from "@redux/index";
+import type { IFormField } from "@type/elementType";
 
 export default function QuickFilters({ handleRemove, handleChange, fields }) {
-  const { activePage,   locale } = useAppSelector(
+  const { activePage, locale } = useAppSelector(
     (state) => ({
       activePage: state.withPersist.pages.find((item) => item.isActive),
       locale: state.withPersist.config.lang,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const filters = activePage?.viewData?.Filters?.FilterInfo;
@@ -43,7 +43,7 @@ export default function QuickFilters({ handleRemove, handleChange, fields }) {
                 handleChange(
                   field.fieldName,
                   event.target.value,
-                  field.fieldType
+                  field.fieldType,
                 );
               }
             }}
@@ -73,7 +73,7 @@ export default function QuickFilters({ handleRemove, handleChange, fields }) {
                 handleChange(
                   field.fieldName,
                   event.target.value,
-                  field.fieldType
+                  field.fieldType,
                 );
               }
             }}
@@ -98,7 +98,7 @@ export default function QuickFilters({ handleRemove, handleChange, fields }) {
       }
 
       case "select":
-        if (field?.valueOption.Options) {
+        if (field?.valueOption?.Options?.length > 0) {
           const options = field?.valueOption.Options.map((item) => {
             return {
               label: item.caption,
@@ -107,31 +107,28 @@ export default function QuickFilters({ handleRemove, handleChange, fields }) {
             };
           });
           const currentValue = filters.find(
-            (i) => i.ColName === field.fieldName
+            (i) => i.ColName === field.fieldName,
           )?.Value;
           const defaultValue = options.find((i) => i.value === currentValue);
           return (
             <CustomSelect
               className="w-[150px]"
-              value={defaultValue ? defaultValue : ""}
+              value={defaultValue}
               // placeholder={t("general.selectField")}
               onChange={(value) => {
                 handleChange(
                   field.fieldName,
-                  value.toString(),
-                  field.fieldType
+                  value?.toString(),
+                  field.fieldType,
                 );
               }}
               options={options}
+              onClear={() => handleRemove(field)}
             />
           );
         }
         return (
           <DynamicSelect
-            allowClear={{
-              clearIcon: <CloseCircle />,
-            }}
-            onClear={() => handleRemove(field)}
             value={filters.find((i) => i.ColName === field.fieldName)?.Value}
             dynamicValue={field?.valueOption}
             className="rounded w-full min-w-[152px]"
@@ -139,11 +136,12 @@ export default function QuickFilters({ handleRemove, handleChange, fields }) {
               if (value) {
                 handleChange(
                   field.fieldName,
-                  value.toString(),
-                  field.fieldType
+                  value?.toString(),
+                  field.fieldType,
                 );
               }
             }}
+            onClear={() => handleRemove(field)}
           />
         );
 

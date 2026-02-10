@@ -19,6 +19,12 @@ export interface CellChangedEvent extends BaseTableEvent {
   columnId: string;
   newValue: unknown;
 }
+export interface CellDisplayChangedEvent extends BaseTableEvent {
+  type: 'CELL_DISPLAY_CHANGED';
+  rowId: number;
+  columnId: string;
+  newValue: unknown;
+}
 
 /* ======================================================
    Row Events
@@ -120,6 +126,7 @@ export interface ValidationFailedEvent extends BaseTableEvent {
 
 export type TableEvent =
   | CellChangedEvent
+  | CellDisplayChangedEvent
   | RowAddedEvent
   | NewRowAddedEvent
   | RowDeletedEvent

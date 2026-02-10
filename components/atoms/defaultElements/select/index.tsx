@@ -1,16 +1,26 @@
-import { FC, useCallback, useEffect } from "react";
+import {
+  FC,
+  useCallback,
+  useEffect,
+} from 'react';
 
-import { Select } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Select } from 'antd';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { PlusOutline, Reload } from "@components/atoms/iconComponents";
-import { useInitializePage } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
+import {
+  PlusOutline,
+  Reload,
+} from '@components/atoms/iconComponents';
+import { useInitializePage } from '@hooks/custom';
+import { useAppSelector } from '@redux/index';
+import { setPageData } from '@slice/pages';
 
-import { MobileSelect } from "./mobileSelect";
-import type { IProps } from "./type";
+import { MobileSelect } from './mobileSelect';
+import type { IProps } from './type';
 
 export const CustomSelect: FC<IProps> = ({
   ref,
@@ -233,6 +243,7 @@ export const CustomSelect: FC<IProps> = ({
           placement={lang === "fa" ? "bottomRight" : "bottomLeft"}
           ref={ref}
           allowClear={props.allowClear ? props.allowClear : match}
+          onChange={selectHandler}
           popupRender={
             props?.popupRender
               ? props?.popupRender

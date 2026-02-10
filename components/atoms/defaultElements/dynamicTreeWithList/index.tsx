@@ -47,7 +47,7 @@ export const DynamicTreeWithList: FC<IProps> = ({
         .find((item) => item.isActive)
         ?.pageData?.find((item) => item.name == config.name)?.value,
     }),
-    shallowEqual
+    shallowEqual,
   );
   const [availableOptions, setAvailableOptions] = useState<any[]>([]);
   const [treeData, setTreeData] = useState<IData[]>([]);
@@ -61,7 +61,7 @@ export const DynamicTreeWithList: FC<IProps> = ({
   };
 
   const existBody = Object.fromEntries(
-    Object.entries(body).filter(([_, value]) => value !== null)
+    Object.entries(body).filter(([_, value]) => value !== null),
   );
 
   const { data, refetch, isFetching } = useGetData<ISelectOption[], null>({
@@ -113,7 +113,7 @@ export const DynamicTreeWithList: FC<IProps> = ({
   const setOptionsDisabledStatus = (
     options: IData[],
     values: number[],
-    disabled: boolean
+    disabled: boolean,
   ): IData[] => {
     return options.map((item) => {
       const children = item.children
@@ -129,13 +129,13 @@ export const DynamicTreeWithList: FC<IProps> = ({
 
   const handleTreeSelectChange = (selectedValues: number[]) => {
     const selectedItems = selectedValues.map((val) =>
-      findOptionByValue(availableOptions, val)
+      findOptionByValue(availableOptions, val),
     );
 
     const newAvailable = setOptionsDisabledStatus(
       availableOptions,
       selectedValues,
-      true
+      true,
     );
 
     setAvailableOptions(newAvailable);
@@ -143,7 +143,7 @@ export const DynamicTreeWithList: FC<IProps> = ({
       setPageData({
         name,
         value: selectedItems,
-      })
+      }),
     );
 
     onChange?.(selectedItems, selectedItems as any, null);
@@ -155,7 +155,7 @@ export const DynamicTreeWithList: FC<IProps> = ({
     const newAvailable = setOptionsDisabledStatus(
       availableOptions,
       [value],
-      false
+      false,
     );
 
     setAvailableOptions(newAvailable);
@@ -163,7 +163,7 @@ export const DynamicTreeWithList: FC<IProps> = ({
       setPageData({
         name,
         value: newSelectedList,
-      })
+      }),
     );
 
     onChange?.(newSelectedList, newSelectedList, null);
@@ -198,7 +198,7 @@ export const DynamicTreeWithList: FC<IProps> = ({
       return;
 
     const preSelectedItems = props.value.map((val) =>
-      findOptionByValue(options, val)
+      findOptionByValue(options, val),
     );
 
     if (JSON.stringify(preSelectedItems) !== JSON.stringify(selectedItems)) {
@@ -206,7 +206,7 @@ export const DynamicTreeWithList: FC<IProps> = ({
         setPageData({
           name,
           value: preSelectedItems,
-        })
+        }),
       );
     }
   }, [props.value, options]);
@@ -266,7 +266,7 @@ export const DynamicTreeWithList: FC<IProps> = ({
             if (onSearchPhrase) {
               return onSearchPhrase(
                 correctOption[0]?.value,
-                correctOption[0]?.title
+                correctOption[0]?.title,
               );
             }
           }
@@ -276,8 +276,9 @@ export const DynamicTreeWithList: FC<IProps> = ({
         addButton={addButton}
       />
 
-      <div className="flex flex-col gap-2 p-2 border border-gray-gray5 rounded  overflow-auto"
-       style={{ height: listHeight }}
+      <div
+        className="flex flex-col gap-2 p-2 border border-gray-gray5 rounded  overflow-auto"
+        style={{ height: listHeight }}
       >
         {selectedItems?.map((item: number, idx: number) => {
           const element = findItemInNestedData<IData>(treeData, "value", item);

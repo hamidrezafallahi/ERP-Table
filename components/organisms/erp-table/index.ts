@@ -4,7 +4,7 @@ export { ERPTable } from './ui/erp-table';
 export { CellRenderer } from './ui/erp-table/cellRenderer';
 export { TableEngine } from './engine/tableEngine';
 
-export { createERPTable } from './bootstrap/createERPTable';
+export { createERPTable } from './bootstrap';
 export type {
   CreateERPTableConfig,
   FieldType,

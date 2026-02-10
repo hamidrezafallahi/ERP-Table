@@ -1,13 +1,10 @@
-import { Badge } from 'antd';
-import { shallowEqual } from 'react-redux';
+import { Badge } from "antd";
+import { shallowEqual } from "react-redux";
 
-import {
-  Close,
-  FilterIcon,
-} from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { Close, FilterIcon } from "@components/atoms/iconComponents";
+import { useAppSelector } from "@redux/index";
 
-import type { IProps } from './type';
+import type { IProps } from "./type";
 
 export default function Filter({
   onResetFilters,
@@ -17,13 +14,19 @@ export default function Filter({
   const { match } = useAppSelector((state) => {
     const match = state.withPersist.config.initMatch;
     return { match };
-  },shallowEqual);
+  }, shallowEqual);
 
   return match ? (
     <>
       <span
-        className="flex items-center bg-gray-gray3 hover:bg-gray-gray5 dark:bg-gray-gray9 p-3 h-full text-black-black95 dark:text-gray-gray2 cursor-pointer"
-        onClick={onResetFilters}
+        className={`${filterCount > 0 ? "cursor-pointer" : "cursor-not-allowed"} flex items-center bg-gray-gray3 hover:bg-gray-gray5 dark:bg-gray-gray9 p-3 h-full text-black-black95 dark:text-gray-gray2`}
+        onClick={() => {
+          if (filterCount > 0) {
+            onResetFilters();
+          } else {
+            null;
+          }
+        }}
       >
         <Close
           config={{

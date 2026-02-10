@@ -66,7 +66,7 @@ function DataGridInner<T extends IBaseDto>(
     formUrl,
     withoutActivation,
   }: IProps<T>,
-  ref: Ref<HTMLDivElement>
+  ref: Ref<HTMLDivElement>,
 ) {
   const { mode = "light" } = useDarkMode();
 
@@ -117,7 +117,7 @@ function DataGridInner<T extends IBaseDto>(
     let statusId;
     const deletedItems = activePage?.viewData?.deletedItems;
     const findingStatusId = activePage?.viewData?.statusItems.find(
-      (el) => el.id === id
+      (el) => el.id === id,
     );
     if (findingStatusId) {
       statusId = findingStatusId.status;
@@ -163,7 +163,7 @@ function DataGridInner<T extends IBaseDto>(
           PageNumber: page,
           PageRecordCount: viewData.PagingInfo.PageRecordCount,
         },
-      })
+      }),
     );
   };
   const handlePageSizeChange = (value: string) => {
@@ -174,7 +174,7 @@ function DataGridInner<T extends IBaseDto>(
           PageNumber: 1,
           PageRecordCount: value ? value : recordPerPage,
         },
-      })
+      }),
     );
   };
   const handleSetBookmark = async (id: number, isBookmarked: boolean) => {
@@ -208,7 +208,7 @@ function DataGridInner<T extends IBaseDto>(
 
             if (existingChange) {
               return prevState.map((item) =>
-                item.id === id ? { ...item, HasBookMark: !isBookmarked } : item
+                item.id === id ? { ...item, HasBookMark: !isBookmarked } : item,
               );
             }
 
@@ -220,7 +220,6 @@ function DataGridInner<T extends IBaseDto>(
               },
             ];
           });
-          // dispatch(apiService.util.resetApiState());
         }
       } catch (error) {
         null;
@@ -243,7 +242,7 @@ function DataGridInner<T extends IBaseDto>(
             ? prev.filter((item) => item !== focusedKey)
             : [...prev, focusedKey];
           dispatch(
-            setItems({ pageId: activePage?.pageId, items: newSelectedData })
+            setItems({ pageId: activePage?.pageId, items: newSelectedData }),
           );
         }
       } else if (e.code === "Escape") {
@@ -288,19 +287,19 @@ function DataGridInner<T extends IBaseDto>(
       selectedItems?.itemsByPage?.[activePage?.pageId],
       dispatch,
       handleEdit,
-    ]
+    ],
   );
 
   const hasBadge = columnsConfig?.find((item) => item.fieldType === "badge");
 
   const correctColumns = columnsConfig?.filter(
-    (column) => column?.fieldType !== "badge"
+    (column) => column?.fieldType !== "badge",
   );
 
   const columns: TableColumnsType<T> = correctColumns?.map(
     (item: IColumnConfig, index: number) => {
       const hasPendingStatus = processedData?.find(
-        (i) => i.PendingStatusId !== undefined
+        (i) => i.PendingStatusId !== undefined,
       );
 
       const isFirstColumn = index === 0;
@@ -327,7 +326,7 @@ function DataGridInner<T extends IBaseDto>(
                           onClick={() =>
                             handleEdit(
                               record[rowFieldKey],
-                              record.PendingStatusId
+                              record.PendingStatusId,
                             )
                           }
                         >
@@ -381,7 +380,7 @@ function DataGridInner<T extends IBaseDto>(
           align: typeof item.fieldName === "string" ? "right" : "left",
           render: (text: any, record: any) => {
             const badgeValue = hasBadge?.conditionalConfig?.find(
-              (el) => el.value === record[hasBadge?.fieldName]
+              (el) => el.value === record[hasBadge?.fieldName],
             );
             return (
               <div className="flex items-center gap-2 my-2">
@@ -406,7 +405,7 @@ function DataGridInner<T extends IBaseDto>(
           return <div className="my-2">{record?.[item.fieldName]}</div>;
         },
       };
-    }
+    },
   );
 
   if (viewData?.ShowTags) {
@@ -432,7 +431,7 @@ function DataGridInner<T extends IBaseDto>(
                   record[additionalFieldKey],
                   record["PendingStatusId"],
                   record["FormViewId"],
-                  record["UniqueId"]
+                  record["UniqueId"],
                 )
               }
             >
@@ -463,11 +462,14 @@ function DataGridInner<T extends IBaseDto>(
       render: (_, record) => {
         const moreActionItem = restActions?.map((action) => {
           const isDisabled =
-            conditionalActions?.some(
-              (el) =>
-                el.conditionallyAction === action.MenuDesc &&
-                !record[el?.conditionalProperty]
+            conditionalActions?.some((el) =>
+              el.conditionallyAction === action.MenuDesc
+                ? el.opposite
+                  ? !!record[el.conditionalProperty]
+                  : !record[el.conditionalProperty]
+                : false,
             ) ?? false;
+
           return {
             key: action.MenuId,
             label: action.MenuDesc,
@@ -487,7 +489,7 @@ function DataGridInner<T extends IBaseDto>(
                   record[additionalFieldKey],
                   record["PendingStatusId"],
                   record["FormViewId"],
-                  record["UniqueId"]
+                  record["UniqueId"],
                 );
               } else {
                 null;
@@ -497,7 +499,7 @@ function DataGridInner<T extends IBaseDto>(
         });
 
         const isDeleted = activePage?.viewData?.deletedItems?.find(
-          (item) => item === record[rowFieldKey]
+          (item) => item === record[rowFieldKey],
         );
         const isPending =
           record["PendingStatusId"] === PendingStatusEnum.Pending1 ||
@@ -513,10 +515,12 @@ function DataGridInner<T extends IBaseDto>(
           <div className="flex justify-center items-center gap-3">
             {firstSixActions.map((action) => {
               const isDisabled =
-                conditionalActions?.some(
-                  (el) =>
-                    el.conditionallyAction === action.MenuDesc &&
-                    !record[el?.conditionalProperty]
+                conditionalActions?.some((el) =>
+                  el.conditionallyAction === action.MenuDesc
+                    ? el.opposite
+                      ? !!record[el.conditionalProperty]
+                      : !record[el.conditionalProperty]
+                    : false,
                 ) ?? false;
               return (
                 <CustomTooltip key={action.MenuDesc} title={action.MenuDesc}>
@@ -533,7 +537,7 @@ function DataGridInner<T extends IBaseDto>(
                           record[additionalFieldKey],
                           record["PendingStatusId"],
                           record["FormViewId"],
-                          record["UniqueId"]
+                          record["UniqueId"],
                         );
                       } else {
                         null;
@@ -632,7 +636,7 @@ function DataGridInner<T extends IBaseDto>(
                       onClick={() =>
                         handleSetBookmark(
                           Number(_record[rowFieldKey]),
-                          _record?.HasBookMark
+                          _record?.HasBookMark,
                         )
                       }
                     >
@@ -642,10 +646,10 @@ function DataGridInner<T extends IBaseDto>(
                         <Spin size="small" indicator={<SpinIcon />} />
                       ) : currentChanges &&
                         currentChanges.find(
-                          (item) => item.id === _record[rowFieldKey]
+                          (item) => item.id === _record[rowFieldKey],
                         ) ? (
                         currentChanges.find(
-                          (item) => item.id === _record[rowFieldKey]
+                          (item) => item.id === _record[rowFieldKey],
                         ).HasBookMark === true ? (
                           <BookMarkIconFilled />
                         ) : (
@@ -667,28 +671,28 @@ function DataGridInner<T extends IBaseDto>(
               const prev =
                 selectedItems?.itemsByPage?.[activePage?.pageId] ?? [];
               const currentPageIds = processedData.map(
-                (item) => item[rowFieldKey]
+                (item) => item[rowFieldKey],
               );
 
               const itemsFromOtherPages = prev.filter(
-                (item) => !currentPageIds.includes(item)
+                (item) => !currentPageIds.includes(item),
               );
 
               const numericKeys = selectedRowKeys.filter(
-                (key): key is number => typeof key === "number"
+                (key): key is number => typeof key === "number",
               );
 
               const finalItems = Array.from(
-                new Set<number>([...itemsFromOtherPages, ...numericKeys])
+                new Set<number>([...itemsFromOtherPages, ...numericKeys]),
               );
 
               dispatch(
-                setItems({ pageId: activePage?.pageId, items: finalItems })
+                setItems({ pageId: activePage?.pageId, items: finalItems }),
               );
             },
             getCheckboxProps: (record) => ({
               disabled: activePage?.viewData?.deletedItems?.find(
-                (item) => item === record[rowFieldKey]
+                (item) => item === record[rowFieldKey],
               )
                 ? true
                 : false,
@@ -702,7 +706,7 @@ function DataGridInner<T extends IBaseDto>(
           onRow={(data, index) => {
             const deletedItems = activePage?.viewData?.deletedItems;
             const isDeleted = deletedItems?.find(
-              (item) => item === data[rowFieldKey]
+              (item) => item === data[rowFieldKey],
             );
 
             return {
@@ -711,10 +715,10 @@ function DataGridInner<T extends IBaseDto>(
               className: isDeleted
                 ? "line-through text-gray-gray8"
                 : focusedIndex === index
-                ? "custom-row-focused"
-                : index % 2 === 0
-                ? "custom-row-even"
-                : "custom-row-odd",
+                  ? "custom-row-focused"
+                  : index % 2 === 0
+                    ? "custom-row-even"
+                    : "custom-row-odd",
             };
           }}
           scroll={{
@@ -786,7 +790,7 @@ function DataGridInner<T extends IBaseDto>(
   );
 }
 const DataGrid = forwardRef(DataGridInner) as <T extends IBaseDto>(
-  props: IProps<T> & { ref?: Ref<HTMLDivElement> }
+  props: IProps<T> & { ref?: Ref<HTMLDivElement> },
 ) => ReturnType<typeof DataGridInner>;
 
 export default DataGrid;

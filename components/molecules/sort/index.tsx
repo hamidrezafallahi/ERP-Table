@@ -1,26 +1,19 @@
-import {
-  useEffect,
-  useState,
-} from 'react';
+import { useEffect, useState } from "react";
 
-import { Badge } from 'antd';
-import { useTranslations } from 'next-intl';
-import {
-  shallowEqual,
-  useDispatch,
-} from 'react-redux';
+import { Badge } from "antd";
+import { useTranslations } from "next-intl";
+import { shallowEqual, useDispatch } from "react-redux";
 
-import { CustomDropdownButton } from '@components/atoms/defaultElements';
+import { CustomDropdownButton } from "@components/atoms/defaultElements";
 import {
   AdvancedSortIcon,
   Close,
   SortAscending,
-} from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
-import { apiService } from '@services/base';
-import { setViewData } from '@slice/pages';
+} from "@components/atoms/iconComponents";
+import { useAppSelector } from "@redux/index";
+import { setViewData } from "@slice/pages";
 
-import type { IProps } from './type';
+import type { IProps } from "./type";
 
 export default function Sort({
   openSortModal,
@@ -34,7 +27,7 @@ export default function Sort({
   const { match } = useAppSelector((state) => {
     const match = state.withPersist.config.initMatch;
     return { match };
-  },shallowEqual);
+  }, shallowEqual);
 
   const [sort, setSort] = useState({ field: rowFieldKey, order: "" });
 
@@ -80,9 +73,8 @@ export default function Sort({
             PageNumber: 1,
             PageRecordCount: viewData?.PagingInfo?.PageRecordCount,
           },
-        })
+        }),
       );
-      dispatch(apiService.util.resetApiState());
     } else {
       dispatch(
         setViewData({
@@ -92,7 +84,7 @@ export default function Sort({
             PageNumber: 1,
             PageRecordCount: viewData?.PagingInfo?.PageRecordCount,
           },
-        })
+        }),
       );
     }
   };
@@ -140,7 +132,7 @@ export default function Sort({
         </span>
       ) : (
         <div
-          className="flex justify-center !px-0 items-center hover:bg-gray-gray6 bg-gray-gray6 rounded selection:rounded-s h-full cursor-pointer"
+          className="flex justify-center items-center bg-gray-gray6 hover:bg-gray-gray6 !px-0 rounded selection:rounded-s h-full cursor-pointer"
           onClick={() => {
             handleFieldChange(sort.field);
             sort.field && onApplySort(sort);

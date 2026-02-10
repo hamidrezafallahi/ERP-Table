@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
-import { Checkbox, Form, Spin } from "antd";
-import { useTranslations } from "next-intl";
 import { CustomButton } from "@components/atoms/defaultElements";
 import { SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation, useGetData } from "@services/base";
 import { useAppSelector } from "@redux/index";
+import { useCUDDataMutation, useGetData } from "@services/base";
+import { Checkbox, Form, Spin } from "antd";
+import { useTranslations } from "next-intl";
 
 export default function CustomFormRepoAssign({
   selectedGoodId,
@@ -14,7 +14,7 @@ export default function CustomFormRepoAssign({
 }) {
   const t = useTranslations();
   const placeId = useAppSelector(
-    (state) => state.withPersist.config.defaultConfigs.PlaceId.id
+    (state) => state.withPersist.config.defaultConfigs.PlaceId.id,
   );
 
   const [mutateItem, { isLoading: mutateIsLoading }] = useCUDDataMutation();
@@ -28,7 +28,7 @@ export default function CustomFormRepoAssign({
         PlaceId: placeId,
       },
       skip: !selectedGoodId || !systemId,
-    }
+    },
   );
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function CustomFormRepoAssign({
           initialValue={false}
           className="flex flex-col justify-end !mb-0 !pb-0 text-xs"
         >
-          <Checkbox> {t("general.assignablity")}</Checkbox>
+          <Checkbox> {t("general.assignability")}</Checkbox>
         </Form.Item>
         <Form.Item className="col-span-12 lg:col-span-3 m-0 p-0 text-xs">
           <div className="flex justify-end items-center gap-2 pt-1 w-full">

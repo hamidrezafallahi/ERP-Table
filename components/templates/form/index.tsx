@@ -18,6 +18,7 @@ export default function Form<T, K>({
   extraFunction,
   withImage,
   submitCaption,
+  withSubmitButton = true,
 }: IProps) {
   return (
     <FormGenerator<T, K>
@@ -36,6 +37,7 @@ export default function Form<T, K>({
       extraFunction={extraFunction}
       withImage={withImage}
       submitCaption={submitCaption}
+      withSubmitButton={withSubmitButton}
     />
   );
 }

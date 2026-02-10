@@ -3,7 +3,7 @@ import { Dispatch, SetStateAction } from "react";
 export interface IProps {
   caption: string;
   fieldKey: string;
-  titleKey: string;
+  titleKey: string | string[];
   listUrl: string;
   url: string;
   pageIcon?: string;
@@ -19,4 +19,5 @@ export interface IProps {
   extraFunction?: (x: any) => void;
   withImage?: boolean;
   submitCaption?: string;
+  withSubmitButton?: boolean;
 }

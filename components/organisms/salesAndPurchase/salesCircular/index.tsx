@@ -32,7 +32,7 @@ export const SalesCircular = ({ form }) => {
   >({
     url: "api/sale/select/saleRule",
     body: {
-      RepoViewId: 1064,
+      RepoViewId: 130057,
       Id: id,
       ShowBookmarked: true,
       ShowTags: true,

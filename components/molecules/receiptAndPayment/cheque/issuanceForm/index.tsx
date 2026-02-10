@@ -218,7 +218,7 @@ export const IssuanceChequeForm = ({ activePage, form }: IProps) => {
         rules={[{ required: true, message: t("form.required") }]}
         className="flex flex-col !mb-0 !pb-0 text-xs"
       >
-        <InputNumber
+        <CustomInputNumber
             controls={false}
             min={0}
             disabled

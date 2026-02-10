@@ -1,5 +1,5 @@
 // RepoAssignSidebar.tsx
-import React, { Dispatch, useEffect, useState, useCallback } from "react";
+import { Dispatch, useEffect, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { DynamicSelect } from "@components/atoms/defaultElements";
 import { SpinIcon } from "@components/atoms/iconComponents";
@@ -59,7 +59,7 @@ export default function GoodListSideBar({
     if (isError) {
       setGoodsList([]);
     }
-  }, [repoEntityData, systemId, isError,isFetching]);
+  }, [repoEntityData, systemId, isError, isFetching]);
 
   useEffect(() => {
     setSearchPhrase("");
@@ -90,10 +90,7 @@ export default function GoodListSideBar({
       ) : (
         <>
           <DebounceSearch setSearch={handleChangeSearchPhrase} />
-          <GoodList
-            goodList={goodsList}
-            isFetching={isFetching}
-          />
+          <GoodList goodList={goodsList} isFetching={isFetching} />
         </>
       )}
     </div>

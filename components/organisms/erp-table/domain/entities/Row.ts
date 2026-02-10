@@ -28,12 +28,12 @@ export class Row {
     if (!cell) return;
     const value = cell.getValue();
     const originalValue = cell.getOriginalValue();
-    if (!value.equals(originalValue)) {
-      this.changeFields.add(columnId.value);
-    } else {
-      this.changeFields.delete(columnId.value);
-    }
     if (this.rowState.value !== RowStateEnum.Added) {
+      if (!value.equals(originalValue)) {
+        this.changeFields.add(columnId.value);
+      } else {
+        this.changeFields.delete(columnId.value);
+      }
 
       if (this.changeFields.size > 0) {
         this.rowState = new RowState(RowStateEnum.Modified)
@@ -64,6 +64,9 @@ export class Row {
   }
   getCells(): ReadonlyMap<string, Cell> {
     return new Map(this.cells);
+  }
+  getCell(columnId:string): Cell{
+    return this.cells.get(columnId)
   }
   ensureCell(columnId: ColumnId, defaultValue: CellValue,displayValue:CellDisplay) {
     if (this.cells.has(columnId.value)) return;

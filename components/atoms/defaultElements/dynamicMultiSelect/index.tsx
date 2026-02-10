@@ -1,3 +1,4 @@
+
 import { FC, useEffect, useState } from "react";
 
 import { useTranslations } from "next-intl";

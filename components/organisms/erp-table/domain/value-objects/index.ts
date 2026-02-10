@@ -1,7 +1,7 @@
 import { IRequestConfig } from '@type/elementType';
 
+import { UITableController } from '../../adapters/ui/UITableController';
 import { FieldType } from '../../bootstrap/type';
-import { TableEngine } from '../../engine/tableEngine';
 import {
   ItemType,
   TCell,
@@ -44,7 +44,7 @@ export type ColumnSchema = {
   required?: boolean;
   dynamicValue?: IRequestConfig
   editable?: boolean;
-  indexOptions?: (tableId: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: TableEngine) => ItemType[];
+  indexOptions?: (tableId: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, controller: UITableController) => ItemType[];
   displayFormat?: (value: unknown) => unknown
   // در ادامه: validator, lookup, formula, dynamicRules...
 };

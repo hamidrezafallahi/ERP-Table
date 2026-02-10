@@ -1,16 +1,13 @@
-import {
-  useEffect,
-  useState,
-} from 'react';
+import { useEffect, useState } from "react";
 
 import {
   dateFilterTypeOptions,
   numberFilterTypeOptions,
   selectFilterTypeOptions,
   stringFilterTypeOptions,
-} from 'constants/filterType';
-import { useTranslations } from 'next-intl';
-import { shallowEqual } from 'react-redux';
+} from "constants/filterType";
+import { useTranslations } from "next-intl";
+import { shallowEqual } from "react-redux";
 
 import {
   CustomButton,
@@ -18,24 +15,17 @@ import {
   CustomTooltip,
   DynamicSelect,
   NewDatePicker,
-} from '@components/atoms/defaultElements';
-import InputText from '@components/atoms/defaultElements/inputText';
-import { Close } from '@components/atoms/iconComponents';
-import BookmarkFilter
-  from '@layout/baseLayout/desktop/actionBar/panelList/bookmarkFilter';
-import SaveFilter
-  from '@layout/baseLayout/desktop/actionBar/panelList/saveFilter';
-import TagFilters
-  from '@layout/baseLayout/desktop/actionBar/panelList/tagFilters';
-import { useAppSelector } from '@redux/index';
+} from "@components/atoms/defaultElements";
+import InputText from "@components/atoms/defaultElements/inputText";
+import { Close } from "@components/atoms/iconComponents";
+import BookmarkFilter from "@layout/baseLayout/desktop/actionBar/panelList/bookmarkFilter";
+import SaveFilter from "@layout/baseLayout/desktop/actionBar/panelList/saveFilter";
+import TagFilters from "@layout/baseLayout/desktop/actionBar/panelList/tagFilters";
+import { useAppSelector } from "@redux/index";
 
-import ShowBookmarkFilter from './showBookmarkFilter';
-import ShowTagFilters from './showTagFilters';
-import type {
-  IAdvancedFilter,
-  IData,
-  IProps,
-} from './type';
+import ShowBookmarkFilter from "./showBookmarkFilter";
+import ShowTagFilters from "./showTagFilters";
+import type { IAdvancedFilter, IData, IProps } from "./type";
 
 export default function AdvancedFilter({
   data,
@@ -48,8 +38,11 @@ export default function AdvancedFilter({
   const { match } = useAppSelector((state) => {
     const match = state.withPersist.config.initMatch;
     return { match };
-  },shallowEqual);
-  const [filters, setFilters] = useState<IAdvancedFilter[]>([]);
+  }, shallowEqual);
+  const [filters, setFilters] = useState<IAdvancedFilter[]>([
+    { id: 1, field: undefined, value: undefined, type: undefined },
+  ]);
+
   const [counter, setCounter] = useState(0);
 
   const handleFieldChange = (id: number, value: any) => {
@@ -57,24 +50,24 @@ export default function AdvancedFilter({
       filters.map((filter) =>
         filter.id === id
           ? { ...filter, field: value, value: undefined, type: undefined }
-          : filter
-      )
+          : filter,
+      ),
     );
   };
 
   const handleFilterValueChange = (id: number, value: any) => {
     setFilters(
       filters.map((filter) =>
-        filter.id === id ? { ...filter, value: value } : filter
-      )
+        filter.id === id ? { ...filter, value: value } : filter,
+      ),
     );
   };
 
   const handleFilterTypeChange = (id: number, value: any) => {
     setFilters(
       filters.map((filter) =>
-        filter.id === id ? { ...filter, type: value } : filter
-      )
+        filter.id === id ? { ...filter, type: value } : filter,
+      ),
     );
   };
 
@@ -100,7 +93,7 @@ export default function AdvancedFilter({
       (filter) =>
         filter.field !== undefined &&
         // filter.value !== undefined &&
-        filter.type !== undefined
+        filter.type !== undefined,
     );
 
     onApplyFilters(appliedFilters);
@@ -148,11 +141,11 @@ export default function AdvancedFilter({
     dataType: IData;
     filter: IAdvancedFilter;
   }) => {
-    if (dataType?.type in staticFilterTypeOptions) {
+    if (dataType?.type in staticFilterTypeOptions && filter.field) {
       return (
         <CustomSelect
-          key={filter.id}
-          className="w-[150px]"
+          key={Math.random()}
+          className="!w-[120px]"
           value={filter.type}
           placeholder={t("general.selectField")}
           onChange={(value) => handleFilterTypeChange(filter.id, value)}
@@ -162,8 +155,9 @@ export default function AdvancedFilter({
     } else {
       return (
         <CustomSelect
+          key={Math.random()}
           disabled
-          className="w-[150px]"
+          className="!w-[120px]"
           value={undefined}
           placeholder={t("general.selectField")}
           onChange={() => null}
@@ -226,45 +220,51 @@ export default function AdvancedFilter({
             };
           });
           return (
-            <CustomSelect
-              key={filter.id}
-              className="w-[150px]"
-              value={filter?.value}
-              placeholder={t("general.selectField")}
-              onChange={(value) => {
-                handleFilterValueChange(filter.id, value);
-              }}
-              options={options}
-            />
+            <div className="w-full">
+              <CustomSelect
+                key={Math.random()}
+                value={filter?.value}
+                placeholder={t("general.selectField")}
+                onChange={(value) => {
+                  handleFilterValueChange(filter.id, value);
+                }}
+                options={options}
+              />
+            </div>
           );
         }
         return (
-          <DynamicSelect
-            showId
-            infinite
-            showSearch
-            allowClear
-            dynamicValue={dataType?.valueOption}
-            className="w-[150px]"
-            value={filter?.value}
-            onChange={(value) => {
-              handleFilterValueChange(filter.id, value);
-            }}
-            onSearchPhrase={(correctOption) =>
-              handleFilterValueChange(filter.id, correctOption)
-            }
-          />
+          <div className="w-full">
+            <DynamicSelect
+              key={Math.random()}
+              showId
+              infinite
+              showSearch
+              allowClear
+              dynamicValue={dataType?.valueOption}
+              className="!flex-1"
+              value={filter?.value}
+              onChange={(value) => {
+                handleFilterValueChange(filter.id, value);
+              }}
+              onSearchPhrase={(correctOption) =>
+                handleFilterValueChange(filter.id, correctOption)
+              }
+            />
+          </div>
         );
       default:
         return (
-          <CustomSelect
-            disabled
-            className="w-[150px]"
-            value={undefined}
-            placeholder={t("general.selectField")}
-            onChange={() => null}
-            options={[]}
-          />
+          <div className="w-full">
+            <CustomSelect
+              key={Math.random()}
+              disabled
+              value={undefined}
+              placeholder={t("general.selectField")}
+              onChange={() => null}
+              options={[]}
+            />
+          </div>
         );
     }
   };
@@ -295,7 +295,7 @@ export default function AdvancedFilter({
         <ul className="hidden-show-scrollBar h-auto lg:!max-h-[25rem] overflow-y-scroll">
           {filters.map((filter) => {
             const dataType: IData = data?.find(
-              (e) => e?.value === filter?.field
+              (e) => e?.value === filter?.field,
             );
 
             return (
@@ -318,7 +318,7 @@ export default function AdvancedFilter({
 
                 <div className="flex lg:flex-row flex-col gap-2 py-2 border-b border-dashed">
                   <CustomSelect
-                    className="w-[150px]"
+                    className="min-w-[150px]"
                     value={filter?.field}
                     placeholder={t("general.selectField")}
                     onChange={(value) => handleFieldChange(filter.id, value)}
@@ -334,17 +334,17 @@ export default function AdvancedFilter({
                   {renderField({ dataType, filter })}
 
                   {match && (
-                    <CustomButton
-                      type="text"
-                      className="bg-gray-gray5 dark:bg-gray-gray12 px-3 py-1 border hover:border-black-black8 rounded text-main-black"
-                      onClick={() => removeFieldHandler(filter.id)}
-                    >
-                      <CustomTooltip title={t("general.delete")}>
+                    <CustomTooltip title={t("general.delete")}>
+                      <CustomButton
+                        type="text"
+                        className="bg-gray-gray5 dark:bg-gray-gray12 px-3 border hover:border-black-black8 rounded h-[34px] text-main-black"
+                        onClick={() => removeFieldHandler(filter.id)}
+                      >
                         <div className="flex justify-center items-center gap-1">
                           <Close config={{ width: 8, height: 8 }} />
                         </div>
-                      </CustomTooltip>
-                    </CustomButton>
+                      </CustomButton>
+                    </CustomTooltip>
                   )}
                 </div>
               </li>

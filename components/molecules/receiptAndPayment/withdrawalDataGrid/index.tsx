@@ -13,7 +13,7 @@ import {
   useState,
 } from "react";
 
-import { InputNumber, Spin, Table, TableColumnsType } from "antd";
+import { Spin, Table, TableColumnsType } from "antd";
 import moment from "moment-jalaali";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
@@ -26,6 +26,7 @@ import {
   CustomTooltip,
   NewDatePicker,
 } from "@components/atoms/defaultElements";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
 import InputText from "@components/atoms/defaultElements/inputText";
 import {
   Dots,
@@ -992,7 +993,7 @@ export const WithdrawalDataGrid: FC<IProps> = ({
       typeof rowData[field] === "number" ? rowData[field] : undefined;
 
     return isEditing ? (
-      <InputNumber
+      <CustomInputNumber
         controls={false}
         prefix=""
         min={0}
@@ -1028,7 +1029,7 @@ export const WithdrawalDataGrid: FC<IProps> = ({
       typeof rowData[field] === "number" ? rowData[field] : undefined;
 
     return isEditing ? (
-      <InputNumber
+      <CustomInputNumber
         controls={false}
         prefix=""
         min={0}

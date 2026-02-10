@@ -23,6 +23,7 @@ export interface IProps<T, K> {
   conditionalActions?: {
     conditionalProperty: keyof T;
     conditionallyAction?: string;
+    opposite?: boolean;
   }[];
   EditField?: string;
   withoutActivation?: boolean;

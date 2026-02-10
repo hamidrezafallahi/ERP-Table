@@ -24,6 +24,7 @@ export const NestedListForm = <T, K>({
   level,
   onClose,
   config,
+  onGetDefault,
 }: IProps<T>) => {
   const t = useTranslations();
   const {
@@ -139,6 +140,7 @@ export const NestedListForm = <T, K>({
   useEffect(() => {
     if (form && defaultValueSuccess && data.Data.length > 0) {
       form?.setFieldsValue(defaultValue);
+      onGetDefault?.(defaultValue);
     }
     return () => form?.resetFields();
   }, [defaultValue, data, form, defaultValueSuccess]);

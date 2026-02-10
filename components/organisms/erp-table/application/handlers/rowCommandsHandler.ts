@@ -27,7 +27,7 @@ export class AddNewRowCommandHandler {
   ) { }
 
   async execute(command: AddEmptyRowCommand, actor: Actor) {
-    const table = await this.repo.getById(command.tableId);
+    const table = await this.repo.getById(command.store,command.tableKey);
 
     if (!this.permission.canAddRow({ actor })) {
       throw new DomainError(
@@ -38,7 +38,7 @@ export class AddNewRowCommandHandler {
     }
 
     const event = table.addNewRow();
-    await this.repo.save(table);
+    await this.repo.save(command.store,table);
     this.audit.log(event);
 
     return event;
@@ -57,7 +57,7 @@ export class DuplicateRowCommandHandler {
   ) { }
 
   async execute(command: DuplicateRowCommand, actor: Actor) {
-    const table = await this.repo.getById(command.tableId);
+    const table = await this.repo.getById(command.store,command.tableKey);
 
     if (!this.permission.canAddRow({ actor })) {
       throw new DomainError(
@@ -69,7 +69,7 @@ export class DuplicateRowCommandHandler {
     const rowId = new RowId(command.rowId);
     const event = table.addRow(rowId);
 
-    await this.repo.save(table);
+    await this.repo.save(command.store,table);
     this.audit.log(event);
 
     return event;
@@ -88,7 +88,7 @@ export class DeleteRowCommandHandler {
   ) { }
 
   async execute(command: DeleteRowCommand, actor: Actor) {
-    const table = await this.repo.getById(command.tableId);
+    const table = await this.repo.getById(command.store,command.tableKey);
     if (!this.permission.canDeleteRow({ actor })) {
       throw new DomainError(
         'FORBIDDEN',
@@ -107,7 +107,7 @@ export class DeleteRowCommandHandler {
       );
     }
 
-    await this.repo.save(table);
+    await this.repo.save(command.store,table);
     this.audit.log(event);
 
     return event;
@@ -124,7 +124,7 @@ export class ReorderRowCommandHandler {
   ) { }
 
   async execute(command: RowReorderedCommand, actor: Actor) {
-    const table = await this.repo.getById(command.tableId);
+    const table = await this.repo.getById(command.store,command.tableKey);
     if (!this.permission?.canReorderRow?.({ actor })) {
       throw new DomainError(
         'FORBIDDEN',
@@ -134,7 +134,7 @@ export class ReorderRowCommandHandler {
     }
     const draggedRowId = new RowId(command.draggedRowId);
     const droppedRowId = new RowId(command.droppedRowId);
-    const event = table.reorderRows(draggedRowId.value, droppedRowId.value);
+    const event = table.reorderRows(draggedRowId.value, droppedRowId.value,command.position);
     if (!event) {
       throw new DomainError(
         'DRAG_OR_DROP_ROW_NOT_FOUND',
@@ -143,7 +143,7 @@ export class ReorderRowCommandHandler {
       );
     }
 
-    await this.repo.save(table);
+    await this.repo.save(command.store,table);
     this.audit.log(event);
 
     return event;

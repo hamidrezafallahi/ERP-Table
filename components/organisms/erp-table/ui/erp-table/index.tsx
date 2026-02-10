@@ -22,10 +22,11 @@ export type ERPTableApi = {
   getSnapshot: () => unknown;
 };
 interface ERPTableProps {
-  tableId: string;
   columns: any[];
   rows: Array<{ id: number; values?: Record<string, unknown> }>;
   actor: any;
+  store:string;
+  tableKey:string;
   onReady?: (api: ERPTableApi) => void;
 }
 
@@ -40,25 +41,25 @@ function isTextInputTarget(target: EventTarget | null): boolean {
 }
 
 export const ERPTable: React.FC<ERPTableProps> = ({
-  tableId,
   columns,
   rows,
   actor,
+  store,
+  tableKey,
   onReady,
 }) => {
-  const result = useERPTable({ tableId, columns, rows, actor });
-
-  const { activePage, fullScreen, minimizePanel, match } = useAppSelector(
+  
+  const {fullScreen, minimizePanel, match } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
-      fullScreen: state.withPersist.config.fullScreen,
+       fullScreen: state.withPersist.config.fullScreen,
       minimizePanel: state.withoutPersist.container.minimize,
       match: state.withPersist.config.initMatch,
     }),
     shallowEqual,
   );
-
+  const result = useERPTable({store,tableKey, columns, rows, actor });
   const activeRowIdRef = useRef<number | null>(null);
+  const activeColumnIdRef = useRef<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isTableActive, setIsTableActive] = useState(false);
 
@@ -71,8 +72,10 @@ export const ERPTable: React.FC<ERPTableProps> = ({
       const button = target.closest("button");
       if (button) {
         const buttonData = button.dataset;
-        if(tableId === buttonData.pageid){
+        if(tableKey === buttonData.pageid){
+          
           console.log('حذف جدول از دیتابیس')
+          controller.dispose();
           // controller.dispatch({
           //   type: "TABLE_DELETED",
           // });
@@ -87,7 +90,8 @@ export const ERPTable: React.FC<ERPTableProps> = ({
         event: e,
         ctx: {
           activeRowId: activeRowIdRef.current,
-          tableId,
+          tableKey,
+          activeColumnId:activeColumnIdRef.current
         },
       });
     };
@@ -97,22 +101,20 @@ export const ERPTable: React.FC<ERPTableProps> = ({
       window.removeEventListener("click", clickHandler, true);
       window.removeEventListener("keydown", handler, true);
     };
-  }, [result.ready, isTableActive, tableId, result]);
+  }, [result.ready, isTableActive, tableKey, result]);
   useEffect(() => {
     if (!result.ready) return;
     if (!onReady) return;
-
     const { controller } = result;
-
     onReady?.({
-      getSnapshot: () => controller.getSnapShot(tableId),
+      getSnapshot: () => controller.getSnapShot(tableKey),
     });
-  }, [result.ready, onReady, tableId, result]);
+  }, [result.ready, onReady, tableKey, result]);
 
   const handleActivateTable = useCallback((e: React.SyntheticEvent) => {
     setIsTableActive(true);
     if (isTextInputTarget(e.target)) return;
-    containerRef.current?.focus();
+    // containerRef.current?.focus();
   }, []);
 
   const handleDeactivateTable = useCallback(
@@ -125,9 +127,9 @@ export const ERPTable: React.FC<ERPTableProps> = ({
     [],
   );
 
+ 
   if (!result.ready) return null;
-  const { controller } = result;
-
+  const { controller} = result;
   return (
     <>
       <div
@@ -149,20 +151,23 @@ export const ERPTable: React.FC<ERPTableProps> = ({
         } flex transition-all duration-200 overflow-y-auto flex-col justify-between gap-2 outline-none`}
       >
         <table className="mt-2">
-          <ERPTableHeader table={controller.getViewState(tableId)} />
+          <ERPTableHeader table={controller.getViewState(tableKey)} />
           <ERPTableBody
             controller={controller}
-            tableId={tableId}
+            tableKey={tableKey}
             containerRef={containerRef}
             onActiveRowChange={(rowId) => {
               activeRowIdRef.current = rowId;
+            }}
+            onActiveColChange={(colId) => {
+              activeColumnIdRef.current = colId;
             }}
           />
         </table>
       </div>
 
       <div className="flex items-center gap-3 w-52">
-        <ERPTablePagination controller={controller} tableId={tableId} />
+        <ERPTablePagination controller={controller} store={store} tableKey={tableKey} />  
         <AddNewRowButton controller={controller} />
       </div>
     </>

@@ -8,7 +8,7 @@ import {
   DynamicSelect,
   NewDatePicker,
 } from "@components/atoms/defaultElements";
-import InputNumber from "@components/atoms/defaultElements/inputNumber";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
 import InputText from "@components/atoms/defaultElements/inputText";
 import type { IAccount, IRequest } from "@services/acc/account/type";
 import { useGetData } from "@services/base";
@@ -302,7 +302,7 @@ export const AdvancedCashFundDepositForm = ({ activePage, form }: IProps) => {
         rules={[{ required: true, message: t("form.required") }]}
         className="flex flex-col lg:col-span-6 !mb-0 !pb-0 text-xs"
       >
-        <InputNumber
+        <CustomInputNumber
           min={0}
           controls={false}
           parser={(value) =>

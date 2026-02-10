@@ -18,12 +18,13 @@ export interface IProps<T> {
     additionalId: number | null,
     PendingStatusId: number | null,
     formViewId: number | null,
-    correctUniqueId?: string | null
+    correctUniqueId?: string | null,
   ) => void;
   recordPerPage: number;
   conditionalActions?: {
     conditionalProperty: keyof T;
     conditionallyAction?: string;
+    opposite?: boolean;
   }[];
   EditField?: string;
   withoutActivation?: boolean;

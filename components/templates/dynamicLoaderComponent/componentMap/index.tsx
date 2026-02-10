@@ -1,6 +1,7 @@
 import { FC } from "react";
 
 import {
+  EndYearOperationsPage,
   FinalizeVoucherPage,
   SortingVoucherPage,
   TafsiliType,
@@ -32,10 +33,13 @@ import {
   ExportSalesInvoice,
   InsuranceServiceWithBuyerSalesInvoice,
   InsuranceServiceWithoutBuyerSalesInvoice,
+  Invoice,
   JewelryWithBuyerSalesInvoice,
   JewelryWithoutBuyerSalesInvoice,
   LandingBillSalesInvoice,
+  PaymentRequest,
   PlaneTicketSalesInvoice,
+  PriceAnnouncement,
   PricingCircular,
   ReturnSalesInvoice,
   SalesCircular,
@@ -87,4 +91,8 @@ export const componentsMap: Record<string, FC<any>> = {
   Patterns,
   FinalizeVoucherPage,
   SortingVoucherPage,
+  EndYearOperationsPage,
+  PaymentRequest,
+  PriceAnnouncement,
+  Invoice
 };

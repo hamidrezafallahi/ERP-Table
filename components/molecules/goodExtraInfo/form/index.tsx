@@ -1,43 +1,27 @@
-import {
-  useEffect,
-  useState,
-} from 'react';
+import { useEffect, useState } from "react";
 
-import {
-  Checkbox,
-  Form,
-  Spin,
-} from 'antd';
-import dayjs from 'dayjs';
-import moment from 'moment-jalaali';
-import { useTranslations } from 'next-intl';
+import { Checkbox, Form, Spin } from "antd";
+import dayjs from "dayjs";
+import moment from "moment-jalaali";
+import { useTranslations } from "next-intl";
 
 import {
   CustomButton,
   CustomTooltip,
   DynamicSelect,
   NewDatePicker,
-} from '@components/atoms/defaultElements';
-import InputNumber from '@components/atoms/defaultElements/inputNumber';
-import InputText from '@components/atoms/defaultElements/inputText';
-import {
-  PlusOutline,
-  SpinIcon,
-} from '@components/atoms/iconComponents';
-import {
-  useCUDDataMutation,
-  useGetData,
-} from '@services/base';
+} from "@components/atoms/defaultElements";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
+import InputText from "@components/atoms/defaultElements/inputText";
+import { PlusOutline, SpinIcon } from "@components/atoms/iconComponents";
+import { useCUDDataMutation, useGetData } from "@services/base";
 import type {
   IGoodExtraInfo,
   IGoodExtraInfoSelect,
   IRequest,
-} from '@services/com/goodExtraInfo/type';
-import type { IRequestConfig } from '@type/elementType';
-import {
-  showSuccessToast,
-  transformDotNotationToNested,
-} from '@utils/core';
+} from "@services/com/goodExtraInfo/type";
+import type { IRequestConfig } from "@type/elementType";
+import { showSuccessToast, transformDotNotationToNested } from "@utils/core";
 
 enum fieldType {
   text = 1,
@@ -108,7 +92,12 @@ export const FormGoodExtraInfo = ({
     }
     if (value === fieldType.number) {
       return (
-        <InputNumber keyboard={false} controls={false} min={0} stringMode />
+        <CustomInputNumber
+          keyboard={false}
+          controls={false}
+          min={0}
+          stringMode
+        />
       );
     }
     if (value === fieldType.boolean) {
@@ -303,7 +292,7 @@ export const FormGoodExtraInfo = ({
         <div className="flex justify-end items-center gap-2 pt-2">
           <CustomTooltip title={t("general.addNew")}>
             <span
-              className="px-2 py-[2.8px] bg-gray-gray3 rounded cursor-pointer"
+              className="bg-gray-gray3 px-2 py-[2.8px] rounded cursor-pointer"
               onClick={() => {
                 clearId();
                 form.resetFields();
