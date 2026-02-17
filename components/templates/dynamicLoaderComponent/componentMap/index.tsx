@@ -33,13 +33,10 @@ import {
   ExportSalesInvoice,
   InsuranceServiceWithBuyerSalesInvoice,
   InsuranceServiceWithoutBuyerSalesInvoice,
-  Invoice,
   JewelryWithBuyerSalesInvoice,
   JewelryWithoutBuyerSalesInvoice,
   LandingBillSalesInvoice,
-  PaymentRequest,
   PlaneTicketSalesInvoice,
-  PriceAnnouncement,
   PricingCircular,
   ReturnSalesInvoice,
   SalesCircular,
@@ -92,7 +89,4 @@ export const componentsMap: Record<string, FC<any>> = {
   FinalizeVoucherPage,
   SortingVoucherPage,
   EndYearOperationsPage,
-  PaymentRequest,
-  PriceAnnouncement,
-  Invoice
 };

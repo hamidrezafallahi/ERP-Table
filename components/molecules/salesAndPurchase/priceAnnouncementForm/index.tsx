@@ -6,35 +6,28 @@ import { Form } from "antd";
 import { IProps } from "./type";
 import { useTranslations } from "next-intl";
 import InputText from "@components/atoms/defaultElements/inputText";
-import { useAppSelector } from "@redux/index";
-import { shallowEqual } from "react-redux";
 import { useSaleConfigs } from "../saleConfigsHook";
 
-export const PriceAnnouncementForm = ({ activePage, form }: IProps) => {
+export const PriceAnnouncementForm = ({ form }: IProps) => {
   const t = useTranslations();
-  const { customerConfig, salesTypeConfig } = useSaleConfigs();
-
-  const { match } = useAppSelector((state) => {
-    const match = state.withPersist.config.initMatch;
-    return { match };
-  }, shallowEqual);
+  const { customerConfig } = useSaleConfigs();
 
   return (
     <Form
       form={form}
-      name="priceAnnouncementForm"
+      name="FormPriceAnnouncement"
       layout="vertical"
-      className="hidden-show-scrollBar gap-5 lg:gap-y-10 grid grid-cols-12 pt-4 lg:pt-0 h-auto max-h-[calc(100dvh-160px)] overflow-y-auto"
+      className="hidden-show-scrollBar gap-5 lg:gap-y-5 grid grid-cols-12 pt-4 lg:pt-0 h-auto max-h-[calc(100dvh-160px)] overflow-y-auto"
     >
       <Form.Item
         label="تاریخ"
-        name="PriceAnnouncementDate"
+        name="VoucherDate"
         rules={[{ required: true, message: t("form.required") }]}
         className="col-span-12 lg:col-span-4 !mb-0 !pb-0 text-xs"
       >
         <NewDatePicker
           config={{
-            name: "PriceAnnouncementDate",
+            name: "VoucherDate",
             caption: "تاریخ",
             type: "date",
             setFieldValue: form.setFieldValue,
@@ -43,13 +36,13 @@ export const PriceAnnouncementForm = ({ activePage, form }: IProps) => {
       </Form.Item>
       <Form.Item
         label="شماره"
-        name="PriceAnnouncementNumber"
+        name="VoucherNumber"
         className="col-span-12 lg:col-span-4 !mb-0 !pb-0 text-xs"
       >
         <InputText
           config={{
             caption: "شماره",
-            name: "PriceAnnouncementNumber",
+            name: "VoucherNumber",
             setFieldValue: form.setFieldValue,
           }}
         />
@@ -80,10 +73,15 @@ export const PriceAnnouncementForm = ({ activePage, form }: IProps) => {
       <div className="col-span-12">
         <Form.Item
           label="توضیحات"
-          name="Description"
+          name="VoucherDesc"
           className="flex flex-col !mb-0 !pb-0 text-xs"
         >
-          <InputText />
+          <InputText
+            config={{
+              name: "VoucherDesc",
+              setFieldValue: form.setFieldValue,
+            }}
+          />
         </Form.Item>
       </div>
     </Form>

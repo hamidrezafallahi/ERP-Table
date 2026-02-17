@@ -28,7 +28,7 @@ import {
   useGetData,
 } from "@services/base";
 import type { IBaseQueryResponse } from "@services/base/type";
-import { getSystemNameById } from "@utils/core";
+import { getSystemNameById, showSuccessToast } from "@utils/core";
 
 type FieldType = {
   RoleId: number[];
@@ -66,7 +66,7 @@ function AssignForm() {
       SystemId: state.withPersist.pages.find((item) => item.isActive).SystemId,
       RepoId: state.withPersist.pages.find((item) => item.isActive).RepoId,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const { data: tableResponse, refetch } = useGetData<ISelect4Assign, any>({
@@ -89,14 +89,17 @@ function AssignForm() {
       "IsCanUpdate",
       "IsCanDelete",
       "IsCanShare",
+      "IsAssignToMe",
     ];
+    const expireDate = form.getFieldValue("ExpireDate");
     if (values.AssignId == null) {
       body = {
         RepoId,
         ReferIds: [ReferId],
         UserIds: selectedRadio == 2 ? [form.getFieldValue("UserId")] : [],
         RoleIds: selectedRadio == 3 ? [form.getFieldValue("RoleId")] : [],
-        ExpireDate: form.getFieldValue("ExpireDate").toISOString(),
+        IsAssignToMe: selectedRadio == 1,
+        ExpireDate: expireDate ? dayjs(expireDate).toISOString() : null,
         IsAssign: form.getFieldValue("IsAssign"),
         IsCanUpdate: form.getFieldValue("IsCanUpdate"),
         IsCanDelete: form.getFieldValue("IsCanDelete"),
@@ -107,7 +110,8 @@ function AssignForm() {
       body = {
         UserId: selectedRadio == 2 ? form.getFieldValue("UserId") : null,
         RoleId: selectedRadio == 3 ? form.getFieldValue("RoleId") : null,
-        ExpireDate: form.getFieldValue("ExpireDate").toISOString(),
+        IsAssignToMe: selectedRadio == 1,
+        ExpireDate: expireDate ? dayjs(expireDate).toISOString() : null,
         IsAssign: form.getFieldValue("IsAssign"),
         IsCanUpdate: form.getFieldValue("IsCanUpdate"),
         IsCanDelete: form.getFieldValue("IsCanDelete"),
@@ -125,6 +129,7 @@ function AssignForm() {
       }).unwrap();
 
       if (submitFormResponse?.Result == "Success") {
+        showSuccessToast(t("toast.successTitle"));
         refetch();
       }
     } catch (err) {
@@ -132,7 +137,7 @@ function AssignForm() {
     }
   };
   const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (
-    errorInfo
+    errorInfo,
   ) => {
     console.log("Failed:", errorInfo);
   };
@@ -169,8 +174,8 @@ function AssignForm() {
           formResponse?.Data[0]?.IsAssignToMe
             ? 1
             : formResponse?.Data[0]?.UserId
-            ? 2
-            : 3
+              ? 2
+              : 3,
         );
         form.setFieldValue("RoleId", formResponse.Data[0].RoleId);
         form.setFieldValue("UserId", formResponse.Data[0].UserId);
@@ -185,7 +190,7 @@ function AssignForm() {
         } else {
           form.setFieldValue(
             "ExpireDate",
-            dayjs(formResponse.Data[0].ExpireDate)
+            dayjs(formResponse.Data[0].ExpireDate),
           );
         }
       }
@@ -556,7 +561,7 @@ export const AssignTable = ({
             expireDate: item.ExpireDate,
             AssignId: item.AssignId,
           };
-        })
+        }),
       );
     }
   }, [response]);

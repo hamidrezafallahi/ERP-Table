@@ -5,9 +5,14 @@ import {
 
 export interface IProps {
   caption: string;
-  url: string;
+  captionII?: string;
   listUrl: string;
-  fieldKey: string;
+  headerFieldKey: string;
+  detailFieldKey: string;
+  headerGetUrl: string;
+  detailGetUrl: string;
+  addUrl: string;
+  updateUrl: string;
   titleKey: string;
   pageIcon?: string;
   conditionalActions?: {
@@ -24,6 +29,6 @@ export interface IProps {
 }
 
 export interface IRequestMeta {
-  requestKey?: string;  
+  requestKey?: string;
   ignoreOnSubmit?: boolean;
 }

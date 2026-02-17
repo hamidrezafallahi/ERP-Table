@@ -18,4 +18,5 @@ export interface IProps {
   mutationSystemId?: number;
   submitCaption?: string;
   withSubmitButton?: boolean;
+  hasShorthandFormToolbar?: boolean;
 }

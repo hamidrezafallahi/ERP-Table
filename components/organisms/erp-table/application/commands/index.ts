@@ -8,8 +8,8 @@ export interface BaseTableCommand {
 }
 
 export type Actor = {
-  userId: string;
-  roles: string[];
+  readonly userId: string;
+  readonly roles: string[];
 };
 
 /**
@@ -19,29 +19,39 @@ export type Actor = {
 
 /* ---------- Cell ---------- */
 
-export interface MoveActiveCellCommand extends BaseTableCommand {
+export interface MoveActiveCellCommand {
   readonly type: 'MOVE_ACTIVE_CELL';
-  rowId: number;
-  columnId: string;
-  direction: 'next' | 'prev';
+  readonly tableKey: string;
+
+  readonly rowId: number;
+  readonly columnId: string;
+  readonly direction: 'next' | 'prev';
 }
-export interface MoveActiveCellVerticalCommand extends BaseTableCommand {
+export interface MoveActiveCellVerticalCommand {
   readonly type: 'MOVE_ACTIVE_CELL_VERTICAL';
-  rowId: number;
-  columnId: string;
-  direction: 'up' | 'down';
+  readonly tableKey: string;
+
+  readonly rowId: number;
+  readonly columnId: string;
+  readonly direction: 'up' | 'down';
 }
-export interface ActiveCellCommand extends BaseTableCommand {
+export interface ActiveCellCommand {
   readonly type: 'ACTIVE_CELL';
-  rowId: number;
-  columnId: string;
+  readonly tableKey: string;
+
+  readonly rowId: number;
+  readonly columnId: string;
 }
-export interface ActiveRowCommand extends BaseTableCommand {
+export interface ActiveRowCommand {
   readonly type: 'ACTIVE_ROW';
-  rowId: number;
+  readonly tableKey: string;
+
+  readonly rowId: number;
 }
-export interface ActiveFirstCellCommand extends BaseTableCommand {
+export interface ActiveFirstCellCommand {
   readonly type: 'ACTIVATE_FIRST_CELL';
+  readonly tableKey: string;
+
   readonly rowId: number;
 
 }
@@ -77,43 +87,65 @@ export interface DeleteRowCommand extends BaseTableCommand {
   readonly rowId: number;
 
 }
-export interface ExpandRowCommand extends BaseTableCommand {
+export interface ExpandRowCommand {
   readonly type: 'ROW_EXPANDED';
   readonly tableKey: string,
   readonly rowId: number,
   readonly value: boolean
 
 }
-export interface ToggleRowCommand extends BaseTableCommand {
-  readonly type: 'ROW_TOGGLED';
+export interface SelectRowCommand {
+  readonly type: 'ROW_SELECTED';
+  readonly tableKey: string,
+  readonly rowId: number,
+}
+export interface ToggleRowSelectionCommand {
+  readonly type: "ROW_SELECTION_TOGGLED";
+  readonly tableKey: string;
+  readonly rowId: number;
+
+}
+export interface ToggleRowExpandCommand {
+  readonly type: 'ROW_EXPAND_TOGGLED';
   readonly tableKey: string,
   readonly rowId: number
 
 }
-
+export interface SelectRangeCommand {
+  readonly type: "ROW_RANGE_SELECTED";
+  readonly tableKey: string;
+  readonly rowId: number;
+}
+export interface SelectActiveRowToLastCommand {
+  readonly type: "SELECT_FROM_ACTIVE_TO_LAST";
+  readonly tableKey: string;
+  readonly anchorRowId: number;
+}
 export interface RowReorderedCommand extends BaseTableCommand {
   readonly type: 'ROW_REORDERED';
   readonly draggedRowId: number;
   readonly droppedRowId: number;
   readonly position: 'before' | 'after';
 }
-export interface ToggleRowSelectionCommand extends BaseTableCommand {
-  readonly type: 'ROW_SELECTION_TOGGLED';
-  readonly rowId: number;
+
+export interface SelectAllRowsCommand {
+  readonly type: 'TOGGLE_SELECT_ALL_ROWS';
+  readonly tableKey: string;
+
+
 
 }
-export interface SelectAllRowsCommand extends BaseTableCommand {
-  readonly type: 'SELECT_ALL_ROWS';
-
-
-}
-export interface ClearRowSelectionCommand extends BaseTableCommand {
+export interface ClearRowSelectionCommand {
   readonly type: 'CLEAR_ROW_SELECTION';
+  readonly tableKey: string;
+
 
 
 }
-export interface CollapseAllRowsCommand extends BaseTableCommand {
+export interface CollapseAllRowsCommand {
   readonly type: 'COLLAPSE_ALL_ROWS';
+  readonly tableKey: string;
+
 
 }
 /* ---------- Column ---------- */
@@ -169,13 +201,15 @@ export interface ChangeUnitLevelCommand extends BaseTableCommand {
 /* ---------- Union ---------- */
 
 export type TableCommand =
-  ToggleRowCommand
+  SelectActiveRowToLastCommand
+  |SelectRangeCommand
+  | ToggleRowExpandCommand
+  | SelectRowCommand
   | CollapseAllRowsCommand
   | RegisterTableCommand
   | DisposeTableCommand
   | ToggleRowSelectionCommand
   | SelectAllRowsCommand
-  | ClearRowSelectionCommand
   | ActiveCellCommand
   | ActiveRowCommand
   | MoveActiveCellCommand

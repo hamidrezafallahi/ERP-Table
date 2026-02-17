@@ -3,14 +3,14 @@ import {
   useState,
 } from 'react';
 
-import { Dropdown } from 'antd';
-import { ItemType } from 'antd/es/menu/interface';
+import { useTranslations } from 'next-intl';
 
+import { CustomDropdownButton } from '@components/atoms/defaultElements';
 import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
 import {
+  Dots,
   DragIcon,
   Expand,
-  MoreVertical,
   RedTrashBin,
   Undo,
 } from '@components/atoms/iconComponents';
@@ -39,124 +39,195 @@ export const IndexCol: React.FC<IndexColProps> = ({
   meta,
 }) => {
   const [, forceUpdate] = useState(0);
-  const rowId = row.cells["index"].value as number;
-    const isActiveRow = controller.isActiveRow(tableKey, row.id);
-  const selectedRow = controller.isSelectedRow(tableKey,row.id)
+  const t = useTranslations();
+  const index = row.cells["index"].value as number;
+  const selectedRow = controller.getSelectedRows(tableKey);
+  const isSelectedRow = controller.isSelectedRow(tableKey, row.id);
+  const isExpandableRow = controller.isExpandableRow(tableKey, row.id);
   const handleDeleteRow = () => {
-    controller.dispatch({ type: "ROW_DELETED", rowId });
+    controller.dispatch({ type: "ROW_DELETED", rowId: row.id });
   };
 
   const handleCopyRow = () => {
-    controller.dispatch({ type: "DUPLICATE_ROW", rowId });
+    controller.dispatch({ type: "DUPLICATE_ROW", rowId: row.id });
+  };
+  const handleAddRow = () => {
+    void controller.dispatch({ type: "ADD_EMPTY_ROW" });
+  };
+  const items = [
+    {
+      key: "1",
+      label: (
+        <span className="flex text-sm" onClick={handleCopyRow}>
+          {t("general.replicateRow")}
+        </span>
+      ),
+      extra: "Ali + D",
+    },
+    {
+      key: "2",
+      label: (
+        <span className="flex text-sm" onClick={handleAddRow}>
+          {t("general.addNewRow")}
+        </span>
+      ),
+      extra: "Alt + N",
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "3",
+      disabled: Object.keys(selectedRow).length === 0,
+      label: (
+        <span
+          className="flex text-sm"
+          onClick={() => {
+            // setAllowCopy(true);
+          }}
+        >
+          {t("general.copy")}
+        </span>
+      ),
+      extra: "Ctrl + Enter",
+    },
+    {
+      key: "4",
+      disabled: Object.keys(selectedRow).length === 0,
+      label: (
+        <span
+          className="flex text-sm"
+          onClick={() => {
+            // handleGroupPasteRow(index);
+          }}
+        >
+          {t("general.paste")}
+        </span>
+      ),
+      extra: "Ctrl + Enter",
+    },
+    {
+      key: "5",
+      disabled: Object.keys(selectedRow).length === 0,
+      label: (
+        <span
+          className="flex text-sm"
+          onClick={() => {
+            // handleGroupPasteRowAsNew(index);
+          }}
+        >
+          {t("general.pasteAsNew")}
+        </span>
+      ),
+      // extra: "Ctrl + Enter",
+    },
+    {
+      key: "6",
+      disabled: Object.keys(selectedRow).length === 0,
+      label: (
+        <span
+          className="flex text-sm"
+          onClick={() => {
+            // handleGroupDelete();
+          }}
+        >
+          {t("general.selectedGroupDelete")}
+        </span>
+      ),
+      // extra: "Ctrl + Enter",
+    },
+    {
+      type: "divider",
+    },
+    ...(meta.indexOptions?.(tableKey, row.id, row, controller) || []),
+  ];
+
+  const handleExpandRow = () => {
+    controller.dispatch({ type: "TOGGLE_ROW_EXPANDED", rowId: row.id });
+  };
+  const handleSelectRow = (e: React.MouseEvent<HTMLInputElement>) => {
+    if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      controller.onRowSelect(row.id);
+    } else {
+    }
   };
 
-  const items = [
-    ...((meta.indexOptions?.(tableKey, rowId, row, controller) as ItemType[]) ||
-      []),
-  ].concat([
-    {
-      key: "copy",
-      label: (
-        <button type="button" onClick={handleCopyRow}>
-          کپی سطر
-        </button>
-      ),
-    },
-    {
-      key: "delete",
-      icon: <RedTrashBin config={{ width: 18, height: 18 }} />,
-      label: (
-        <button type="button" onClick={handleDeleteRow}>
-          حذف سطر
-        </button>
-      ),
-    },
-  ]);
-  const handleExpandRow = () => {
-    controller.dispatch({ type: "TOGGLE_ROW_EXPANDED", rowId });
-  };
   const isDeleted = row.rowState === RowStateEnum.Deleted;
   useEffect(() => {
     if (!controller) return;
-    const unsubscribe = controller.subscribeRow(rowId, () => {
-      forceUpdate(t => t + 1);
+    const unsubscribe = controller.subscribeRow(row.id, () => {
+      forceUpdate((t) => t + 1);
     });
     return () => unsubscribe?.();
-  }, [controller, rowId]);
+  }, [controller, row.id]);
   return (
     <div
       className={` ${
         isDeleted && "cursor-not-allowed"
-      }  flex justify-around items-center gap-2 px-2 w-36`}
+      }  flex justify-around items-center gap-2 px-2 w-36 relative`}
     >
-      <CustomCheckbox disabled={isDeleted} checked={selectedRow}/>
-      <div className="w-[18px] text-xs text-center">{rowId}</div>
+      {!isDeleted && (
+        <CustomCheckbox
+          disabled={isDeleted}
+          checked={isSelectedRow}
+          onClick={handleSelectRow}
+        />
+      )}
+      <div className="w-[18px] text-xs text-center">{index}</div>
 
-      {!isDeleted ? (
-        <div
-          className={`flex cursor-grab active:cursor-grabbing justify-center items-center w-[16px] h-[16px] `}
-          draggable={false}
-          onMouseDown={(e) => {
-            const tr = e.currentTarget.closest("tr");
-            tr?.setAttribute("draggable", "true");
-          }}
-        >
-          <DragIcon config={{ width: 16, height: 16 }} />
-        </div>
-      ) : (
-        isDeleted && (
-          <button
-            className={`flex ${
-              isDeleted && "cursor-not-allowed "
-            }   justify-center items-center w-[16px] h-[16px] `}
-            disabled={isDeleted}
+      {!isDeleted && (
+        <>
+          <div
+            className={`flex cursor-grab active:cursor-grabbing justify-center items-center w-[16px] h-[16px] `}
+            draggable={false}
+            onMouseDown={(e) => {
+              const tr = e.currentTarget.closest("tr");
+              tr?.setAttribute("draggable", "true");
+            }}
           >
             <DragIcon config={{ width: 16, height: 16 }} />
-          </button>
-        )
+          </div>
+
+          {isExpandableRow && (
+            <button
+              type="button"
+              onClick={handleExpandRow}
+              className={`z-20  ${
+                isDeleted ? "cursor-not-allowed " : "hover:bg-red-100"
+              } `}
+              disabled={isDeleted}
+            >
+              <Expand config={{ width: 18, height: 18 }} />
+            </button>
+          )}
+        </>
       )}
+
       <button
         type="button"
-        onClick={handleExpandRow}
-        className={`z-20  ${
-          isDeleted ? "cursor-not-allowed " : "hover:bg-red-100"
-        } `}
-        disabled={isDeleted}
+        onClick={handleDeleteRow}
+        className="hover:bg-red-100"
       >
-        <Expand config={{ width: 18, height: 18 }} />
+        {!isDeleted ? (
+          <RedTrashBin config={{ width: 18, height: 18 }} />
+        ) : (
+          <Undo config={{ width: 18, height: 18 }} />
+        )}
       </button>
 
-      {!isDeleted ? (
-        <button
-          type="button"
-          onClick={handleDeleteRow}
-          className="hover:bg-red-100"
+      {!isDeleted && (
+        <CustomDropdownButton
+          placement="bottom"
+          className="flex m-0 p-0 rounded"
+          items={items as any}
         >
-          <RedTrashBin config={{ width: 18, height: 18 }} />
-        </button>
-      ) : isDeleted ? (
-        <button
-          type="button"
-          disabled={isDeleted}
-          className={` ${isDeleted && "cursor-not-allowed "}`}
-        >
-          <RedTrashBin config={{ width: 18, height: 18, stroke: "#939393" }} />
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={handleDeleteRow}
-          className="z-20 hover:bg-red-100"
-        >
-          <Undo config={{ width: 18, height: 18 }} />
-        </button>
+          <a className="cursor-pointer" onClick={(e) => e.preventDefault()}>
+            <Dots config={{ width: 18, height: 18 }} />
+          </a>
+        </CustomDropdownButton>
       )}
-
-      <Dropdown placement="bottomRight" menu={{ items }} disabled={isDeleted}>
-        <a onClick={(e) => e.preventDefault()}>
-          <MoreVertical config={{ width: 18, height: 18 }} />
-        </a>
-      </Dropdown>
     </div>
   );
 };

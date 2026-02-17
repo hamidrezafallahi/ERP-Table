@@ -1,17 +1,15 @@
 // ui/erp-table/ERPTable.tsx
 "use client";
-
 import React, {
-  useCallback,
+  ReactNode,
   useEffect,
-  useRef,
-  useState,
 } from 'react';
 
 import { shallowEqual } from 'react-redux';
 
 import { useAppSelector } from '@redux/index';
 
+import { CreateERPTableConfig } from '../../bootstrap/type';
 import { AddNewRowButton } from '../addNewRowButton';
 import { ERPTableBody } from './ERPTableBody';
 import { ERPTableHeader } from './ERPTableHeader';
@@ -20,156 +18,135 @@ import ERPTablePagination from './pagination';
 
 export type ERPTableApi = {
   getSnapshot: () => unknown;
+  subscribeColumn: <T = unknown>(
+    columnId: string,
+    cb: (values: T[]) => void,
+  ) => () => void;
 };
-interface ERPTableProps {
-  columns: any[];
-  rows: Array<{ id: number; values?: Record<string, unknown> }>;
-  actor: any;
-  store:string;
-  tableKey:string;
+export interface ERPTableProps<
+  TMoreDetail = unknown,
+> extends CreateERPTableConfig<TMoreDetail> {
   onReady?: (api: ERPTableApi) => void;
+  header?: ReactNode;
+  footer?: ReactNode;
+  tableHeight?: number | string;
+  moreDetailComponent?: React.ComponentType<{ data: TMoreDetail }>;
 }
-
-function isTextInputTarget(target: EventTarget | null): boolean {
-  const el = target as HTMLElement | null;
-  if (!el) return false;
-  const tag = el.tagName?.toLowerCase();
-  if (tag === "input" || tag === "textarea" || tag === "select") return true;
-  if (el.isContentEditable) return true;
-  if (el.closest('input,textarea,select,[contenteditable="true"]')) return true;
-  return false;
-}
-
-export const ERPTable: React.FC<ERPTableProps> = ({
-  columns,
-  rows,
-  actor,
-  store,
-  tableKey,
-  onReady,
-}) => {
-  
-  const {fullScreen, minimizePanel, match } = useAppSelector(
+export function ERPTable<TMoreDetail = unknown>(
+  props: ERPTableProps<TMoreDetail>,
+) {
+  const {
+    columns,
+    rowAccess,
+    rows,
+    actor,
+    store,
+    tableKey,
+    onReady,
+    header,
+    footer,
+    tableHeight,
+    moreDetailComponent: MoreDetailComponent,
+  } = props;
+  const { fullScreen, minimizePanel, match } = useAppSelector(
     (state) => ({
-       fullScreen: state.withPersist.config.fullScreen,
+      fullScreen: state.withPersist.config.fullScreen,
       minimizePanel: state.withoutPersist.container.minimize,
       match: state.withPersist.config.initMatch,
     }),
     shallowEqual,
   );
-  const result = useERPTable({store,tableKey, columns, rows, actor });
-  const activeRowIdRef = useRef<number | null>(null);
-  const activeColumnIdRef = useRef<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isTableActive, setIsTableActive] = useState(false);
+  const result = useERPTable({
+    store,
+    tableKey,
+    columns,
+    rows,
+    actor,
+    rowAccess,
+  });
 
   // ---------- keyboard handler ----------
   useEffect(() => {
     if (!result.ready) return;
     const { controller } = result;
-    const clickHandler = (e: MouseEvent) => {
+    const clickHandler = async (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const button = target.closest("button");
       if (button) {
-        const buttonData = button.dataset;
-        if(tableKey === buttonData.pageid){
-          
-          console.log('حذف جدول از دیتابیس')
+        const { pageid, id } = button.dataset;
+        if (tableKey === id || tableKey === pageid) {
+          console.log("حذف جدول از دیتابیس");
           controller.dispose();
-          // controller.dispatch({
-          //   type: "TABLE_DELETED",
-          // });
         }
       }
     };
 
     const handler = (e: KeyboardEvent) => {
-      if (!isTableActive) return;
+      const activeRow = controller.getActiveRow(tableKey);
+      const activeCell = controller.getActiveCell(tableKey);
       controller.dispatch({
         type: "KEY_DOWN",
         event: e,
         ctx: {
-          activeRowId: activeRowIdRef.current,
+          activeRowId: activeRow,
           tableKey,
-          activeColumnId:activeColumnIdRef.current
+          activeColumnId: activeCell?.columnId,
         },
       });
     };
+
     window.addEventListener("keydown", handler, true);
     window.addEventListener("click", clickHandler, true);
     return () => {
       window.removeEventListener("click", clickHandler, true);
       window.removeEventListener("keydown", handler, true);
     };
-  }, [result.ready, isTableActive, tableKey, result]);
+  }, [result.ready, tableKey, result]);
   useEffect(() => {
     if (!result.ready) return;
     if (!onReady) return;
     const { controller } = result;
     onReady?.({
       getSnapshot: () => controller.getSnapShot(tableKey),
+      subscribeColumn: (columnId, cb) =>
+        controller.subscribeColumn(columnId, cb),
     });
   }, [result.ready, onReady, tableKey, result]);
-
-  const handleActivateTable = useCallback((e: React.SyntheticEvent) => {
-    setIsTableActive(true);
-    if (isTextInputTarget(e.target)) return;
-    // containerRef.current?.focus();
-  }, []);
-
-  const handleDeactivateTable = useCallback(
-    (e: React.FocusEvent<HTMLDivElement>) => {
-      const next = e.relatedTarget as Node | null;
-      if (!next || !containerRef.current?.contains(next)) {
-        setIsTableActive(false);
-      }
-    },
-    [],
-  );
-
- 
   if (!result.ready) return null;
-  const { controller} = result;
+  const { controller } = result;
   return (
-    <>
-      <div
-        ref={containerRef}
-        tabIndex={0}
-        onMouseDownCapture={handleActivateTable}
-        onFocusCapture={handleActivateTable}
-        onBlurCapture={handleDeactivateTable}
-        className={`w-full ${
-          fullScreen
-            ? "w-full"
-            : !match
-              ? "!w-full"
-              : minimizePanel
-                ? " max-w-[calc(100dvw-300px)]"
-                : " max-w-[calc(100dvw-550px)]"
-        } ${
-          !match ? "h-full" : "h-[calc(100dvh-400px)]"
-        } flex transition-all duration-200 overflow-y-auto flex-col justify-between gap-2 outline-none`}
-      >
-        <table className="mt-2">
-          <ERPTableHeader table={controller.getViewState(tableKey)} />
-          <ERPTableBody
-            controller={controller}
-            tableKey={tableKey}
-            containerRef={containerRef}
-            onActiveRowChange={(rowId) => {
-              activeRowIdRef.current = rowId;
-            }}
-            onActiveColChange={(colId) => {
-              activeColumnIdRef.current = colId;
-            }}
-          />
-        </table>
-      </div>
+   <div className="flex flex-col w-full h-full">
+  {/* header دلخواه */}
+  {header}
 
-      <div className="flex items-center gap-3 w-52">
-        <ERPTablePagination controller={controller} store={store} tableKey={tableKey} />  
-        <AddNewRowButton controller={controller} />
-      </div>
-    </>
+  {/* wrapper scrollable جدول */}
+  <div
+    className="flex-1 overflow-y-auto"
+    style={{ maxHeight: tableHeight ?? "100%" }}
+  >
+    <table className="w-full border-collapse table-fixed">
+      <ERPTableHeader controller={controller} tableKey={tableKey} />
+      <ERPTableBody
+        controller={controller}
+        tableKey={tableKey}
+        moreDetailComponent={MoreDetailComponent}
+      />
+    </table>
+  </div>
+
+  {/* Pagination و دکمه‌ها همیشه زیر */}
+  <div className="flex justify-end items-center gap-3 mt-2 w-full">
+    <ERPTablePagination
+      controller={controller}
+      store={store}
+      tableKey={tableKey}
+    />
+    <AddNewRowButton controller={controller} />
+  </div>
+
+  {/* footer دلخواه */}
+  {footer}
+</div>
+
   );
-};
+}

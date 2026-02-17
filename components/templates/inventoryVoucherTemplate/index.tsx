@@ -18,8 +18,12 @@ import {
 } from '@components/molecules/inventoryVoucher';
 import { ERPTable } from '@components/organisms/erp-table';
 import {
+  ERPTableApi,
+  ERPTableProps,
+} from '@components/organisms/erp-table/ui/erp-table';
+import {
   useFullScreen,
-  useNavigatePage,
+  useInitializePage,
 } from '@hooks/custom';
 import { useAppSelector } from '@redux/index';
 import { useGetConditionallyMutation } from '@services/base';
@@ -36,7 +40,18 @@ import {
 import { IProps } from './type';
 
 export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
-  const { caption, url, listUrl, pageIcon } = props;
+  const {
+    caption,
+    captionII,
+    listUrl,
+    pageIcon,
+    detailFieldKey,
+    headerFieldKey,
+    headerGetUrl,
+    detailGetUrl,
+    addUrl,
+    updateUrl,
+  } = props;
   const [pageReady, setPageReady] = React.useState(false);
   const t = useTranslations();
   const dispatch = useDispatch();
@@ -57,22 +72,13 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
   const vti = activePage?.data?.voucherTypeId;
   const internal = activePage?.data?.InOut == 0 || activePage?.data?.InOut == 1;
   const NeedReference = activePage?.data?.NeedReference;
-  const StockId = activePage?.pageData?.find(d=>d.name == 'StockId')?.value
-  const InvoiceHeaderId = activePage?.pageData?.find(d=>d.name == 'InvoiceHeaderId')?.value
+  const StockId = activePage?.pageData?.find((d) => d.name == "StockId")?.value;
+  const VoucherHeaderId = activePage?.pageData?.find(
+    (d) => d.name == "VoucherHeaderId",
+  )?.value;
   const voucherTypeId = vti ? Number(vti) : null;
   const titleKey = "VoucherNumber";
-  const fieldKey = "VoucherHeaderId";
-  const getUrl = "api/inv/select/voucher/header";
-  const getDetailUrl = "api/inv/select/voucher/detail";
-  const addUrl = "api/inv/insert/voucher";
-  const updateUrl = "api/inv/update/voucher";
-  const deleteUrl = "api/inv/delete/voucher";
-  const info = {
-    addEndpoint: addUrl,
-    deleteEndpoint: deleteUrl,
-    updateEndpoint: updateUrl,
-    formIdField: fieldKey,
-  };
+
   const recordHeight = 40;
   const deviceHeight = window.innerHeight;
   const formHeight = 200;
@@ -86,9 +92,12 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
     pageId,
     RepoId,
     SystemId,
-    url: BaseUrl,
+    url,
     pageState,
     originalPageState,
+    Id,
+    data: initData,
+    returnPageId,
   } = initPage;
 
   const safeParse = (s: any) => {
@@ -99,32 +108,24 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
     }
   };
 
+  const [headerId, setHeaderId] = React.useState<number | null>(null);
+  const [rows, setRows] = React.useState<any[] | null>(null);
   const [getToolbarData] = useGetConditionallyMutation();
   const [itemMutate] = useGetConditionallyMutation();
-  const { navigateBack } = useNavigatePage();
-  const tableApiRef = useRef(null);
+  const initializePage = useInitializePage();
+  const tableApiRef = useRef<ERPTableApi | null>(null);
   const fetchDefaultValues = async (id) => {
     let defaultData = [];
-    const res = await fetchDefault({
-      url: getUrl,
-      body: {
-        Id: id,
-      },
-    }).unwrap();
-    if (res.Result == "Success") {
-      const temp = res.Data[0];
-      const detailRes = await fetchDefault({
-        url: getDetailUrl,
+    if (id) {
+      const res = await fetchDefault({
+        url: headerGetUrl,
         body: {
-          HeaderId: temp[fieldKey],
-          RepoViewId: 70003,
-          PagingInfo: {
-            PageNumber: 1,
-            PageRecordCount: recordsPerPage,
-          },
+          Id: id,
         },
       }).unwrap();
-      if (detailRes.Result == "Success") {
+      if (res.Result == "Success") {
+        const currentHeaderId = res.Data[0][headerFieldKey];
+        setHeaderId(currentHeaderId);
         const correctDefaultValue = {
           ...res.Data[0],
         };
@@ -145,21 +146,15 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
             : correctDefaultValue[item.name];
           const newValue = {
             ...item,
-            value:
-              item.name == "Details"
-                ? detailRes.Data
-                : (correctValue ?? item?.value),
-            originalValue:
-              item.name == "Details"
-                ? detailRes.Data
-                : (correctOriginalValue ?? item?.originalValue),
+            value: correctValue ?? item?.value,
+            originalValue: correctOriginalValue ?? item?.originalValue,
             isTitleField: item.name === titleKey,
           };
           return newValue;
         });
 
         defaultData.push({
-          name: fieldKey,
+          name: headerFieldKey,
           caption: "MainIdField",
           value: id,
           originalValue: id,
@@ -174,10 +169,15 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
           originalValue: item?.originalValue,
         }));
       }
-      return defaultData;
     } else {
-      return [];
+      defaultData = formConfig.map((item) => ({
+        ...item,
+        isTitleField: item.name === titleKey,
+        value: item?.value,
+        originalValue: item?.originalValue,
+      }));
     }
+    return defaultData;
   };
   useEffect(() => {
     const fetchData = async () => {
@@ -197,15 +197,16 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
           updateEndpoint: Config.updateEndpoint,
           formIdField: Config.formIdField,
         };
-        if (id) {
-          formData = await fetchDefaultValues(id);
-        }
+
+        formData = await fetchDefaultValues(id);
+
         dispatch(
           addNewPage({
+            Id: Id,
             pageId,
             icon: pageIcon,
             caption: caption,
-            captionII: initPage.caption ?? "",
+            captionII: captionII ?? "",
             pageState: pageState ? pageState : PageStateEnum.Opened,
             originalPageState: originalPageState
               ? originalPageState
@@ -218,62 +219,92 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
                 PageRecordCount: recordsPerPage,
               },
             },
-            data: initPage.data,
+            data: initData,
             RepoId,
             SystemId,
-            url: BaseUrl,
+            url,
             pageInfo: info,
             listUrl,
           }),
         );
+        if (!id) {
+          setRows([]);
+        }
         setPageReady(true);
       }
     };
 
     fetchData();
   }, []);
-  const { Details } = useAppSelector(
-    (state) => ({
-      Details: state?.withPersist?.pages
-        ?.find((item) => item.isActive)
-        ?.pageData?.find((i) => i.name === "Details")?.value,
-    }),
-    shallowEqual,
-  );
 
-  const rows = useMemo(() => {
-    const correctArray = Details?.map((_, i) => ({
-      id: _.RowNum,
-      values: {
-        ..._,
+  const fetchDefaultDetails = async (headerId: number) => {
+    const detailRes = await fetchDefault({
+      url: detailGetUrl,
+      body: {
+        HeaderId: headerId,
+        RepoViewId: 70003,
+        PagingInfo: {
+          PageNumber: 1,
+          PageRecordCount: recordsPerPage,
+        },
       },
-    }));
-    return correctArray ?? [];
-  }, [Details]);
+    }).unwrap();
+
+    if (detailRes.Result === "Success") {
+      return detailRes.Data ?? [];
+    }
+
+    return [];
+  };
+
+  useEffect(() => {
+    if (!headerId) return;
+    const loadDetails = async () => {
+      const details = await fetchDefaultDetails(headerId);
+      const mappedRows = details.map((item, i) => ({
+        id: item[detailFieldKey],
+        values: { ...item },
+       moreDetails: {
+        data: item,          // ← اینجا data می‌ذاریم (یا { item } اگر دوست داری شیء بمونه)
+      },
+      }));
+      setRows(mappedRows);
+    };
+    loadDetails();
+  }, [headerId]);
+
   const colConfigs = useMemo(() => {
-    return columnConfig(vti, internal, NeedReference, StockId, InvoiceHeaderId);
-  }, [vti, internal, NeedReference, StockId, InvoiceHeaderId]);
+    return columnConfig(vti, internal, NeedReference, StockId, VoucherHeaderId);
+  }, [vti, internal, NeedReference, StockId, VoucherHeaderId]);
   const testActor = { userId: "12", roles: ["ADMIN"] };
 
   function mapSnapshotToDetailsDynamic(snapshot: any) {
-    return snapshot.rows.map((row: any) => {
-      const detail: Record<string, any> = {};
-      detail.RowState = row.rowState;
-      detail.ChangeFields = row.changeFields;
-      Object.entries(row.cells).forEach(([col, cell]: [string, any]) => {
-        if (!cell || cell === undefined || cell === null || cell === "") {
-          return;
+    return snapshot.rows
+      .filter((row: any) => row.rowState !== "None")
+      .map((row: any) => {
+        const detail: Record<string, any> = {};
+        detail.RowState = row.rowState;
+        detail.ChangeFields = row.changeFields;
+        if (id) {
+          detail[detailFieldKey] = row.id;
         }
-        if (col === "index") {
-          detail.RowNum = cell;
-          return;
-        }
-        const value =
-          typeof cell === "object" && "value" in cell ? cell.value : cell;
-        detail[col] = value;
+
+        Object.entries(row.cells).forEach(([col, cell]: [string, any]) => {
+          if (!cell) return;
+
+          if (col === "index") {
+            detail.RowNum = cell;
+            return;
+          }
+
+          const value =
+            typeof cell === "object" && "value" in cell ? cell.value : cell;
+
+          detail[col] = value;
+        });
+
+        return detail;
       });
-      return detail;
-    });
   }
 
   const handleSubmit = async () => {
@@ -284,12 +315,22 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
       Details: mapSnapshotToDetailsDynamic(tableApiRef.current),
     };
     const res = await itemMutate({
-      url: addUrl,
+      url: !id ? addUrl : updateUrl,
       body: payload,
     }).unwrap();
     if (res?.Result == "Success") {
-      showSuccessToast(t("toast.successTitle"), caption);
-      navigateBack();
+      showSuccessToast(t("toast.successTitle"), t(caption));
+
+      initializePage({
+        config: {
+          ...initData,
+          RepoId: activePage.RepoId,
+          SystemId: activePage.SystemId,
+          url: listUrl,
+          pageId: returnPageId,
+          data: initData,
+        },
+      });
     }
   };
 
@@ -297,18 +338,38 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
   //   url: `/api/mng/select/placeConfigValue`,
   //   body: {},
   // });
+  const rowAccess = {
+    denyRoles: ["VIEWER"],
+    // allowRoles: ["ADMIN"],
+    // rule(ctx) {
+    //   return false;
+    // },
+  };
 
-  const prop = useMemo(() => {
-    return {
-      actor: testActor,
-      store: "inventoryVoucher",
-      tableKey: params.get("id") ?? activePage?.pageId,
-      rows,
-      columns: colConfigs,
+  useEffect(() => {
+    if (!tableApiRef.current) {
+      return;
+    }
+    const unsubscribe = tableApiRef.current.subscribeColumn<number>(
+      "Quantity1",
+      (values) => {
+        console.log("COLUMN CHANGED:", values);
+      },
+    );
+    return () => {
+      unsubscribe();
     };
-  }, [activePage?.pageId, colConfigs]);
+  }, [tableApiRef.current]);
 
-
+ const prop = useMemo<ERPTableProps<IMoreProps>>(() => ({
+  actor: testActor,
+  store: "inventoryVoucher",
+  tableKey: params.get("id") ?? activePage?.pageId ?? "",
+  rows,
+  columns: colConfigs,
+  rowAccess,
+  tableHeight:500
+}), [activePage?.pageId, colConfigs, rows]);
   return (
     <div className="relative">
       <button
@@ -318,14 +379,31 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
         {t("general.submit")}
       </button>
       <InventoryVoucherHeaderForm form={form} />
-      {pageReady && activePage?.pageId && StockId && InvoiceHeaderId && (
-        <ERPTable
+      {pageReady && activePage?.pageId && StockId && rows !== null && (
+        <ERPTable<IMoreProps>
           {...prop}
+          moreDetailComponent={More}
           onReady={(api) => {
-            tableApiRef.current = api.getSnapshot();
+            tableApiRef.current = api;
+
+            const unsubscribe = api.subscribeColumn<number>(
+              "Quantity1",
+              (values) => {
+                console.log(values);
+              },
+            );
           }}
         />
       )}
     </div>
   );
 }
+interface IMoreProps {
+  data: unknown;  
+}
+
+const More = ({ data }:IMoreProps) => {
+  const moreDetail = data;  
+  console.log(moreDetail);
+  return <>test</>;
+};

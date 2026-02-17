@@ -83,6 +83,8 @@ import {
   renderPageState,
 } from "@utils/core";
 
+import { CustomerCredit } from "@components/molecules/customerCredit";
+import { CustomerGroupCredit } from "@components/molecules/customerGroupCredit";
 import ChatWidget from "../chat";
 import DynamicModal from "../dynamicModal";
 import { ActionLabelsEnum } from "../list/enum";
@@ -103,6 +105,7 @@ export default function FormToolbar({
   getUrl,
   submitCaption,
   withSubmitButton = true,
+  hasShorthandFormToolbar,
 }: IProps) {
   const t = useTranslations();
   const dispatch = useDispatch();
@@ -125,7 +128,7 @@ export default function FormToolbar({
     };
   }, shallowEqual);
   const hasDetails = activePage?.pageData?.find(
-    (item) => item.name === "Details"
+    (item) => item.name === "Details",
   );
   const selectedViewIndex = activePage?.selectedViewIndex ?? 0;
 
@@ -181,6 +184,10 @@ export default function FormToolbar({
     isChangeInvoiceCurrencyRateModalOpen,
     setIsChangeInvoiceCurrencyRateModalOpen,
   ] = useState(false);
+  const [isCustomerCreditModalOpen, setIsCustomerCreditModalOpen] =
+    useState(false);
+  const [isCustomerGroupCreditModalOpen, setIsCustomerGroupCreditModalOpen] =
+    useState(false);
 
   const {
     handleAdd,
@@ -293,6 +300,12 @@ export default function FormToolbar({
         case ActionLabelsEnum.ChangeInvoiceCurrencyRate as string:
           setIsChangeInvoiceCurrencyRateModalOpen(true);
           break;
+        case ActionLabelsEnum.CustomerCredit as string:
+          setIsCustomerCreditModalOpen(true);
+          break;
+        case ActionLabelsEnum.CustomerGroupCredit as string:
+          setIsCustomerGroupCreditModalOpen(true);
+          break;
         default:
           setIsDynamicModalOpen(true);
           break;
@@ -337,7 +350,7 @@ export default function FormToolbar({
     const correctReportItems = toolbarData?.ReportPosition?.filter(
       (item: IReportPosition) =>
         item.RepoViewId === activePage?.viewData?.RepoViewId &&
-        item.Type !== ReportTypeEnum.Print
+        item.Type !== ReportTypeEnum.Print,
     );
 
     if (!correctReportItems || toolbarData === undefined) {
@@ -362,7 +375,7 @@ export default function FormToolbar({
     const correctPrintItems = toolbarData?.ReportPosition?.filter(
       (item: IReportPosition) =>
         item.RepoViewId === activePage?.viewData?.RepoViewId &&
-        item.Type === ReportTypeEnum.Print
+        item.Type === ReportTypeEnum.Print,
     );
 
     if (!correctPrintItems || toolbarData === undefined || !id) {
@@ -398,7 +411,7 @@ export default function FormToolbar({
         !(
           menuItem.MenuDesc === ActionLabelsEnum.Edit ||
           menuItem.MenuDesc === ActionLabelsEnum.Delete
-        )
+        ),
     );
     if (!filteredMoreAction) return [];
     return filteredMoreAction.map((menuItem: IToolbarMenu) => {
@@ -407,8 +420,8 @@ export default function FormToolbar({
           (el) =>
             el.conditionallyAction === menuItem.MenuDesc &&
             !activePage?.pageData?.find(
-              (item) => item.name === el.conditionalProperty
-            )?.originalValue
+              (item) => item.name === el.conditionalProperty,
+            )?.originalValue,
         ) ?? false;
 
       return {
@@ -532,7 +545,7 @@ export default function FormToolbar({
   const defaultSubmitKey = getCookie("ArianSubmitForm");
 
   const [selectedSubmit, setSelectedSubmit] = useState(
-    defaultSubmitKey ? defaultSubmitKey : "1"
+    defaultSubmitKey ? defaultSubmitKey : "1",
   );
 
   const handleSelectedSubmit = (key) => {
@@ -562,14 +575,14 @@ export default function FormToolbar({
   const items = allItems.filter((button) => button.key !== selectedSubmit);
 
   const activeSubmitButton: any = allItems.find(
-    (button) => button.key === selectedSubmit
+    (button) => button.key === selectedSubmit,
   );
 
   useEffect(() => {
     if (!toolbarData?.List?.ListProp) return;
 
     const exactItemIndex = toolbarData.List.ListProp.findIndex(
-      (item) => item.Id === selectedView
+      (item) => item.Id === selectedView,
     );
 
     if (exactItemIndex !== -1) {
@@ -614,15 +627,17 @@ export default function FormToolbar({
                   </span>
                 </CustomDropdownButton>
               )}
-              <ShorthandFormToolbar
-                handleReset={handleReset}
-                handleSubmitAndSave={handleSubmitAndClean}
-                handleAdd={handleAdd}
-                handleNextItem={handleNextItem}
-                handlePrevItem={handlePrevItem}
-                disabledNextButton={disabledNextButton}
-                disabledPrevButton={disabledPrevButton}
-              />
+              {hasShorthandFormToolbar && (
+                <ShorthandFormToolbar
+                  handleReset={handleReset}
+                  handleSubmitAndSave={handleSubmitAndClean}
+                  handleAdd={handleAdd}
+                  handleNextItem={handleNextItem}
+                  handlePrevItem={handlePrevItem}
+                  disabledNextButton={disabledNextButton}
+                  disabledPrevButton={disabledPrevButton}
+                />
+              )}
               {displayListItems.length > 1 && (
                 <CustomDropdownButton
                   placement={lang === "fa" ? "bottomRight" : "bottomLeft"}
@@ -734,17 +749,17 @@ export default function FormToolbar({
                       activePage.pageData?.find((i) => i.isTitleField === true)
                         ?.value
                     : activePage?.type === PageTypeEnum.Form
-                    ? activePage?.pageState === PageStateEnum.Pending ||
-                      activePage?.pageState === PageStateEnum.PendingUpdate ||
-                      activePage?.pageState === PageStateEnum.PendingDelete ||
-                      activePage?.pageState === PageStateEnum.Saved
-                      ? t(activePage.caption) +
-                        " - " +
-                        activePage.pageData?.find(
-                          (i) => i.isTitleField === true
-                        )?.value
-                      : t(activePage.caption) + " - " + t("general.newForm")
-                    : t(activePage?.caption)}
+                      ? activePage?.pageState === PageStateEnum.Pending ||
+                        activePage?.pageState === PageStateEnum.PendingUpdate ||
+                        activePage?.pageState === PageStateEnum.PendingDelete ||
+                        activePage?.pageState === PageStateEnum.Saved
+                        ? t(activePage.caption) +
+                          " - " +
+                          activePage.pageData?.find(
+                            (i) => i.isTitleField === true,
+                          )?.value
+                        : t(activePage.caption) + " - " + t("general.newForm")
+                      : t(activePage?.caption)}
                 </span>
                 <div className="flex justify-center items-center">
                   {renderPageState(activePage?.pageState)}
@@ -1394,6 +1409,56 @@ export default function FormToolbar({
               id={id}
               sourceKey={fieldKey}
               handleClose={() => setIsChangeInvoiceCurrencyRateModalOpen(false)}
+            />
+          }
+        />
+      )}
+      {isCustomerCreditModalOpen && (
+        <CustomModal
+          contentClassName={`${match ? "w-[540px] h-[220px]" : ""}`}
+          headerName={dynamicAction.MenuDesc}
+          headerIcon={
+            match && (
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: getColoredIcon(dynamicAction.Icon, mode),
+                }}
+                style={{ width: "18px", height: "17px" }}
+              />
+            )
+          }
+          closeModal={() => setIsCustomerCreditModalOpen(false)}
+          isModalOpen={isCustomerCreditModalOpen}
+          content={
+            <CustomerCredit
+              id={id}
+              sourceKey={fieldKey}
+              handleClose={() => setIsCustomerCreditModalOpen(false)}
+            />
+          }
+        />
+      )}
+      {isCustomerGroupCreditModalOpen && (
+        <CustomModal
+          contentClassName={`${match ? "w-[540px] h-[220px]" : ""}`}
+          headerName={dynamicAction.MenuDesc}
+          headerIcon={
+            match && (
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: getColoredIcon(dynamicAction.Icon, mode),
+                }}
+                style={{ width: "18px", height: "17px" }}
+              />
+            )
+          }
+          closeModal={() => setIsCustomerGroupCreditModalOpen(false)}
+          isModalOpen={isCustomerGroupCreditModalOpen}
+          content={
+            <CustomerGroupCredit
+              id={id}
+              sourceKey={fieldKey}
+              handleClose={() => setIsCustomerGroupCreditModalOpen(false)}
             />
           }
         />

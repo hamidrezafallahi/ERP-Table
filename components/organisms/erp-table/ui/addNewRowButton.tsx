@@ -16,7 +16,7 @@ export const AddNewRowButton: React.FC<AddNewRowButtonProps> = ({
   return (
     <button
       type="button"
-      className="w-full"
+      className="w-fit"
       onClick={handleAddRow}
     >
       +

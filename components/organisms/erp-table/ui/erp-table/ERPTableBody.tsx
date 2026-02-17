@@ -1,7 +1,5 @@
 import React, { useRef } from 'react';
 
-import { NoData } from '@components/atoms/iconComponents';
-
 import { UITableController } from '../../adapters/ui/UITableController';
 import { RowStateEnum } from '../../domain/value-objects';
 import { TCell } from '../../engine/type';
@@ -10,18 +8,14 @@ import { ERPTableRow } from './eRPTableRow';
 interface Props {
   controller: UITableController;
   tableKey: string;
-  containerRef: React.RefObject<HTMLDivElement>;
-  onActiveRowChange: (rowId: number) => void;
-  onActiveColChange: (colId: string) => void;
+  moreDetailComponent?: React.ComponentType<{ data: unknown }>;
 }
 
 export function ERPTableBody({
   controller,
   tableKey,
-  onActiveRowChange,
-  onActiveColChange,
+  moreDetailComponent: MoreDetailComponent,
 }: Props) {
-  // const [initialized, setInitialized] = useState(false);
   const table = controller.getViewState(tableKey);
   const dragRowId = useRef<number | null>(null);
   if (!table) return null;
@@ -29,22 +23,12 @@ export function ERPTableBody({
     id: number;
     rowState: RowStateEnum;
     cells: Record<string, TCell>;
+
     isExpanded: boolean;
   }> = table.rows;
- 
-  return (
-    <tbody>
-      {rows.length === 0 && (
-        <tr>
-          <td
-            colSpan={table.columns.filter((c) => !c.hidden).length}
-            className="py-2 text-center"
-          >
-            <NoData config={{ width: 60, height: 60 }} />
-          </td>
-        </tr>
-      )}
 
+  return (
+    <>
       {rows.map((row, index) => (
         <ERPTableRow
           key={row.id}
@@ -53,11 +37,10 @@ export function ERPTableBody({
           table={table}
           controller={controller}
           tableKey={tableKey}
-          onActiveRowChange={onActiveRowChange}
-          onActiveColChange={onActiveColChange}
           draggedRowIdRef={dragRowId}
+          moreDetailComponent={MoreDetailComponent}
         />
       ))}
-    </tbody>
+    </>
   );
 }

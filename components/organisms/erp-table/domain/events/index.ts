@@ -51,7 +51,6 @@ export type PageChanged = { type: "PageChanged"; payload: { page: number; }; };
 
 export class RowAdded {
   readonly type = 'ROW_ADDED';
-
   constructor(public readonly rowId: RowId) { }
 }
 export class NewRowAdded {

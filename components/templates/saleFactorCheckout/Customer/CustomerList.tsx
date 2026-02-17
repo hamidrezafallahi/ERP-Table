@@ -46,7 +46,7 @@ export default function CustomerList({ ...props }) {
             className={`flex flex-row-reverse lg:flex-col  items-center lg:justify-center justify-end gap-2 lg:col-span-1 !border border-gray-gray85 rounded-lg w-full h-12 lg:h-36 text-wrap`}
             key={index}
           >
-            <div>{item?.Person.FullName}</div>
+            <div>{item?.FullName}</div>
             <div>{item?.CustomerDesc}</div>
             <Image
               width={40}

@@ -16,7 +16,7 @@ export const InvoiceForm = ({ activePage, form }: IProps) => {
       form={form}
       name="advancedBankWithdrawalForm"
       layout="vertical"
-      className="hidden-show-scrollBar gap-5 lg:gap-y-10 grid grid-cols-12 pt-4 lg:pt-0 h-auto max-h-[calc(100dvh-160px)] overflow-y-auto"
+      className="hidden-show-scrollBar gap-5 lg:gap-y-5 grid grid-cols-12 pt-4 lg:pt-0 h-auto max-h-[calc(100dvh-160px)] overflow-y-auto"
     >
       <Form.Item
         label="تاریخ سند"

@@ -32,6 +32,7 @@ erp-table/bootstrap/createERPTable.ts
 erp-table/ui/index.tsx
 erp-table/ui/indexCol.tsx
 erp-table/ui/cellRenderer.tsx
+erp-table/ui/erpTableRow.tsx
 erp-table/ui/ERPTableBody.tsx
 erp-table/ui/ERPTableHeader.tsx
 erp-table/ui/useERPTable.ts

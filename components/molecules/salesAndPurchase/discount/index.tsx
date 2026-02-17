@@ -203,7 +203,7 @@ export const DiscountForm = ({ defOpt, form, id }: IProps) => {
       }}
       name="discountForm"
       layout="vertical"
-      className="hidden-show-scrollBar gap-5 lg:gap-y-10 grid grid-cols-12 mt-4 lg:mt-0 h-auto overflow-auto"
+      className="hidden-show-scrollBar gap-5 lg:gap-y-5 grid grid-cols-12 mt-4 lg:mt-0 h-auto overflow-auto"
     >
       {/* ================= عنوان + انتخاب نوع تخفیف ================= */}
       <div className="gap-5 lg:gap-4 grid grid-cols-12 col-span-12">

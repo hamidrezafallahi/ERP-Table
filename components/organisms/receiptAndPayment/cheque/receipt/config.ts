@@ -1,7 +1,7 @@
-import type { IDetailColumnConfig } from '@services/generalType/type';
-import type { IFormFieldConfig } from '@type/elementType';
+import type { IDetailColumnConfig } from "@services/generalType/type";
+import type { IFormFieldConfig } from "@type/elementType";
 
-import { stateConfig } from '../../config';
+import { stateConfig } from "../../config";
 
 export const formConfig: IFormFieldConfig[] = [
   {
@@ -151,8 +151,8 @@ export const formConfig: IFormFieldConfig[] = [
     caption: "ماهیت",
     type: "selectOption",
     selectEndpoint: {
-      addWebUrl: "api/com/select/commonInfo/voucherNature",
-      endpoint: "api/com/select/commonInfo/voucherNature",
+      addWebUrl: "api/trh/select/commonInfo/voucherNature",
+      endpoint: "api/trh/select/commonInfo/voucherNature",
       repoViewId: null,
     },
   },

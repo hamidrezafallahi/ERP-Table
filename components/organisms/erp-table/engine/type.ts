@@ -8,7 +8,7 @@ import { RowStateEnum } from '../domain/value-objects';
 
 export type TableViewState = {
   table: Table
-  activeCell:ActiveCell;
+  activeCell: ActiveCell;
   selectedRows: Record<number, true>;
   rows: Array<{
     id: number;
@@ -37,10 +37,15 @@ export type TableSnapShot = {
     id: number;
     cells: Record<string, unknown>;
     rowState: RowStateEnum
+    moreDetails:unknown,
+
+
   }>;
   deletedRows: Array<{
     id: string;
     cells: Record<string, unknown>;
+    moreDetails:unknown,
+
   }>;
 };
 
@@ -59,17 +64,15 @@ export type ActiveCell = {
   rowId: number;
   columnId: string;
 } | null;
-export type ActiveRow = {
-  rowId: number;
- 
-} | null;
+
 
 export type TableState = {
   table: Table;
-  expanded: Record<string, boolean>;
-  activeRow?: ActiveRow;
-  activeCell?: ActiveCell;
-  selectedRows: Record<number, true>;
+  expandedRows: Record<string, boolean>;
+  selectedRows: Record<number, true>
+  activeRowId: number | null
+  activeCell: ActiveCell
+  rangeAnchorRowId: number | null
 };
 
 

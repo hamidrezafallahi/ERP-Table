@@ -16,10 +16,13 @@ export class TableStore<T> {
     return this.state;
   }
 
-  setState(newState: T) {
-    this.state = newState;
-    this.notify();
-  }
+setState(updater: (prev: T) => T) {
+  const nextState = updater(this.state);
+  if (nextState === this.state) return;
+  this.state = nextState;
+  this.notify();
+}
+
 
   subscribe(cb: Subscriber) {
     this.subscribers.push(cb);

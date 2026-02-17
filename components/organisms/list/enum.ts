@@ -40,4 +40,6 @@ export enum ActionLabelsEnum {
   ChangeInvoiceCurrency = "تغییر ارز",
   ChangeInvoiceCurrencyRate = "تغییر نرخ ارز",
   GoodMeasurementUnit = "واحد شمارش فرعی",
+  CustomerCredit = "اعتبار مشتریان",
+  CustomerGroupCredit = "اعتبار گروه مشتریان",
 }

@@ -21,8 +21,8 @@ export const formConfig: IFormFieldConfig[] = [
     caption: "واریز به حساب بانکی",
     type: "selectOption",
     selectEndpoint: {
-      addWebUrl: "api/com/select/bankAccount4SelectOption",
-      endpoint: "api/com/select/bankAccount4SelectOption",
+      addWebUrl: "api/trh/select/bankAccount4SelectOption",
+      endpoint: "api/trh/select/bankAccount4SelectOption",
       repoViewId: 106081,
     },
   },

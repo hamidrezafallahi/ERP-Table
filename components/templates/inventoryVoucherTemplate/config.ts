@@ -62,7 +62,7 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
         return [
           {
             key: "qwe", label: ('آپشن تست 1'), onClick: () => {
-              controller.dispatch({ type: 'UI_CELL_CHANGE',value:125, rowId, columnId: "Quantity1", })
+              controller.dispatch({ type: 'UI_CELL_CHANGE', value: 125, rowId, columnId: "Quantity1", })
               console.log(tableKey, rowId, row)
             }
           },
@@ -120,8 +120,7 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
       fieldType: "number",
       order: 4,
       visibility: { kind: 'always' },
-
-
+      // colAccess: { denyRoles: ['VIEWER'],allowRoles:['ADMIN'],rule(ctx) {return false} }
       // visibility: {
       //   kind: "whenFieldTruthy",
       //   fieldName: "GoodsId",
@@ -230,30 +229,30 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
         flag: "HasLocation",
       },
     },
-  {
-  fieldName: "TotalQty",
-  fieldCaption: "جمع تعداد",
-  fieldType: "number",
-  order: 13,
-  visibility: { kind: 'always' },
-  computed: {
-    dependsOn: ["Quantity1", "Quantity2", "Quantity3"],
-    compute: async (row, remoteApi) => {
+    //   {
+    //   fieldName: "TotalQty",
+    //   fieldCaption: "جمع تعداد",
+    //   fieldType: "number",
+    //   order: 13,
+    //   visibility: { kind: 'always' },
+    //   computed: {
+    //     dependsOn: ["Quantity1", "Quantity2", "Quantity3"],
+    //     compute: async (row, remoteApi) => {
 
-      // اگر واقعاً نیاز به API داری
-      const res = await remoteApi?.request<{ factor: number }>({
-        endpoint: '/calculate/factor',
-        params: { productId: row.ProductId },
-      });
-console.log(res)
-      const q1 = Number(row.Quantity1 ?? 0);
-      const q2 = Number(row.Quantity2 ?? 0);
-      const q3 = Number(row.Quantity3 ?? 0);
+    //       // اگر واقعاً نیاز به API داری
+    // //       const res = await remoteApi?.request<{ factor: number }>({
+    // //         endpoint: '/calculate/factor',
+    // //         params: { productId: row.ProductId },
+    // //       });
+    // // console.log(res)
+    //       const q1 = Number(row.Quantity1 ?? 0);
+    //       const q2 = Number(row.Quantity2 ?? 0);
+    //       const q3 = Number(row.Quantity3 ?? 0);
 
-      return (q1 + q2 + q3);
-    },
-  },
-}
+    //       return (q1 + q2 + q3);
+    //     },
+    //   },
+    // }
 
     // {
     //   fieldName: "FinalQtyStatus",

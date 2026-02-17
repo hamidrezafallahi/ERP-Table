@@ -1,32 +1,26 @@
-﻿import {
-  Pagination,
-  Spin,
-  Table,
-  TableColumnsType,
-} from 'antd';
-import { useTranslations } from 'next-intl';
+﻿import { Pagination, Spin, Table, TableColumnsType } from "antd";
+import { useTranslations } from "next-intl";
 
 import {
   CustomButton,
   CustomSelect,
   CustomTooltip,
-} from '@components/atoms/defaultElements';
+} from "@components/atoms/defaultElements";
 import {
+  Info,
   LeftChevron,
   NoData,
   RightChevron,
   SpinIcon,
-} from '@components/atoms/iconComponents';
-import RenderStatus from '@components/molecules/renderStatus';
-import {
-  useDarkMode,
-  useProcessedData,
-} from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
-import type { IColumnConfig } from '@services/generalType/type';
-import { getColoredIcon } from '@utils/core';
+} from "@components/atoms/iconComponents";
+import RenderStatus from "@components/molecules/renderStatus";
+import { useDarkMode, useProcessedData } from "@hooks/custom";
+import { useAppSelector } from "@redux/index";
+import type { IColumnConfig } from "@services/generalType/type";
+import { getColoredIcon } from "@utils/core";
 
-import type { IProps } from './type';
+import { shallowEqual } from "react-redux";
+import type { IProps } from "./type";
 
 export const ActionGrid = ({
   data,
@@ -49,7 +43,16 @@ export const ActionGrid = ({
 
   const t = useTranslations();
 
-  const locale = useAppSelector((state) => state.withPersist.config.lang);
+  const { locale, isFullScreen } = useAppSelector((state) => {
+    const locale = state.withPersist.config.lang;
+    const isFullScreen = state.withPersist.config.fullScreen;
+
+    return {
+      locale,
+
+      isFullScreen,
+    };
+  }, shallowEqual);
 
   const processedData = useProcessedData({
     data,
@@ -60,7 +63,7 @@ export const ActionGrid = ({
   const columns: TableColumnsType = columnsConfig?.map(
     (item: IColumnConfig, index: number) => {
       const hasPendingStatus = processedData?.find(
-        (i) => i.PendingStatusId !== undefined
+        (i) => i.PendingStatusId !== undefined,
       );
       const isFirstColumn = index === 0;
 
@@ -69,6 +72,17 @@ export const ActionGrid = ({
           title: item.fieldCaption,
           key: item.fieldName,
           render: (text: any, record: any) => {
+            const action = {
+              MenuId: null,
+              Icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"fill="none"><path d="M10 9.16667V13.3333M10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5C14.1421 2.5 17.5 5.85786 17.5 10C17.5 14.1421 14.1421 17.5 10 17.5ZM10.0415 6.66667V6.75L9.9585 6.75016V6.66667H10.0415Z"className="stroke-gray-gray10 dark:stroke-gray-gray1"stroke="stroke-gray-gray10  dark:stroke-gray-gray1"strokeLinecap="round"strokeLinejoin="round"/></svg>`,
+              ActionId: null,
+              MenuDesc: "عملیات چک دریافتی",
+              key: "عملیات چک دریافتی",
+              FatherId: null,
+              MenuType: null,
+              loggedInUserId: null,
+              condition: "",
+            };
             return (
               <div className="flex flex-wrap items-center gap-2">
                 {record[item.fieldName] && (
@@ -81,6 +95,81 @@ export const ActionGrid = ({
                   pendingMessage={record.PendingMessage}
                   isMobile={false}
                 />
+                <div
+                  className="cursor-pointer"
+                  onClick={() => onActionClick(action, record)}
+                >
+                  <Info />
+                </div>
+              </div>
+            );
+          },
+        };
+      }
+      if (!hasPendingStatus && isFirstColumn) {
+        return {
+          title: item.fieldCaption,
+          key: item.fieldName,
+          render: (text: any, record: any) => {
+            const action = {
+              MenuId: null,
+              Icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"fill="none"><path d="M10 9.16667V13.3333M10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5C14.1421 2.5 17.5 5.85786 17.5 10C17.5 14.1421 14.1421 17.5 10 17.5ZM10.0415 6.66667V6.75L9.9585 6.75016V6.66667H10.0415Z"className="stroke-gray-gray10 dark:stroke-gray-gray1"stroke="stroke-gray-gray10  dark:stroke-gray-gray1"strokeLinecap="round"strokeLinejoin="round"/></svg>`,
+              ActionId: null,
+              MenuDesc: "عملیات چک دریافتی",
+              key: "عملیات چک دریافتی",
+              FatherId: null,
+              MenuType: null,
+              loggedInUserId: null,
+              condition: "",
+            };
+            return (
+              <div className="flex flex-wrap items-center gap-2">
+                {record[item.fieldName] && (
+                  <span>{record[item.fieldName]}</span>
+                )}
+
+                <CustomTooltip title="رفتن به چک دریافتی">
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => onActionClick(action, record)}
+                  >
+                    <Info />
+                  </div>
+                </CustomTooltip>
+              </div>
+            );
+          },
+        };
+      }
+
+      if (item.fieldName === "DocumentCheque.StateId") {
+        return {
+          title: item.fieldCaption,
+          key: item.fieldName,
+          render: (text: any, record: any) => {
+            const action = {
+              MenuId: null,
+              Icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"fill="none"><path d="M10 9.16667V13.3333M10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5C14.1421 2.5 17.5 5.85786 17.5 10C17.5 14.1421 14.1421 17.5 10 17.5ZM10.0415 6.66667V6.75L9.9585 6.75016V6.66667H10.0415Z"className="stroke-gray-gray10 dark:stroke-gray-gray1"stroke="stroke-gray-gray10  dark:stroke-gray-gray1"strokeLinecap="round"strokeLinejoin="round"/></svg>`,
+              ActionId: null,
+              MenuDesc: "وضعیت چک",
+              key: "وضعیت چک",
+              FatherId: null,
+              MenuType: null,
+              loggedInUserId: null,
+              condition: "",
+            };
+            return (
+              <div className="flex flex-wrap items-center gap-2">
+                {record[item.fieldName] && (
+                  <span>{record[item.fieldName]}</span>
+                )}
+
+                <div
+                  className="cursor-pointer"
+                  onClick={() => onActionClick(action, record)}
+                >
+                  <Info />
+                </div>
               </div>
             );
           },
@@ -92,7 +181,7 @@ export const ActionGrid = ({
         dataIndex: item.fieldName,
         key: item.fieldName,
       };
-    }
+    },
   );
 
   const handlePaginationChange = (page: number) => {
@@ -152,7 +241,12 @@ export const ActionGrid = ({
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      <div className="hidden-show-scrollBar pt-3 h-[calc(100dvh-265px)] overflow-y-scroll">
+      <div
+        tabIndex={-1}
+        className={`${
+          isFullScreen ? "h-[calc(100dvh-160px)]" : "h-[calc(100dvh-265px)]"
+        } pt-3 outline-none overflow-x-auto overflow-y-hidden`}
+      >
         <Table
           loading={{
             spinning: loading,
@@ -180,7 +274,7 @@ export const ActionGrid = ({
             renderCell: (_value, _record, _index, originNode) => {
               return (
                 <>
-                  <div className="flex justify-start items-center gap-2 w-[42px]">
+                  <div className="flex justify-start items-center gap-2 w-[42px] h-9">
                     {originNode}
                   </div>
                 </>

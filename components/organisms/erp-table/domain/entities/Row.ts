@@ -16,9 +16,10 @@ import { Cell } from './Cell';
 export class Row {
   constructor(
     public id: RowId,
-    private cells: Map<string, Cell>,
+    public cells: Map<string, Cell>,
     public rowState: RowState,
-    private changeFields: Set<string> = new Set(),
+    public changeFields: Set<string> = new Set(),
+    public moreDetails:unknown,
  
 
 
@@ -75,6 +76,12 @@ export class Row {
   setRowId(rowId: RowId) {
     this.id.set(rowId);
   }
+  setMoreDetails(detail: unknown) {
+    this.moreDetails = detail ;
+  }
+  getMoreDetails() {
+    return this.moreDetails ;
+  }
 
   removeCell(columnId: ColumnId) {
     this.cells.delete(columnId.value);
@@ -84,6 +91,6 @@ export class Row {
     for (const [k, cell] of this.cells.entries()) {
       clonedCells.set(k, cell.clone());
     }
-    return new Row(this.id, clonedCells, this.rowState,this.changeFields );
+    return new Row(this.id, clonedCells, this.rowState,this.changeFields,this.moreDetails );
   }
 }

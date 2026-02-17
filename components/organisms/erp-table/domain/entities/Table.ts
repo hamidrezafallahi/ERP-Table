@@ -45,6 +45,15 @@ export class Table {
   getColumns(): ColumnSchema[] {
     return Array.from(this.columns.values());
   }
+  getColumnValues(colId: string): unknown[] {
+    const result: unknown[] = [];
+    for (const row of this.rows.values()) {
+      const cell = row.getCell(colId);
+      if (!cell) continue;
+      result.push(cell.getValue().value);
+    }
+    return result;
+  }
   setColumns(newColumns: ColumnSchema[]) {
     const updatedColumns = new Map<string, ColumnSchema>();
     for (const col of newColumns) {
@@ -95,7 +104,8 @@ export class Table {
     const rowsArray = Array.from(this.rows.values());
     const target = rowsArray.find(r => r.id.value == rowId.value);
     if (!target) {
-      throw new Error(`Row ${rowId.value} does not exist`);
+      console.log(rowId)
+      return //throw new Error(`Row ${rowId.value} does not exist`);
     }
     const newRowId = new RowId(rowId.value + 1);
     const newCells = new Map<string, Cell>();
@@ -114,7 +124,7 @@ export class Table {
       );
     }
 
-    const newRow = new Row(newRowId, newCells, new RowState(RowStateEnum.Added));
+    const newRow = new Row(newRowId, newCells, new RowState(RowStateEnum.Added), target.changeFields, target.moreDetails);
     rowsArray.splice(target.id.value, 0, newRow);
     const rebuilt = new Map<number, Row>();
     rowsArray.forEach((row, i) => {
@@ -149,7 +159,7 @@ export class Table {
       );
       cells.set(columnId, cell);
     });
-    const newRow = new Row(newRowId, cells, new RowState(RowStateEnum.Added));
+    const newRow = new Row(newRowId, cells, new RowState(RowStateEnum.Added), new Set(), undefined);
     this.rows.set(newRowId.value, newRow);
     const totalRows = this.rows.size;
     const pageSize = this.pagination.pageSize;
@@ -222,6 +232,10 @@ export class Table {
   getRows(): Row[] {
     return Array.from(this.rows.values());
   }
+  getRow(rowId: number): Row | undefined {
+    return this.rows.get(rowId);
+  }
+
   getPagination() {
     return this.pagination;
   }
@@ -278,7 +292,7 @@ export class Table {
       }
     }
   }
-  reorderRows(draggedRowId: number, droppedRowId: number,position: 'before' | 'after' = 'after' ): RowReordered {
+  reorderRows(draggedRowId: number, droppedRowId: number, position: 'before' | 'after' = 'after'): RowReordered {
     if (draggedRowId === droppedRowId) {
       return new RowReordered(draggedRowId, droppedRowId);
     }
@@ -290,15 +304,15 @@ export class Table {
     }
     const [moved] = rowsArray.splice(fromIndex, 1);
     let insertIndex = toIndex;
-  if (position === 'after') {
-    insertIndex = toIndex + 1;
-    if (fromIndex < toIndex) insertIndex -= 1;
-  } else {
-    // قبل → منطق قدیمی
-    if (fromIndex < toIndex) insertIndex -= 1;
-  }
+    if (position === 'after') {
+      insertIndex = toIndex + 1;
+      if (fromIndex < toIndex) insertIndex -= 1;
+    } else {
+      // قبل → منطق قدیمی
+      if (fromIndex < toIndex) insertIndex -= 1;
+    }
 
-  rowsArray.splice(insertIndex, 0, moved);
+    rowsArray.splice(insertIndex, 0, moved);
     const rebuilt = new Map<number, Row>();
     rowsArray.forEach((row, i) => {
       const newId = i + 1;

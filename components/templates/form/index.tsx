@@ -19,6 +19,7 @@ export default function Form<T, K>({
   withImage,
   submitCaption,
   withSubmitButton = true,
+  hasShorthandFormToolbar,
 }: IProps) {
   return (
     <FormGenerator<T, K>
@@ -38,6 +39,7 @@ export default function Form<T, K>({
       withImage={withImage}
       submitCaption={submitCaption}
       withSubmitButton={withSubmitButton}
+      hasShorthandFormToolbar={hasShorthandFormToolbar}
     />
   );
 }

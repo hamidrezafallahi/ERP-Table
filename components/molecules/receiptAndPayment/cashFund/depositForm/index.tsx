@@ -129,40 +129,40 @@ export const AdvancedCashFundDepositForm = ({ activePage, form }: IProps) => {
 
   useEffect(() => {
     const rpWayDefaultValue = activePage?.pageData?.find(
-      (item) => item.name === "RpWayId"
+      (item) => item.name === "RpWayId",
     )?.originalValue;
     const rpWayValue = activePage?.pageData?.find(
-      (item) => item.name === "RpWayId"
+      (item) => item.name === "RpWayId",
     )?.value;
     const tafsiliIdDefaultValue = activePage?.pageData?.find(
-      (item) => item.name === "TafsiliId"
+      (item) => item.name === "TafsiliId",
     )?.originalValue;
     const fifthIdDefaultValue = activePage?.pageData?.find(
-      (item) => item.name === "FifthId"
+      (item) => item.name === "FifthId",
     )?.originalValue;
     const sixthIdDefaultValue = activePage?.pageData?.find(
-      (item) => item.name === "SixthId"
+      (item) => item.name === "SixthId",
     )?.originalValue;
     const seventhIdDefaultValue = activePage?.pageData?.find(
-      (item) => item.name === "SeventhId"
+      (item) => item.name === "SeventhId",
     )?.originalValue;
     const eightIdDefaultValue = activePage?.pageData?.find(
-      (item) => item.name === "EightId"
+      (item) => item.name === "EightId",
     )?.originalValue;
     const nineIdDefaultValue = activePage?.pageData?.find(
-      (item) => item.name === "NineId"
+      (item) => item.name === "NineId",
     )?.originalValue;
     const tenIdDefaultValue = activePage?.pageData?.find(
-      (item) => item.name === "TenId"
+      (item) => item.name === "TenId",
     )?.originalValue;
     const elevenIdDefaultValue = activePage?.pageData?.find(
-      (item) => item.name === "ElevenId"
+      (item) => item.name === "ElevenId",
     )?.originalValue;
     const twelveIdDefaultValue = activePage?.pageData?.find(
-      (item) => item.name === "TwelveId"
+      (item) => item.name === "TwelveId",
     )?.originalValue;
     const thirteenIdDefaultValue = activePage?.pageData?.find(
-      (item) => item.name === "ThirteenId"
+      (item) => item.name === "ThirteenId",
     )?.originalValue;
 
     if (rpWayDefaultValue === rpWayValue) {
@@ -185,7 +185,7 @@ export const AdvancedCashFundDepositForm = ({ activePage, form }: IProps) => {
   useEffect(() => {
     if (rpWayId) {
       const accountId = rpWayData?.Data?.find(
-        (item) => item._SelectId === rpWayId
+        (item) => item._SelectId === rpWayId,
       )?.AccountId;
       if (accountId) {
         setAccountId(accountId);
@@ -201,7 +201,7 @@ export const AdvancedCashFundDepositForm = ({ activePage, form }: IProps) => {
       form={form}
       name="advancedCashFundDepositForm"
       layout="vertical"
-      className={`flex flex-col pt-4 lg:pt-0 gap-5 lg:gap-y-10 lg:grid lg:grid-cols-12 max-h-[calc(100dvh-160px)] h-auto overflow-y-auto hidden-show-scrollBar`}
+      className={`flex flex-col pt-4 lg:pt-0 gap-5 lg:gap-y-5 lg:grid lg:grid-cols-12 max-h-[calc(100dvh-160px)] h-auto overflow-y-auto hidden-show-scrollBar`}
     >
       <Form.Item
         label="تاریخ سند"

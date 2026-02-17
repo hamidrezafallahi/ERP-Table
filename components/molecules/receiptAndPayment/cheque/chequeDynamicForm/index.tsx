@@ -66,13 +66,13 @@ export const ChequeDynamicForm = ({
         const key = config?.alternativeFindKey.split(".");
         let value = item;
         for (let i = 0; i < key.length; i++) {
-          value = value[key[i]];
+          value = value?.[key[i]];
         }
 
         return value;
       });
       const validation = alternativeValue.every(
-        (value) => value === alternativeValue[0]
+        (value) => value === alternativeValue[0],
       );
       validation
         ? (body = {
@@ -239,7 +239,7 @@ export const ChequeDynamicForm = ({
             >
               {renderField(item)}
             </Form.Item>
-          )
+          ),
         )}
       {config.conditionalFields && <ConditionalFields form={form} />}
       <Form.Item className="col-span-2 m-0 p-0 text-xs">

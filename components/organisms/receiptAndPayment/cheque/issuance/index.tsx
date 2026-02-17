@@ -1,47 +1,31 @@
 "use client";
-import {
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { Pagination } from 'antd';
-import { useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
-import {
-  shallowEqual,
-  useDispatch,
-} from 'react-redux';
+import { Pagination } from "antd";
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { shallowEqual, useDispatch } from "react-redux";
 
-import { CustomButton } from '@components/atoms/defaultElements';
+import { CustomButton } from "@components/atoms/defaultElements";
 import {
   DownChevron,
   LeftChevron,
   RightChevron,
-} from '@components/atoms/iconComponents';
-import { DetailDataGrid } from '@components/molecules/detailDataGrid';
-import type {
-  IChildHandle,
-} from '@components/molecules/detailDataGrid/mobile/type';
-import {
-  IssuanceChequeForm,
-} from '@components/molecules/receiptAndPayment/cheque';
-import { useAppSelector } from '@redux/index';
-import { useGetData } from '@services/base';
-import type { IDetailColumnConfig } from '@services/generalType/type';
+} from "@components/atoms/iconComponents";
+import { DetailDataGrid } from "@components/molecules/detailDataGrid";
+import type { IChildHandle } from "@components/molecules/detailDataGrid/mobile/type";
+import { IssuanceChequeForm } from "@components/molecules/receiptAndPayment/cheque";
+import { useAppSelector } from "@redux/index";
+import { useGetData } from "@services/base";
+import type { IDetailColumnConfig } from "@services/generalType/type";
 import type {
   IChequeIssuance,
   IRequest,
-} from '@services/trh/chequeIssuance/type';
-import type {
-  IChequeIssuanceDetail,
-} from '@services/trh/chequeIssuanceDetail/type';
-import {
-  setAllPageData,
-  setPageInfo,
-} from '@slice/pages';
+} from "@services/trh/chequeIssuance/type";
+import type { IChequeIssuanceDetail } from "@services/trh/chequeIssuanceDetail/type";
+import { setAllPageData, setPageInfo } from "@slice/pages";
 
-import { formConfig } from './config';
+import { formConfig } from "./config";
 
 export const ChequeIssuance = ({ form }) => {
   const titleKey = "VoucherNumber";
@@ -72,14 +56,14 @@ export const ChequeIssuance = ({ form }) => {
   const { activePage, fullScreen, minimizePanel, match } = useAppSelector(
     (state) => ({
       activePage: state.withPersist.pages.find(
-        (item) => item.isActive === true
+        (item) => item.isActive === true,
       ),
       fullScreen: state.withPersist.config.fullScreen,
       minimizePanel: state.withoutPersist.container.minimize,
       match: state.withPersist.config.initMatch,
     }),
 
-    shallowEqual
+    shallowEqual,
   );
 
   const storedData = activePage?.pageData;
@@ -92,8 +76,6 @@ export const ChequeIssuance = ({ form }) => {
   };
   const [headerId, setHeaderId] = useState(null);
   const [isShowForm, setShowForm] = useState(true);
-  const [bankAccountId, setBankAccountId] = useState(null);
-  const [columnConfig, setColumnConfig] = useState([]);
   const [detailsInitialData, setDetailsInitialData] = useState([]);
   const [pageNumber, setPageNumber] = useState(1);
 
@@ -171,7 +153,7 @@ export const ChequeIssuance = ({ form }) => {
       if (defaultValue !== null && defaultValue) {
         formData = formConfig.map((item) => {
           const storedDataValue = storedData?.find(
-            (i) => i.name === item.name
+            (i) => i.name === item.name,
           )?.value;
 
           const correctValue = storedDataValue
@@ -226,67 +208,71 @@ export const ChequeIssuance = ({ form }) => {
     }
   }, [detailsData?.Data, headerId]);
 
-  useEffect(() => {
-    const bankAccount = activePage?.pageData?.find(
-      (i) => i.name === "BankAccountId"
-    );
-    if (bankAccount) {
-      setBankAccountId(bankAccount.value);
-    }
-  }, [activePage?.pageData]);
+  const bankAccountId = activePage?.pageData?.find(
+    (i) => i.name === "BankAccountId",
+  )?.value;
 
   useEffect(() => {
     if (bankAccountId) {
-      const config: IDetailColumnConfig[] = [
-        {
-          fieldName: "index",
-          fieldCaption: `ردیف - عملیات`,
-          fieldType: "index",
-          order: 1,
-        },
-        {
-          fieldName: "CheckPlaceMentDetailId",
-          fieldCaption: "چک",
-          fieldType: "selectOption",
-          dynamicValue: {
-            addWebUrl: "api/trh/select/CheckPlacementDetail/Check/Issuance",
-            endpoint: "api/trh/select/CheckPlacementDetail/Check/Issuance",
-            repoViewId: 140029,
-            BankAccountId: bankAccountId,
-          },
-          mobileRender: true,
-          order: 2,
-        },
-        {
-          fieldName: "MaturityDate",
-          fieldCaption: "تاریخ سررسید",
-          fieldType: "date",
-          mobileRender: true,
-          order: 3,
-        },
-        {
-          fieldName: "DocPrice",
-          fieldCaption: "مبلغ",
-          fieldType: "price",
-          mobileRender: true,
-          order: 4,
-        },
-        {
-          fieldName: "IsForToday",
-          fieldCaption: "چک روز",
-          fieldType: "boolean",
-          mobileRender: true,
-          order: 5,
-        },
-        {
-          fieldName: "DetailDesc",
-          fieldCaption: "شرح",
-          fieldType: "text",
-          order: 6,
-        },
-      ];
-      setColumnConfig(config);
+      setDetailsInitialData([]);
     }
+  }, [bankAccountId]);
+
+  const columnConfig = useMemo(() => {
+    if (!bankAccountId) return [];
+    const config: IDetailColumnConfig[] = [
+      {
+        fieldName: "index",
+        fieldCaption: `ردیف - عملیات`,
+        fieldType: "index",
+        order: 1,
+      },
+      {
+        fieldName: "CheckPlaceMentDetailId",
+        fieldCaption: "چک",
+        fieldType: "selectOption",
+        dynamicValue: {
+          addWebUrl: "api/trh/select/CheckPlacementDetail/Check/Issuance",
+          endpoint: "api/trh/select/CheckPlacementDetail/Check/Issuance",
+          repoViewId: 140029,
+          BankAccountId: bankAccountId,
+          dependOn: {
+            value: bankAccountId,
+            fieldName: "BankAccountId",
+          },
+        },
+        mobileRender: true,
+        order: 2,
+      },
+      {
+        fieldName: "MaturityDate",
+        fieldCaption: "تاریخ سررسید",
+        fieldType: "date",
+        mobileRender: true,
+        order: 3,
+      },
+      {
+        fieldName: "DocPrice",
+        fieldCaption: "مبلغ",
+        fieldType: "price",
+        mobileRender: true,
+        order: 4,
+      },
+      {
+        fieldName: "IsForToday",
+        fieldCaption: "چک روز",
+        fieldType: "boolean",
+        mobileRender: true,
+        order: 5,
+      },
+      {
+        fieldName: "DetailDesc",
+        fieldCaption: "شرح",
+        fieldType: "text",
+        order: 6,
+      },
+    ];
+    return config;
   }, [bankAccountId]);
 
   return (
@@ -336,18 +322,17 @@ export const ChequeIssuance = ({ form }) => {
               </div>
             </div>
           )}
-
           <div
             className={`${
               fullScreen
                 ? "w-full"
                 : !match
-                ? "w-full"
-                : `${
-                    minimizePanel
-                      ? "w-fit max-w-[calc(100dvw-300px)]"
-                      : "w-fit max-w-[calc(100dvw-550px)]"
-                  }`
+                  ? "w-full"
+                  : `${
+                      minimizePanel
+                        ? "w-fit max-w-[calc(100dvw-300px)]"
+                        : "w-fit max-w-[calc(100dvw-550px)]"
+                    }`
             } ${
               !match ? "h-full" : "h-[calc(100dvh-430px)]"
             } flex hidden-show-scrollBar transition-all duration-200 flex-col justify-between gap-2`}
@@ -361,6 +346,7 @@ export const ChequeIssuance = ({ form }) => {
               columnConfig &&
               (match ? (
                 <DetailDataGrid.Desktop<IChequeIssuanceDetail>
+                  key={`ss-${bankAccountId}`}
                   isEdit={isEdit}
                   fieldKey={alternateKey}
                   alternateKey={alternateKey}
@@ -374,6 +360,7 @@ export const ChequeIssuance = ({ form }) => {
                 />
               ) : (
                 <DetailDataGrid.Mobile<IChequeIssuanceDetail>
+                  key={`ss-${bankAccountId}`}
                   isEdit={isEdit}
                   fieldKey={alternateKey}
                   alternateKey={alternateKey}

@@ -22,6 +22,47 @@ export class TableEngine {
     private readonly repo: TableRepository,
     private readonly actor: Actor,
   ) { }
+private columnListeners = new Map<string, Set<(values: unknown[]) => void>>();
+
+subscribeColumn<T = unknown>(
+  tableKey: string,
+  columnId: string,
+  cb: (values: T[]) => void
+) {
+  const key = `${tableKey}_${columnId}`;
+  if (!this.columnListeners.has(key)) {
+    this.columnListeners.set(key, new Set());
+  }
+  this.columnListeners.get(key)!.add(cb);
+
+  // unsubscribe function
+  return () => {
+    const listeners = this.columnListeners.get(key);
+    if (listeners) {
+      listeners.delete(cb);
+      if (listeners.size === 0) {
+        this.columnListeners.delete(key); // پاک کردن Set خالی برای بهینه‌سازی حافظه
+      }
+    }
+  };
+}
+
+private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
+  const key = `${tableKey}_${columnId}`;
+  const listeners = this.columnListeners.get(key);
+  if (!listeners || listeners.size === 0) return;
+
+  const values = table.getColumnValues(columnId); // برگرداندن تمام مقادیر ستون
+
+  for (const cb of listeners) {
+    try {
+      cb(values);
+    } catch (err) {
+      console.error(`Error in column subscriber for ${columnId}:`, err);
+    }
+  }
+}
+
   private async registerTable(cmd: {
     store: string, table: Table
   }) {
@@ -33,12 +74,40 @@ export class TableEngine {
       table.id,
       new TableStore({
         table,
-        expanded: {},
-        activeCell: null,
+        expandedRows: {},
         selectedRows: {},
+        activeRowId: null,
+        activeCell: null,
+        rangeAnchorRowId: null
       })
     );
     await this.repo.save(store, table);
+  }
+
+  private selectFromActiveToLast(cmd: {
+    tableKey: string;
+    anchorRowId: number;
+  }) {
+    const store = this.getStore(cmd.tableKey);
+    store.setState(prev => {
+      const rows = prev.table.getVisibleRows(); // فقط ردیف‌های صفحه فعلی
+
+      const startIdx = rows.findIndex(r => r.id.value === cmd.anchorRowId);
+      if (startIdx === -1) return prev;
+
+      // از سطر فعال تا **آخرین ردیف صفحه فعلی**
+      const nextSelected: Record<number, true> = { ...prev.selectedRows };
+
+      for (let i = startIdx; i < rows.length; i++) {
+        nextSelected[rows[i].id.value] = true;
+      }
+
+      return {
+        ...prev,
+        selectedRows: nextSelected,
+        rangeAnchorRowId: cmd.anchorRowId, // برای سازگاری با range selection معمولی
+      };
+    });
   }
   private async deleteTable(cmd: {
     store: string, tableKey: string
@@ -48,20 +117,43 @@ export class TableEngine {
     await this.repo.delete(store, tableKey);
     this.tables.delete(tableKey);
   }
-  private disposeTable(tableKey: string) {
+  private disposeTable(cmd: { store: string, tableKey: string }) {
+    const { store, tableKey } = cmd
+    this.repo.delete(store, tableKey)
     this.tables.delete(tableKey);
+
   }
   private async resetTable(cmd: {
-    store: string, tableKey: string
+    store: string;
+    tableKey: string;
   }) {
-    const { store, tableKey } = cmd
+    const { store, tableKey } = cmd;
 
-    const table = this.tables.get(tableKey);
-    if (store) {
-      table.resetTable()
-      await this.repo.resetTable(store, tableKey);
+    const tableStore = this.tables.get(tableKey);
+    if (!tableStore) {
+      throw new Error(`Table ${tableKey} is not registered`);
     }
+
+    // گرفتن نسخه‌ی اولیه از persistence
+    const freshTable = await this.repo.getById(store, tableKey);
+
+    if (!freshTable) {
+      throw new Error(`Table ${tableKey} could not be reloaded`);
+    }
+
+    // reset کامل state (domain + ui state)
+    tableStore.setState(prev => ({
+      ...prev,
+      table: freshTable,
+      expandedRows: {},
+      selectedRows: {},
+      activeRowId: null,
+      activeCell: null,
+      rangeAnchorRowId: null,
+    }));
   }
+
+
   private getStore(tableKey: string): TableStore<TableState> {
     const store = this.tables.get(tableKey);
     if (!store) {
@@ -93,14 +185,112 @@ export class TableEngine {
     const nextCol = columns[nextIndex];
     if (!nextCol) return;
 
-    store.setState({
+    store.setState(() => ({
       ...state,
       activeCell: {
         rowId: cmd.rowId,
         columnId: nextCol.id,
       },
-    });
+    }));
   }
+  private moveActiveCellVertical(cmd: {
+    tableKey: string;
+    rowId: number;
+    columnId: string;
+    direction: 'up' | 'down';
+  }) {
+    const store = this.getStore(cmd.tableKey);
+    store.setState(prev => {
+      const view = this.getViewState(cmd.tableKey);   // ← مهم
+      const { pagination } = view;
+      const visibleRows = view.rows;                  // ردیف‌های صفحه فعلی
+      const currentIndex = visibleRows.findIndex(r => r.id === cmd.rowId);
+
+      if (currentIndex === -1) return prev;
+
+      let nextIndex = cmd.direction === 'down' ? currentIndex + 1 : currentIndex - 1;
+
+      // داخل صفحه فعلی هستیم؟
+      if (nextIndex >= 0 && nextIndex < visibleRows.length) {
+        const nextRow = visibleRows[nextIndex];
+        return {
+          ...prev,
+          activeRowId: nextRow.id,
+          activeCell: { rowId: nextRow.id, columnId: cmd.columnId },
+        };
+      }
+
+      // ------------------------------
+      // حالا مرز صفحه
+      // ------------------------------
+      const shouldGoNextPage = cmd.direction === 'down' && currentIndex === visibleRows.length - 1;
+      const shouldGoPrevPage = cmd.direction === 'up' && currentIndex === 0;
+
+      if (shouldGoNextPage && pagination.canNext) {
+        // به صفحه بعدی → ردیف اول همان ستون
+        return {
+          ...prev,
+          activeCell: null,   // موقتاً پاک می‌کنیم تا بعد از تغییر صفحه ست کنیم
+        };
+      }
+
+      if (shouldGoPrevPage && pagination.canPrev) {
+        // به صفحه قبلی → ردیف آخر همان ستون
+        return {
+          ...prev,
+          activeCell: null,
+        };
+      }
+
+      // هیچ جا نمی‌تونیم بریم → بدون تغییر
+      return prev;
+    });
+
+    // بعد از تغییر state، اگر نیاز به تغییر صفحه بود، اینجا انجام بده
+    const currentView = this.getViewState(cmd.tableKey);
+    const active = currentView.activeCell;
+
+    if (!active && cmd.direction === 'down' && currentView.pagination.canNext) {
+      this.dispatch({
+        type: 'CHANGE_PAGE',
+        tableKey: cmd.tableKey,
+        page: currentView.pagination.page + 1,
+        store: 'your-store-name', // یا از cmd بگیری
+      }).then(() => {
+        // بعد از لود صفحه جدید، اولین ردیف + همان ستون را فعال کن
+        const newView = this.getViewState(cmd.tableKey);
+        if (newView.rows.length > 0) {
+          const firstRowId = newView.rows[0].id;
+          this.setActiveCell({
+            tableKey: cmd.tableKey,
+            rowId: firstRowId,
+            columnId: cmd.columnId,
+          });
+        }
+      });
+    }
+
+    if (!active && cmd.direction === 'up' && currentView.pagination.canPrev) {
+      this.dispatch({
+        type: 'CHANGE_PAGE',
+        tableKey: cmd.tableKey,
+        page: currentView.pagination.page - 1,
+        store: cmd.tableKey
+,
+      }).then(() => {
+        const newView = this.getViewState(cmd.tableKey);
+        if (newView.rows.length > 0) {
+          const lastRowId = newView.rows[newView.rows.length - 1].id;
+          this.setActiveCell({
+            tableKey: cmd.tableKey,
+            rowId: lastRowId,
+            columnId: cmd.columnId,
+          });
+        }
+      });
+    }
+  }
+
   private activateFirstCell(cmd: {
     tableKey: string;
     rowId: number;
@@ -115,16 +305,16 @@ export class TableEngine {
 
     if (!firstEditable) return;
 
-    store.setState({
+    store.setState(() => ({
       ...state,
       activeCell: {
         rowId: cmd.rowId,
         columnId: firstEditable.id,
       },
-    });
+    }));
   }
   getViewState(tableKey: string): TableViewState {
-    const { table, expanded, activeCell, selectedRows } = this.getStore(tableKey).getState();
+    const { table, expandedRows, activeCell, selectedRows } = this.getStore(tableKey).getState();
     const pagination = table.getPagination();
     const totalRows = table.getRows().length;
     const totalPages = Math.max(
@@ -153,7 +343,8 @@ export class TableEngine {
           rowState: row.rowState.value,
           changeFields: row.getChangeFields(),
           cells,//: Object.fromEntries([...row.getCells()].map(([k, c]) => [k, { value: c.getValue()?.value, originalValue: c.getOriginalValue()?.value }])),
-          isExpanded: !!expanded[row.id.value],
+          isExpanded: !!expandedRows[row.id.value],
+          moreDetails:row.moreDetails
         }
       }),
       deletedRows: [],
@@ -181,13 +372,15 @@ export class TableEngine {
     const { table } = this.getStore(tableKey).getState();
     return {
       table,
-      rows: table.getVisibleRows().map(row => ({
+      rows: table.getRows().map(row => ({
         id: row.id.value,
         changeFields: row.getChangeFields(),
         cells: Object.fromEntries(
           [...row.getCells()].map(([k, c]) => [k, c.getValue()?.value])
         ),
-        rowState: row.rowState.value
+        rowState: row.rowState.value,
+        moreDetails:row.moreDetails
+
       })),
       deletedRows: [],
 
@@ -215,7 +408,7 @@ export class TableEngine {
     const store = this.getStore(tableKey).getState();
     if (!store) return null;
 
-    return store.activeRow;
+    return store.activeRowId;
   }
   isActiveCell(
     tableKey: string,
@@ -237,9 +430,9 @@ export class TableEngine {
   ): boolean {
 
     try {
-      const { activeRow } = this.getStore(tableKey).getState();
-      return !!activeRow &&
-        activeRow.rowId === rowId
+      const { activeRowId } = this.getStore(tableKey).getState();
+      return !!activeRowId &&
+        activeRowId === rowId
     } catch {
       return false;
     }
@@ -252,28 +445,79 @@ export class TableEngine {
       return false;
     }
   }
+  isExpandableRow(tableKey: string, rowId: number): boolean {
+      const { table } = this.getStore(tableKey).getState();
+      const row = table.getRow(rowId)
+      const expandAble = row.getMoreDetails()
+      return  !!expandAble;
+  }
+  getSelectedRows(tableKey: string): Record<number,boolean> {
+      return this.getStore(tableKey).getState().selectedRows;
+  }
 
-  private activeCell(cmd: {
-    tableKey: string,
-    rowId: number,
+  private setActiveCell(cmd: {
+    tableKey: string
+    rowId: number
     columnId: string
   }) {
-    const { tableKey, rowId, columnId } = cmd
-    const table = this.getStore(tableKey).getState();
-    table.activeCell = { rowId, columnId }
+    const store = this.getStore(cmd.tableKey);
 
+    store.setState(prev => {
+      const current = prev.activeCell;
+
+      if (
+        current &&
+        current.rowId === cmd.rowId &&
+        current.columnId === cmd.columnId
+      ) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        activeRowId: cmd.rowId,
+        activeCell: {
+          rowId: cmd.rowId,
+          columnId: cmd.columnId,
+        },
+      };
+    });
   }
-  private activeRow(cmd: {
-    tableKey: string,
-    rowId: number,
 
+  private setActiveRow(cmd: {
+    tableKey: string
+    rowId: number
   }) {
-    const { tableKey, rowId } = cmd
-    const table = this.getStore(tableKey).getState();
-    table.activeRow = { rowId }
+    const store = this.getStore(cmd.tableKey);
+    store.setState(prev => {
+      if (prev.activeRowId === cmd.rowId) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        activeRowId: cmd.rowId,
+        activeCell: null,
+        rangeAnchorRowId: cmd.rowId,
+        // selectedRows: { [cmd.rowId]: true },
+      };
+    });
   }
+  private setSelectRow(cmd: {
+    tableKey: string
+    rowId: number
+  }) {
+    const store = this.getStore(cmd.tableKey);
+    store.setState(prev => {
+      const isSelected = !!prev.selectedRows[cmd.rowId];
+      return {
+        ...prev,
+        selectedRows: isSelected ? {} : { [cmd.rowId]: true },
+        rangeAnchorRowId: isSelected ? null : cmd.rowId,
 
-
+      };
+    });
+  }
   private setRowExpanded(cmd: {
     tableKey: string, rowId: number, value: boolean
   }) {
@@ -281,15 +525,15 @@ export class TableEngine {
     const store = this.getStore(tableKey);
     const state = store.getState();
     const key = String(rowId);
-    if (!!state.expanded[rowId] === value) return;
+    if (!!state.expandedRows[rowId] === value) return;
 
-    store.setState({
+    store.setState(() => ({
       ...state,
-      expanded: {
-        ...state.expanded,
+      expandedRows: {
+        ...state.expandedRows,
         [key]: value,
       },
-    });
+    }));
   }
 
   private toggleRowExpanded(cmd: {
@@ -301,123 +545,166 @@ export class TableEngine {
 
     const store = this.getStore(tableKey);
     const state = store.getState();
-    const next = !state.expanded[key];
+    const next = !state.expandedRows[key];
 
-    store.setState({
+    store.setState(() => ({
       ...state,
-      expanded: {
-        ...state.expanded,
+      expandedRows: {
+        ...state.expandedRows,
         [key]: next,
       },
-    });
+    }));
   }
 
   private collapseAll(tableKey: string) {
     const store = this.getStore(tableKey);
     const state = store.getState();
-    if (!state.expanded || Object.keys(state.expanded).length === 0) return;
+    if (!state.expandedRows || Object.keys(state.expandedRows).length === 0) return;
 
-    store.setState({
+    store.setState(() => ({
       ...state,
-      expanded: {},
-    });
+      expandedRows: {},
+    }));
   }
   private toggleRowSelection(cmd: {
-    tableKey: string;
-    rowId: number;
+    tableKey: string
+    rowId: number
   }) {
     const store = this.getStore(cmd.tableKey);
-    const state = store.getState();
 
-    const selected = { ...state.selectedRows };
+    store.setState(prev => {
+      const isSelected = !!prev.selectedRows[cmd.rowId];
 
-    if (selected[cmd.rowId]) {
-      delete selected[cmd.rowId];
-    } else {
-      selected[cmd.rowId] = true;
+      const nextSelected = { ...prev.selectedRows };
+
+      if (isSelected) {
+        delete nextSelected[cmd.rowId];
+      } else {
+        nextSelected[cmd.rowId] = true;
+      }
+
+      return {
+        ...prev,
+        selectedRows: nextSelected,
+      };
+    });
+  }
+  private toggleSelectAllRows(cmd: { tableKey: string }) {
+    const store = this.getStore(cmd.tableKey);
+    const allRows = store.getState().table.getRows()
+    const allSelected = Object.keys(store.getState().selectedRows).length === allRows.length;
+    store.setState(prev => {
+      if (allSelected) {
+        return {
+          ...prev,
+          selectedRows: {},
+        };
+      } else {
+        const nextSelected: Record<number, true> = {};
+        allRows.forEach(row => {
+          nextSelected[row.id.value] = true;
+        });
+        return {
+          ...prev,
+          selectedRows: nextSelected,
+        };
+      }
+    });
+  }
+
+  private goToPreviousPage(tableKey: string) {
+    const store = this.getStore(tableKey);
+    const pagination = store.getState().table.getPagination();
+    if (pagination.page > 1) {
+      this.dispatch({
+        type: 'CHANGE_PAGE',
+        store: '', // مقدار store رو باید از جایی بگیری
+        tableKey,
+        page: pagination.page - 1,
+      });
     }
-
-    store.setState({
-      ...state,
-      selectedRows: selected,
-    });
   }
-  private selectAllVisibleRows(cmd: {
-    tableKey: string;
-  }) {
-    const store = this.getStore(cmd.tableKey);
-    const state = store.getState();
 
-    const rows = state.table.getVisibleRows();
+  private goToNextPage(tableKey: string) {
+    const store = this.getStore(tableKey);
+    const pagination = store.getState().table.getPagination();
+    const totalRows = store.getState().table.getRows().length;
+    const totalPages = Math.ceil(totalRows / pagination.pageSize);
 
-    const selected: Record<number, true> = {};
-    for (const row of rows) {
-      selected[row.id.value] = true;
+    if (pagination.page < totalPages) {
+      this.dispatch({
+        type: 'CHANGE_PAGE',
+        store: '', // مقدار store رو باید از جایی بگیری
+        tableKey,
+        page: pagination.page + 1,
+      });
     }
-
-    store.setState({
-      ...state,
-      selectedRows: selected,
-    });
   }
-  private clearRowSelection(cmd: {
-    tableKey: string;
+
+  private activateFirstCellOfColumn(tableKey: string, columnId: string) {
+    const store = this.getStore(tableKey);
+    const firstRow = store.getState().table.getVisibleRows()[0];
+    if (firstRow) {
+      this.setActiveCell({
+        tableKey,
+        rowId: firstRow.id.value,
+        columnId,
+      });
+    }
+  }
+
+  private activateLastCellOfColumn(tableKey: string, columnId: string) {
+    const store = this.getStore(tableKey);
+    const rows = store.getState().table.getVisibleRows();
+    const lastRow = rows[rows.length - 1];
+    if (lastRow) {
+      this.setActiveCell({
+        tableKey,
+        rowId: lastRow.id.value,
+        columnId,
+      });
+    }
+  }
+  private selectRange(cmd: {
+    tableKey: string
+    rowId: number
   }) {
     const store = this.getStore(cmd.tableKey);
-    const state = store.getState();
+    store.setState(prev => {
+      const anchor = prev.rangeAnchorRowId ?? prev.activeRowId;
+      if (!anchor) return prev;
 
-    store.setState({
-      ...state,
-      selectedRows: {},
+      const rows = prev.table.getVisibleRows();
+      const startIndex = rows.findIndex(r => r.id.value === anchor);
+      const endIndex = rows.findIndex(r => r.id.value === cmd.rowId);
+
+      if (startIndex === -1 || endIndex === -1) return prev;
+
+      const [from, to] =
+        startIndex < endIndex
+          ? [startIndex, endIndex]
+          : [endIndex, startIndex];
+
+      const nextSelected: Record<number, true> = {};
+
+      for (let i = from; i <= to; i++) {
+        nextSelected[rows[i].id.value] = true;
+      }
+
+      return {
+        ...prev,
+        selectedRows: nextSelected,
+        rangeAnchorRowId: anchor,
+      };
     });
   }
-  private moveActiveCellVertical(cmd: {
-    tableKey: string;
-    rowId: number;
-    columnId: string;
-    direction: 'up' | 'down';
-  }) {
-    const store = this.getStore(cmd.tableKey);
-    const state = store.getState();
-    const rows = state.table.getVisibleRows();
-
-    const rowIndex = rows.findIndex(r => r.id.value === cmd.rowId);
-    if (rowIndex === -1) return;
-
-    const nextIndex =
-      cmd.direction === 'down' ? rowIndex + 1 : rowIndex - 1;
-
-    const nextRow = rows[nextIndex];
-    if (!nextRow) return;
-
-    store.setState({
-      ...state,
-
-      activeRow: {
-        rowId: nextRow.id.value,
-      },
-    });
-    // آیا این ستون در سطر مقصد وجود دارد؟
-    const cell = nextRow.getCells().get(cmd.columnId);
-    if (!cell) return;
-    store.setState({
-      ...state,
-      activeCell: {
-        rowId: nextRow.id.value,
-        columnId: cmd.columnId,
-      },
-    });
-  }
-
-
   async dispatch(command: TableCommand) {
-
     switch (command.type) {
       case 'ACTIVE_CELL':
-        this.activeCell(command);
+        this.setActiveCell(command);
         return;
       case 'ACTIVE_ROW':
-        this.activeRow(command);
+        this.setActiveRow(command);
         return;
       case 'MOVE_ACTIVE_CELL':
         this.moveActiveCell(command);
@@ -427,15 +714,6 @@ export class TableEngine {
         return;
       case 'ACTIVATE_FIRST_CELL':
         this.activateFirstCell(command);
-        return;
-      case 'ROW_SELECTION_TOGGLED':
-        this.toggleRowSelection(command);
-        return;
-      case 'SELECT_ALL_ROWS':
-        this.selectAllVisibleRows(command);
-        return;
-      case 'CLEAR_ROW_SELECTION':
-        this.clearRowSelection(command);
         return;
       case 'TABLE_REGISTERED':
         await this.registerTable(command);
@@ -449,32 +727,44 @@ export class TableEngine {
         this.setRowExpanded(command);
         return;
       case 'TABLE_DISPOSED':
-        this.disposeTable(command.tableKey);
+        this.disposeTable(command);
         return;
       case 'COLLAPSE_ALL_ROWS':
         this.collapseAll(command.tableKey);
         return;
-      case 'ROW_TOGGLED':
+      case 'ROW_EXPAND_TOGGLED':
         this.toggleRowExpanded(command);
         return;
       case 'TABLE_RESET':
         this.resetTable(command);
+        return;
+      case 'TOGGLE_SELECT_ALL_ROWS':
+        this.toggleSelectAllRows(command);
+        return;
+      case 'ROW_SELECTION_TOGGLED':
+        this.toggleRowSelection(command);
+        return;
+      case 'ROW_RANGE_SELECTED':
+        this.selectRange(command);
+        return;
+      case 'ROW_SELECTED':
+        this.setSelectRow(command);
+        return;
+      case 'SELECT_FROM_ACTIVE_TO_LAST':
+        this.selectFromActiveToLast(command);
         return;
       default:
         await this.app.execute(command, this.actor);
         const updated = await this.repo.getById(command.store, command.tableKey);
         const store = this.getStore(command.tableKey);
         const prev = store.getState();
-
-        store.setState({
+        store.setState(() => ({
           ...prev,
           table: updated,
-        });
+        }));
 
     }
-
   }
-
   subscribe(tableKey: string, cb: () => void) {
     const table = this.getStore(tableKey).subscribe(cb);
     try {

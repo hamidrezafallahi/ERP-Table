@@ -47,7 +47,7 @@ export const InventoryVoucherHeaderForm = ({ ...props }: IProps) => {
   };
   return (
     <>
-      <Title caption={label} />
+      <Title  captionII={label} />
       <Form
         form={form}
         name="inventoryVoucherHeaderForm"
@@ -72,7 +72,7 @@ export const InventoryVoucherHeaderForm = ({ ...props }: IProps) => {
         {NeedReference && (
           <Form.Item
             label="مرجع"
-            name="InvoiceHeaderId"
+            name="VoucherHeaderId"
             rules={[{ required: true, message: t("form.required") }]}
             className="flex flex-col !mb-0 !pb-0 text-xs"
           >
@@ -82,10 +82,10 @@ export const InventoryVoucherHeaderForm = ({ ...props }: IProps) => {
               allowClear
               showId
              
-              onClear={() => form.setFieldValue("InvoiceHeaderId", null)}
+              onClear={() => form.setFieldValue("VoucherHeaderId", null)}
               infinite
               config={{
-                name: "InvoiceHeaderId",
+                name: "VoucherHeaderId",
                 caption: "مرجع",
                 help: "",
                 placeHolder: "",

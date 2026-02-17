@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 
 import { Tree, TreeProps } from "antd";
 import { ItemType } from "antd/es/menu/interface";
@@ -24,6 +24,7 @@ import {
   CloseCircle,
   DownChevron,
   Edit,
+  HeadOfAccountsIcon,
   Link,
   Magnifier,
   NoData,
@@ -50,7 +51,9 @@ import {
   showSuccessToast,
 } from "@utils/core";
 
+import { CustomerGroupCredit } from "@components/molecules/customerGroupCredit";
 import DynamicModal from "../dynamicModal";
+import { ActionLabelsEnum } from "../list/enum";
 import type { IProps } from "./type";
 
 export default function NestedList<T extends IBaseDto, K>({
@@ -104,6 +107,8 @@ export default function NestedList<T extends IBaseDto, K>({
     t("sidebar.drag"),
   );
   const [isDynamicModalOpen, setIsDynamicModalOpen] = useState(false);
+  const [isCustomerGroupCreditModalOpen, setIsCustomerGroupCreditModalOpen] =
+    useState(false);
   const [dynamicAction, setDynamicAction] = useState<{
     icon: string;
     label: string;
@@ -196,6 +201,27 @@ export default function NestedList<T extends IBaseDto, K>({
     return keys;
   };
 
+  const handleAction = async (action: IToolbarMenu) => {
+    try {
+      setDynamicAction({
+        icon: action.Icon,
+        label: action.MenuDesc,
+        actionConfig: action,
+      });
+
+      switch (action.MenuDesc) {
+        case ActionLabelsEnum.CustomerGroupCredit as string:
+          setIsCustomerGroupCreditModalOpen(true);
+          break;
+        default:
+          setIsDynamicModalOpen(true);
+          break;
+      }
+    } catch (error) {
+      null;
+    }
+  };
+
   const renderCustomAction = (item: T) => {
     const condition = addChildCondition ? addChildCondition(item) : true;
     if (!condition) return null;
@@ -208,12 +234,7 @@ export default function NestedList<T extends IBaseDto, K>({
                 className="flex items-center gap-3 text-sm"
                 onClick={() => {
                   setId(item[uniqueKey]);
-                  setDynamicAction({
-                    icon: menuItem.Icon,
-                    label: menuItem.MenuDesc,
-                    actionConfig: menuItem,
-                  });
-                  setIsDynamicModalOpen(true);
+                  handleAction(menuItem);
                 }}
               >
                 {/* {menuItem.Icon} */}
@@ -675,18 +696,23 @@ export default function NestedList<T extends IBaseDto, K>({
       </div>
       {isFormModalOpen && (
         <CustomModal
-          contentClassName={`${match ? "!min-w-[520px] h-full" : ""}`}
+          contentClassName={`  ${match ? "!min-w-[520px] h-full" : ""}`}
           headerName={
             id ? (
-              <div className="flex flex-col justify-between gap-1 max-h-20">
-                {t("general.update")}
-                {title && (
-                  <>
+              <div className="flex items-start justify-between  flex-col">
+                <div className="flex gap-1 items-center">
+                  <HeadOfAccountsIcon config={{ width: 18, height: 18 }} />
+                  <span className="font-bold text-gray-gray10 dark:text-white lg:text-lg">
+                    {t("general.update")}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  {title && (
                     <span className="font-light text-gray-gray85 text-xs">
                       {title}
                     </span>
-                  </>
-                )}
+                  )}
+                </div>
               </div>
             ) : (
               t("general.addNew")
@@ -815,6 +841,31 @@ export default function NestedList<T extends IBaseDto, K>({
                 //   (item) => item.name === dynamicAction.label
                 // )?.config
               }
+            />
+          }
+        />
+      )}
+      {isCustomerGroupCreditModalOpen && (
+        <CustomModal
+          contentClassName={`${match ? "w-[540px] h-[220px]" : ""}`}
+          headerName={dynamicAction.label}
+          headerIcon={
+            match && (
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: getColoredIcon(dynamicAction.icon, mode),
+                }}
+                style={{ width: "18px", height: "17px" }}
+              />
+            )
+          }
+          closeModal={() => setIsCustomerGroupCreditModalOpen(false)}
+          isModalOpen={isCustomerGroupCreditModalOpen}
+          content={
+            <CustomerGroupCredit
+              id={id}
+              sourceKey={"CustomerGroupId"}
+              handleClose={() => setIsCustomerGroupCreditModalOpen(false)}
             />
           }
         />

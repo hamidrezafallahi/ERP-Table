@@ -23,6 +23,8 @@ interface SerializedRow {
   rowId: number;
   cells: SerializedCell[];
   rowState: RowStateEnum;
+  moreDetails: unknown;
+
 }
 
 interface SerializedTable {
@@ -33,7 +35,6 @@ interface SerializedTable {
 
 export class IndexedDbTableRepository implements TableRepository {
   private dbName = 'ERP_TABLE_DB';
-  private DB_VERSION = 1;
   private dbPromise: Promise<IDBDatabase>;
 
   constructor() {
@@ -47,7 +48,16 @@ export class IndexedDbTableRepository implements TableRepository {
         // هیچ store پیش‌فرضی ایجاد نمی‌کنیم، داینامیک خواهد بود
       };
 
-      request.onsuccess = () => resolve(request.result)
+      request.onsuccess = () => {
+        const db = request.result;
+
+        db.onversionchange = () => {
+          db.close();
+          console.warn("DB version changed, connection closed");
+        };
+
+        resolve(db);
+      };
       request.onerror = () => reject(request.error)
     });
   }
@@ -60,6 +70,7 @@ export class IndexedDbTableRepository implements TableRepository {
     return rows.map(row => ({
       rowId: row.id.value,
       rowState: row.rowState.value,
+      moreDetails:row.moreDetails,
       cells: Array.from(row.getCells().entries()).map(([colId, cell]) => ({
         colId,
         value: cell.getValue().value,
@@ -87,28 +98,37 @@ export class IndexedDbTableRepository implements TableRepository {
       });
       rowMap.set(
         r.rowId,
-        new Row(new RowId(r.rowId), cells, new RowState(r.rowState), new Set())
+        new Row(new RowId(r.rowId), cells, new RowState(r.rowState), new Set(),r.moreDetails)
       );
     });
     return rowMap;
   }
 
-  private async ensureStore(db: IDBDatabase, storeName: string): Promise<IDBDatabase> {
-    if (db.objectStoreNames.contains(storeName)) return db;
-    db.close();
-    const newDb = await new Promise<IDBDatabase>((resolve, reject) => {
-      const req = indexedDB.open(this.dbName, db.version + 1);
-      req.onupgradeneeded = (event) => {
-        const upgradedDb = (event.target as IDBOpenDBRequest).result;
-        if (!upgradedDb.objectStoreNames.contains(storeName)) {
-          upgradedDb.createObjectStore(storeName, { keyPath: 'id' });
-        }
-      };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-    return newDb;
-  }
+ private async ensureStore(db: IDBDatabase, storeName: string): Promise<IDBDatabase> {
+  if (db.objectStoreNames.contains(storeName)) return db;
+
+  db.close();
+
+  const newDb = await new Promise<IDBDatabase>((resolve, reject) => {
+    const req = indexedDB.open(this.dbName, db.version + 1);
+
+    req.onupgradeneeded = (event) => {
+      const upgradedDb = (event.target as IDBOpenDBRequest).result;
+      if (!upgradedDb.objectStoreNames.contains(storeName)) {
+        upgradedDb.createObjectStore(storeName, { keyPath: 'id' });
+      }
+    };
+
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+
+  // 🔥 خیلی مهم
+  this.dbPromise = Promise.resolve(newDb);
+
+  return newDb;
+}
+
 
   async save(storeName: string, table: Table): Promise<void> {
     let db = await this.getDb();

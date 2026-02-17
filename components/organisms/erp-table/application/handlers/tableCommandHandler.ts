@@ -1,6 +1,7 @@
 // application/handlers/TableCommandHandler.ts
 
 import { IDetailColumnConfig } from '../../bootstrap/type';
+import { DomainError } from '../../domain/errors/DomainError';
 import {
   Actor,
   PermissionPolicy,
@@ -38,13 +39,13 @@ export class ChangeUnitLevelHandler {
     actor: Actor
   ): Promise<TableEvent[]> {
 
-    const table = await this.repo.getById(command.store,command.tableKey);
+    const table = await this.repo.getById(command.store, command.tableKey);
 
     try {
 
       table.addColumns([]);
 
-      await this.repo.save(command.store,table);
+      await this.repo.save(command.store, table);
 
       const out: TableEvent = {
         type: 'UNIT_COLUMN_ADDED',
@@ -53,19 +54,28 @@ export class ChangeUnitLevelHandler {
         details: { level: command.level },
       };
 
-      this.audit.log(out);
+      this.audit.log({
+        type: out.type,
+        message: out.reason,
+        payload: out.details
+      });
       return [out];
 
-    } catch (e: any) {
-      const failed: TableEvent = {
-        type: 'VALIDATION_FAILED',
-        tableId: command.tableKey,
-        reason: e?.message ?? 'Unknown error',
-        details: e?.details ?? String(e),
-      };
+    } catch (error) {
 
-      this.audit.log(failed);
-      return [failed];
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error }
+        });
+      } return null
     }
   }
 }
@@ -84,12 +94,12 @@ export class ChangePageCommandHandler {
     command: ChangePageCommand,
     actor: Actor
   ): Promise<TableEvent[]> {
-
-    const table = await this.repo.getById(command.store,command.tableKey);
     try {
+      const table = await this.repo.getById(command.store, command.tableKey);
+
       table.changePage(command.page);
 
-      await this.repo.save(command.store,table);
+      await this.repo.save(command.store, table);
 
       const out: TableEvent = {
         type: 'PAGE_CHANGED',
@@ -97,19 +107,28 @@ export class ChangePageCommandHandler {
         page: command.page
       };
 
-      this.audit.log(out);
+      this.audit.log({
+        type: out.type,
+        message: out.type,
+        payload: out.page
+      });
       return [out];
 
-    } catch (e: any) {
-      const failed: TableEvent = {
-        type: 'VALIDATION_FAILED',
-        tableId: command.tableKey,
-        reason: e?.message ?? 'Unknown error',
-        details: e?.details ?? String(e),
-      };
+    } catch (error) {
 
-      this.audit.log(failed);
-      return [failed];
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error }
+        });
+      } return null
     }
   }
 }
@@ -128,27 +147,37 @@ export class ChangePageSizeCommandHandler {
     command: ChangePageSizeCommand,
     actor: Actor
   ): Promise<TableEvent[]> {
-    const table = await this.repo.getById(command.store,command.tableKey);
+    const table = await this.repo.getById(command.store, command.tableKey);
     try {
       table.changePageSize(command.pageSize);
-      await this.repo.save(command.store,table);
+      await this.repo.save(command.store, table);
       const out: TableEvent = {
         type: 'PAGE_SIZE_CHANGED',
         tableId: command.tableKey,
         pageSize: command.pageSize
       };
 
-      this.audit.log(out);
+      this.audit.log({
+        type: out.type,
+        message: out.type,
+        payload: out.tableId
+      });
       return [out];
-    } catch (e: any) {
-      const failed: TableEvent = {
-        type: 'VALIDATION_FAILED',
-        tableId: command.tableKey,
-        reason: e?.message ?? 'Unknown error',
-        details: e?.details ?? String(e),
-      };
-      this.audit.log(failed);
-      return [failed];
+    } catch (error) {
+
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error }
+        });
+      } return null
     }
   }
 }
@@ -167,26 +196,36 @@ export class DeleteTableCommandHandler {
     command: DeleteTableCommand,
     actor: Actor
   ): Promise<TableEvent[]> {
-    const table = await this.repo.getById(command.store,command.tableKey);
+    const table = await this.repo.getById(command.store, command.tableKey);
     try {
-      this.repo.delete(command.store,command.tableKey)
-      await this.repo.save(command.store,table);
+      this.repo.delete(command.store, command.tableKey)
+      await this.repo.save(command.store, table);
       const out: TableEvent = {
         type: 'TABLE_DELETED',
         tableId: command.tableKey,
       };
 
-      this.audit.log(out);
+      this.audit.log({
+        type: out.type,
+        message: out.type,
+        payload: out.tableId
+      });
       return [out];
-    } catch (e: any) {
-      const failed: TableEvent = {
-        type: 'VALIDATION_FAILED',
-        tableId: command.tableKey,
-        reason: e?.message ?? 'Unknown error',
-        details: e?.details ?? String(e),
-      };
-      this.audit.log(failed);
-      return [failed];
+    } catch (error) {
+
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error }
+        });
+      } return null
     }
   }
 }
@@ -206,26 +245,35 @@ export class ResetTableCommandHandler {
     command: ResetTableCommand,
     actor: Actor
   ): Promise<TableEvent[]> {
-    const table = await this.repo.getById(command.store,command.tableKey);
+    const table = await this.repo.getById(command.store, command.tableKey);
     try {
-      this.repo.delete(command.store,command.tableKey)
-      await this.repo.save(command.store,table);
+      this.repo.delete(command.store, command.tableKey)
+      await this.repo.save(command.store, table);
       const out: TableEvent = {
         type: 'TABLE_RESET',
         tableId: command.tableKey,
       };
 
-      this.audit.log(out);
-      return [out];
-    } catch (e: any) {
-      const failed: TableEvent = {
-        type: 'VALIDATION_FAILED',
-        tableId: command.tableKey,
-        reason: e?.message ?? 'Unknown error',
-        details: e?.details ?? String(e),
-      };
-      this.audit.log(failed);
-      return [failed];
+      this.audit.log({
+        type: out.type,
+        message: out.type,
+        payload: out.tableId
+      }); return [out];
+    } catch (error) {
+
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error }
+        });
+      } return null
     }
   }
 }

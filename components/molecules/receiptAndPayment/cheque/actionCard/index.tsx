@@ -5,26 +5,17 @@ import {
   RefAttributes,
   useEffect,
   useState,
-} from 'react';
+} from "react";
 
-import {
-  Checkbox,
-  Collapse,
-} from 'antd';
-import { useTranslations } from 'next-intl';
+import { Checkbox, Collapse } from "antd";
+import { useTranslations } from "next-intl";
 
-import {
-  DownChevron,
-  NoData,
-} from '@components/atoms/iconComponents';
-import {
-  useDarkMode,
-  useProcessedData,
-} from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
-import { getColoredIcon } from '@utils/core';
+import { DownChevron, Info, NoData } from "@components/atoms/iconComponents";
+import { useDarkMode, useProcessedData } from "@hooks/custom";
+import { useAppSelector } from "@redux/index";
+import { getColoredIcon } from "@utils/core";
 
-import type { IProps } from './type';
+import type { IProps } from "./type";
 
 const ActionCard = forwardRef(function Card(
   {
@@ -40,7 +31,7 @@ const ActionCard = forwardRef(function Card(
     selectedHeaderId,
     setSelectedHeaderId,
   }: IProps,
-  ref: RefAttributes<HTMLDivElement>["ref"]
+  ref: RefAttributes<HTMLDivElement>["ref"],
 ) {
   const t = useTranslations();
   const { lang: locale } = useAppSelector((state) => ({
@@ -122,23 +113,99 @@ const ActionCard = forwardRef(function Card(
   const Details = (item) => {
     return (
       <>
-        {columnsConfig?.map((el) => (
-          <div
-            key={el.fieldName}
-            className="items-center gap-2 grid grid-cols-2 mx-6"
-          >
-            <div className="flex flex-col gap-2">
-              <p className="text-[0.6rem] text-gray-gray10">
-                {el.fieldCaption}
-              </p>
+        {columnsConfig?.map((el, idx) => {
+          const isFirstColumn = idx === 0;
+          if (isFirstColumn) {
+            const action = {
+              MenuId: null,
+              Icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"fill="none"><path d="M10 9.16667V13.3333M10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5C14.1421 2.5 17.5 5.85786 17.5 10C17.5 14.1421 14.1421 17.5 10 17.5ZM10.0415 6.66667V6.75L9.9585 6.75016V6.66667H10.0415Z"className="stroke-gray-gray10 dark:stroke-gray-gray1"stroke="stroke-gray-gray10  dark:stroke-gray-gray1"strokeLinecap="round"strokeLinejoin="round"/></svg>`,
+              ActionId: null,
+              MenuDesc: "عملیات چک دریافتی",
+              key: "عملیات چک دریافتی",
+              FatherId: null,
+              MenuType: null,
+              loggedInUserId: null,
+              condition: "",
+            };
+            return (
+              <div
+                key={el.fieldName}
+                className="items-center gap-2 grid grid-cols-2 mx-6"
+              >
+                <div className="flex flex-col gap-2">
+                  <p className="text-[0.6rem] text-gray-gray10">
+                    {el.fieldCaption}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="text-[0.6rem] text-gray-gray7">
+                    {item[el.fieldName]}
+                  </p>
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => onActionClick(action, item)}
+                  >
+                    <Info />
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (el.fieldName === "DocumentCheque.StateId") {
+            const action = {
+              MenuId: null,
+              Icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"fill="none"><path d="M10 9.16667V13.3333M10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5C14.1421 2.5 17.5 5.85786 17.5 10C17.5 14.1421 14.1421 17.5 10 17.5ZM10.0415 6.66667V6.75L9.9585 6.75016V6.66667H10.0415Z"className="stroke-gray-gray10 dark:stroke-gray-gray1"stroke="stroke-gray-gray10  dark:stroke-gray-gray1"strokeLinecap="round"strokeLinejoin="round"/></svg>`,
+              ActionId: null,
+              MenuDesc: "وضعیت چک",
+              key: "وضعیت چک",
+              FatherId: null,
+              MenuType: null,
+              loggedInUserId: null,
+              condition: "",
+            };
+            return (
+              <div
+                key={el.fieldName}
+                className="items-center gap-2 grid grid-cols-2 mx-6"
+              >
+                <div className="flex flex-col gap-2">
+                  <p className="text-[0.6rem] text-gray-gray10">
+                    {el.fieldCaption}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="text-[0.6rem] text-gray-gray7">
+                    {item[el.fieldName]}
+                  </p>
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => onActionClick(action, item)}
+                  >
+                    <Info />
+                  </div>
+                </div>
+              </div>
+            );
+          }
+          return (
+            <div
+              key={el.fieldName}
+              className="items-center gap-2 grid grid-cols-2 mx-6"
+            >
+              <div className="flex flex-col gap-2">
+                <p className="text-[0.6rem] text-gray-gray10">
+                  {el.fieldCaption}
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-[0.6rem] text-gray-gray7">
+                  {item[el.fieldName]}
+                </p>
+              </div>
             </div>
-            <div className="flex flex-col gap-2">
-              <p className="text-[0.6rem] text-gray-gray7">
-                {item[el.fieldName]}
-              </p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         <div className="flex items-center gap-2 ms-6 mt-6 pb-4">
           {actions &&

@@ -33,7 +33,7 @@ export const MainInfoCard = ({
   titleGroup?: string;
 }) => {
   return (
-    <div className="flex flex-col gap-1 p-3 border border-gray-gray4 rounded-lg">
+    <div className="flex flex-col justify-between p-3 border border-gray-gray4 rounded-lg">
       <div className="flex">
         {temp?.type && (
           <div className="flex gap-2 ps-2 h-10">
@@ -123,9 +123,9 @@ export const ProfileImg: FC<ProfileDisplayProps> = ({
 const TextContainer = ({ label, record, titleGroup, description }) => {
   const t = useTranslations();
   return (
-    <div className="flex flex-col justify-center gap-1 w-full overflow-hidden">
+    <div className="flex flex-col justify-center gap-2 w-full overflow-hidden">
       <div className="overflow-hidden text-gray-gray9 text-sm text-ellipsis whitespace-nowrap">
-        {titleGroup ? t(`${titleGroup}.${label}`) :  label}
+        {titleGroup ? t(`${titleGroup}.${label}`) : label}
       </div>
       {description ? (
         <CustomTooltip title={description}>
@@ -156,10 +156,10 @@ const CustomButtonWithIcons = ({ icon1, icon2, form = null, list = null }) => {
           url: `${form.formUrl}`,
           originalPageState: PageStateEnum.Opened,
           pageState: PageStateEnum.Opened,
-          keyName: form.keyName,
-          keyValue: form.keyValue,
-          caption:"",
-          captionII:form.label,
+          // keyName: form.keyName,
+          // keyValue: form.keyValue,
+          caption: "",
+          captionII: form.label,
           data: form,
         },
       });
@@ -172,10 +172,10 @@ const CustomButtonWithIcons = ({ icon1, icon2, form = null, list = null }) => {
           data: list,
           originalPageState: PageStateEnum.Opened,
           pageState: PageStateEnum.Opened,
-          keyName: list.keyName,
-          keyValue: list.keyValue,
-          caption:"",
-          captionII:`${t("general.list")} ${list.label}`,
+          // keyName: list.keyName,
+          // keyValue: list.keyValue,
+          caption: "",
+          captionII: `${t("general.list")} ${list.label}`,
         },
       });
     }

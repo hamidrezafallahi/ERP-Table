@@ -44,6 +44,7 @@ export type ColumnSchema = {
   required?: boolean;
   dynamicValue?: IRequestConfig
   editable?: boolean;
+  expandable: boolean;
   indexOptions?: (tableId: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, controller: UITableController) => ItemType[];
   displayFormat?: (value: unknown) => unknown
   // در ادامه: validator, lookup, formula, dynamicRules...

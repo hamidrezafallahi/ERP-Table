@@ -3,8 +3,8 @@ import type { IIconConfig } from '../type';
 export const File = ({ config }: { config?: IIconConfig }) => {
   return (
     <svg
-      width={config?.width ? `${config.width}` : "36"}
-      height={config?.height ? `${config.height}` : "36"}
+      width={config?.width ? `${config.width}` : "24"}
+      height={config?.height ? `${config.height}` : "24"}
       viewBox="0 0 36 36"
       fill={config?.fill ? `${config.fill}` : "none"}
       xmlns="http://www.w3.org/2000/svg"

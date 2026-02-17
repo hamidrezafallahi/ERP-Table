@@ -20,4 +20,5 @@ export interface IProps {
   withImage?: boolean;
   submitCaption?: string;
   withSubmitButton?: boolean;
+  hasShorthandFormToolbar?: boolean;
 }

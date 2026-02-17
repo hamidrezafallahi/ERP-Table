@@ -18,8 +18,8 @@ export const AdvancedBankWithdrawalForm = ({ activePage, form }: IProps) => {
   const t = useTranslations();
 
   const bankAccountConfig: IRequestConfig = {
-    addWebUrl: "api/com/Select/BankAccount4SelectOPtion",
-    endpoint: "api/com/Select/BankAccount4SelectOPtion",
+    addWebUrl: "api/trh/select/BankAccount4SelectOPtion",
+    endpoint: "api/trh/select/BankAccount4SelectOPtion",
     repoViewId: 106081,
     addButton: {
       url: "com/bankAccount",
@@ -29,7 +29,7 @@ export const AdvancedBankWithdrawalForm = ({ activePage, form }: IProps) => {
   };
 
   const totalPrice = activePage?.pageData?.find(
-    (item) => item.name === "Price"
+    (item) => item.name === "Price",
   )?.value;
 
   const cashStatementPricesValue = activePage?.pageData
@@ -55,11 +55,11 @@ export const AdvancedBankWithdrawalForm = ({ activePage, form }: IProps) => {
         0) +
       (tankhahStatementPricesValue?.reduce(
         (sum, current) => sum + current,
-        0
+        0,
       ) || 0) +
       (tafsiliStatementPricesValue?.reduce(
         (sum, current) => sum + current,
-        0
+        0,
       ) || 0) +
       (bankStatementPricesValue?.reduce((sum, current) => sum + current, 0) ||
         0);
@@ -79,7 +79,7 @@ export const AdvancedBankWithdrawalForm = ({ activePage, form }: IProps) => {
       form={form}
       name="advancedBankWithdrawalForm"
       layout="vertical"
-      className="hidden-show-scrollBar gap-5 lg:gap-y-10 grid grid-cols-12 pt-4 lg:pt-0 h-auto max-h-[calc(100dvh-160px)] overflow-y-auto"
+      className="hidden-show-scrollBar gap-5 lg:gap-y-5 grid grid-cols-12 pt-4 lg:pt-0 h-auto max-h-[calc(100dvh-160px)] overflow-y-auto"
     >
       <Form.Item
         label="تاریخ سند"

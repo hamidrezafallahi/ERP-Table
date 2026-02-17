@@ -17,13 +17,13 @@ import { useEffect, useState } from "react";
 
 import { formConfig } from "./config";
 
-import { setAllPageData, setPageInfo } from "@slice/pages";
-import { shallowEqual, useDispatch } from "react-redux";
 import { CustomModal } from "@components/atoms/defaultElements";
+import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
 import Confirmation from "@components/molecules/confirmation";
+import { setAllPageData, setPageData, setPageInfo } from "@slice/pages";
 import { showSuccessToast } from "@utils/core";
 import { useTranslations } from "next-intl";
-import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
+import { shallowEqual, useDispatch } from "react-redux";
 
 export const Patterns = () => {
   const t = useTranslations();
@@ -32,11 +32,11 @@ export const Patterns = () => {
     (state) => ({
       locale: state.withPersist.config.lang,
       activePage: state.withPersist.pages.find(
-        (item) => item.isActive === true
+        (item) => item.isActive === true,
       ),
       match: state.withPersist.config.initMatch,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const [repoId, setRepoId] = useState<number>(null);
@@ -150,8 +150,14 @@ export const Patterns = () => {
   const handleClearAll = () => {
     setSelectedId(null);
     form.resetFields();
-    dispatch(setAllPageData(formConfig));
-    dispatch(setPageInfo({ pageId: pageId, pageInfo: info }));
+    dispatch(
+      setPageData({
+        name: "PatternItem",
+        value: [],
+      }),
+    );
+    // dispatch(setAllPageData(formConfig));
+    // dispatch(setPageInfo({ pageId: pageId, pageInfo: info }));
   };
 
   const handleConfirmation = async () => {
@@ -178,8 +184,8 @@ export const Patterns = () => {
             (draft) => {
               if (draft?.Data) draft.Data = [];
             },
-            false
-          )
+            false,
+          ),
         );
         (dispatch as any)(
           apiService.util.updateQueryData(
@@ -194,8 +200,8 @@ export const Patterns = () => {
             (draft) => {
               if (draft?.Data) draft.Data = [];
             },
-            false
-          )
+            false,
+          ),
         );
       }
     } catch (error) {
@@ -211,7 +217,7 @@ export const Patterns = () => {
   const handleActionClick = async (
     action: IToolbarMenu,
     id: number,
-    PendingStatusId: number | null
+    PendingStatusId: number | null,
   ) => {
     setSelectedId(id);
     try {

@@ -1,6 +1,5 @@
 import {
   CustomButton,
-  CustomSelect,
   CustomTooltip,
   DynamicSelect,
 } from "@components/atoms/defaultElements";
@@ -12,15 +11,67 @@ import type { IPatternItem } from "@services/mng/pattern/type";
 import { setPageData } from "@slice/pages";
 import type { IPage } from "@slice/pages/type";
 import type { IOption } from "@type/elementType";
-import { Form, FormInstance, Radio } from "antd";
+import { Form, FormInstance, Radio, Select } from "antd";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { useDispatch } from "react-redux";
 
 enum fieldType {
   element = 1,
   constant = 2,
 }
+
+const SeparatorSelectWrapper = (props: Record<string, any>) => {
+  const { onEditPatternItem, separatorOptions, value, onChange, ...rest } =
+    props;
+  return (
+    <Select
+      {...rest}
+      options={separatorOptions}
+      value={value}
+      className="!bg-gray-gray3 dark:!bg-gray-gray95 rounded w-full !h-[34px] text-sm"
+      onChange={(val: string) => {
+        onEditPatternItem?.("Separator", val, null);
+        onChange?.(val);
+      }}
+    />
+  );
+};
+
+const ElementSelectWrapper = (props: Record<string, any>) => {
+  const { onEditPatternItem, elementConfig, editingPatternItemValue, ...rest } =
+    props;
+  return (
+    <DynamicSelect
+      {...rest}
+      showSearch
+      allowClear
+      dynamicValue={elementConfig}
+      value={editingPatternItemValue?.PatternObjectId}
+      onChange={(value: string, option: IOption) => {
+        onEditPatternItem?.(
+          "PatternObjectId",
+          value,
+          option?.label?.split(" - ")[1],
+        );
+        props.onChange?.(value);
+      }}
+    />
+  );
+};
+
+const TextInputWrapper = (props: Record<string, any>) => {
+  const { onEditPatternItem, ...rest } = props;
+  return (
+    <InputText
+      {...rest}
+      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+        onEditPatternItem?.("Text", e.target.value, null);
+        props.onChange?.(e);
+      }}
+    />
+  );
+};
 
 export const PatternForm = ({
   form,
@@ -87,7 +138,7 @@ export const PatternForm = ({
   };
 
   const patternItemsValue = activePage?.pageData?.find(
-    (item) => item.name === "PatternItem"
+    (item) => item.name === "PatternItem",
   )?.value;
 
   const correctPatternItemsValue: IPatternItem =
@@ -105,24 +156,35 @@ export const PatternForm = ({
   };
 
   const handleEditPatternItem = (field: string, value: any, desc: string) => {
-    form.setFieldsValue({
-      [field]: value,
-    });
+    if (!editingItem) return;
+
     const newPatternItemsValue = patternItemsValue?.map((item) => {
-      if (item.key === editingItem?.key) {
+      if (item.key === editingItem.key) {
+        const updates: Partial<IPatternItem> = {
+          [field]: value,
+          ...(desc != null && { PatternObjectDesc: desc }),
+        };
+        if (field === "Text") {
+          updates.PatternObjectId = null;
+          updates.PatternObjectDesc = null;
+        }
         return {
           ...item,
-          [field]: value,
-          PatternObjectDesc: desc,
+          ...updates,
         };
       }
       return item;
+    });
+
+    form.setFieldsValue({
+      [field]: value,
+      ...(field === "Text" && { PatternObjectId: null }),
     });
     dispatch(
       setPageData({
         name: "PatternItem",
         value: newPatternItemsValue,
-      })
+      }),
     );
   };
   const handleClear = () => {
@@ -148,8 +210,9 @@ export const PatternForm = ({
       setPageData({
         name: "PatternItem",
         value: [...patternItemsValue, newItem],
-      })
+      }),
     );
+    setEditingItem(newItem);
   };
 
   const handleDeletePatternItem = (itemId: number) => {
@@ -157,7 +220,7 @@ export const PatternForm = ({
       setPageData({
         name: "PatternItem",
         value: patternItemsValue?.filter((item) => item.key !== itemId),
-      })
+      }),
     );
   };
 
@@ -342,18 +405,10 @@ export const PatternForm = ({
           name="PatternObjectId"
           className="flex flex-col col-span-2 !mb-0 !pb-0 text-xs"
         >
-          <DynamicSelect
-            showSearch
-            allowClear
-            dynamicValue={elementConfig}
-            value={correctPatternItemsValue?.PatternObjectId}
-            onChange={(value, option: IOption) =>
-              handleEditPatternItem(
-                "PatternObjectId",
-                value,
-                option?.label?.split(" - ")[1]
-              )
-            }
+          <ElementSelectWrapper
+            onEditPatternItem={handleEditPatternItem}
+            elementConfig={elementConfig}
+            editingPatternItemValue={correctPatternItemsValue}
           />
         </Form.Item>
       ) : (
@@ -362,12 +417,7 @@ export const PatternForm = ({
           name="Text"
           className="flex flex-col col-span-2 !mb-0 !pb-0 text-xs"
         >
-          <InputText
-            value={correctPatternItemsValue?.Text}
-            onChange={(e) =>
-              handleEditPatternItem("Text", e.target.value, null)
-            }
-          />
+          <TextInputWrapper onEditPatternItem={handleEditPatternItem} />
         </Form.Item>
       )}
       <Form.Item
@@ -375,12 +425,9 @@ export const PatternForm = ({
         name="Separator"
         className="flex flex-col col-span-2 !mb-0 !pb-0 text-xs"
       >
-        <CustomSelect
-          showSearch
-          allowClear
-          options={separatorOptions}
-          value={correctPatternItemsValue?.Separator}
-          onChange={(value) => handleEditPatternItem("Separator", value, null)}
+        <SeparatorSelectWrapper
+          onEditPatternItem={handleEditPatternItem}
+          separatorOptions={separatorOptions}
         />
       </Form.Item>
       <Form.Item className="flex justify-end items-end col-span-2 m-0 text-xs">

@@ -127,7 +127,7 @@ export const YearContent = ({
       className={`flex flex-col gap-3 p-4 px-8 py-5 w-full h-fit lg:h-full`}
     >
       <div className="flex gap-2">
-        <FinancialYearIcon />
+        <FinancialYearIcon config={{stroke:"#939393"}} />
         {t("general.financialYear")}
       </div>
       <div

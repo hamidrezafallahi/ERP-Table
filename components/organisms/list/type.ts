@@ -63,6 +63,8 @@ export interface IState {
   formulaParameterModalIsOpen: boolean;
   changeInvoiceCurrencyModalIsOpen: boolean;
   changeInvoiceCurrencyRateModalIsOpen: boolean;
+  customerCreditModalIsOpen: boolean;
+  customerGroupCreditModalIsOpen: boolean;
 }
 
 export type Action =
@@ -127,4 +129,8 @@ export type Action =
   | { type: "OPEN_CHANGE_CURRENCY_MODAL"; payload: IToolbarMenu }
   | { type: "CLOSE_CHANGE_CURRENCY_MODAL" }
   | { type: "OPEN_CHANGE_CURRENCY_RATE_MODAL"; payload: IToolbarMenu }
-  | { type: "CLOSE_CHANGE_CURRENCY_RATE_MODAL" };
+  | { type: "CLOSE_CHANGE_CURRENCY_RATE_MODAL" }
+  | { type: "OPEN_CUSTOMER_CREDIT_MODAL"; payload: IToolbarMenu }
+  | { type: "CLOSE_CUSTOMER_CREDIT_MODAL" }
+  | { type: "OPEN_CUSTOMER_GROUP_CREDIT_MODAL"; payload: IToolbarMenu }
+  | { type: "CLOSE_CUSTOMER_GROUP_CREDIT_MODAL" };

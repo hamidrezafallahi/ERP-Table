@@ -107,13 +107,13 @@ export interface ReorderRowUiCommand extends UICommandBase {
 }
 export interface ToggleRowSelectedUiCommand extends UICommandBase {
   readonly type: 'TOGGLE_ROW_SELECTED';
-  readonly rowId: number;
-}export interface SelectAllRowsUiCommand extends UICommandBase {
-  readonly type: 'SELECT_ALL_ROWS';
-
-}export interface ClearRowSelectionUiCommand extends UICommandBase {
-  readonly type: 'CLEAR_ROWS_SELECTION';
+ 
 }
+export interface RowSelectedUiCommand extends UICommandBase {
+  readonly type: 'ROW_SELECTED';
+  readonly rowId: number;
+}
+ 
 /* ---------- Keyboard ---------- */
 
 export interface KeyDownUiCommand extends UICommandBase {
@@ -131,8 +131,7 @@ export interface KeyDownUiCommand extends UICommandBase {
 export type UITableCommand =
   ActiveRowUiCommand
   | ToggleRowSelectedUiCommand
-  | SelectAllRowsUiCommand
-  | ClearRowSelectionUiCommand
+  | RowSelectedUiCommand
   | UIMoveActiveVerticalCellEvent
   | UIMoveActiveCellEvent
   | UIActiveCellEvent

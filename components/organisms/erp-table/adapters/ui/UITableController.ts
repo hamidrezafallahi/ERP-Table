@@ -31,7 +31,6 @@ export class UITableController {
   }
   subscribeRow(rowId: number, cb: () => void) {
     const key = rowId;
-    console.log(rowId, this.rowListeners)
     if (!this.rowListeners.has(key)) {
       this.rowListeners.set(key, new Set());
     }
@@ -40,7 +39,6 @@ export class UITableController {
       this.rowListeners.get(key)?.delete(cb);
     };
   }
-
   private notifyCellChange(rowId: number, columnId: string) {
     const key = `${rowId}_${columnId}`;
     this.cellListeners.get(key)?.forEach((cb) => cb());
@@ -63,6 +61,17 @@ export class UITableController {
       return null;
     }
   }
+  subscribeColumn<T = unknown>(
+    columnId: string,
+    cb: (values: T[]) => void
+  ) {
+    return this.engine.subscribeColumn(
+      this.tableKey,
+      columnId,
+      cb
+    );
+  }
+
   isActiveCell(tableKey: string, rowId: number, columnId: string) {
     try {
       return this.engine.isActiveCell(tableKey, rowId, columnId);
@@ -73,6 +82,35 @@ export class UITableController {
   isActiveRow(tableKey: string, rowId: number) {
     try {
       return this.engine.isActiveRow(tableKey, rowId);
+    } catch {
+      return null;
+    }
+  }
+
+  getActiveRow(tableKey: string) {
+    try {
+      return this.engine.getActiveRow(tableKey);
+    } catch {
+      return null;
+    }
+  }
+  getSelectedRows(tableKey: string) {
+    try {
+      return this.engine.getSelectedRows(tableKey);
+    } catch {
+      return null;
+    }
+  }
+  getActiveCell(tableKey: string) {
+    try {
+      return this.engine.getActiveCell(tableKey);
+    } catch {
+      return null;
+    }
+  }
+  isExpandableRow(tableKey: string, rowId: number) {
+    try {
+      return this.engine.isExpandableRow(tableKey, rowId);
     } catch {
       return null;
     }
@@ -91,7 +129,6 @@ export class UITableController {
       return null;
     }
   }
-
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
@@ -101,7 +138,6 @@ export class UITableController {
       tableKey: this.tableKey,
     });
   }
-
   private changePageSize(pageSize: number) {
     this.engine.dispatch({
       type: 'CHANGE_PAGE_SIZE',
@@ -110,7 +146,6 @@ export class UITableController {
       pageSize,
     });
   }
-
   private changePage(page: number) {
     this.engine.dispatch({
       type: 'CHANGE_PAGE',
@@ -119,7 +154,6 @@ export class UITableController {
       page,
     });
   }
-
   private onCellChange(rowId: number, columnId: string, value: unknown) {
     this.engine.dispatch({
       type: 'CHANGE_CELL_VALUE',
@@ -150,7 +184,6 @@ export class UITableController {
 
     this.engine.dispatch({
       type: 'ACTIVE_CELL',
-      store: this.store,
       tableKey: this.tableKey,
       rowId,
       columnId,
@@ -161,41 +194,26 @@ export class UITableController {
 
   }
   private setActiveRow(rowId: number) {
-    const prevActiveRow = this.engine.getActiveRow(this.tableKey);
-    if (prevActiveRow?.rowId === rowId) {
-      return;
-    }
-
     this.engine.dispatch({
       type: 'ACTIVE_ROW',
-      store: this.store,
       tableKey: this.tableKey,
       rowId,
-
-
     });
-    this.notifyRowChange(rowId);
-    this.notifyRowChange(prevActiveRow?.rowId);
-
   }
   private moveActiveCellVertical(
     rowId: number,
     columnId: string,
     direction: 'up' | 'down'
   ) {
-        console.log(direction)
+    console.log(direction)
     this.engine.dispatch({
       type: 'MOVE_ACTIVE_CELL_VERTICAL',
-      store: this.store,
       tableKey: this.tableKey,
       rowId,
       columnId,
       direction,
     });
   }
-
-
-
   private reorderRows(draggedRowId: number, droppedRowId: number, position: 'before' | 'after') {
     this.engine.dispatch({
       type: 'ROW_REORDERED',
@@ -206,7 +224,6 @@ export class UITableController {
       position
     });
   }
-
   private addEmptyRow() {
     this.engine.dispatch({
       type: 'ADD_EMPTY_ROW',
@@ -215,8 +232,6 @@ export class UITableController {
       autoActivate: true,
     });
   }
-
-
   private duplicateRow(rowId: number) {
     this.engine.dispatch({
       type: 'DUPLICATE_ROW',
@@ -225,7 +240,6 @@ export class UITableController {
       rowId,
     });
   }
-
   private deleteRow(rowId: number) {
     this.engine.dispatch({
       type: 'ROW_DELETED',
@@ -249,48 +263,27 @@ export class UITableController {
       table
     });
   }
-
   private async toggleRowExpanded(rowId: number) {
     await this.engine.dispatch({
-      type: 'ROW_TOGGLED',
-      store: this.store,
+      type: 'ROW_EXPAND_TOGGLED',
       tableKey: this.tableKey,
       rowId
     });
 
   }
-
   private async collapseAll() {
     await this.engine.dispatch({
       type: 'COLLAPSE_ALL_ROWS',
-      store: this.store,
       tableKey: this.tableKey,
 
     });
   }
-  private async clearRowSelection() {
+  private async toggleRowSelect() {
     await this.engine.dispatch({
-      type: 'CLEAR_ROW_SELECTION',
-      store: this.store,
+      type: 'TOGGLE_SELECT_ALL_ROWS',
       tableKey: this.tableKey,
     });
   }
-  private async selectAllRows() {
-    await this.engine.dispatch({
-      type: 'SELECT_ALL_ROWS',
-      store: this.store,
-      tableKey: this.tableKey,
-    });
-  }
-  private async toggleRowSelect(rowId: number) {
-    await this.engine.dispatch({
-      type: 'ROW_SELECTION_TOGGLED',
-      store: this.store,
-      tableKey: this.tableKey,
-      rowId
-    });
-  }
-
   private isTextInputTarget(target: EventTarget | null): boolean {
     const el = target as HTMLElement | null;
     if (!el) return false;
@@ -299,11 +292,49 @@ export class UITableController {
     if (el.isContentEditable) return true;
     return false;
   }
+  onRowClick(rowId: number, modifiers: { ctrlKey: boolean; shiftKey: boolean }) {
+    if (modifiers.shiftKey) {
+      this.engine.dispatch({
+        type: "ROW_RANGE_SELECTED",
+        tableKey: this.tableKey,
+        rowId,
+      });
+    } else if (modifiers.ctrlKey) {
+      this.engine.dispatch({
+        type: 'ROW_SELECTION_TOGGLED',
+        tableKey: this.tableKey,
+        rowId
+      });
+    } else {
+      this.engine.dispatch({
+        type: "ACTIVE_ROW",
+        tableKey: this.tableKey,
+        rowId,
+      });
+    }
+  }
 
+  onRowSelect(rowId: number) {
+    this.engine.dispatch({
+      type: 'ROW_SELECTION_TOGGLED',
+      tableKey: this.tableKey,
+      rowId
+    });
+  }
+  private selectFromActiveToLast(activeRowId: number) {
+
+    if (activeRowId == null) return;
+
+    this.engine.dispatch({
+      type: "SELECT_FROM_ACTIVE_TO_LAST",
+      tableKey: this.tableKey,
+      anchorRowId: activeRowId,     // نقطه شروع
+    });
+  }
   private async onKeyDown(e: KeyboardEvent, ctx: KeydownCtx) {
     const inTextInput = this.isTextInputTarget(e.target);
     const { canPrev, canNext, page } = this.engine.getViewState(this.tableKey).pagination
-    const { key, altKey, shiftKey } = e;
+    const { key, altKey, shiftKey, ctrlKey } = e;
     const { tableKey, activeRowId, activeColumnId } = ctx;
 
     // if (e.altKey === true) {
@@ -324,6 +355,19 @@ export class UITableController {
     if (altKey && (key === 'n' || key === 'N')) {
       e.preventDefault();
       this.addEmptyRow();
+      return;
+    }
+    // Ctrl+Shift+End => Select rest rows
+    if (shiftKey && ctrlKey && key === 'End') {
+      e.preventDefault();
+      this.selectFromActiveToLast(activeRowId);
+      return;
+    }
+    // Shift+End => Select active row
+    if (shiftKey && (key === 'End')) {
+      if (activeRowId == null) return;
+      e.preventDefault();
+      this.onRowSelect(activeRowId);
       return;
     }
 
@@ -360,62 +404,49 @@ export class UITableController {
     }
 
     // Shift+Enter => collapse all
-    if (!inTextInput && key === 'Enter' && shiftKey) {
+    if (key === 'Enter' && shiftKey) {
       e.preventDefault();
       await this.collapseAll();
       return;
     }
-
-
-
-
-    // ArrowDown => active cell below
-    if (key === 'ArrowDown') {
-      console.log("active cell below")
-      e.preventDefault();
-      if (!activeRowId || !activeColumnId) return;
-      this.moveActiveCellVertical(activeRowId, activeColumnId, 'down');
-
-      return;
-    }
-    //  ArrowLeft =>  active next cell
     if (key === 'ArrowLeft') {
-      console.log("active next cell")
 
       e.preventDefault();
       if (!activeRowId || !activeColumnId) return;
+      console.log("active next cell")
       this.moveToNextCell(activeRowId, activeColumnId, 'next');
       return
-      // await this.collapseAll();
 
     }
-    // ArrowUp => active cell above
-    if (key === 'ArrowUp') {
-      console.log("active cell above")
-      e.preventDefault();
-      if (!activeRowId || !activeColumnId) return;
-      this.moveActiveCellVertical(activeRowId, activeColumnId, 'up');
-      return;
-    }
-    // ArrowRight => active previous cell
     if (key === 'ArrowRight') {
-      console.log("active previous cell")
 
       e.preventDefault();
+      console.log(activeRowId, activeColumnId)
       if (!activeRowId || !activeColumnId) return;
+      console.log("active previous cell")
       this.moveToNextCell(activeRowId, activeColumnId, 'prev');
-
-      // await this.collapseAll();
       return;
     }
 
 
 
+    if (key === 'ArrowDown') {
+      e.preventDefault();
+      if (!activeRowId ) return;
+       this.moveActiveCellVertical(activeRowId, activeColumnId, 'down');
 
-    // Alt+ArrowLeft => collapse all
+      return;
+    }
+
+    if (key === 'ArrowUp') {
+      e.preventDefault();
+      if (!activeRowId  ) return;
+       this.moveActiveCellVertical(activeRowId, activeColumnId, 'up');
+      return;
+    }
     if (altKey && key === 'ArrowLeft') {
       e.preventDefault();
-      // await this.collapseAll();
+      await this.collapseAll();
       return;
     }
 
@@ -425,6 +456,7 @@ export class UITableController {
       e.preventDefault();
       this.engine.dispatch({
         type: 'CHANGE_PAGE',
+
         tableKey: tableKey,
         page: page - 1,
         store: this.store
@@ -452,7 +484,6 @@ export class UITableController {
     console.log(direction)
     this.engine.dispatch({
       type: 'MOVE_ACTIVE_CELL',
-      store: this.store,
       tableKey: this.tableKey,
       rowId,
       columnId,
@@ -462,19 +493,15 @@ export class UITableController {
   private activateFirstEditableCell(rowId: number) {
     this.engine.dispatch({
       type: 'ACTIVATE_FIRST_CELL',
-      store: this.store,
       tableKey: this.tableKey,
       rowId,
     });
   }
-
-
   async dispatch(command: UITableCommand): Promise<void> {
     switch (command.type) {
       case 'CHANGE_PAGE_SIZE':
         this.changePageSize(command.pageSize);
         return;
-
       case 'CHANGE_PAGE':
         this.changePage(command.page);
         return;
@@ -500,26 +527,15 @@ export class UITableController {
       case 'TABLE_DELETED':
         this.deleteTable();
         return;
-
       case 'TOGGLE_ROW_EXPANDED':
         await this.toggleRowExpanded(command.rowId);
         return;
-
       case 'ROW_REORDERED':
         this.reorderRows(command.draggedRowId, command.droppedRowId, command.position);
         return;
       case 'TABLE_REGISTERED':
         this.registerTable(command.table);
         return;
-      case 'CLEAR_ROWS_SELECTION':
-        this.clearRowSelection()
-        return
-      case 'SELECT_ALL_ROWS':
-        this.selectAllRows()
-        return
-      case 'TOGGLE_ROW_SELECTED':
-        this.toggleRowSelect(command.rowId)
-        return
       case 'UI_ACTIVE_FIRST_CELL':
         this.activateFirstEditableCell(command.rowId)
 
@@ -537,7 +553,6 @@ export class UITableController {
           command.direction
         );
         return;
-
       case 'UI_ACTIVE_ROW':
         this.setActiveRow(command.rowId)
         return
@@ -545,13 +560,15 @@ export class UITableController {
       case 'KEY_DOWN':
         await this.onKeyDown(command.event, command.ctx);
         return;
-
+      case 'TOGGLE_ROW_SELECTED':
+        this.toggleRowSelect()
+        return
+      case 'ROW_SELECTED':
+        this.toggleRowSelect()
+        return
       default:
         const _exhaustive: never = command;
         return _exhaustive;
     }
   }
-
-
-
 }

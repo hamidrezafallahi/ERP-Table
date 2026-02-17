@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useReducer, useRef, useState } from "react";
 
+import { useTranslations } from "next-intl";
 import { shallowEqual } from "react-redux";
 
 import { CustomModal, CustomSpin } from "@components/atoms/defaultElements";
@@ -10,22 +11,32 @@ import {
   ActionToolbar,
   ChequeActionModal,
   ChequeDynamicForm,
+  ChequeInfoModal,
 } from "@components/molecules/receiptAndPayment/cheque";
 import ActionCard from "@components/molecules/receiptAndPayment/cheque/actionCard";
 import { chequeDynamicConfig } from "@components/molecules/receiptAndPayment/cheque/chequeDynamicForm/config";
-import { useDarkMode } from "@hooks/custom";
+import { useDarkMode, useInitializePage } from "@hooks/custom";
 import { useAppSelector } from "@redux/index";
-import { useGetData, useGetInfinite } from "@services/base";
+import { useCUDDataMutation, useGetData, useGetInfinite } from "@services/base";
 import type { IChequeDetails } from "@services/trh/chequeDetails/type";
+import { SystemEnum } from "@type/enum";
 import type { IToolbarMenu } from "@type/toolbar";
-import { getColoredIcon } from "@utils/core";
+import {
+  findingPageState,
+  getColoredIcon,
+  showInfoToast,
+  showSuccessToast,
+} from "@utils/core";
 
 import { stateConfig } from "../../config";
 import { actions, columnsConfig } from "./config";
+import { ActionLabelsEnum } from "./enum";
 import type { Action, IState } from "./type";
 
 export const ChequeAction = () => {
+  const t = useTranslations();
   const { mode = "light" } = useDarkMode();
+  const initializePage = useInitializePage();
 
   const url = "api/trh/select/check/receipt/operations";
   const repoViewId = 140017;
@@ -44,16 +55,18 @@ export const ChequeAction = () => {
   const [orderInfo, setOrderInfo] = useState();
   const [quickSearch, setQuickSearch] = useState("");
 
-  const { match } = useAppSelector((state) => {
+  const { match, activePage } = useAppSelector((state) => {
     const match = state.withPersist.config.initMatch;
+    const activePage = state.withPersist.pages.find((page) => page.isActive);
 
-    return { match };
+    return { match, activePage };
   }, shallowEqual);
 
-  const { data: gridData, isFetching: gridIsLoading } = useGetData<
-    IChequeDetails[],
-    any
-  >({
+  const {
+    data: gridData,
+    isFetching: gridIsLoading,
+    refetch,
+  } = useGetData<IChequeDetails[], any>({
     url: url,
     body: {
       Filters: {
@@ -111,9 +124,12 @@ export const ChequeAction = () => {
     id: "all",
   });
 
+  const [trigger] = useCUDDataMutation();
+
   const initialState: IState = {
     actionConfig: null,
     isChequeDynamicActionOpen: false,
+    isInfoActionOpen: false,
   };
 
   function reducer(state: IState, action: Action): IState {
@@ -128,6 +144,18 @@ export const ChequeAction = () => {
         return {
           ...state,
           isChequeDynamicActionOpen: false,
+          actionConfig: null,
+        };
+      case "OPEN_INFO_MODAL":
+        return {
+          ...state,
+          isInfoActionOpen: true,
+          actionConfig: action.payload,
+        };
+      case "CLOSE_INFO_MODAL":
+        return {
+          ...state,
+          isInfoActionOpen: false,
           actionConfig: null,
         };
 
@@ -170,9 +198,36 @@ export const ChequeAction = () => {
     setSelectedId(record[rowFieldKey]);
     setSelectedHeaderId([record[headerKey]]);
     setSelectedItems([record[rowFieldKey]]);
+    const correctItem = gridData?.Data?.find(
+      (item) => item[rowFieldKey] === selectedId,
+    );
+    const chequeReceiptHeaderId = correctItem?.CheckReceiptHeaderId;
 
     try {
       switch (action.MenuDesc) {
+        case ActionLabelsEnum.ChequeReceiptAction:
+          initializePage({
+            config: {
+              RepoId: 3025,
+              SystemId: SystemEnum.trh,
+              url: `trh/chequeReceipt?id=${chequeReceiptHeaderId}`,
+              pageState: findingPageState(null),
+              originalPageState: findingPageState(null),
+              Id: Number(chequeReceiptHeaderId),
+              listPageId: activePage.pageId,
+              Key: Number(chequeReceiptHeaderId),
+              selectedView: null,
+              data: activePage.data,
+              returnPageId: activePage.pageId,
+            },
+          });
+          break;
+        case ActionLabelsEnum.ChequeStatus:
+          dispatchState({
+            type: "OPEN_INFO_MODAL",
+            payload: action,
+          });
+          break;
         default:
           dispatchState({
             type: "OPEN_CHEQUE_DYNAMIC_ACTION_MODAL",
@@ -190,7 +245,7 @@ export const ChequeAction = () => {
   const selectedGroupCondition = selectedItems?.map((item) => {
     const correctField = records?.find((el) => el[rowFieldKey] === item);
     return stateConfig.find(
-      (i) => i.value === correctField?.DocumentCheque?.StateId
+      (i) => i.value === correctField?.DocumentCheque?.StateId,
     )?.title;
   });
 
@@ -198,10 +253,36 @@ export const ChequeAction = () => {
     render:
       selectedGroupCondition?.length > 0 &&
       selectedGroupCondition?.every(
-        (item) => item === selectedGroupCondition[0]
+        (item) => item === selectedGroupCondition[0],
       ),
     condition:
       selectedGroupCondition?.length > 0 ? selectedGroupCondition[0] : null,
+  };
+
+  const handlePrevStep = async () => {
+    const correctItem = gridData?.Data?.find(
+      (item) => item[rowFieldKey] === selectedId,
+    );
+
+    try {
+      const prevStepResult = await trigger({
+        url: "api/trh/update/getBackToPreviousStep",
+        body: { DocumentChequeId: selectedId },
+      }).unwrap();
+
+      if (prevStepResult.Result === "Success") {
+        if (state.isInfoActionOpen) {
+          dispatchState({ type: "CLOSE_INFO_MODAL" });
+        }
+
+        showInfoToast(t("toast.Pending"));
+        showSuccessToast("", t("toast.successTitle"), 500);
+        setSelectedId(null);
+        refetch();
+      }
+    } catch (error) {
+      null;
+    }
   };
 
   return (
@@ -239,7 +320,7 @@ export const ChequeAction = () => {
           !cardIsLoading ? (
             <ActionCard
               staticKey={staticKey as string}
-              data={cardData?.Data}
+              data={gridData?.Data}
               columnsConfig={columnsConfig}
               actions={actions}
               ref={lastItemRef}
@@ -296,10 +377,10 @@ export const ChequeAction = () => {
             headerDescription={`${
               match
                 ? gridData?.Data?.find(
-                    (item) => item[rowFieldKey] === selectedId
+                    (item) => item[rowFieldKey] === selectedId,
                   )[staticKey]
                 : cardData?.Data?.find(
-                    (item) => item[rowFieldKey] === selectedId
+                    (item) => item[rowFieldKey] === selectedId,
                   )[staticKey]
             }
               `}
@@ -313,9 +394,12 @@ export const ChequeAction = () => {
                   selectedRecords={[
                     records?.find((i) => i[rowFieldKey] === selectedId),
                   ]}
-                  handleClose={() =>
-                    dispatchState({ type: "CLOSE_CHEQUE_DYNAMIC_ACTION_MODAL" })
-                  }
+                  handleClose={() => {
+                    dispatchState({
+                      type: "CLOSE_CHEQUE_DYNAMIC_ACTION_MODAL",
+                    });
+                    refetch();
+                  }}
                   sourceId={[
                     {
                       DocumentChequeId: selectedId,
@@ -325,9 +409,47 @@ export const ChequeAction = () => {
                   sourceKey={"Details"}
                   config={
                     chequeDynamicConfig.find(
-                      (item) => item.name === state.actionConfig.MenuDesc
+                      (item) => item.name === state.actionConfig.MenuDesc,
                     )?.config
                   }
+                />
+              </ChequeActionModal>
+            }
+          />
+        )}
+        {state.isInfoActionOpen && (
+          <CustomModal
+            contentClassName={`${match ? "w-[700px] h-[400px]" : ""}`}
+            headerName={state.actionConfig.MenuDesc}
+            headerIcon={
+              match && (
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: getColoredIcon(state.actionConfig.Icon, mode),
+                  }}
+                  style={{ width: "18px", height: "17px" }}
+                />
+              )
+            }
+            headerDescription={`${
+              match
+                ? gridData?.Data?.find(
+                    (item) => item[rowFieldKey] === selectedId,
+                  )[staticKey]
+                : cardData?.Data?.find(
+                    (item) => item[rowFieldKey] === selectedId,
+                  )[staticKey]
+            }
+              `}
+            closeModal={() => dispatchState({ type: "CLOSE_INFO_MODAL" })}
+            isModalOpen={state.isInfoActionOpen}
+            content={
+              <ChequeActionModal ids={selectedHeaderId}>
+                <ChequeInfoModal
+                  data={gridData?.Data?.find(
+                    (item) => item[rowFieldKey] === selectedId,
+                  )}
+                  handlePrevStep={handlePrevStep}
                 />
               </ChequeActionModal>
             }

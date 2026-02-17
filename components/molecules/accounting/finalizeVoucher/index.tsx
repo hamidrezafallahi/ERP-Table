@@ -17,27 +17,29 @@ export const FinalizeVoucher = ({ form, setMobileDrawerContent }) => {
     (state) => ({
       locale: state.withPersist.config.lang,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const { data: lastCloseDate } = useGetData<ILastCloseDate, IRequest>({
     url: "/api/acc/select/finished/lastDate",
     body: {},
   });
-  const closeDate =
-    locale === "fa"
-      ? moment(lastCloseDate?.Data[0]?.Date)
-          .locale("fa")
-          .format("jYYYY/jMM/jDD")
-      : moment(lastCloseDate?.Data[0]?.Date).locale("en").format("YYYY/MM/DD");
+
+  const closeDate = lastCloseDate?.Data?.[0]?.Date
+    ? moment(lastCloseDate.Data[0].Date)
+        .locale(locale === "fa" ? "fa" : "en")
+        .format(locale === "fa" ? "jYYYY/jMM/jDD" : "YYYY/MM/DD")
+    : "";
 
   return (
     <Form form={form}>
       <div className="flex flex-col gap-4">
         <span className="font-normal text-blue-blue5 text-xs">
-          {t("account.lastCloseDate", {
-            date: closeDate,
-          })}
+          {closeDate.length
+            ? t("account.lastCloseDate", {
+                date: closeDate,
+              })
+            : "تاریخی ثبت نشده."}
         </span>
         <Form.Item
           label="تا تاریخ"

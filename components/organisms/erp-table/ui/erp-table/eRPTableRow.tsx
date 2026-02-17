@@ -1,5 +1,5 @@
-import {
-  useEffect,
+import React, {
+  useMemo,
   useState,
 } from 'react';
 
@@ -22,63 +22,73 @@ interface ERPTableRowProps {
     rowState: RowStateEnum;
     cells: Record<string, TCell>;
     isExpanded: boolean;
+    moreDetails?: unknown;
   };
   index: number;
   table: any;
   controller: UITableController;
   tableKey: string;
-  onActiveRowChange: (rowId: number) => void;
-  onActiveColChange: (colId: string) => void;
   draggedRowIdRef: React.MutableRefObject<number | null>;
+  moreDetailComponent?: React.ComponentType<{ data: unknown }>;
 }
 
-export function ERPTableRow({
+function ERPTableRowComponent({
   row,
   index,
   table,
   controller,
   tableKey,
-  onActiveRowChange,
-  onActiveColChange,
   draggedRowIdRef,
+  moreDetailComponent: MoreDetailComponent,
 }: ERPTableRowProps) {
-  const [, forceUpdate] = useState(0);
   const t = useTranslations();
   const [dropZone, setDropZone] = useState<"before" | "after" | null>(null);
+
   const isDeleted = row.rowState === RowStateEnum.Deleted;
-  const activeRow = (rowId: number) => {
-    controller.dispatch({ type: "UI_ACTIVE_ROW", rowId });
-  };
   const isActiveRow = controller.isActiveRow(tableKey, row.id);
-  const handleDragOverLocal = (e: React.DragEvent<HTMLTableRowElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const isSelectedRow = controller.isSelectedRow(tableKey, row.id);
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const mouseY = e.clientY - rect.top;
-    const isUpperHalf = mouseY < rect.height / 2;
+  const handleRowClick = (e: React.MouseEvent) => {
+    controller.onRowClick(row.id, {
+      ctrlKey: e.ctrlKey,
+      shiftKey: e.shiftKey,
+    });
+  };
 
-    const newZone = isUpperHalf ? "before" : "after";
+  const handleSelectRow = (e: React.MouseEvent<HTMLElement>) => {
+    const el = e.target as HTMLElement;
+    if (el.tagName !== "TR") return;
 
-    if (newZone !== dropZone) {
-      setDropZone(newZone);
+    if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      controller.onRowSelect(row.id);
     }
   };
-  const handleDragEnd = (e: React.DragEvent<HTMLTableRowElement>) => {
-    draggedRowIdRef.current = null;
-    e.currentTarget.setAttribute("draggable", "false");
+
+  const handleDragStart = (
+    e: React.DragEvent<HTMLTableRowElement>,
+    rowId: number,
+  ) => {
+    draggedRowIdRef.current = rowId;
+    e.dataTransfer.setData("text/plain", String(rowId));
+    e.dataTransfer.effectAllowed = "move";
   };
-  const handleDragLeaveLocal = () => {
-    setDropZone(null);
+
+  const handleDragOverLocal = (e: React.DragEvent<HTMLTableRowElement>) => {
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mouseY = e.clientY - rect.top;
+    setDropZone(mouseY < rect.height / 2 ? "before" : "after");
   };
+
   const handleDropLocal = (e: React.DragEvent<HTMLTableRowElement>) => {
     e.preventDefault();
-    e.stopPropagation();
-
     if (!dropZone) return;
 
     const sourceId = draggedRowIdRef.current;
     if (!sourceId || sourceId === row.id) return;
+
     controller.dispatch({
       type: "ROW_REORDERED",
       draggedRowId: sourceId,
@@ -88,77 +98,63 @@ export function ERPTableRow({
 
     setDropZone(null);
   };
-  const handleDragStart = (
-    e: React.DragEvent<HTMLTableRowElement>,
-    rowId: number,
-  ) => {
-    draggedRowIdRef.current = rowId;
-    e.dataTransfer.setData("text/plain", String(rowId));
-    e.dataTransfer.effectAllowed = "move";
-  };
- 
 
-  useEffect(() => {
-    if (!controller) return;
-    const unsubscribe = controller.subscribeRow(row.id, () => {
-      forceUpdate((t) => t + 1);
-    });
-    return () => unsubscribe?.();
-  }, [controller, row.id]);
-  if(isActiveRow){
-      console.log('ERPTableRow',row.id,isActiveRow)
-  }
+  const rowClass = useMemo(() => {
+    return `
+      relative flex items-center border
+      ${isActiveRow ? "border-gray-gray8" : "border-gray-gray4"}
+      ${isSelectedRow ? "bg-blue-100" : ""}
+      ${
+        isDeleted
+          ? "!bg-gray-gray5 absolute inset-0 line-through"
+          : index % 2
+            ? "bg-blue-blue11"
+            : "bg-main-white"
+      }
+      w-full h-9
+    `;
+  }, [isActiveRow, isSelectedRow, isDeleted, index]);
   return (
     <>
-    <tr
-      className={`relative flex !items-center border border-gray-gray4
-        ${isActiveRow ? "border-gray-gray8" : "border-gray-gray4"}
-          ${
-            isDeleted
-              ? "!bg-gray-gray5 w-full flex z-10 absolute inset-0 text-gray-gray8 items-center line-through"
-              : ""
-          } ${index % 2 ? "bg-blue-blue11" : "bg-main-white"} w-full h-9`}
-      data-rowid={row.id}
-      draggable={false}
-      onDragStart={(e) => handleDragStart(e, row.id)}
-      onDragOver={handleDragOverLocal} //
-      onDragLeave={handleDragLeaveLocal} //
-      onDrop={handleDropLocal} //
-      onDragEnd={handleDragEnd}
-      onMouseDownCapture={() => onActiveRowChange(row.id)}
-      onClick={() => {
-        activeRow(row.id);
-      }}
-    >
-      {table.columns
-        .filter((c) => !c.hidden)
-        .map((c, idx) => {
-          const meta: CellMeta = {
-            renderType: c.renderType,
-            editable: c.editable,
-            tableId: tableKey,
-            columnId: c.id,
-            options: c.options,
-            dynamicValue: c.dynamicValue,
-            indexOptions: c.indexOptions,
-          };
-          if (c.id === "index") {
+      <tr
+        className={rowClass}
+        data-rowid={row.id}
+        draggable
+        onDragStart={(e) => handleDragStart(e, row.id)}
+        onDragOver={handleDragOverLocal}
+        onDrop={handleDropLocal}
+        onClick={handleRowClick}
+        onDoubleClick={handleSelectRow}
+      >
+        {table.columns
+          .filter((c: any) => !c.hidden)
+          .map((c: any, idx: number) => {
+            const meta: CellMeta = {
+              renderType: c.renderType,
+              editable: c.editable,
+              tableId: tableKey,
+              columnId: c.id,
+              options: c.options,
+              dynamicValue: c.dynamicValue,
+              indexOptions: c.indexOptions,
+              expandable: c.expandable,
+            };
+
+            if (c.id === "index") {
+              return (
+                <td key={c.id}>
+                  <IndexCol
+                    tableKey={tableKey}
+                    row={row}
+                    controller={controller}
+                    meta={meta}
+                  />
+                </td>
+              );
+            }
+
             return (
-              <td key={c.id}>
-                <IndexCol
-                  tableKey={tableKey}
-                  row={row}
-                  controller={controller}
-                  meta={meta}
-                />
-              </td>
-            );
-          } else {
-            return (
-              <td
-                key={c.id}
-                className="flex justify-start items-center w-36 h-full"
-              >
+              <td key={c.id} className="w-36">
                 <CellRenderer
                   row={row}
                   tableKey={tableKey}
@@ -168,31 +164,38 @@ export function ERPTableRow({
                   cell={row.cells[c.id]}
                   controller={controller}
                   tabIndex={idx}
-                  onActiveColChange={onActiveColChange}
                 />
               </td>
             );
-          }
-        })}
-    </tr>
+          })}
+      </tr>
+
       {row.isExpanded && (
-        <div
-          style={{
-            maxHeight: row.isExpanded ? "500px" : "0px",
-            opacity: row.isExpanded ? 1 : 0,
-            padding: row.isExpanded ? "0.5rem" : "0rem",
-          }}
-          className="flex justify-center items-center bg-gray-100 shadow my-1 rounded overflow-hidden transition-all duration-300 ease-in-out"
-        >
-          <div className="flex flex-col justify-center items-center gap-2 m-12">
-            <NoData config={{ width: 60, height: 60 }} />
-            <span className="text-gray-gray9 text-md">
-              {t("general.noData")}
-            </span>
-          </div>
-        </div>
+        <tr>
+          <td colSpan={table.columns.filter((c: any) => !c.hidden).length}>
+            {row.moreDetails && MoreDetailComponent ? (
+              <MoreDetailComponent data={row.moreDetails} />
+            ) : (
+              <div className="flex justify-center items-center bg-gray-100 shadow my-1 rounded transition-all duration-300">
+                <div className="flex flex-col items-center gap-2 m-12">
+                  <NoData config={{ width: 60, height: 60 }} />
+                  <span className="text-gray-gray9 text-md">
+                    {t("general.noData")}
+                  </span>
+                </div>
+              </div>
+            )}
+          </td>
+        </tr>
       )}
     </>
-
   );
 }
+
+export const ERPTableRow = React.memo(ERPTableRowComponent, (prev, next) => {
+  return (
+    prev.row === next.row &&
+    prev.index === next.index &&
+    prev.table === next.table
+  );
+});

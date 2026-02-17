@@ -26,8 +26,8 @@ export const formConfig: IFormFieldConfig[] = [
     caption: "ماهیت سند",
     type: "selectOption",
     selectEndpoint: {
-      addWebUrl: "api/com/select/commonInfo/voucherNature",
-      endpoint: "api/com/select/commonInfo/voucherNature",
+      addWebUrl: "api/trh/select/commonInfo/voucherNature",
+      endpoint: "api/trh/select/commonInfo/voucherNature",
       repoViewId: null,
     },
   },

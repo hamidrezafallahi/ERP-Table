@@ -1,51 +1,31 @@
 "use client";
-import {
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useEffect, useRef, useState } from "react";
 
-import { Pagination } from 'antd';
-import { useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
-import {
-  shallowEqual,
-  useDispatch,
-} from 'react-redux';
+import { Pagination } from "antd";
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { shallowEqual, useDispatch } from "react-redux";
 
-import { CustomButton } from '@components/atoms/defaultElements';
+import { CustomButton } from "@components/atoms/defaultElements";
 import {
   DownChevron,
   LeftChevron,
   RightChevron,
-} from '@components/atoms/iconComponents';
-import { DetailDataGrid } from '@components/molecules/detailDataGrid';
-import type {
-  IChildHandle,
-} from '@components/molecules/detailDataGrid/mobile/type';
-import {
-  ReceiptChequeForm,
-} from '@components/molecules/receiptAndPayment/cheque';
-import { useAppSelector } from '@redux/index';
-import { useGetData } from '@services/base';
-import type { IChequeDetails } from '@services/trh/chequeDetails/type';
+} from "@components/atoms/iconComponents";
+import { DetailDataGrid } from "@components/molecules/detailDataGrid";
+import type { IChildHandle } from "@components/molecules/detailDataGrid/mobile/type";
+import { ReceiptChequeForm } from "@components/molecules/receiptAndPayment/cheque";
+import { useAppSelector } from "@redux/index";
+import { useGetData } from "@services/base";
+import type { IChequeDetails } from "@services/trh/chequeDetails/type";
 import type {
   IChequeIssuance,
   IRequest,
-} from '@services/trh/chequeIssuance/type';
-import type {
-  IChequeIssuanceDetail,
-} from '@services/trh/chequeIssuanceDetail/type';
-import {
-  setAllPageData,
-  setPageData,
-  setPageInfo,
-} from '@slice/pages';
+} from "@services/trh/chequeIssuance/type";
+import type { IChequeIssuanceDetail } from "@services/trh/chequeIssuanceDetail/type";
+import { setAllPageData, setPageData, setPageInfo } from "@slice/pages";
 
-import {
-  columnConfig,
-  formConfig,
-} from './config';
+import { columnConfig, formConfig } from "./config";
 
 export const ChequeReceipt = ({ form }) => {
   const titleKey = "VoucherNumber";
@@ -53,8 +33,8 @@ export const ChequeReceipt = ({ form }) => {
   const alternateKey = "CheckReceiptDetailId";
   const detailCaption = "اقلام";
   const detailKey = "Details";
-  const repoViewId = 3025;
-  const detailRepoViewId = 3024;
+  const repoViewId = 140018;
+  const detailRepoViewId = 140017;
   const detailDragUrl = "";
   const getUrl = "api/trh/select/check/receipt";
   const getDetailUrl = "api/trh/select/checkDetail/receipt";
@@ -76,13 +56,13 @@ export const ChequeReceipt = ({ form }) => {
   const { activePage, fullScreen, minimizePanel, match } = useAppSelector(
     (state) => ({
       activePage: state.withPersist.pages.find(
-        (item) => item.isActive === true
+        (item) => item.isActive === true,
       ),
       fullScreen: state.withPersist.config.fullScreen,
       minimizePanel: state.withoutPersist.container.minimize,
       match: state.withPersist.config.initMatch,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const storedData = activePage?.pageData;
@@ -174,7 +154,7 @@ export const ChequeReceipt = ({ form }) => {
       if (defaultValue !== null && defaultValue) {
         formData = formConfig.map((item) => {
           const storedDataValue = storedData?.find(
-            (i) => i.name === item.name
+            (i) => i.name === item.name,
           )?.value;
 
           const correctValue = storedDataValue
@@ -243,7 +223,7 @@ export const ChequeReceipt = ({ form }) => {
           type: "array",
           value: detailsDefaultValue,
           originalValue: detailsDefaultValue,
-        })
+        }),
       );
       setDetailsInitialData(detailsDefaultValue);
     }
@@ -330,12 +310,12 @@ export const ChequeReceipt = ({ form }) => {
               fullScreen
                 ? "w-full"
                 : !match
-                ? "w-full"
-                : `${
-                    minimizePanel
-                      ? "w-fit max-w-[calc(100dvw-300px)]"
-                      : "w-fit max-w-[calc(100dvw-550px)]"
-                  }`
+                  ? "w-full"
+                  : `${
+                      minimizePanel
+                        ? "w-fit max-w-[calc(100dvw-300px)]"
+                        : "w-fit max-w-[calc(100dvw-550px)]"
+                    }`
             } ${
               !match ? "h-full" : "h-[calc(100dvh-430px)]"
             } flex hidden-show-scrollBar transition-all duration-200 flex-col justify-between gap-2`}

@@ -8,6 +8,9 @@ import {
   UITableController,
 } from '@components/organisms/erp-table/adapters/ui/UITableController';
 import { createERPTable } from '@components/organisms/erp-table/bootstrap';
+import {
+  CreateERPTableConfig,
+} from '@components/organisms/erp-table/bootstrap/type';
 import { TableSnapShot } from '@components/organisms/erp-table/engine/type';
 
 export type UseERPTableResult =
@@ -18,13 +21,7 @@ export type UseERPTableResult =
     table: TableSnapShot;
   };
 
-export function useERPTable(config: {
-  store: string;
-  tableKey: string;
-  columns: any[];
-  rows: Array<{ id: number; values?: Record<string, unknown> }>;
-  actor: any;
-}): UseERPTableResult {
+export function useERPTable(config:CreateERPTableConfig): UseERPTableResult {
   const [controller, setController] =
     useState<UITableController | null>(null);
   const [table, setTable] = useState<TableSnapShot | null>(null);

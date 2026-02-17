@@ -56,6 +56,7 @@ export default function FormGenerator<T, K>({
   withImage,
   submitCaption,
   withSubmitButton = true,
+  hasShorthandFormToolbar,
 }: IProps) {
   const t = useTranslations();
   const dispatch = useDispatch();
@@ -278,13 +279,16 @@ export default function FormGenerator<T, K>({
           });
         }
 
-        pageData.push({
-          name: fieldKey,
-          caption: "MainIdField",
-          value: id,
-          originalValue: id,
-          type: "hidden",
-        });
+        if (id && formData.length > 0) {
+          pageData.push({
+            name: fieldKey,
+            caption: "MainIdField",
+            value: id,
+            originalValue: id,
+            type: "hidden",
+          });
+        }
+
 
         dispatch(
           addNewPage({
@@ -323,7 +327,7 @@ export default function FormGenerator<T, K>({
     if (formData?.length > 0 || Config?.data) {
       setNewPage();
     }
-}, [formData, titleKey, id, Config?.data]);
+  }, [formData, titleKey, id, Config?.data]);
 
   useEffect(() => {
     window.addEventListener("click", handleOutsideClick);
@@ -363,6 +367,7 @@ export default function FormGenerator<T, K>({
             mutationSystemId={mutationSystemId}
             submitCaption={submitCaption}
             withSubmitButton={withSubmitButton}
+            hasShorthandFormToolbar={hasShorthandFormToolbar}
           />
         </div>
         <div className="hidden-show-scrollBar flex flex-col gap-10 mt-4 lg:mt-0 h-full max-h-[calc(100dvh-160px)] overflow-auto">

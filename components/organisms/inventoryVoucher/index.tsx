@@ -1,20 +1,29 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import Title from "@components/atoms/Title";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
+import Title from '@components/atoms/Title';
+import { useAppSelector } from '@redux/index';
+import { useGetData } from '@services/base';
 import type {
   IInventoryVoucherType,
   IRequest,
-} from "@services/inv/inventoryVoucherType/type";
-import { addNewPage } from "@slice/pages";
-import { PageTypeEnum, SystemEnum } from "@type/enum";
+} from '@services/inv/inventoryVoucherType/type';
+import { addNewPage } from '@slice/pages';
+import {
+  PageTypeEnum,
+  SystemEnum,
+} from '@type/enum';
 
-import { InOutEnum } from "./enum";
-import { InventoryVoucherToolbar, MainInfoSection } from "./main";
+import { InOutEnum } from './enum';
+import {
+  InventoryVoucherToolbar,
+  MainInfoSection,
+} from './main';
 
 export default function InventoryVoucher() {
   const { data } = useGetData<IInventoryVoucherType[], IRequest>({
@@ -47,8 +56,8 @@ export default function InventoryVoucher() {
       InOutTypeDesc: item.InOutTypeDesc,
       NeedQualityControl: item.NeedQualityControl,
       VoucherReference: item.VoucherReference,
-      keyName: "VoucherTypeId",
-      keyValue: item.VoucherTypeId,
+      // keyName: "VoucherTypeId",
+      // keyValue: item.VoucherTypeId,
     })),
   };
   const outboundData = {
@@ -74,8 +83,8 @@ export default function InventoryVoucher() {
       InOutTypeDesc: item.InOutTypeDesc,
       NeedQualityControl: item.NeedQualityControl,
       VoucherReference: item.VoucherReference,
-      keyName: "VoucherTypeId",
-      keyValue: item.VoucherTypeId,
+      // keyName: "VoucherTypeId",
+      // keyValue: item.VoucherTypeId,
     })),
   };
 

@@ -27,21 +27,37 @@ export class AddNewRowCommandHandler {
   ) { }
 
   async execute(command: AddEmptyRowCommand, actor: Actor) {
-    const table = await this.repo.getById(command.store,command.tableKey);
+    try{
+    const table = await this.repo.getById(command.store, command.tableKey);
 
     if (!this.permission.canAddRow({ actor })) {
       throw new DomainError(
         'FORBIDDEN',
-        'Actor is not allowed to add a row',
+        'Actor is not allowed to add a new row',
         { actor }
       );
     }
 
     const event = table.addNewRow();
-    await this.repo.save(command.store,table);
-    this.audit.log(event);
-
+    await this.repo.save(command.store, table);
+    this.audit.log({ type: 'INFORMATION', message: event.type, payload: event.rowId });
     return event;
+    } catch (error) {
+
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error }
+        });
+      } return null
+    }
   }
 }
 
@@ -57,22 +73,37 @@ export class DuplicateRowCommandHandler {
   ) { }
 
   async execute(command: DuplicateRowCommand, actor: Actor) {
-    const table = await this.repo.getById(command.store,command.tableKey);
+    try {
+      const table = await this.repo.getById(command.store, command.tableKey);
+      if (!this.permission.canCopyRow({ actor, rowId: command.rowId })) {
+        throw new DomainError(
+          'FORBIDDEN',
+          'Actor is not allowed to duplicate a row',
+          { actor }
+        );
+      }
+      const rowId = new RowId(command.rowId);
+      const event = table.addRow(rowId);
 
-    if (!this.permission.canAddRow({ actor })) {
-      throw new DomainError(
-        'FORBIDDEN',
-        'Actor is not allowed to duplicate a row',
-        { actor }
-      );
+      await this.repo.save(command.store, table);
+      this.audit.log({ type: 'INFORMATION', message: event.type, payload: event.rowId });
+      return event;
+    } catch (error) {
+
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error }
+        });
+      } return null
     }
-    const rowId = new RowId(command.rowId);
-    const event = table.addRow(rowId);
-
-    await this.repo.save(command.store,table);
-    this.audit.log(event);
-
-    return event;
   }
 }
 
@@ -88,29 +119,47 @@ export class DeleteRowCommandHandler {
   ) { }
 
   async execute(command: DeleteRowCommand, actor: Actor) {
-    const table = await this.repo.getById(command.store,command.tableKey);
-    if (!this.permission.canDeleteRow({ actor })) {
-      throw new DomainError(
-        'FORBIDDEN',
-        'Actor is not allowed to delete this row',
-        { actor }
-      );
-    }
-    const rowId = new RowId(command.rowId);
-    const event =table.deleteRow(rowId);
-  
-    if (!event) {
-      throw new DomainError(
-        'ROW_NOT_FOUND',
-        'Row not found or already deleted',
-        { rowId: rowId.value }
-      );
-    }
+    try {
+      const table = await this.repo.getById(command.store, command.tableKey);
+      if (!this.permission.canDeleteRow({ actor, rowId: command.rowId })) {
+        throw new DomainError(
+          'FORBIDDEN',
+          'Actor is not allowed to delete this row',
+          { actor }
+        );
+      }
+      const rowId = new RowId(command.rowId);
+      const event = table.deleteRow(rowId);
 
-    await this.repo.save(command.store,table);
-    this.audit.log(event);
+      if (!event) {
+        throw new DomainError(
+          'ROW_NOT_FOUND',
+          'Row not found or already deleted',
+          { rowId: rowId.value }
+        );
+      }
 
-    return event;
+      await this.repo.save(command.store, table);
+
+      this.audit.log({ type: 'INFORMATION', message: event.type, payload: event.rowId });
+
+      return event;
+    } catch (error) {
+
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error }
+        });
+      } return null
+    }
   }
 }
 /* ======================================================
@@ -124,28 +173,48 @@ export class ReorderRowCommandHandler {
   ) { }
 
   async execute(command: RowReorderedCommand, actor: Actor) {
-    const table = await this.repo.getById(command.store,command.tableKey);
-    if (!this.permission?.canReorderRow?.({ actor })) {
-      throw new DomainError(
-        'FORBIDDEN',
-        'Actor is not allowed to reorder this row',
-        { actor }
-      );
-    }
-    const draggedRowId = new RowId(command.draggedRowId);
-    const droppedRowId = new RowId(command.droppedRowId);
-    const event = table.reorderRows(draggedRowId.value, droppedRowId.value,command.position);
-    if (!event) {
-      throw new DomainError(
-        'DRAG_OR_DROP_ROW_NOT_FOUND',
-        `Drag row num is ${draggedRowId.value} && drop row num is ${droppedRowId.value} `,
-        { draggedRowId: draggedRowId.value, droppedRowId: droppedRowId.value }
-      );
+    try {
+      const table = await this.repo.getById(command.store, command.tableKey);
+      if (!this.permission?.canReorderRow?.({ actor, rowId: command.draggedRowId })) {
+        throw new DomainError(
+          'FORBIDDEN',
+          'Actor is not allowed to reorder this row',
+          { actor }
+        );
+      }
+      const draggedRowId = new RowId(command.draggedRowId);
+      const droppedRowId = new RowId(command.droppedRowId);
+      const event = table.reorderRows(draggedRowId.value, droppedRowId.value, command.position);
+      if (!event) {
+        this.audit.log({ type: 'ERROR', message: event.type, payload: { event } });
+
+        throw new DomainError(
+          'DRAG_OR_DROP_ROW_NOT_FOUND',
+          `Drag row num is ${draggedRowId.value} && drop row num is ${droppedRowId.value} `,
+          { draggedRowId: draggedRowId.value, droppedRowId: droppedRowId.value }
+        );
+      }
+
+      await this.repo.save(command.store, table);
+      return event;
+
+    } catch (error) {
+
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error }
+        });
+      } return null
     }
 
-    await this.repo.save(command.store,table);
-    this.audit.log(event);
 
-    return event;
   }
 }

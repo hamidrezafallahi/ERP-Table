@@ -201,7 +201,7 @@ export const AdvancedCashDepositForm = ({ activePage, form }: IProps) => {
       form={form}
       name="advancedCashDepositForm"
       layout="vertical"
-      className={`flex flex-col lg:grid pt-4 lg:pt-0 gap-5 lg:gap-y-10 lg:grid-cols-12 max-h-[calc(100dvh-160px)] h-auto overflow-y-auto hidden-show-scrollBar`}
+      className={`flex flex-col lg:grid pt-4 lg:pt-0 gap-5 lg:gap-y-5 lg:grid-cols-12 max-h-[calc(100dvh-160px)] h-auto overflow-y-auto hidden-show-scrollBar`}
     >
       <Form.Item
         label="تاریخ سند"

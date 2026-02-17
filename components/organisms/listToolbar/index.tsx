@@ -1,10 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
-import Notification from "@components/molecules/notification";
-import { Drawer, Menu, MenuProps } from "antd";
-import DOMPurify from "dompurify";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Drawer,
+  Menu,
+  MenuProps,
+} from 'antd';
+import DOMPurify from 'dompurify';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import {
   CustomButton,
@@ -12,8 +23,8 @@ import {
   CustomModal,
   CustomSwitch,
   CustomTooltip,
-} from "@components/atoms/defaultElements";
-import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
+} from '@components/atoms/defaultElements';
+import { CustomDrawer } from '@components/atoms/defaultElements/drawer';
 import {
   BoxMinimalistic,
   Close,
@@ -28,47 +39,56 @@ import {
   RemindMeIcon,
   ReportIcon,
   TagIcon,
-} from "@components/atoms/iconComponents";
-import CloseButton from "@components/molecules/closeButton";
-import Confirmation from "@components/molecules/confirmation";
-import ExpandedButton from "@components/molecules/expandedButton";
-import { QuickSearch } from "@components/molecules/quickSearch";
-import { QuickFilterRef } from "@components/molecules/quickSearch/type";
-import RemindMe from "@components/molecules/remindMe";
-import { TagManagement } from "@components/molecules/tag";
-
+} from '@components/atoms/iconComponents';
+import CloseButton from '@components/molecules/closeButton';
+import Confirmation from '@components/molecules/confirmation';
+import ExpandedButton from '@components/molecules/expandedButton';
+import Notification from '@components/molecules/notification';
+import { QuickSearch } from '@components/molecules/quickSearch';
+import { QuickFilterRef } from '@components/molecules/quickSearch/type';
+import RemindMe from '@components/molecules/remindMe';
+import { TagManagement } from '@components/molecules/tag';
 import {
   useDarkMode,
   useInitializePage,
   useInvalidateTag,
   useNavigatePage,
-} from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation } from "@services/base";
-import { ReportTypeEnum } from "@services/mng/report/type";
-import { clearReportData } from "@slice/config";
-import { addHistory } from "@slice/history";
-import { HistoryTypeEnum } from "@slice/history/enum";
-import { resetItemsByPage, setItems } from "@slice/items";
+} from '@hooks/custom';
+import { useAppSelector } from '@redux/index';
+import { useCUDDataMutation } from '@services/base';
+import { ReportTypeEnum } from '@services/mng/report/type';
+import { clearReportData } from '@slice/config';
+import { addHistory } from '@slice/history';
+import { HistoryTypeEnum } from '@slice/history/enum';
+import {
+  resetItemsByPage,
+  setItems,
+} from '@slice/items';
 import {
   setPageState,
   setPageType,
   setShowTags,
   setViewData,
-} from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
+} from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
 import type {
   IReportPosition,
   IToolbarList,
   IToolbarMenu,
-} from "@type/toolbar";
-import { getColoredIcon, showInfoToast, showSuccessToast } from "@utils/core";
+} from '@type/toolbar';
+import {
+  getColoredIcon,
+  showInfoToast,
+  showSuccessToast,
+} from '@utils/core';
 
-import { ActionLabelsEnum } from "../list/enum";
-
-import ChatWidget from "../chat";
-import { ShowPrinter, ShowReport } from "../managementSystem";
-import ListSelectMode from "./listSelectMode";
+import ChatWidget from '../chat';
+import { ActionLabelsEnum } from '../list/enum';
+import {
+  ShowPrinter,
+  ShowReport,
+} from '../managementSystem';
+import ListSelectMode from './listSelectMode';
 
 export default function ListToolbar({
   formUrl,
@@ -464,6 +484,7 @@ export default function ListToolbar({
         SystemId: systemId,
         url: formUrl,
         data: data,
+        returnPageId:activePage.pageId
       },
     });
   };

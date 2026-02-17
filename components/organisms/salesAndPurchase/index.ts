@@ -17,6 +17,3 @@ export { SellingCurrencySalesInvoice } from "./salesInvoice/sellingCurrency";
 export { StockExchangeSalesInvoice } from "./salesInvoice/stockExchange";
 export { SellWithCustomerSalesInvoice } from "./salesInvoice/sellWithCustomer";
 export { BuyRequest } from "./buyRequest";
-export { PaymentRequest } from "./paymentRequest";
-export { PriceAnnouncement } from "./priceAnnouncement";
-export { Invoice } from "./invoice";

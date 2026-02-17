@@ -29,6 +29,7 @@ import {
 export type CellMeta = {
   renderType: FieldType;
   editable?: boolean;
+  expandable?: boolean;
   options?: { label: string; value: string }[];
   dynamicValue?: IRequestConfig;
   // store: string;
@@ -62,7 +63,6 @@ interface CellRendererProps {
     rowState: RowStateEnum;
     isExpanded: boolean;
   };
-  onActiveColChange(colId: string): void;
 }
 
 /* ======================================================
@@ -78,7 +78,6 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   meta,
   controller,
   tabIndex,
-  onActiveColChange,
 }) => {
   const { value, display } = cell;
   const refElement = useRef<HTMLElement>(null);
@@ -136,57 +135,31 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         return "—";
     }
   };
-useEffect(() => {
-  if (!controller) return;
-  const unsubscribe = controller.subscribeCell(rowId, columnId, () => {
-    forceUpdate(t => t + 1);
-  });
-  return () => unsubscribe?.();
-}, [controller, rowId, columnId]);
-  /* ===== close on outside click ===== */
-  // useEffect(() => {
-  //   if (!editMode) return;
-
-  //   const close = (e: MouseEvent) => {
-  //     if (!refElement.current) return;
-  //     if (refElement.current.contains(e.target as Node)) return;
-
-  //     setEditMode(false);
-  //   };
-
-  //   document.addEventListener("click", close);
-  //   return () => document.removeEventListener("click", close);
-  // }, [editMode]);
-
-  // useEffect(() => {
-  //   if (isActive && refElement.current) {
-  //     refElement.current.focus();
-  //   }
-  // }, [isActive]);
-  /* ===== not editable ===== */
+  useEffect(() => {
+    if (!controller) return;
+    const unsubscribe = controller.subscribeCell(rowId, columnId, () => {
+      forceUpdate((t) => t + 1);
+    });
+    return () => unsubscribe?.();
+  }, [controller, rowId, columnId]);
   if (editable == false || type == "index") {
-    return (
-      <span
-        className="text-xs"
-      >
-        {String(value ?? "")}
-      </span>
-    );
+    return <span className="text-xs">{String(value ?? "")}</span>;
   }
 
   /* ===== view mode ===== */
-  if (!isActive) {
+  if (!isActive || isDeleted) {
     return (
-      <span
-        ref={refElement as Ref<HTMLSpanElement>}
+      <button
+        ref={refElement as Ref<HTMLButtonElement>}
         tabIndex={tabIndex}
-        className={`flex items-center  px-2 w-full h-full text-xs cursor-text`}
+        disabled={isDeleted}
+        className={`flex items-center  px-2 w-full h-full text-xs ${isDeleted ? "cursor-not-allowed " : "cursor-text"}`}
         onClick={() => {
           activeCell();
         }}
       >
         {valueParser(display ?? value)}
-      </span>
+      </button>
     );
   }
 
@@ -251,13 +224,24 @@ useEffect(() => {
     case "selectOption":
       return (
         <DynamicSelect
+          showSearch
+          onSearchPhrase={(v, o) => {
+            dispatchChangeValue(v);
+            if (!Array.isArray(o)) {
+              if (o) {
+                dispatchChangeDisplay(o);
+              } else {
+                console.log("change display to null");
+                dispatchChangeDisplay(null);
+              }
+            }
+          }}
           autoFocus
           ref={refElement as Ref<HTMLSelectElement>}
           disabled={isDeleted || !editable}
           value={{ value: String(value ?? ""), label: cell.display }}
           dynamicValue={meta?.dynamicValue}
-          onFocus={() => onActiveColChange(columnId)}
-          className={`!w-36 h-8 ${isDeleted && "cursor-not-allowed"} relative`}
+          className={`!bg-white !border-[0.4px] !border-gray-gray7 !w-36 h-8 ${isDeleted && "cursor-not-allowed"} relative`}
           infinite
           onClick={() => activeCell()}
           onChange={(v, o) => {
@@ -310,8 +294,7 @@ useEffect(() => {
           onDrop={blockDrag}
           onChange={(e) => dispatchChangeValue(e.target.value)}
           // onFocus={() => onActiveColChange(columnId)}
-                    onClick={() => activeCell()}
-
+          onClick={() => activeCell()}
         />
       );
   }

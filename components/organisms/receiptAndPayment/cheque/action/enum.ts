@@ -11,4 +11,6 @@ export enum ActionLabelsEnum {
   CashFundCollect = "وصول چک توسط تنخواه دار",
   CustomerRefunding = "استرداد چک به مشتریان",
   BankRefunding = "استرداد چک از بانک",
+  ChequeStatus = "وضعیت چک",
+  ChequeReceiptAction = "عملیات چک دریافتی",
 }

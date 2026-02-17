@@ -3,8 +3,8 @@ import type { IIconConfig } from '../type';
 export const DollarSignIcon = ({ config }: { config?: IIconConfig }) => {
   return (
     <svg
-      width={config?.width ? `${config.width}` : "40"}
-      height={config?.height ? `${config.height}` : "40"}
+      width={config?.width ? `${config.width}` : "20"}
+      height={config?.height ? `${config.height}` : "20"}
       viewBox="0 0 40 40"
       fill={config?.fill ? `${config.fill}` : "none"}
       xmlns="http://www.w3.org/2000/svg"

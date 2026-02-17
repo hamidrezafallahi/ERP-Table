@@ -26,7 +26,10 @@ import { TableAppService } from '../application/TableAppService';
 import { Cell } from '../domain/entities/Cell';
 import { Row } from '../domain/entities/Row';
 import { Table } from '../domain/entities/Table';
-import { PermissionPolicy } from '../domain/policies';
+import {
+  Actor,
+  PermissionPolicy,
+} from '../domain/policies';
 import {
   CellDisplay,
   CellValue,
@@ -64,6 +67,7 @@ export async function buildTable(
   columnsConfig: IDetailColumnConfig[],
   repo: TableRepository,
   rows?: RowInput[]
+
 ): Promise<{ table: Table; columnMeta: Map<string, IDetailColumnConfig> }> {
   let rowMap = new Map<number, Row>();
   const columns = new Map<string, ColumnSchema>();
@@ -78,6 +82,7 @@ export async function buildTable(
       title: col.fieldCaption,
       renderType: col.fieldType,
       editable: col.computed ? false : col.fieldType === 'index' ? false : true,
+      expandable: col.fieldName === 'index',
       hidden: isInitiallyHidden(col, rows),
       required: col.required,
       dynamicValue: col.dynamicSource,
@@ -90,58 +95,54 @@ export async function buildTable(
   }
 
   // ---------- rows: ابتدا IndexedDB, fallback به ورودی ----------
-if (await repo.exists(store, tableKey)) {
-  const persistedTable = await repo.getById(store, tableKey);
-  rowMap = new Map<number, Row>(
-    persistedTable.getRows().map(r => [r.id.value, r])
-  );
-} else {
-  const inputRows = rows && rows.length > 0 ? rows.sort((a, b) => a.id - b.id) : [{ id: 1, values: { RowState: RowStateEnum.Added } }];
+  if (await repo.exists(store, tableKey)) {
+    const persistedTable = await repo.getById(store, tableKey);
+    rowMap = new Map<number, Row>(
+      persistedTable.getRows().map(r => [r.id.value, r])
+    );
+  } else {
+    const inputRows = rows && rows.length > 0 ? rows.sort((a, b) => a.id - b.id) : [{ id: 1, RowNum: 1, values: { RowState: RowStateEnum.Added },moreDetails:undefined }];
+    for (const [idx, r] of inputRows.entries()) {
+      const rowId = new RowId(r.id);
+      const cells = new Map<string, Cell>();
+      for (const [colId, schema] of columns.entries()) {
+        const meta = columnMeta.get(colId);
+        const incoming = r.values?.[colId];
+        const RowNum = r.values['RowNum'];
+        // مقدار اولیه
+        let value = meta.fieldType === 'index' ? RowNum ?? idx + 1 : incoming ?? null;
+        let display = meta.fieldType === 'index' ? RowNum ?? idx + 1 : incoming ?? incoming;
 
-  for (const [idx, r] of inputRows.entries()) {
-    const rowId = new RowId(r.id);
-    const cells = new Map<string, Cell>();
-
-    for (const [colId, schema] of columns.entries()) {
-      const meta = columnMeta.get(colId);
-      const incoming = r.values?.[colId];
-      const RowNum = r.values['RowNum'];
-
-      // مقدار اولیه
-      let value = meta.fieldType === 'index' ? RowNum ?? idx + 1 : incoming ?? null;
-      let display = meta.fieldType === 'index' ? RowNum ?? idx + 1 : incoming ?? incoming;
-
-      // اگر ستون computed داشت، مقدار async اش را await کن
-      if (meta?.computed?.dependsOn) {
-        value = await meta.computed.compute(r.values, remoteApi);
-        display = value;
-      } else if (incoming && schema.displayFormat) {
-        display = schema.displayFormat(incoming);
+        // اگر ستون computed داشت، مقدار async اش را await کن
+        if (meta?.computed?.dependsOn) {
+          value = await meta.computed.compute(r.values, remoteApi);
+          display = value;
+        } else if (incoming && schema.displayFormat) {
+          display = schema.displayFormat(incoming);
+        }
+        cells.set(
+          colId,
+          new Cell(
+            rowId,
+            new ColumnId(colId),
+            new CellValue(value),
+            new CellValue(value),
+            new CellDisplay(display)
+          )
+        );
       }
-
-      cells.set(
-        colId,
-        new Cell(
+      rowMap.set(
+        rowId.value,
+        new Row(
           rowId,
-          new ColumnId(colId),
-          new CellValue(value),
-          new CellValue(value),
-          new CellDisplay(display)
+          cells,
+          new RowState(rows?.length > 0 ? RowStateEnum.Unchanged : RowStateEnum.Added),
+          new Set(),
+          r.moreDetails
         )
       );
     }
-
-    rowMap.set(
-      rowId.value,
-      new Row(
-        rowId,
-        cells,
-        new RowState(rows?.length > 0 ? RowStateEnum.Unchanged : RowStateEnum.Added),
-        new Set()
-      )
-    );
   }
-}
 
   const table = new Table(tableKey, rowMap, columns);
   return { table, columnMeta };
@@ -152,8 +153,6 @@ if (await repo.exists(store, tableKey)) {
    ====================================================== */
 
 export async function createERPTable(config: CreateERPTableConfig) {
-
-
   // ---------- infra ----------
   const repo = config.repo ?? new CachedTableRepository()
   const audit = config.audit ?? new ConsoleAuditLogger();
@@ -170,37 +169,118 @@ export async function createERPTable(config: CreateERPTableConfig) {
     const columns = new Map<string, ColumnSchema>();
     for (const col of config.columns) {
       // const hasValue = table.getRows().some(r => Object.keys(r.getCell(col.fieldName).getValue().value))
-      const hasValue =  table.getRows()[0].getCell(col.fieldName).getValue().value
+      const hasValue = table.getRows()[0].getCell(col.fieldName).getValue().value
       columns.set(col.fieldName, {
         id: col.fieldName,
         title: col.fieldCaption,
         renderType: col.fieldType,
         editable: col.editable ?? true,
+        expandable: col.fieldName === 'index' && table.getRows().some(row=>row.getMoreDetails()),
         hidden: col.visibility.kind !== 'always' && hasValue == null,
         required: col.required ?? false,
         selectOptions: col.selectOptions,
         indexOptions: col.indexOptions,
         dynamicValue: col.dynamicSource,
         displayFormat: col.displayFormat,
+
       });
     }
     const columnsArray: ColumnSchema[] = Array.from(columns.values());
+    console.log(columnsArray)
     table.setColumns(columnsArray);
   } else {
     const built = await buildTable(config.store, config.tableKey, config.columns, repo, config.rows);
     table = built.table;
     await repo.save(config.store, table);
   }
+  const checkRoleAccess = (
+    actor: Actor,
+    allowRoles?: string[],
+    denyRoles?: string[]
+  ): boolean => {
 
+    if (denyRoles?.some(r => actor.roles.includes(r))) {
+      return false;
+    }
+
+    if (allowRoles) {
+      return allowRoles.some(r => actor.roles.includes(r));
+    }
+
+    return true;
+  };
+
+  const resolveColumnAccess = (
+    actor: Actor,
+    rowId: number,
+    columnId: string
+  ): boolean => {
+    const meta = columnMeta.get(columnId);
+    if (!meta?.colAccess) return true;
+    const row = table.getRow(rowId);
+    if (!row) return false;
+    const { allowRoles, denyRoles, rule } = meta.colAccess;
+    if (!checkRoleAccess(actor, allowRoles, denyRoles)) {
+      return false;
+    }
+
+    if (rule) {
+      return rule({ actor, row, table });
+    }
+
+    return true;
+  };
+  const resolveRowAccess = (
+    actor: Actor,
+    rowId?: number
+  ): boolean => {
+    if (!rowId) {
+      const rowAccess = config.rowAccess;
+      if (!rowAccess) return true;
+      const { allowRoles, denyRoles, rule } = rowAccess;
+      if (!checkRoleAccess(actor, allowRoles, denyRoles)) {
+        return false;
+      }
+      if (rule) {
+        return rule({ actor, table });
+      }
+      return true
+    } else {
+      const row = table.getRow(rowId);
+      if (!row) return false;
+      const rowAccess = config.rowAccess;
+      if (!rowAccess) return true;
+      const { allowRoles, denyRoles, rule } = rowAccess;
+      if (!checkRoleAccess(actor, allowRoles, denyRoles)) {
+        return false;
+      }
+      if (rule) {
+        return rule({ actor, row, table });
+      }
+      return true;
+    }
+
+
+
+  };
   // ---------- policies ----------
   const permissionPolicy: PermissionPolicy =
     config.permissionPolicy ?? {
-      canChangeCell: ({ actor }) => actor.roles.includes('ADMIN'),
-      canAddRow: ({ actor }) => actor.roles.includes('ADMIN'),
-      canDeleteRow: ({ actor }) => actor.roles.includes('ADMIN'),
-      canReorderRow: ({ actor }) => actor.roles.includes('ADMIN'),
-      canEdit: ({ actor }) => actor.roles.includes('ADMIN'),
+      canChangeCell: ({ actor, rowId, columnId }) =>
+        resolveColumnAccess(actor, rowId, columnId),
+      canEdit: ({ actor, rowId, columnId }) =>
+        resolveColumnAccess(actor, rowId, columnId),
+      canAddRow: ({ actor }) =>
+        resolveRowAccess(actor),
+      canCopyRow: ({ actor, rowId }) =>
+        resolveRowAccess(actor, rowId),
+      canDeleteRow: ({ actor, rowId }) =>
+        resolveRowAccess(actor, rowId),
+      canReorderRow: ({ actor, rowId }) =>
+        resolveRowAccess(actor, rowId),
+
     };
+
   // ---------- handlers ----------
   // console.log('new handlers')
   const changeCellHandler = new ChangeCellValueHandler(
@@ -242,7 +322,7 @@ export async function createERPTable(config: CreateERPTableConfig) {
   const engine = new TableEngine(app, repo, config.actor);
   // ---------- controller ----------
   const controller = new UITableController(engine, config.store, config.tableKey);
-  await controller.dispatch({type:'TABLE_REGISTERED',storeName:config.store,table})
+  await controller.dispatch({ type: 'TABLE_REGISTERED', storeName: config.store, table })
   return {
     engine,
     controller,

@@ -77,8 +77,8 @@ export class ChangeCellValueHandler {
       if (
         !this.permissionPolicy.canChangeCell({
           actor,
-          rowId,
-          columnId,
+          rowId: command.rowId,
+          columnId: command.columnId,
         })
       ) {
         throw new DomainError(
@@ -108,6 +108,11 @@ export class ChangeCellValueHandler {
 
       /* ---------- 5. domain mutation ---------- */
       const domainEvent = table.changeCell(
+        rowId,
+        columnId,
+        new CellValue(validated.value)
+      );
+      table.changeDisplay(
         rowId,
         columnId,
         new CellValue(validated.value)
@@ -171,6 +176,11 @@ export class ChangeCellValueHandler {
           new ColumnId('RowState'),
           new CellValue(RowStateEnum.Modified)
         );
+        table.changeDisplay(
+          rowId,
+          new ColumnId('RowState'),
+          new CellValue(RowStateEnum.Modified)
+        );
       }
 
       /* ---------- 8. persist ---------- */
@@ -185,19 +195,18 @@ export class ChangeCellValueHandler {
         columnId: domainEvent.columnId.value,
         newValue: domainEvent.newValue.value,
       };
+      this.audit.log({ type: 'INFORMATION', message: out.type, payload: { out } });
 
-      this.audit.log(out);
       return [out];
 
     } catch (e: any) {
       const failed: TableEvent = {
-        type: 'VALIDATION_FAILED',
+        type: e,
         tableId: command.tableKey,
         reason: e?.message ?? 'Unknown error',
         details: e?.details ?? String(e),
       };
-
-      this.audit.log(failed);
+      this.audit.log({ type: failed.type, message: failed.type, payload: { failed } });
       return [failed];
     }
   }
@@ -334,6 +343,11 @@ export class ChangeCellValueHandler {
         if (Object.is(prev, validated.value)) continue;
 
         table.changeCell(
+          rowId,
+          targetColId,
+          new CellValue(validated.value)
+        );
+        table.changeDisplay(
           rowId,
           targetColId,
           new CellValue(validated.value)
@@ -498,8 +512,9 @@ export class ChangeCellDisplayValueHandler {
       if (
         !this.permissionPolicy.canChangeCell({
           actor,
-          rowId,
-          columnId,
+          rowId: command.rowId,
+          columnId: command.columnId,
+
         })
       ) {
         throw new DomainError(
@@ -549,21 +564,27 @@ export class ChangeCellDisplayValueHandler {
         newValue: domainEvent.newValue.value,
       };
 
-      this.audit.log(out);
+      this.audit.log({ type: 'INFORMATION', message: out.type, payload: { out } });
       return [out];
 
-    } catch (e: any) {
-      const failed: TableEvent = {
-        type: 'VALIDATION_FAILED',
-        tableId: command.tableKey,
-        reason: e?.message ?? 'Unknown error',
-        details: e?.details ?? String(e),
-      };
+    } catch (error: any) {
 
-      this.audit.log(failed);
-      return [failed];
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error }
+        });
+      } return null
     }
   }
+
 
 
 

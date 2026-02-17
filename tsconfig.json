@@ -1,34 +1,62 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "ES2022"],
+    "module": "ESNext",
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
+    "strict": false,
+    "noEmit": false,
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "incremental": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
+    "outDir": "dist",
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["./components/*"],
+      "@utils/*": ["./utils/*"],
+      "@defaultElements/*": ["./components/atoms/defaultElements/*"],
+      "@layout/*": ["./layout/*"],
+      "@services/*": ["./services/*"],
+      "@HOC/*": ["./HOC/*"],
+      "@asset/*": ["./public/assets/*"],
+      "@redux/*": ["./store/*"],
+      "@type/*": ["./types/*"],
+      "@public/*": ["./public/*"],
+      "@slice/*": ["./slice/*"],
+      "@store/*": ["./store/*"],
+      "@styles/*": ["./styles/*"],
+      "@hooks/*": ["hooks/*"]
+    },
     "plugins": [
       {
         "name": "next"
       }
-    ],
-    "paths": {
-      "@/*": ["./*"]
-    }
+    ]
   },
   "include": [
     "next-env.d.ts",
+    "GlobalTypes.ts",
     "**/*.ts",
     "**/*.tsx",
+    "**/*.js",
+    "**/*.json",
+    "**/*.css",
+    "**/*.woff",
+    "**/*.eot",
+    "**/*.ttf",
+    "**/*.svg",
+    "**/*.ico",
+    "**/*.png",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "dynamsoft.config.ts",
+    "components/organisms/erp-table/ui/erp-table/ERPTableHeader.فسط"
   ],
   "exclude": ["node_modules"]
 }

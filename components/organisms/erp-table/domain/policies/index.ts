@@ -1,17 +1,13 @@
 //domain/policies
 
-import {
-  ColumnId,
-  RowId,
-} from '../value-objects';
-
 export type Actor = { userId: string; roles: string[] };
 
 export interface PermissionPolicy {
-  canChangeCell(input: { actor: Actor; rowId: RowId; columnId: ColumnId }): boolean;
-  canEdit?: (input: { actor: Actor }) => boolean;  
-    canAddRow?: (input: { actor: Actor }) => boolean;  
-    canDeleteRow?: (input: { actor: Actor }) => boolean;  
-    canReorderRow?: (input: { actor: Actor }) => boolean;  
+  canChangeCell(input: { actor: Actor; rowId: number; columnId: string }): boolean;
+  canEdit?: (input: { actor: Actor; rowId: number; columnId: string }) => boolean;
+  canAddRow?: (input: { actor: Actor }) => boolean;
+  canCopyRow?: (input: { actor: Actor;rowId: number; }) => boolean;
+  canDeleteRow?: (input: { actor: Actor; rowId: number; }) => boolean;
+  canReorderRow?: (input: { actor: Actor; rowId: number; }) => boolean;
 }
- 
+

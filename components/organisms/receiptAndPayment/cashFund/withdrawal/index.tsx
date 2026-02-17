@@ -1,44 +1,29 @@
 "use client";
-import {
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useEffect, useRef, useState } from "react";
 
-import { useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
-import {
-  shallowEqual,
-  useDispatch,
-} from 'react-redux';
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { shallowEqual, useDispatch } from "react-redux";
 
-import { CustomButton } from '@components/atoms/defaultElements';
-import { DownChevron } from '@components/atoms/iconComponents';
-import { DetailDataGrid } from '@components/molecules/detailDataGrid';
-import { IChildHandle } from '@components/molecules/detailDataGrid/mobile/type';
-import { WithdrawalTab } from '@components/molecules/receiptAndPayment';
-import {
-  AdvancedBankWithdrawalForm,
-} from '@components/molecules/receiptAndPayment/bank';
-import type { IActiveTab } from '@components/molecules/receiptAndPayment/type';
-import { useAppSelector } from '@redux/index';
-import type { IAccount } from '@services/acc/account/type';
-import { useGetData } from '@services/base';
+import { CustomButton } from "@components/atoms/defaultElements";
+import { DownChevron } from "@components/atoms/iconComponents";
+import { DetailDataGrid } from "@components/molecules/detailDataGrid";
+import { IChildHandle } from "@components/molecules/detailDataGrid/mobile/type";
+import { WithdrawalTab } from "@components/molecules/receiptAndPayment";
+import { AdvancedBankWithdrawalForm } from "@components/molecules/receiptAndPayment/bank";
+import type { IActiveTab } from "@components/molecules/receiptAndPayment/type";
+import { useAppSelector } from "@redux/index";
+import type { IAccount } from "@services/acc/account/type";
+import { useGetData } from "@services/base";
 import type {
   IBankWithdrawal,
   IRequest,
-} from '@services/trh/bankWithdrawal/type';
-import type { IRpWay } from '@services/trh/rpWay/type';
-import {
-  setAllPageData,
-  setPageInfo,
-} from '@slice/pages';
-import { findItemInNestedData } from '@utils/core';
+} from "@services/trh/bankWithdrawal/type";
+import type { IRpWay } from "@services/trh/rpWay/type";
+import { setAllPageData, setPageInfo } from "@slice/pages";
+import { findItemInNestedData } from "@utils/core";
 
-import {
-  columnConfig,
-  formConfig,
-} from './config';
+import { columnConfig, formConfig } from "./config";
 
 export const AdvancedCashFundWithdrawal = ({ form }) => {
   const titleKey = "VoucherNumber";
@@ -59,13 +44,13 @@ export const AdvancedCashFundWithdrawal = ({ form }) => {
   const { activePage, fullScreen, minimizePanel, match } = useAppSelector(
     (state) => ({
       activePage: state.withPersist.pages.find(
-        (item) => item.isActive === true
+        (item) => item.isActive === true,
       ),
       fullScreen: state.withPersist.config.fullScreen,
       minimizePanel: state.withoutPersist.container.minimize,
       match: state.withPersist.config.initMatch,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const storedData = activePage?.pageData;
@@ -125,12 +110,12 @@ export const AdvancedCashFundWithdrawal = ({ form }) => {
   const renderConditionalColumn = (
     conditionValue: number,
     fieldName: string,
-    initialRenderCondition: Record<string, boolean>
+    initialRenderCondition: Record<string, boolean>,
   ) => {
     if (conditionValue) {
       let accountId = null;
       const newAccountId = rpWayData?.Data?.find(
-        (item) => item._SelectId === conditionValue
+        (item) => item._SelectId === conditionValue,
       )?.AccountId;
       if (newAccountId) {
         accountId = newAccountId;
@@ -141,7 +126,7 @@ export const AdvancedCashFundWithdrawal = ({ form }) => {
       const condition = findItemInNestedData<IAccount>(
         accountTree?.Data,
         "AccountId",
-        accountId
+        accountId,
       );
 
       return {
@@ -170,7 +155,7 @@ export const AdvancedCashFundWithdrawal = ({ form }) => {
       if (defaultValue !== null && defaultValue) {
         formData = formConfig.map((item) => {
           const storedDataValue = storedData?.find(
-            (i) => i.name === item.name
+            (i) => i.name === item.name,
           )?.value;
 
           const correctValue = storedDataValue
@@ -247,7 +232,7 @@ export const AdvancedCashFundWithdrawal = ({ form }) => {
             fieldCaption: "حساب بانکی",
             fieldType: "selectOption",
             dynamicValue: {
-              endpoint: "api/com/select/bankAccount4SelectOption",
+              endpoint: "api/trh/select/bankAccount4SelectOption",
               repoViewId: 106081,
             },
             order: 4,
@@ -259,7 +244,7 @@ export const AdvancedCashFundWithdrawal = ({ form }) => {
       }
 
       const detailData = activePage?.pageData?.find(
-        (item) => item.name === active.detailKey
+        (item) => item.name === active.detailKey,
       );
 
       const originalDetailData = detailData?.originalValue ?? [];
@@ -268,8 +253,8 @@ export const AdvancedCashFundWithdrawal = ({ form }) => {
       const filteredOriginalValue = originalDetailData.filter(
         (originalItem) =>
           !valueDetailData.some(
-            (valueItem) => valueItem.key === originalItem[active.fieldKey]
-          )
+            (valueItem) => valueItem.key === originalItem[active.fieldKey],
+          ),
       );
 
       const areArraysEqual = (a: any[], b: any[]) =>
@@ -277,7 +262,7 @@ export const AdvancedCashFundWithdrawal = ({ form }) => {
 
       const defaultDetailData = areArraysEqual(
         originalDetailData,
-        valueDetailData
+        valueDetailData,
       )
         ? originalDetailData
         : [...filteredOriginalValue, ...valueDetailData];
@@ -331,12 +316,12 @@ export const AdvancedCashFundWithdrawal = ({ form }) => {
                 fullScreen
                   ? "w-full"
                   : !match
-                  ? "w-full"
-                  : `${
-                      minimizePanel
-                        ? "w-fit max-w-[calc(100dvw-300px)]"
-                        : "w-fit max-w-[calc(100dvw-550px)]"
-                    }`
+                    ? "w-full"
+                    : `${
+                        minimizePanel
+                          ? "w-fit max-w-[calc(100dvw-300px)]"
+                          : "w-fit max-w-[calc(100dvw-550px)]"
+                      }`
               } ${
                 !match ? "h-full" : "h-[calc(100dvh-400px)]"
               }  flex hidden-show-scrollBar transition-all duration-200 overflow-y-auto flex-col justify-between gap-2`}
