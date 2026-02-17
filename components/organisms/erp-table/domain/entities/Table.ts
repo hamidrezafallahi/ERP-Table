@@ -239,6 +239,9 @@ export class Table {
   getPagination() {
     return this.pagination;
   }
+  setPagination(pagination:Pagination) {
+    this.pagination=pagination
+  }
   changePage(page: number) {
     this.pagination = this.pagination.changePage(page);
 

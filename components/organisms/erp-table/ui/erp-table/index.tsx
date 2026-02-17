@@ -29,7 +29,8 @@ export interface ERPTableProps<
   onReady?: (api: ERPTableApi) => void;
   header?: ReactNode;
   footer?: ReactNode;
-  tableHeight?: number | string;
+  tableHeight?: number;
+  recordPerPage?: number;
   moreDetailComponent?: React.ComponentType<{ data: TMoreDetail }>;
 }
 export function ERPTable<TMoreDetail = unknown>(
@@ -46,6 +47,7 @@ export function ERPTable<TMoreDetail = unknown>(
     header,
     footer,
     tableHeight,
+    recordPerPage,
     moreDetailComponent: MoreDetailComponent,
   } = props;
   const { fullScreen, minimizePanel, match } = useAppSelector(
@@ -63,6 +65,8 @@ export function ERPTable<TMoreDetail = unknown>(
     rows,
     actor,
     rowAccess,
+    tableHeight,
+    recordPerPage,
   });
 
   // ---------- keyboard handler ----------
@@ -115,38 +119,37 @@ export function ERPTable<TMoreDetail = unknown>(
   if (!result.ready) return null;
   const { controller } = result;
   return (
-   <div className="flex flex-col w-full h-full">
-  {/* header دلخواه */}
-  {header}
+    <div className="flex flex-col w-full h-full">
+      {/* header دلخواه */}
+      {header}
 
-  {/* wrapper scrollable جدول */}
-  <div
-    className="flex-1 overflow-y-auto"
-    style={{ maxHeight: tableHeight ?? "100%" }}
-  >
-    <table className="w-full border-collapse table-fixed">
-      <ERPTableHeader controller={controller} tableKey={tableKey} />
-      <ERPTableBody
-        controller={controller}
-        tableKey={tableKey}
-        moreDetailComponent={MoreDetailComponent}
-      />
-    </table>
-  </div>
+      {/* wrapper scrollable جدول */}
+      <div
+        className="flex-1 overflow-y-auto"
+        style={{ maxHeight: tableHeight ?? "100%" }}
+      >
+        <table className="w-full border-collapse table-fixed">
+          <ERPTableHeader controller={controller} tableKey={tableKey} />
+          <ERPTableBody
+            controller={controller}
+            tableKey={tableKey}
+            moreDetailComponent={MoreDetailComponent}
+          />
+        </table>
+      </div>
 
-  {/* Pagination و دکمه‌ها همیشه زیر */}
-  <div className="flex justify-end items-center gap-3 mt-2 w-full">
-    <ERPTablePagination
-      controller={controller}
-      store={store}
-      tableKey={tableKey}
-    />
-    <AddNewRowButton controller={controller} />
-  </div>
+      {/* Pagination و دکمه‌ها همیشه زیر */}
+      <div className="flex justify-end items-center gap-3 mt-2 w-full">
+        <ERPTablePagination
+          controller={controller}
+          store={store}
+          tableKey={tableKey}
+        />
+        <AddNewRowButton controller={controller} />
+      </div>
 
-  {/* footer دلخواه */}
-  {footer}
-</div>
-
+      {/* footer دلخواه */}
+      {footer}
+    </div>
   );
 }

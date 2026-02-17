@@ -368,7 +368,8 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
   rows,
   columns: colConfigs,
   rowAccess,
-  tableHeight:500
+  // tableHeight:100,
+  // recordPerPage:6
 }), [activePage?.pageId, colConfigs, rows]);
   return (
     <div className="relative">

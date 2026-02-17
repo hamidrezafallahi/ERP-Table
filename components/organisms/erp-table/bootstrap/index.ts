@@ -35,6 +35,7 @@ import {
   CellValue,
   ColumnId,
   ColumnSchema,
+  Pagination,
   RowId,
   RowState,
   RowStateEnum,
@@ -164,6 +165,11 @@ export async function createERPTable(config: CreateERPTableConfig) {
   );
   // ---------- table (async build + fallback) ----------
   let table: Table;
+  const page = 1
+const pageSize = config.tableHeight
+  ? Math.floor(config.tableHeight / 36)
+  : config.recordPerPage ?? 10;
+
   if (await repo.exists(config.store, config.tableKey)) {
     table = await repo.getById(config.store, config.tableKey);
     const columns = new Map<string, ColumnSchema>();
@@ -188,9 +194,13 @@ export async function createERPTable(config: CreateERPTableConfig) {
     const columnsArray: ColumnSchema[] = Array.from(columns.values());
     console.log(columnsArray)
     table.setColumns(columnsArray);
+    table.setPagination(new Pagination(page,pageSize)) ;
+
   } else {
     const built = await buildTable(config.store, config.tableKey, config.columns, repo, config.rows);
     table = built.table;
+    table.setPagination(new Pagination(page,pageSize)) ;
+
     await repo.save(config.store, table);
   }
   const checkRoleAccess = (

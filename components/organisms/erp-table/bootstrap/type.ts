@@ -21,7 +21,7 @@ export interface DynamicValueConfig {
 
 export type FieldType = 'index' | 'text' | 'number' | 'select' | 'selectOption' | 'date' | 'static';
 
-export type RowInput = { id: number; values?: Record<string, unknown>,moreDetails:unknown };
+export type RowInput = { id: number; values?: Record<string, unknown>, moreDetails: unknown };
 
 export type ColumnVisibilityRule =
     | { kind: 'always' }
@@ -38,18 +38,18 @@ export interface ResolveOnConfig {
     mapFlags?: (response: any) => Record<string, boolean>;
 }
 type ColumnAccessControl = {
-  allowRoles?: string[]; 
-  denyRoles?: string[];
-rule?: (ctx: { actor; row; table }) => boolean;
+    allowRoles?: string[];
+    denyRoles?: string[];
+    rule?: (ctx: { actor; row; table }) => boolean;
 };
 type RowAccessControl = {
-  allowRoles?: string[];
-  denyRoles?: string[];
-  rule?: (ctx: {
-    actor: Actor;
-    table: Table;
-    row?: Row;
-  }) => boolean;
+    allowRoles?: string[];
+    denyRoles?: string[];
+    rule?: (ctx: {
+        actor: Actor;
+        table: Table;
+        row?: Row;
+    }) => boolean;
 };
 export interface IDetailColumnConfig {
     fieldName: string;
@@ -86,14 +86,16 @@ export interface IDetailColumnConfig {
     displayFormat?: (value: unknown) => unknown;
 
 }
-export type CreateERPTableConfig<TMoreDetail=unknown>  = {
+export type CreateERPTableConfig<TMoreDetail = unknown> = {
     store: string;
     tableKey: string;
     actor: Actor;
     rowAccess?: RowAccessControl;
     columns: IDetailColumnConfig[];
-    rows?: Array<{ id: number; values?: Record<string, unknown>,moreDetails:TMoreDetail  }>;
+    rows?: Array<{ id: number; values?: Record<string, unknown>, moreDetails: TMoreDetail }>;
     repo?: TableRepository;
     audit?: AuditLogger;
     permissionPolicy?: PermissionPolicy;
+    tableHeight?: number ;
+    recordPerPage?: number;
 };
