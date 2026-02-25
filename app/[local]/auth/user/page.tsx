@@ -8,7 +8,7 @@ export default function UserFormPage() {
       fieldKey="UserId"
       url="/api/auth/select/user"
       listUrl="auth/userList"
-      titleKey={["FirstName","LastName"]}
+      titleKey="FullName"
       pageIcon="UserIcon"
     />
   );

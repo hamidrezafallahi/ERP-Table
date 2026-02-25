@@ -13,7 +13,7 @@ const listItemSlice = createSlice({
   reducers: {
     setItems: (
       state,
-      action: PayloadAction<{ pageId: PageId; items: number[] }>
+      action: PayloadAction<{ pageId: PageId; items: number[] }>,
     ) => {
       state.itemsByPage[action.payload.pageId] = action.payload.items;
     },

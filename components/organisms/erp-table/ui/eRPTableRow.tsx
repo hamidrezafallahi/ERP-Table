@@ -7,9 +7,9 @@ import { useTranslations } from 'next-intl';
 
 import { NoData } from '@components/atoms/iconComponents';
 
-import { UITableController } from '../../adapters/ui/UITableController';
-import { RowStateEnum } from '../../domain/value-objects';
-import { TCell } from '../../engine/type';
+import { UITableController } from '../adapters/ui/UITableController';
+import { RowStateEnum } from '../domain/value-objects';
+import { TCell } from '../engine/type';
 import {
   CellMeta,
   CellRenderer,
@@ -42,8 +42,8 @@ function ERPTableRowComponent({
   moreDetailComponent: MoreDetailComponent,
 }: ERPTableRowProps) {
   const t = useTranslations();
+  const rowNum = row.cells["index"].value as number
   const [dropZone, setDropZone] = useState<"before" | "after" | null>(null);
-
   const isDeleted = row.rowState === RowStateEnum.Deleted;
   const isActiveRow = controller.isActiveRow(tableKey, row.id);
   const isSelectedRow = controller.isSelectedRow(tableKey, row.id);
@@ -62,7 +62,7 @@ function ERPTableRowComponent({
     if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
       e.preventDefault();
       e.stopPropagation();
-      controller.onRowSelect(row.id);
+      controller.onRowSelect(rowNum);
     }
   };
 
@@ -88,7 +88,6 @@ function ERPTableRowComponent({
 
     const sourceId = draggedRowIdRef.current;
     if (!sourceId || sourceId === row.id) return;
-
     controller.dispatch({
       type: "ROW_REORDERED",
       draggedRowId: sourceId,
@@ -101,8 +100,8 @@ function ERPTableRowComponent({
 
   const rowClass = useMemo(() => {
     return `
-      relative flex items-center border
-      ${isActiveRow ? "border-gray-gray8" : "border-gray-gray4"}
+      relative flex items-center border  
+      ${isActiveRow ? "border-gray-gray8" : "border-gray-gray5"}
       ${isSelectedRow ? "bg-blue-100" : ""}
       ${
         isDeleted
@@ -111,7 +110,7 @@ function ERPTableRowComponent({
             ? "bg-blue-blue11"
             : "bg-main-white"
       }
-      w-full h-9
+      w-full h-9 rounded
     `;
   }, [isActiveRow, isSelectedRow, isDeleted, index]);
   return (
@@ -156,12 +155,11 @@ function ERPTableRowComponent({
             return (
               <td key={c.id} className="w-36">
                 <CellRenderer
-                  row={row}
+                  idx={idx}
                   tableKey={tableKey}
-                  rowId={row.id}
+                  row={row}
                   columnId={c.id}
                   meta={meta}
-                  cell={row.cells[c.id]}
                   controller={controller}
                   tabIndex={idx}
                 />
@@ -172,7 +170,7 @@ function ERPTableRowComponent({
 
       {row.isExpanded && (
         <tr>
-          <td colSpan={table.columns.filter((c: any) => !c.hidden).length}>
+          <td>
             {row.moreDetails && MoreDetailComponent ? (
               <MoreDetailComponent data={row.moreDetails} />
             ) : (

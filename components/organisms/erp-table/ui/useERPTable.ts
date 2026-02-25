@@ -21,25 +21,15 @@ export type UseERPTableResult =
     table: TableSnapShot;
   };
 
-export function useERPTable(config:CreateERPTableConfig): UseERPTableResult {
+export function useERPTable(config: CreateERPTableConfig): UseERPTableResult {
+
   const [controller, setController] =
     useState<UITableController | null>(null);
   const [table, setTable] = useState<TableSnapShot | null>(null);
   // ---------- bootstrap ----------
   useEffect(() => {
-    let mounted = true;
-    createERPTable(config).then(({ controller }) => {
-      if (mounted) {
-        setController(controller);
-      } else {
-        controller.dispose();
-      }
-    });
-
-    return () => {
-      mounted = false;
-    };
-  }, [config.tableKey,config.columns]);
+  createERPTable(config).then(({ controller }) => {setController(controller)});
+  }, [config.tableKey, config.columns,config.page]);
 
   // ---------- subscribe ----------
   useEffect(() => {
@@ -58,7 +48,7 @@ export function useERPTable(config:CreateERPTableConfig): UseERPTableResult {
     return () => {
       unsubscribe?.();
     };
-  }, [controller,config.store, config.tableKey]);
+  }, [controller, config.store, config.tableKey]);
   if (!controller || !table) {
     return { ready: false };
   }

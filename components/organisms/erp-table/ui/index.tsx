@@ -5,16 +5,14 @@ import React, {
   useEffect,
 } from 'react';
 
-import { shallowEqual } from 'react-redux';
+import { useFullScreen } from '@hooks/custom';
 
-import { useAppSelector } from '@redux/index';
-
-import { CreateERPTableConfig } from '../../bootstrap/type';
-import { AddNewRowButton } from '../addNewRowButton';
+import { CreateERPTableConfig } from '../bootstrap/type';
+import { AddNewRowButton } from './addNewRowButton';
 import { ERPTableBody } from './ERPTableBody';
 import { ERPTableHeader } from './ERPTableHeader';
-import { useERPTable } from './hooks/useERPTable';
 import ERPTablePagination from './pagination';
+import { useERPTable } from './useERPTable';
 
 export type ERPTableApi = {
   getSnapshot: () => unknown;
@@ -22,6 +20,7 @@ export type ERPTableApi = {
     columnId: string,
     cb: (values: T[]) => void,
   ) => () => void;
+  addNewRows: () => void;
 };
 export interface ERPTableProps<
   TMoreDetail = unknown,
@@ -29,8 +28,9 @@ export interface ERPTableProps<
   onReady?: (api: ERPTableApi) => void;
   header?: ReactNode;
   footer?: ReactNode;
-  tableHeight?: number;
-  recordPerPage?: number;
+  tableHeight:number
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (page: number, pageSize: number) => void;
   moreDetailComponent?: React.ComponentType<{ data: TMoreDetail }>;
 }
 export function ERPTable<TMoreDetail = unknown>(
@@ -46,18 +46,15 @@ export function ERPTable<TMoreDetail = unknown>(
     onReady,
     header,
     footer,
+    onPageChange,
+    onPageSizeChange,
+    page,
+    pageSize,
+    totalRecords,
     tableHeight,
-    recordPerPage,
     moreDetailComponent: MoreDetailComponent,
   } = props;
-  const { fullScreen, minimizePanel, match } = useAppSelector(
-    (state) => ({
-      fullScreen: state.withPersist.config.fullScreen,
-      minimizePanel: state.withoutPersist.container.minimize,
-      match: state.withPersist.config.initMatch,
-    }),
-    shallowEqual,
-  );
+  const toggleFullScreen = useFullScreen();
   const result = useERPTable({
     store,
     tableKey,
@@ -65,14 +62,16 @@ export function ERPTable<TMoreDetail = unknown>(
     rows,
     actor,
     rowAccess,
-    tableHeight,
-    recordPerPage,
+    page,
+    pageSize,
+    totalRecords
   });
 
   // ---------- keyboard handler ----------
   useEffect(() => {
     if (!result.ready) return;
     const { controller } = result;
+
     const clickHandler = async (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const button = target.closest("button");
@@ -84,7 +83,6 @@ export function ERPTable<TMoreDetail = unknown>(
         }
       }
     };
-
     const handler = (e: KeyboardEvent) => {
       const activeRow = controller.getActiveRow(tableKey);
       const activeCell = controller.getActiveCell(tableKey);
@@ -98,7 +96,6 @@ export function ERPTable<TMoreDetail = unknown>(
         },
       });
     };
-
     window.addEventListener("keydown", handler, true);
     window.addEventListener("click", clickHandler, true);
     return () => {
@@ -107,23 +104,21 @@ export function ERPTable<TMoreDetail = unknown>(
     };
   }, [result.ready, tableKey, result]);
   useEffect(() => {
-    if (!result.ready) return;
-    if (!onReady) return;
-    const { controller } = result;
-    onReady?.({
-      getSnapshot: () => controller.getSnapShot(tableKey),
-      subscribeColumn: (columnId, cb) =>
-        controller.subscribeColumn(columnId, cb),
-    });
-  }, [result.ready, onReady, tableKey, result]);
+    if (result.ready) {
+      const { controller } = result;
+      onReady?.({
+        getSnapshot: () => controller.getSnapShot(tableKey),
+        addNewRows: () => {}, // controller.addNewRows(tableKey,[])},
+        subscribeColumn: (columnId, cb) =>
+          controller.subscribeColumn(columnId, cb),
+      });
+    }
+  }, [result.ready]);
   if (!result.ready) return null;
   const { controller } = result;
   return (
     <div className="flex flex-col w-full h-full">
-      {/* header دلخواه */}
       {header}
-
-      {/* wrapper scrollable جدول */}
       <div
         className="flex-1 overflow-y-auto"
         style={{ maxHeight: tableHeight ?? "100%" }}
@@ -139,13 +134,15 @@ export function ERPTable<TMoreDetail = unknown>(
       </div>
 
       {/* Pagination و دکمه‌ها همیشه زیر */}
-      <div className="flex justify-end items-center gap-3 mt-2 w-full">
+      <div className="flex justify-between items-center gap-3 mt-2 w-full">
+        <AddNewRowButton controller={controller} />
         <ERPTablePagination
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
           controller={controller}
           store={store}
           tableKey={tableKey}
         />
-        <AddNewRowButton controller={controller} />
       </div>
 
       {/* footer دلخواه */}

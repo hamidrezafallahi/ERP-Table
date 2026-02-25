@@ -157,11 +157,9 @@ td.ant-table-cell {
 }
 
 .ant-table-cell-fix-left {
-  background-color: inherit !important;
+  background-color: transparent !important;
 }
-/* .ant-table-cell-row-hover {
-  background-color: unset !important;
-} */
+
 .ant-table-row-selected .ant-table-cell {
   background-color: unset !important;
 }
@@ -179,6 +177,40 @@ td.ant-table-cell {
 }
 .ant-table-cell .ant-table-cell-fix-left .ant-table-cell-row-hover,
 .ant-table-cell .ant-table-cell-fix-right .ant-table-cell-row-hover {
+  background-color: transparent !important;
+}
+.dark .ant-table-cell .ant-table-cell-fix-left .ant-table-cell-row-hover,
+.dark .ant-table-cell .ant-table-cell-fix-right .ant-table-cell-row-hover {
+  background-color: transparent !important;
+}
+
+.ant-table-cell
+  .ant-table-selection-column
+  .ant-table-cell-fix-left
+  .ant-table-cell-row-hover,
+.ant-table-cell
+  .ant-table-selection-column
+  .ant-table-cell-fix-right
+  .ant-table-cell-row-hover {
+  background-color: transparent !important;
+}
+.dark
+  .ant-table-cell
+  .ant-table-selection-column
+  .ant-table-cell-fix-left
+  .ant-table-cell-row-hover,
+.dark
+  .ant-table-cell
+  .ant-table-selection-column
+  .ant-table-cell-fix-right
+  .ant-table-cell-row-hover {
+  background-color: transparent !important;
+}
+.dark
+  .ant-table-cell
+  .ant-table-cell-fix-left
+  .ant-table-cell-fix-left-last:hover,
+.dark .ant-table-cell .ant-table-cell-fix-right:hover {
   background-color: transparent !important;
 }
 
@@ -669,10 +701,10 @@ td.ant-table-cell {
 }
 
 .ant-table-wrapper .ant-table-cell-fix-right {
-  background-color: inherit;
+  background-color: transparent;
 }
 .ant-table-wrapper .ant-table-cell-fix-left {
-  background-color: inherit;
+  background-color: transparent;
 }
 
 .ant-table-row td:first-child {

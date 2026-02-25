@@ -1,8 +1,10 @@
 import Form from "@components/templates/form";
+import { IFinalizeVoucher ,IRequest } from "@services/acc/FinalizeVoucher/type";
+
 
 export default function FinalizeVoucherPage() {
   return (
-    <Form<null, null>
+    <Form<IFinalizeVoucher, IRequest>
       titleKey=""
       fieldKey=""
       caption={"title.finalizeVoucher"}

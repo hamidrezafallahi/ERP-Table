@@ -8,6 +8,7 @@ export interface IGoodExtraInfo extends IBaseDto {
   GoodsExtraInfo: {
     GoodsExtraInfoId: number;
     GoodsExtraInfoDesc: string;
+    Type: number;
   };
   CreateDate: string;
   CreateUserId: number;

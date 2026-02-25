@@ -83,8 +83,8 @@ export class RowRestored {
 export class RowReordered {
   readonly type = "ROW_REORDERED";
   constructor(
-    public readonly draggedRowId: number,
-    public readonly droppedRowId: number
+    public readonly draggedRowNum: number,
+    public readonly droppedRowNum: number
   ) { }
 }
 

@@ -4,6 +4,7 @@ import {
   FormInstance,
 } from 'antd';
 import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
 import {
   DynamicSelect,
@@ -25,7 +26,7 @@ export const InventoryVoucherHeaderForm = ({ ...props }: IProps) => {
     label:state.withPersist.pages.find(p=>p.isActive)?.data?.label,
     hasThirdParty:state.withPersist.pages.find(p=>p.isActive)?.data?.hasThirdParty,
     tafsiliTypeId:state.withPersist.pages.find(p=>p.isActive)?.data?.tafsiliTypeId
-  }))
+}), shallowEqual);
   const { form } = props;
   const t = useTranslations();
 
@@ -81,7 +82,6 @@ export const InventoryVoucherHeaderForm = ({ ...props }: IProps) => {
               showSearch
               allowClear
               showId
-             
               onClear={() => form.setFieldValue("VoucherHeaderId", null)}
               infinite
               config={{

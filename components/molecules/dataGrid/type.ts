@@ -29,6 +29,7 @@ export interface IProps<T> {
   EditField?: string;
   withoutActivation?: boolean;
   formUrl?: string;
+  filteringAction?: (actions: IToolbarMenu[], rowData: T) => IToolbarMenu[];
 }
 
 export interface IChangesField {

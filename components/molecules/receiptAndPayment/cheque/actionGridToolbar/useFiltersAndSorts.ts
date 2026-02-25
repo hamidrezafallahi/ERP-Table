@@ -2,7 +2,9 @@ import { useReducer } from "react";
 
 import { useDispatch } from "react-redux";
 
+import type { IData } from "@components/molecules/advancedFilter/type";
 import { useAppSelector } from "@redux/index";
+import { StateTypeEnum } from "@services/trh/receivedCheque/type";
 import { setPageState } from "@slice/pages";
 import { PageStateEnum } from "@slice/pages/enum";
 
@@ -51,8 +53,71 @@ export const useFiltersAndSorts = ({
 
   const dispatch = useDispatch();
 
-  const filterFields = [];
-  const sortFields = [];
+  const filterFields: IData[] = [
+    {
+      value: "DocumentCheque.MaturityDate",
+      label: "تاریخ سررسید",
+      type: "date",
+      valueOption: {},
+    },
+    {
+      value: "DocumentCheque.StateId",
+      label: "آخرین وضعیت",
+      type: "select",
+      valueOption: {
+        Options: [
+          {
+            caption: "نزد بانک",
+            value: StateTypeEnum.Bank,
+          },
+          {
+            caption: "نزد صندوق",
+            value: StateTypeEnum.CashDesk,
+          },
+          {
+            caption: "وصول شده",
+            value: StateTypeEnum.Collected,
+          },
+          {
+            caption: "نزد شخص",
+            value: StateTypeEnum.Person,
+          },
+          {
+            caption: "نزد تنخواه",
+            value: StateTypeEnum.Tankhah,
+          },
+          {
+            caption: "استرداد شده",
+            value: StateTypeEnum.Returned,
+          },
+        ],
+      },
+    },
+    {
+      value: "CheckReceiptHeader.TafsiliId",
+      label: "صادرکننده چک",
+      type: "select",
+      valueOption: {
+        endpoint: "/api/acc/select/tafsili4SelectOption",
+        TafsiliTypeId: 1,
+        repoViewId: 10017,
+      },
+    },
+  ];
+  const sortFields = [
+    {
+      value: "DocumentCheque.MaturityDate",
+      label: "تاریخ سررسید",
+      type: "date",
+      valueOption: {},
+    },
+    {
+      value: "CreateDate",
+      label: "تاریخ دریافت",
+      type: "date",
+      valueOption: {},
+    },
+  ];
 
   const applySorts = (appliedSorts: { field: string; order: string }[]) => {
     setOrderInfo(

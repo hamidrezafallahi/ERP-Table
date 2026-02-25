@@ -41,12 +41,6 @@ export type TableSnapShot = {
 
 
   }>;
-  deletedRows: Array<{
-    id: string;
-    cells: Record<string, unknown>;
-    moreDetails:unknown,
-
-  }>;
 };
 
 export type ViewColumn = {

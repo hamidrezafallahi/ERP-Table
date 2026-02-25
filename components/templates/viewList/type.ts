@@ -1,3 +1,4 @@
+import { IToolbarMenu } from "@type/toolbar";
 import { ReactNode } from "react";
 
 export interface IProps<T, K> {
@@ -27,4 +28,6 @@ export interface IProps<T, K> {
   rangeFilterKey?: string | null;
   customColumns?: any;
   renderCustomActions?: () => ReactNode;
- titleKey?:string[];}
+  titleKey?: string[];
+  filteringAction?: (actions: IToolbarMenu[], rowData: T) => IToolbarMenu[];
+}

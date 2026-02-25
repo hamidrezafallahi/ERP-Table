@@ -27,3 +27,12 @@ export interface IRequestMeta {
   requestKey?: string;  
   ignoreOnSubmit?: boolean;
 }
+
+
+export type TableSnapshot = {
+    rows: Array<{
+      rowState?: any;
+      changeFields?: any;
+      cells: Record<string, any>;
+    }>;
+  };

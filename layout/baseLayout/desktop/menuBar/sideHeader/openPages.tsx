@@ -214,7 +214,7 @@ export default function OpenPages() {
                 }}
                 className="flex items-center gap-2 w-full text-[13px] line-clamp-1 cursor-pointer"
               >
-                <p className="overflow-hidden dark:text-gray-gray55 text-ellipsis">
+                <div className="overflow-hidden dark:text-gray-gray55 text-ellipsis">
                   {renderTitleWithRedAfterDash(
                     item.url?.includes("id")
                       ? finalCaption + " - " + titleFields
@@ -227,7 +227,7 @@ export default function OpenPages() {
                           : finalCaption + " - " + t("general.newForm")
                         : finalCaption,
                   )}
-                </p>
+                </div>
                 <div className="flex justify-center items-center">
                   {renderPageState(item.pageState)}
                 </div>

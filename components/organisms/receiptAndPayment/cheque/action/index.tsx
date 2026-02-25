@@ -1,15 +1,17 @@
 "use client";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useReducer, useRef, useState } from "react";
 
 import { useTranslations } from "next-intl";
 import { shallowEqual } from "react-redux";
 
-import { CustomModal, CustomSpin } from "@components/atoms/defaultElements";
+import { CustomModal } from "@components/atoms/defaultElements";
+import Confirmation from "@components/molecules/confirmation";
 import {
   ActionGrid,
   ActionGridToolbar,
   ActionToolbar,
   ChequeActionModal,
+  ChequeCirculationModal,
   ChequeDynamicForm,
   ChequeInfoModal,
 } from "@components/molecules/receiptAndPayment/cheque";
@@ -17,7 +19,7 @@ import ActionCard from "@components/molecules/receiptAndPayment/cheque/actionCar
 import { chequeDynamicConfig } from "@components/molecules/receiptAndPayment/cheque/chequeDynamicForm/config";
 import { useDarkMode, useInitializePage } from "@hooks/custom";
 import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation, useGetData, useGetInfinite } from "@services/base";
+import { useCUDDataMutation, useGetData } from "@services/base";
 import type { IChequeDetails } from "@services/trh/chequeDetails/type";
 import { SystemEnum } from "@type/enum";
 import type { IToolbarMenu } from "@type/toolbar";
@@ -49,18 +51,20 @@ export const ChequeAction = () => {
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [selectedId, setSelectedId] = useState(null);
   const [selectedHeaderId, setSelectedHeaderId] = useState<number[]>([]);
-  const observer = useRef<IntersectionObserver | null>(null);
+  const [isSelectMode, setIsSelectMode] = useState(false);
+
   const lastItemRef = useRef<HTMLDivElement | null>(null);
-  const [filterInfo, setFilterInfo] = useState();
-  const [orderInfo, setOrderInfo] = useState();
+  const [filterInfo, setFilterInfo] = useState([]);
+  const [orderInfo, setOrderInfo] = useState([]);
   const [quickSearch, setQuickSearch] = useState("");
 
   const { match, activePage } = useAppSelector((state) => {
     const match = state.withPersist.config.initMatch;
     const activePage = state.withPersist.pages.find((page) => page.isActive);
-
     return { match, activePage };
   }, shallowEqual);
+
+  const mobilePerPageCount = 100;
 
   const {
     data: gridData,
@@ -76,13 +80,14 @@ export const ChequeAction = () => {
       RepoViewId: repoViewId,
       PagingInfo: {
         PageNumber: pageNumber,
-        PageRecordCount: recordPerPage,
+        PageRecordCount: match ? recordPerPage : mobilePerPageCount,
       },
       FullSearchPhrase: quickSearch,
     },
-    skip: !match,
+
     id: "all",
   });
+
   const { data: gridTotal } = useGetData<null, null>({
     url: url,
     body: {
@@ -98,38 +103,16 @@ export const ChequeAction = () => {
       },
       FullSearchPhrase: quickSearch,
     },
-    skip: !match,
   });
 
-  const {
-    data: cardData,
-    isFetching: cardIsFetching,
-    isLoading: cardIsLoading,
-  } = useGetInfinite<IChequeDetails[], any>({
-    url: url,
-    body: {
-      Filters: {
-        FilterInfo: filterInfo,
-      },
-      OrderInfo: orderInfo,
-      RepoViewId: repoViewId,
-
-      PagingInfo: {
-        PageNumber: pageNumber,
-        PageRecordCount: recordPerPage,
-      },
-      FullSearchPhrase: quickSearch,
-    },
-    skip: match,
-    id: "all",
-  });
-
-  const [trigger] = useCUDDataMutation();
+  const [trigger, { isLoading: mutateIsLoading }] = useCUDDataMutation();
 
   const initialState: IState = {
     actionConfig: null,
     isChequeDynamicActionOpen: false,
-    isInfoActionOpen: false,
+    isInfoModalOpen: false,
+    isCirculationModalOpen: false,
+    isPrevStepConfirmationModalOpen: false,
   };
 
   function reducer(state: IState, action: Action): IState {
@@ -149,14 +132,46 @@ export const ChequeAction = () => {
       case "OPEN_INFO_MODAL":
         return {
           ...state,
-          isInfoActionOpen: true,
+          isInfoModalOpen: true,
           actionConfig: action.payload,
         };
       case "CLOSE_INFO_MODAL":
         return {
           ...state,
-          isInfoActionOpen: false,
+          isInfoModalOpen: false,
           actionConfig: null,
+        };
+      case "OPEN_CIRCULATION_MODAL":
+        return {
+          ...state,
+          isCirculationModalOpen: true,
+          actionConfig: action.payload,
+        };
+      case "CLOSE_CIRCULATION_MODAL":
+        return {
+          ...state,
+          isCirculationModalOpen: false,
+          actionConfig: null,
+        };
+      case "OPEN_PREV_STEP_MODAL":
+        return {
+          ...state,
+          isPrevStepConfirmationModalOpen: true,
+          actionConfig: action.payload,
+        };
+      case "CLOSE_PREV_STEP_MODAL":
+        return {
+          ...state,
+          isPrevStepConfirmationModalOpen: false,
+          actionConfig: null,
+        };
+      case "CLOSE_ALL_MODAL":
+        return {
+          actionConfig: null,
+          isChequeDynamicActionOpen: false,
+          isInfoModalOpen: false,
+          isCirculationModalOpen: false,
+          isPrevStepConfirmationModalOpen: false,
         };
 
       default:
@@ -166,33 +181,30 @@ export const ChequeAction = () => {
 
   const [state, dispatchState] = useReducer(reducer, initialState);
 
-  useEffect(() => {
-    if (
-      !match &&
-      cardData?.Data?.length > 0 &&
-      cardData?.ReturnCount === Number(recordPerPage)
-    ) {
-      const pageNumberCount = pageNumber;
+  const handleReturn = () => {
+    initializePage({
+      config: {
+        RepoId: 3025,
+        SystemId: SystemEnum.trh,
+        url: `trh/chequeReceipt?id=${selectedHeaderId}`,
+        pageState: findingPageState(null),
+        originalPageState: findingPageState(null),
+        Id: Number(selectedHeaderId),
+        listPageId: activePage.pageId,
+        Key: Number(selectedHeaderId),
+        selectedView: null,
+        data: activePage.data,
+        returnPageId: activePage.pageId,
+      },
+    });
+    dispatchState({
+      type: "CLOSE_ALL_MODAL",
+    });
+  };
 
-      const observerCallback = (entries: IntersectionObserverEntry[]) => {
-        if (entries[0].isIntersecting && !cardIsFetching) {
-          pageNumberCount
-            ? setPageNumber(pageNumberCount + 1)
-            : setPageNumber(1);
-        }
-      };
-
-      observer.current = new IntersectionObserver(observerCallback);
-      const currentLastItem = lastItemRef.current;
-
-      if (currentLastItem) observer.current.observe(currentLastItem);
-
-      return () => {
-        if (observer.current && currentLastItem)
-          observer.current.unobserve(currentLastItem);
-      };
-    }
-  }, [cardIsFetching, pageNumber, match, cardData?.Data?.length]);
+  const handlePaginationChange = (page: number) => {
+    setPageNumber(page);
+  };
 
   const handleAction = (action: IToolbarMenu, record: any) => {
     setSelectedId(record[rowFieldKey]);
@@ -201,30 +213,24 @@ export const ChequeAction = () => {
     const correctItem = gridData?.Data?.find(
       (item) => item[rowFieldKey] === selectedId,
     );
-    const chequeReceiptHeaderId = correctItem?.CheckReceiptHeaderId;
 
     try {
       switch (action.MenuDesc) {
-        case ActionLabelsEnum.ChequeReceiptAction:
-          initializePage({
-            config: {
-              RepoId: 3025,
-              SystemId: SystemEnum.trh,
-              url: `trh/chequeReceipt?id=${chequeReceiptHeaderId}`,
-              pageState: findingPageState(null),
-              originalPageState: findingPageState(null),
-              Id: Number(chequeReceiptHeaderId),
-              listPageId: activePage.pageId,
-              Key: Number(chequeReceiptHeaderId),
-              selectedView: null,
-              data: activePage.data,
-              returnPageId: activePage.pageId,
-            },
+        case ActionLabelsEnum.ChequeCirculation:
+          dispatchState({
+            type: "OPEN_CIRCULATION_MODAL",
+            payload: action,
           });
           break;
         case ActionLabelsEnum.ChequeStatus:
           dispatchState({
             type: "OPEN_INFO_MODAL",
+            payload: action,
+          });
+          break;
+        case ActionLabelsEnum.PrevStep:
+          dispatchState({
+            type: "OPEN_PREV_STEP_MODAL",
             payload: action,
           });
           break;
@@ -240,7 +246,7 @@ export const ChequeAction = () => {
     }
   };
 
-  const records = gridData?.Data ?? cardData?.Data;
+  const records = gridData?.Data;
 
   const selectedGroupCondition = selectedItems?.map((item) => {
     const correctField = records?.find((el) => el[rowFieldKey] === item);
@@ -271,8 +277,11 @@ export const ChequeAction = () => {
       }).unwrap();
 
       if (prevStepResult.Result === "Success") {
-        if (state.isInfoActionOpen) {
+        if (state.isInfoModalOpen) {
           dispatchState({ type: "CLOSE_INFO_MODAL" });
+        }
+        if (state.isPrevStepConfirmationModalOpen) {
+          dispatchState({ type: "CLOSE_PREV_STEP_MODAL" });
         }
 
         showInfoToast(t("toast.Pending"));
@@ -283,6 +292,11 @@ export const ChequeAction = () => {
     } catch (error) {
       null;
     }
+  };
+
+  const handleRefreshData = () => {
+    setPageNumber(1);
+    refetch();
   };
 
   return (
@@ -303,6 +317,7 @@ export const ChequeAction = () => {
               renderGroupAction={renderGroupAction}
               rowFieldKey={rowFieldKey}
               records={records}
+              handleRefreshData={handleRefreshData}
             />
           </div>
           <ActionGridToolbar
@@ -317,26 +332,28 @@ export const ChequeAction = () => {
         </div>
 
         {!match ? (
-          !cardIsLoading ? (
-            <ActionCard
-              staticKey={staticKey as string}
-              data={gridData?.Data}
-              columnsConfig={columnsConfig}
-              actions={actions}
-              ref={lastItemRef}
-              onActionClick={handleAction}
-              rowFieldKey={rowFieldKey}
-              selectedItems={selectedItems}
-              setSelectedItems={setSelectedItems}
-              headerKey={headerKey}
-              selectedHeaderId={selectedHeaderId}
-              setSelectedHeaderId={setSelectedHeaderId}
-            />
-          ) : (
-            <div className="flex items-center w-full h-[500px]">
-              <CustomSpin className="w-full" size="large" />
-            </div>
-          )
+          <ActionCard
+            staticKey={staticKey as string}
+            data={gridData?.Data}
+            columnsConfig={columnsConfig}
+            actions={actions}
+            ref={lastItemRef}
+            onActionClick={handleAction}
+            rowFieldKey={rowFieldKey}
+            selectedItems={selectedItems}
+            setSelectedItems={setSelectedItems}
+            headerKey={headerKey}
+            selectedHeaderId={selectedHeaderId}
+            setSelectedHeaderId={setSelectedHeaderId}
+            isSelectMode={isSelectMode}
+            setIsSelectMode={setIsSelectMode}
+            loading={gridIsLoading}
+            pageNumber={pageNumber}
+            mobilePerPageCount={mobilePerPageCount}
+            returnCount={gridTotal?.ReturnCount}
+            totalCount={gridTotal?.TotalCount}
+            handlePaginationChange={handlePaginationChange}
+          />
         ) : (
           <ActionGrid
             actions={actions}
@@ -356,9 +373,6 @@ export const ChequeAction = () => {
             setSelectedHeaderId={setSelectedHeaderId}
           />
         )}
-        {!cardIsLoading && cardIsFetching && (
-          <CustomSpin className="w-full" size="large" />
-        )}
 
         {state.isChequeDynamicActionOpen && (
           <CustomModal
@@ -375,13 +389,9 @@ export const ChequeAction = () => {
               )
             }
             headerDescription={`${
-              match
-                ? gridData?.Data?.find(
-                    (item) => item[rowFieldKey] === selectedId,
-                  )[staticKey]
-                : cardData?.Data?.find(
-                    (item) => item[rowFieldKey] === selectedId,
-                  )[staticKey]
+              gridData?.Data?.find((item) => item[rowFieldKey] === selectedId)[
+                staticKey
+              ]
             }
               `}
             closeModal={() =>
@@ -417,7 +427,7 @@ export const ChequeAction = () => {
             }
           />
         )}
-        {state.isInfoActionOpen && (
+        {state.isInfoModalOpen && (
           <CustomModal
             contentClassName={`${match ? "w-[700px] h-[400px]" : ""}`}
             headerName={state.actionConfig.MenuDesc}
@@ -432,26 +442,75 @@ export const ChequeAction = () => {
               )
             }
             headerDescription={`${
-              match
-                ? gridData?.Data?.find(
-                    (item) => item[rowFieldKey] === selectedId,
-                  )[staticKey]
-                : cardData?.Data?.find(
-                    (item) => item[rowFieldKey] === selectedId,
-                  )[staticKey]
+              gridData?.Data?.find((item) => item[rowFieldKey] === selectedId)[
+                staticKey
+              ]
             }
               `}
             closeModal={() => dispatchState({ type: "CLOSE_INFO_MODAL" })}
-            isModalOpen={state.isInfoActionOpen}
+            isModalOpen={state.isInfoModalOpen}
             content={
               <ChequeActionModal ids={selectedHeaderId}>
                 <ChequeInfoModal
-                  data={gridData?.Data?.find(
-                    (item) => item[rowFieldKey] === selectedId,
-                  )}
+                  id={selectedId}
                   handlePrevStep={handlePrevStep}
+                  mutateIsLoading={mutateIsLoading}
                 />
               </ChequeActionModal>
+            }
+          />
+        )}
+        {state.isCirculationModalOpen && (
+          <CustomModal
+            contentClassName={`${match ? "w-[700px] h-[400px]" : ""}`}
+            headerName={state.actionConfig.MenuDesc}
+            headerIcon={
+              match && (
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: getColoredIcon(state.actionConfig.Icon, mode),
+                  }}
+                  style={{ width: "18px", height: "17px" }}
+                />
+              )
+            }
+            headerDescription={`${
+              gridData?.Data?.find((item) => item[rowFieldKey] === selectedId)[
+                staticKey
+              ]
+            }
+              `}
+            closeModal={() =>
+              dispatchState({ type: "CLOSE_CIRCULATION_MODAL" })
+            }
+            isModalOpen={state.isCirculationModalOpen}
+            content={
+              <ChequeActionModal
+                ids={selectedHeaderId}
+                handleReturn={handleReturn}
+              >
+                <ChequeCirculationModal id={selectedId} />
+              </ChequeActionModal>
+            }
+          />
+        )}
+        {state.isPrevStepConfirmationModalOpen && (
+          <CustomModal
+            width={300}
+            centered
+            disableTitle
+            closeModal={() => dispatchState({ type: "CLOSE_PREV_STEP_MODAL" })}
+            isModalOpen={state.isPrevStepConfirmationModalOpen}
+            content={
+              <Confirmation
+                itemsToConfirm={selectedId}
+                mode="Confirm"
+                onLoading={mutateIsLoading}
+                onCancel={() =>
+                  dispatchState({ type: "CLOSE_PREV_STEP_MODAL" })
+                }
+                onConfirm={handlePrevStep}
+              />
             }
           />
         )}

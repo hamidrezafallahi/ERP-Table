@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 
-import { UITableController } from '../../adapters/ui/UITableController';
-import { RowStateEnum } from '../../domain/value-objects';
-import { TCell } from '../../engine/type';
+import { UITableController } from '../adapters/ui/UITableController';
+import { RowStateEnum } from '../domain/value-objects';
+import { TCell } from '../engine/type';
 import { ERPTableRow } from './eRPTableRow';
 
 interface Props {
@@ -23,24 +23,27 @@ export function ERPTableBody({
     id: number;
     rowState: RowStateEnum;
     cells: Record<string, TCell>;
-
     isExpanded: boolean;
   }> = table.rows;
-
   return (
-    <>
-      {rows.map((row, index) => (
-        <ERPTableRow
-          key={row.id}
-          row={row}
-          index={index}
-          table={table}
-          controller={controller}
-          tableKey={tableKey}
-          draggedRowIdRef={dragRowId}
-          moreDetailComponent={MoreDetailComponent}
-        />
-      ))}
-    </>
+   <tbody>
+  {rows
+    .sort((a, b) => 
+      (a.cells['index'].value as number) - 
+      (b.cells['index'].value as number)
+    )
+    .map((row, index) => (
+      <ERPTableRow
+        key={row.id}
+        row={row}
+        index={index}
+        table={table}
+        controller={controller}
+        tableKey={tableKey}
+        draggedRowIdRef={dragRowId}
+        moreDetailComponent={MoreDetailComponent}
+      />
+    ))}
+</tbody>
   );
 }

@@ -1,15 +1,16 @@
-import { combineReducers } from "@reduxjs/toolkit";
+import { combineReducers } from '@reduxjs/toolkit';
+import notificationReducer, { NotificationState } from '@slice/notification';
 
-import account from "./account";
-import config from "./config";
-import container from "./container";
-import history from "./history";
-import init from "./init";
-import listItems from "./items";
-import navigateList from "./navigateList";
-import pages from "./pages";
-import notificationReducer, { NotificationState } from "@slice/notification";
-import { IInitialContainer } from "./container/type";
+import account from './account';
+import config from './config';
+import container from './container';
+import { IInitialContainer } from './container/type';
+import endYearOperations from './endYearOperations';
+import history from './history';
+import init from './init';
+import listItems from './items';
+import navigateList from './navigateList';
+import pages from './pages';
 
 const withoutPersist = combineReducers({
   container,
@@ -28,6 +29,7 @@ const withPersist = combineReducers({
   navigateList,
   history,
   account,
+  endYearOperations,
 });
 
 const sliceRootReducer = {

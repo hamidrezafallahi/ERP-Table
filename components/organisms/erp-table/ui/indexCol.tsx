@@ -1,8 +1,3 @@
-import {
-  useEffect,
-  useState,
-} from 'react';
-
 import { useTranslations } from 'next-intl';
 
 import { CustomDropdownButton } from '@components/atoms/defaultElements';
@@ -15,9 +10,9 @@ import {
   Undo,
 } from '@components/atoms/iconComponents';
 
-import { UITableController } from '../../adapters/ui/UITableController';
-import { RowStateEnum } from '../../domain/value-objects';
-import { TCell } from '../../engine/type';
+import { UITableController } from '../adapters/ui/UITableController';
+import { RowStateEnum } from '../domain/value-objects';
+import { TCell } from '../engine/type';
 import { CellMeta } from './cellRenderer';
 
 interface IndexColProps {
@@ -38,14 +33,11 @@ export const IndexCol: React.FC<IndexColProps> = ({
   controller,
   meta,
 }) => {
-  const [, forceUpdate] = useState(0);
   const t = useTranslations();
   const index = row.cells["index"].value as number;
   const selectedRow = controller.getSelectedRows(tableKey);
-  const isSelectedRow = controller.isSelectedRow(tableKey, row.id);
-  const isExpandableRow = controller.isExpandableRow(tableKey, row.id);
   const handleDeleteRow = () => {
-    controller.dispatch({ type: "ROW_DELETED", rowId: row.id });
+     controller.dispatch({ type: "ROW_DELETED", rowId: row.id });
   };
 
   const handleCopyRow = () => {
@@ -155,13 +147,8 @@ export const IndexCol: React.FC<IndexColProps> = ({
   };
 
   const isDeleted = row.rowState === RowStateEnum.Deleted;
-  useEffect(() => {
-    if (!controller) return;
-    const unsubscribe = controller.subscribeRow(row.id, () => {
-      forceUpdate((t) => t + 1);
-    });
-    return () => unsubscribe?.();
-  }, [controller, row.id]);
+ const isSelectedRow = controller.isSelectedRow(tableKey, row.id);
+  const isExpandableRow = controller.isExpandableRow(tableKey, row.id); 
   return (
     <div
       className={` ${
@@ -195,7 +182,7 @@ export const IndexCol: React.FC<IndexColProps> = ({
               type="button"
               onClick={handleExpandRow}
               className={`z-20  ${
-                isDeleted ? "cursor-not-allowed " : "hover:bg-red-100"
+                isDeleted ? "cursor-not-allowed " : "hover:bg-zinc-200"
               } `}
               disabled={isDeleted}
             >

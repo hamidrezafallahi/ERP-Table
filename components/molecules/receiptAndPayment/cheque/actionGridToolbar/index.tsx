@@ -1,21 +1,21 @@
-import { useTranslations } from 'next-intl';
-import { shallowEqual } from 'react-redux';
+import { useTranslations } from "next-intl";
+import { shallowEqual } from "react-redux";
 
-import { CustomModal } from '@components/atoms/defaultElements';
+import { CustomModal } from "@components/atoms/defaultElements";
 import {
   FilterIcon,
   SortAscending,
   Undo,
-} from '@components/atoms/iconComponents';
-import AdvancedSort from '@components/molecules/advancedSort';
-import Filter from '@components/molecules/filter';
-import { LocalQuickSearch } from '@components/molecules/localQuickSearch';
-import Sort from '@components/molecules/sort';
-import { useAppSelector } from '@redux/index';
+} from "@components/atoms/iconComponents";
+import AdvancedSort from "@components/molecules/advancedSort";
+import Filter from "@components/molecules/filter";
+import { LocalQuickSearch } from "@components/molecules/localQuickSearch";
+import Sort from "@components/molecules/sort";
+import { useAppSelector } from "@redux/index";
 
-import { AdvancedFilter } from './advancedFilter';
-import type { IProps } from './type';
-import { useFiltersAndSorts } from './useFiltersAndSorts';
+import AdvancedFilter from "@components/molecules/advancedFilter";
+import type { IProps } from "./type";
+import { useFiltersAndSorts } from "./useFiltersAndSorts";
 
 export const ActionGridToolbar = ({
   filterInfo,
@@ -30,7 +30,7 @@ export const ActionGridToolbar = ({
   const { match } = useAppSelector((state) => {
     const match = state.withPersist.config.initMatch;
     return { match };
-  },shallowEqual);
+  }, shallowEqual);
 
   const {
     filterFields,
@@ -154,7 +154,7 @@ export const ActionGridToolbar = ({
             data={filterFields}
             onReset={onResetFilters}
             onApplyFilters={applyFilters}
-            filterInfo={filterInfo}
+            // filterInfo={filterInfo}
             defaultFilters={null}
           />
         }

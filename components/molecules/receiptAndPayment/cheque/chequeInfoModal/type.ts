@@ -1,6 +1,6 @@
-import type { IChequeDetails } from "@services/trh/chequeDetails/type";
-
 export interface IProps {
-  handlePrevStep: () => Promise<void>;
-  data: IChequeDetails;
+  handlePrevStep?: () => Promise<void>;
+  id: number;
+  mutateIsLoading?: boolean;
+  withoutButton?: boolean;
 }

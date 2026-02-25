@@ -39,6 +39,7 @@ export interface ICommandResponse {
   TotalInputCount?: number;
   TotalOkCount?: number;
   TotalErrorCount?: number;
+  Data?: any;
 }
 
 export interface IDeleteResult {
@@ -127,7 +128,8 @@ export interface IBaseRequest<T> {
   CalendarId?: number;
   YearPlanId?: number;
   Token?: string;
-  Details?:unknown[]
+  Details?:unknown[];
+  BankAccountId?:number
 }
 
 export interface IService<T, K = unknown> {

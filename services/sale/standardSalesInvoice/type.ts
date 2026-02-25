@@ -28,6 +28,7 @@ export interface IStandardSalesInvoice extends IBaseDto {
   AddElementIds: number[];
   Currency: {
     CurrencyDesc: string;
+    CurrencyId: number;
   };
   PayOfTypeId?: number; // روش تسویه
   LondAmount?: number; // مبلغ نسیه

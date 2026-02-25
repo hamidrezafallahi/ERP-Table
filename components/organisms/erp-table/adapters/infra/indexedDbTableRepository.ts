@@ -7,6 +7,7 @@ import { Table } from '../../domain/entities/Table';
 import {
   CellValue,
   ColumnId,
+  Pagination,
   RowId,
   RowState,
   RowStateEnum,
@@ -161,7 +162,7 @@ export class IndexedDbTableRepository implements TableRepository {
           reject(new Error(`Table ${tableId} not found`));
           return;
         }
-        resolve(new Table(tableId, this.deserializeRows(req.result.rows), new Map()));
+        resolve(new Table(tableId, this.deserializeRows(req.result.rows), new Map(), new Pagination(1,10,10)));
       };
       req.onerror = () => reject(req.error);
     });

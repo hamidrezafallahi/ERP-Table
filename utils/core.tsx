@@ -1,12 +1,6 @@
-import {
-  FormInstance,
-  message,
-} from 'antd';
-import moment from 'moment-jalaali';
-import {
-  Slide,
-  toast,
-} from 'react-toastify';
+import { FormInstance, message } from "antd";
+import moment from "moment-jalaali";
+import { Slide, toast } from "react-toastify";
 
 import {
   BadgeError,
@@ -21,11 +15,11 @@ import {
   NeedReloadBadge,
   NewDatePicker,
   SavedBadge,
-} from '@components/atoms/defaultElements';
-import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
-import { DynamicTree } from '@components/atoms/defaultElements/dynamicTree';
-import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
-import InputText from '@components/atoms/defaultElements/inputText';
+} from "@components/atoms/defaultElements";
+import CustomCheckbox from "@components/atoms/defaultElements/checkbox";
+import { DynamicTree } from "@components/atoms/defaultElements/dynamicTree";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
+import InputText from "@components/atoms/defaultElements/inputText";
 import {
   ErrorAddIcon,
   ErrorDeleteIcon,
@@ -36,8 +30,8 @@ import {
   PendingAddIcon,
   PendingDeleteIcon,
   PendingUpdateIcon,
-} from '@components/atoms/iconComponents';
-import DynamicRadio from '@components/molecules/dynamicRadioList';
+} from "@components/atoms/iconComponents";
+import DynamicRadio from "@components/molecules/dynamicRadioList";
 import {
   ToastConfirm,
   ToastError,
@@ -45,36 +39,31 @@ import {
   ToastInfo,
   ToastNotification,
   ToastSuccess,
-} from '@components/molecules/toast';
-import { Dispatch } from '@reduxjs/toolkit';
-import type { IDeleteData } from '@services/auth/base/type';
-import {
-  BadgeTypeEnum,
-  type IColumnConfig,
-} from '@services/generalType/type';
-import { resetContainer } from '@slice/container';
-import { resetInit } from '@slice/init';
-import type { IInitialPage } from '@slice/init/type';
-import { resetAllItems } from '@slice/items';
-import { resetNavigateList } from '@slice/navigateList';
-import { resetPages } from '@slice/pages';
-import { PageStateEnum } from '@slice/pages/enum';
-import { resetFactors } from '@slice/pages/factors';
+} from "@components/molecules/toast";
+import { Dispatch } from "@reduxjs/toolkit";
+import type { IDeleteData } from "@services/auth/base/type";
+import { BadgeTypeEnum, type IColumnConfig } from "@services/generalType/type";
+import { resetContainer } from "@slice/container";
+import { resetInit } from "@slice/init";
+import type { IInitialPage } from "@slice/init/type";
+import { resetAllItems } from "@slice/items";
+import { resetNavigateList } from "@slice/navigateList";
+import { resetPages } from "@slice/pages";
+import { PageStateEnum } from "@slice/pages/enum";
+import { resetFactors } from "@slice/pages/factors";
 import type {
   IFormFieldConfig,
   IRequestConfig,
   IRule,
-} from '@type/elementType';
-import {
-  MessageEnum,
-  SystemEnum,
-} from '@type/enum';
+} from "@type/elementType";
+import { MessageEnum, SystemEnum } from "@type/enum";
 
-import { validateNationalCode } from './checkingHelper';
+import { resetEndYearOperation } from "@slice/endYearOperations";
+import { validateNationalCode } from "./checkingHelper";
 
 export const getColoredIcon = (
   icon: string,
-  mode: "light" | "dark" = "light"
+  mode: "light" | "dark" = "light",
 ): string => {
   if (!icon) return icon;
 
@@ -108,7 +97,7 @@ export const renderFormField = (
   secondaryColor = "#585858", // * Subsidiary or complementary color for secondary emphasis
   backgroundColor = "#fff", // * background color (large area)
   accentColor = "#2563eb", // * blue color to attract attention, e.g. notifications or CTAs
-  tertiaryColor = "#939393" // * less important details and elements like text color
+  tertiaryColor = "#939393", // * less important details and elements like text color
 ) => {
   const {
     name,
@@ -500,18 +489,20 @@ export const resetData = async (dispatch: Dispatch) => {
   dispatch(resetFactors({}));
   dispatch(resetContainer({}));
   dispatch(resetNavigateList());
+  dispatch(resetEndYearOperation());
+
   await new Promise<void>((resolve, reject) => {
-  const req = indexedDB.deleteDatabase('ERP_TABLE_DB');
-  req.onsuccess = () => resolve();
-  req.onerror = () => reject();
-  req.onblocked = () => console.log('waiting for connections to close...');
-});
+    const req = indexedDB.deleteDatabase("ERP_TABLE_DB");
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject();
+    req.onblocked = () => console.log("waiting for connections to close...");
+  });
 };
 export const createCookie = (
   cookieName: string,
   cookieValue: string,
   hourToExpire?: number,
-  infinite?: boolean
+  infinite?: boolean,
 ) => {
   const date = new Date();
   const defaultHour = hourToExpire ?? 8;
@@ -583,7 +574,7 @@ export const showErrorToastDelete = (
   message: string,
   deleteData: IDeleteData[],
   title = "",
-  time = 0
+  time = 0,
 ) => {
   return toast(
     <ToastErrorDelete
@@ -604,7 +595,7 @@ export const showErrorToastDelete = (
       progress: undefined,
       theme: "light",
       transition: Slide,
-    }
+    },
   );
 };
 export const showInfoToast = (message = "", title = "", time = 2000) => {
@@ -641,7 +632,7 @@ export const showSuccessToast = (message, title = null, time = 2000) => {
 export const showConfirmToast = (
   message = null,
   title = null,
-  handleConfirm
+  handleConfirm,
 ) => {
   return toast(
     <ToastConfirm
@@ -662,7 +653,7 @@ export const showConfirmToast = (
       progress: undefined,
       theme: "light",
       transition: Slide,
-    }
+    },
   );
 };
 export const showNotificationToast = (message = "", title = "") => {
@@ -716,7 +707,7 @@ export const convertToStringDate = (date: Date) => {
   const offset = date.getTimezoneOffset();
   const offsetHours = String(Math.floor(Math.abs(offset) / 60)).padStart(
     2,
-    "0"
+    "0",
   );
   const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, "0");
   const sign = offset < 0 ? "+" : "-";
@@ -730,7 +721,7 @@ export const convertToStringDateWithoutTime = (date: Date) => {
   const offset = date.getTimezoneOffset();
   const offsetHours = String(Math.floor(Math.abs(offset) / 60)).padStart(
     2,
-    "0"
+    "0",
   );
   const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, "0");
   const sign = offset < 0 ? "+" : "-";
@@ -788,7 +779,7 @@ export const convertDate = ({
 
 export const stringToColorIndex = (
   str: string,
-  paletteLength: number
+  paletteLength: number,
 ): number => {
   let hash = 0;
   for (let i = 0; i < str?.length; i++) {
@@ -798,7 +789,7 @@ export const stringToColorIndex = (
 };
 
 export const generateColorsFromString = (
-  str: string
+  str: string,
 ): { backgroundColor: string; textColor: string } => {
   const index = stringToColorIndex(str, colorPalette.length);
   const { background: backgroundColor, text: textColor } = colorPalette[index];
@@ -856,7 +847,7 @@ export function dataURLtoFile(dataUrl: string, filename: string): File {
   return new File([uint8Array], filename, { type: mimeType });
 }
 export function getFileTypeFromBase64(
-  base64String: string | null | undefined
+  base64String: string | null | undefined,
 ): string | null {
   if (!base64String) {
     return null;
@@ -958,7 +949,7 @@ export const levelUrl = (Level) => {
 export function findItemInNestedData<T>(
   array: T[],
   key: keyof T,
-  value: unknown
+  value: unknown,
 ): T | null {
   const search = (item: T): T | null => {
     if (item[key] === value) {
@@ -1026,7 +1017,7 @@ export function findNearestTrueValue(obj, targetKey) {
 }
 
 export function transformDotNotationToNested<T extends Record<string, any>>(
-  obj: T
+  obj: T,
 ): Record<string, any> {
   const result: Record<string, any> = {};
   for (const key in obj) {
@@ -1068,7 +1059,7 @@ export function transformDotNotationToNested<T extends Record<string, any>>(
 
 export const getChangedFields = <T extends Record<string, any>>(
   defaultValue: T,
-  newValues: T
+  newValues: T,
 ): Array<keyof T> => {
   const changedFields: Array<keyof T> = [];
 
@@ -1085,7 +1076,7 @@ export function findNestedLevel<T>(
   items: T[],
   targetId: unknown,
   options: { idKey?: string; childrenKey?: string } = {},
-  level: number = 1
+  level: number = 1,
 ): number {
   const { idKey = "id", childrenKey = "children" } = options;
 
@@ -1100,7 +1091,7 @@ export function findNestedLevel<T>(
         children,
         targetId,
         options,
-        level + 1
+        level + 1,
       );
       if (childLevel !== -1) {
         return childLevel;
@@ -1195,7 +1186,7 @@ export function randomString(length: number = 50): string {
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
   return Array.from(
     { length },
-    () => chars[Math.floor(Math.random() * chars.length)]
+    () => chars[Math.floor(Math.random() * chars.length)],
   ).join("");
 }
 export const hasStoredValue = (val: any) => {
@@ -1221,7 +1212,7 @@ export function columnsSorting(columns: IColumnConfig[]): IColumnConfig[] {
 
 export function checkAndRedirectIfNeeded(
   initialPage: IInitialPage,
-  pathname: string
+  pathname: string,
 ): {
   isAdd: boolean;
 } {

@@ -1,10 +1,10 @@
 import React, { ReactNode } from 'react';
 
-import { UITableController } from '../../adapters/ui/UITableController';
+import { UITableController } from '../adapters/ui/UITableController';
 import {
   TableViewState,
   TCell,
-} from '../../engine/type';
+} from '../engine/type';
 import { CellMeta } from './cellRenderer';
 
 interface Props {

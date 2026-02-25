@@ -2,7 +2,7 @@ import React from 'react';
 
 import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
 
-import { UITableController } from '../../adapters/ui/UITableController';
+import { UITableController } from '../adapters/ui/UITableController';
 
 interface Props {
  controller: UITableController
@@ -11,7 +11,7 @@ interface Props {
 
 export function ERPTableHeader({ controller ,tableKey}: Props) {
   const table = controller.getViewState(tableKey)
-  if (!table || !table.columns) return null; // اگر هنوز load نشده باشد
+  if (!table || !table.columns) return null; 
 
   const isSelectedAllRows = table.rows.every(row => !!table.selectedRows[row.id]);
   const handleSelectAllRows = () => {

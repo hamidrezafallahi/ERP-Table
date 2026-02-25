@@ -1,9 +1,4 @@
-import React, {
-  Ref,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { useEffect } from 'react';
 
 import moment from 'moment-jalaali';
 import { useLocale } from 'next-intl';
@@ -14,13 +9,13 @@ import {
 } from '@components/atoms/defaultElements';
 import { IRequestConfig } from '@type/elementType';
 
-import { UITableController } from '../../adapters/ui/UITableController';
-import { FieldType } from '../../bootstrap/type';
-import { RowStateEnum } from '../../domain/value-objects';
+import { UITableController } from '../adapters/ui/UITableController';
+import { FieldType } from '../bootstrap/type';
+import { RowStateEnum } from '../domain/value-objects';
 import {
   ItemType,
   TCell,
-} from '../../engine/type';
+} from '../engine/type';
 
 /* ======================================================
    Types
@@ -51,18 +46,17 @@ export type CellMeta = {
 
 interface CellRendererProps {
   tableKey: string;
-  rowId: number;
-  columnId: string;
-  cell: TCell;
-  meta?: CellMeta;
-  controller: UITableController;
-  tabIndex: number;
   row: {
     id: number;
     cells: Record<string, TCell>;
     rowState: RowStateEnum;
     isExpanded: boolean;
   };
+  columnId: string;
+  idx: number;
+  meta?: CellMeta;
+  controller: UITableController;
+  tabIndex: number;
 }
 
 /* ======================================================
@@ -70,24 +64,24 @@ interface CellRendererProps {
    ====================================================== */
 
 export const CellRenderer: React.FC<CellRendererProps> = ({
-  row,
-  rowId,
   tableKey,
+  row,
   columnId,
-  cell,
   meta,
   controller,
   tabIndex,
+  idx,
 }) => {
-  const { value, display } = cell;
-  const refElement = useRef<HTMLElement>(null);
-  const [, forceUpdate] = useState(0);
-  const isActive = controller.isActiveCell(tableKey, rowId, columnId);
+  const viewCell = controller.getCell(tableKey, row.id, columnId);
+  const value = viewCell.getValue().value;
+  const display = viewCell.getDisplay().value;
+  const isActive = controller.isActiveCell(tableKey, row.id, columnId);
+const inputRef = React.useRef<HTMLInputElement | null>(null);
   const locale = useLocale();
   const dispatchChangeValue = (newValue: unknown) => {
     controller.dispatch({
       type: "UI_CELL_CHANGE",
-      rowId,
+      rowId: row.id,
       columnId,
       value: newValue,
     });
@@ -95,13 +89,13 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   const dispatchChangeDisplay = (label: string | null) => {
     controller.dispatch({
       type: "UI_CELL_CHANGE_DISPLAY",
-      rowId,
+      rowId: row.id,
       columnId,
       value: label,
     });
   };
   const activeCell = () => {
-    controller.dispatch({ type: "UI_ACTIVE_CELL", rowId, columnId });
+    controller.dispatch({ type: "UI_ACTIVE_CELL", rowId: row.id, columnId });
   };
 
   const type = meta.renderType;
@@ -136,21 +130,20 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     }
   };
   useEffect(() => {
-    if (!controller) return;
-    const unsubscribe = controller.subscribeCell(rowId, columnId, () => {
-      forceUpdate((t) => t + 1);
-    });
-    return () => unsubscribe?.();
-  }, [controller, rowId, columnId]);
-  if (editable == false || type == "index") {
-    return <span className="text-xs">{String(value ?? "")}</span>;
+  if (isActive && inputRef.current) {
+    inputRef.current.focus();
+    inputRef.current.select();
   }
+}, [isActive]);
 
+  if (editable == false || type == "index") {
+    return <span key={idx} className="text-xs">{String(value ?? "")}</span>;
+  }
   /* ===== view mode ===== */
   if (!isActive || isDeleted) {
     return (
       <button
-        ref={refElement as Ref<HTMLButtonElement>}
+        key={idx}
         tabIndex={tabIndex}
         disabled={isDeleted}
         className={`flex items-center  px-2 w-full h-full text-xs ${isDeleted ? "cursor-not-allowed " : "cursor-text"}`}
@@ -168,7 +161,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     case "number":
       return (
         <input
-          autoFocus
+          key={idx}
+          ref={inputRef}
           value={value === "" || value == null ? "" : Number(value)}
           disabled={isDeleted || !editable}
           className={`${isDeleted && "cursor-not-allowed"}
@@ -190,6 +184,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     case "date":
       return (
         <NewDatePicker
+          key={idx}
           disabled={isDeleted || !editable}
           value={value ? new Date(value as string).valueOf() : undefined}
           onChange={(v) => {
@@ -201,12 +196,10 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     case "select":
       return (
         <select
-          // autoFocus
-          // ref={refElement as Ref<HTMLSelectElement>}
+          key={idx}
           disabled={isDeleted || !editable}
           className={`!w-36 h-8 ${isDeleted && "cursor-not-allowed"}`}
           value={String(value ?? "")}
-          // onFocus={() => onActiveColChange(columnId)}
           onClick={() => activeCell()}
           onChange={(e) => {
             dispatchChangeValue(e.target.value);
@@ -224,6 +217,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     case "selectOption":
       return (
         <DynamicSelect
+          key={idx}
           showSearch
           onSearchPhrase={(v, o) => {
             dispatchChangeValue(v);
@@ -231,15 +225,13 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
               if (o) {
                 dispatchChangeDisplay(o);
               } else {
-                console.log("change display to null");
-                dispatchChangeDisplay(null);
+                 dispatchChangeDisplay(null);
               }
             }
           }}
           autoFocus
-          ref={refElement as Ref<HTMLSelectElement>}
           disabled={isDeleted || !editable}
-          value={{ value: String(value ?? ""), label: cell.display }}
+          value={{ value: String(value ?? ""), label: display }}
           dynamicValue={meta?.dynamicValue}
           className={`!bg-white !border-[0.4px] !border-gray-gray7 !w-36 h-8 ${isDeleted && "cursor-not-allowed"} relative`}
           infinite
@@ -250,50 +242,39 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
               if (o?.label) {
                 dispatchChangeDisplay(o.label as string);
               } else {
-                console.log("change display to null");
-                dispatchChangeDisplay(null);
+                 dispatchChangeDisplay(null);
               }
             }
           }}
         />
       );
-
     case "static":
       return (
         <span
-          // ref={refElement as Ref<HTMLSpanElement>}
+        key={idx}
           tabIndex={tabIndex}
           className="flex items-center px-2 w-full h-full text-xs cursor-text"
           onClick={() => activeCell()}
-
-          // onFocus={(e) => {
-          //   activeCell();
-
-          //   onActiveColChange(columnId);
-          // }}
         >
           {String(display ?? value ?? "") || "—"}
         </span>
       );
-
     case "text":
     default:
       return (
         <input
-          // autoFocus
-          // ref={refElement as Ref<HTMLInputElement>}
+         key={idx}
+          ref={inputRef}
           disabled={isDeleted || !editable}
           value={value == null ? "" : String(value)}
           className={`${isDeleted && "cursor-not-allowed"}
             flex items-center bg-transparent px-2 outline-none focus-visible:outline-none
            focus:outline-none ring-0 focus:!ring-0 focus:ring-offset-0 w-36 h-8 transition-colors ]`}
           draggable={false}
-          // onBlur={() => activeCell()}
           onDragStart={blockDrag}
           onDragOver={blockDrag}
           onDrop={blockDrag}
           onChange={(e) => dispatchChangeValue(e.target.value)}
-          // onFocus={() => onActiveColChange(columnId)}
           onClick={() => activeCell()}
         />
       );

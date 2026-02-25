@@ -12,7 +12,7 @@ export interface IProps {
   staticKey: string;
   onActionClick: (
     action: IToolbarMenu,
-    record: any
+    record: any,
     // id: number | null,
     // headerId: number | null
   ) => void;
@@ -20,4 +20,12 @@ export interface IProps {
   headerKey: string;
   selectedHeaderId: number[];
   setSelectedHeaderId: Dispatch<SetStateAction<number | number[]>>;
+  isSelectMode: boolean;
+  setIsSelectMode: Dispatch<SetStateAction<boolean>>;
+  loading: boolean;
+  pageNumber: number;
+  returnCount: number;
+  mobilePerPageCount: number;
+  totalCount: number;
+  handlePaginationChange: (page: number) => void;
 }

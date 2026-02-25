@@ -20,5 +20,16 @@ export const defaultListConfig = {
       fieldType: "string",
       order: 6,
     },
+    {
+      fieldName: "CurrencyId",
+      fieldCaption: "ارز",
+      fieldType: "selectOption",
+      selectEndpoint: {
+        addWebUrl: "/api/sale/select/currencyAvailable",
+        endpoint: "/api/sale/select/currencyAvailable",
+        repoViewId: 130076,
+      },
+      order: 7,
+    },
   ],
 };

@@ -1,4 +1,4 @@
-import type { IFormFieldConfig } from '@type/elementType';
+import type { IFormFieldConfig } from "@type/elementType";
 
 export const formConfig: IFormFieldConfig[] = [
   {
@@ -24,6 +24,16 @@ export const formConfig: IFormFieldConfig[] = [
       addWebUrl: "/api/trh/Select/Cashier4SelectOption",
       endpoint: "/api/trh/Select/Cashier4SelectOption",
       repoViewId: 140002,
+    },
+  },
+  {
+    name: "CurrencyId",
+    caption: "ارز",
+    type: "selectOption",
+    selectEndpoint: {
+      addWebUrl: "/api/trh/select/currencyAvailable",
+      endpoint: "/api/trh/select/currencyAvailable",
+      repoViewId: 140036,
     },
   },
   {

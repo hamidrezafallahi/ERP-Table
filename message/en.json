@@ -195,9 +195,11 @@
     "repoAssign": "Assignability",
     "issuingProformaInvoice": "Issuing Proforma Invoice",
     "priceAnnouncement": "Price Announcement",
+    "priceAnnouncementList": "Price Announcement List",
     "invoice": "Invoice",
     "paymentRequest": "Payment Request",
-    "endYearOperations": "End Year Operations"
+    "endYearOperations": "End Year Operations",
+    "bankStatementInfo": "bank Statement Info"
   },
   "homePage": {
     "title": "Hello world!",
@@ -966,7 +968,8 @@
     "receivedChequeList": "Received Cheque List",
     "receivedChequeAction": "Received Cheque Action",
     "notRegisteredReceivedCheque": "Not Registered Received Cheque",
-    "notRegisteredIssuanceCheque": "Not Registered Issuance Cheque"
+    "notRegisteredIssuanceCheque": "Not Registered Issuance Cheque",
+    "bankStatementInfo": "bank Statement Info"
   },
   "company": {
     "name": "Arian System"
@@ -1077,5 +1080,9 @@
     "percentage": "Percentage",
     "aSumOfMoney": "A Sum Of Money",
     "aPercentageOf": "A percentage of"
+  },
+  "bankStatementInfo": {
+    "accounts": "Accounts",
+    "bankStatementTxt": "First, choose an account."
   }
 }

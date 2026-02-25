@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
+import { shallowEqual } from "react-redux";
 
-import { RowInfoIcon } from "@components/atoms/iconComponents";
+import { Info, RowInfoIcon } from "@components/atoms/iconComponents";
 import {
   isRegisteredConfig,
   stateConfig,
@@ -14,9 +15,21 @@ import type {
   IRequest,
 } from "@services/trh/receivedCheque/type";
 
-export const HeaderAction = ({ id, getUrl, repoViewId, isMulti = false }) => {
+export const HeaderAction = ({
+  id,
+  getUrl,
+  repoViewId,
+  isMulti = false,
+  handleReturn = null,
+}) => {
   const t = useTranslations();
-  const locale = useAppSelector((state) => state.withPersist.config.lang);
+
+  const { locale } = useAppSelector((state) => {
+    const locale = state.withPersist.config.lang;
+
+    return { locale };
+  }, shallowEqual);
+
   const { data: headerData } = useGetData<IReceivedCheque[], IRequest>({
     url: getUrl,
     body: {
@@ -24,6 +37,7 @@ export const HeaderAction = ({ id, getUrl, repoViewId, isMulti = false }) => {
       Id: id,
     },
   });
+
   const columnsConfig: IColumnConfig[] = [
     {
       fieldName: "DocumentCheque.Num",
@@ -208,6 +222,16 @@ export const HeaderAction = ({ id, getUrl, repoViewId, isMulti = false }) => {
             {finalData?.["DocumentCheque.IsRegistered"] ? "✔" : "✘"}
           </span>
         </div>
+        {handleReturn && (
+          <div
+            className="flex flex-1 justify-end items-center"
+            onClick={handleReturn}
+          >
+            <span className="cursor-pointer">
+              <Info />
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -279,16 +279,15 @@ export default function FormGenerator<T, K>({
           });
         }
 
-        if (id && formData.length > 0) {
+        if (formData.length > 0) {
           pageData.push({
             name: fieldKey,
             caption: "MainIdField",
-            value: id,
-            originalValue: id,
+            value: id ? id : null,
+            originalValue: id ? id : null,
             type: "hidden",
           });
         }
-
 
         dispatch(
           addNewPage({

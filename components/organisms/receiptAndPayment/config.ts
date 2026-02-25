@@ -1,4 +1,5 @@
-import { SystemEnum } from '@type/enum';
+import { PageStateEnum } from "@slice/pages/enum";
+import { SystemEnum } from "@type/enum";
 
 export const mainCardConfig = [
   {
@@ -179,6 +180,21 @@ export const bankInfoConfig = {
       listRepoId: 3012,
       listSystemId: SystemEnum.trh,
       recordUrl: `recordUrl`,
+    },
+    {
+      label: "bankStatementInfo",
+      // icon: Icons["Deposit"],
+      record: 248,
+      listUrl: `trh/bankStatementInfo`,
+      // listRepoId: 3012,
+      recordUrl: `recordUrl`,
+      listRepoId: 12,
+      listSystemId: SystemEnum.trh,
+      data: {},
+      originalPageState: PageStateEnum.Opened,
+      pageState: PageStateEnum.Opened,
+      caption: "caption",
+      captionII: `captionII`,
     },
   ],
 };

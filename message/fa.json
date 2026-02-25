@@ -195,9 +195,11 @@
     "repoAssign": "اختصاص پذیری",
     "issuingProformaInvoice": "صدور پیش فاکتور",
     "priceAnnouncement": "پیشنهاد قیمت",
+    "priceAnnouncementList": "لیست پیشنهاد قیمت",
     "invoice": "صورتحساب",
     "paymentRequest": "درخواست پرداخت",
-    "endYearOperations": "عملیات پایان سال"
+    "endYearOperations": "عملیات پایان سال",
+    "bankStatementInfo": "گردش حساب"
   },
   "homePage": {
     "title": "Hello world!",
@@ -988,7 +990,8 @@
     "receivedChequeList": "لیست چک دریافتی",
     "receivedChequeAction": "عملیات چک دریافتی",
     "notRegisteredReceivedCheque": "چک های دریافتی ثبت نشده",
-    "notRegisteredIssuanceCheque": "چک های صادره ثبت نشده"
+    "notRegisteredIssuanceCheque": "چک های صادره ثبت نشده",
+    "bankStatementInfo": "گردش حساب"
   },
   "company": {
     "name": "آرین سیستم"
@@ -1101,5 +1104,9 @@
     "percentage": "درصد",
     "aSumOfMoney": "مبلغی",
     "aPercentageOf": "درصدی"
+  },
+  "bankStatementInfo": {
+    "accounts": "حساب ها",
+    "bankStatementTxt": "یک حساب را ابتدا انتخاب نمایید."
   }
 }

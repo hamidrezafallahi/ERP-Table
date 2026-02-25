@@ -23,9 +23,9 @@ export const EndYearOperationsPage = ({ setMobileDrawerContent, form }) => {
   const pageId = activePage?.pageId;
 
   const info = {
-    addEndpoint: "api/acc/insert/confirmationVouchers",
+    addEndpoint: "/api/acc/voucher/finishingVoucher",
     deleteEndpoint: null,
-    updateEndpoint: "api/acc/insert/confirmationVouchers",
+    updateEndpoint: "/api/acc/voucher/finishingVoucher",
     formIdField: null,
   };
 

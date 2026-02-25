@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 
 import { Checkbox, Form, Spin } from "antd";
-import dayjs from "dayjs";
 import moment from "moment-jalaali";
 import { useTranslations } from "next-intl";
 
@@ -65,13 +64,10 @@ export const FormGoodExtraInfo = ({
 
   const [mutateItem, { isLoading: mutateIsLoading }] = useCUDDataMutation();
 
-  const [changeFields, setChangeFields] = useState([]);
-  const [originalValues, setOriginalValues] = useState(null);
   const [independentValue, setIndependentValue] = useState<number>();
 
   const t = useTranslations();
   const [form] = Form.useForm();
-  const formValues = Form.useWatch([], form);
 
   const independentKey = Form.useWatch("GoodsExtraInfoId", form);
   const dependentKey = Form.useWatch("GoodsExtraInfoValue", form);
@@ -82,12 +78,9 @@ export const FormGoodExtraInfo = ({
     }
     if (value === fieldType.date) {
       const validDate = form.getFieldValue("GoodsExtraInfoValue");
-      if (typeof validDate === "string" || typeof validDate === "number") {
-        const date = new Date(
-          moment(validDate, "jYYYY-jMM-jDD").format()
-        ).toISOString();
-        form.setFieldValue("GoodsExtraInfoValue", dayjs(date));
-      }
+
+      form.setFieldValue("GoodsExtraInfoValue", validDate);
+
       return <NewDatePicker />;
     }
     if (value === fieldType.number) {
@@ -118,18 +111,15 @@ export const FormGoodExtraInfo = ({
     }
   };
 
-  const formIsValid = formValues
-    ? Object.values(formValues).every((value) => value !== undefined)
-    : false;
-
   const handleSubmit = async (values) => {
     const cleanValues = transformDotNotationToNested(values);
 
     let dependentValue = cleanValues?.GoodsExtraInfoValue;
+
     if (independentValue === fieldType.date) {
       let dateStringValue;
       if (locale === "fa") {
-        dateStringValue = moment(dependentValue.toISOString())
+        dateStringValue = moment(dependentValue)
           .locale("fa")
           .format("jYYYY/jMM/jDD");
       } else {
@@ -140,9 +130,10 @@ export const FormGoodExtraInfo = ({
           timeZone: locale || Intl.DateTimeFormat().resolvedOptions().locale,
         };
         dateStringValue = new Intl.DateTimeFormat(locale, options).format(
-          dependentValue.toISOString()
+          dependentValue?.toISOString(),
         );
       }
+
       dependentValue = dateStringValue;
     }
 
@@ -158,7 +149,7 @@ export const FormGoodExtraInfo = ({
             GoodsExtraInfoValue: dependentValue,
             [sourceKey]: sourceId,
             [fieldKey]: id,
-            ChangeFields: changeFields,
+            ChangeFields: ["GoodsExtraInfoId", "GoodsExtraInfoValue"],
           },
         }).unwrap();
       } else {
@@ -183,50 +174,41 @@ export const FormGoodExtraInfo = ({
     }
   };
 
-  useEffect(() => {
-    if (originalValues) {
-      for (const key in formValues) {
-        if (originalValues[key] !== formValues[key]) {
-          const exist = changeFields.find((item) => item === key);
-
-          if (!exist) {
-            setChangeFields((prevState) => [...prevState, key]);
-          }
-        }
-      }
-    }
-  }, [formValues, originalValues]);
+  function toEnglishDigits(str: string) {
+    return str.replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d).toString());
+  }
 
   useEffect(() => {
     form.resetFields();
-    setChangeFields([]);
-    setOriginalValues(null);
+
     if (id && defaultValue?.Data) {
       form.setFieldValue(
         "GoodsExtraInfoId",
-        defaultValue?.Data[0]?.GoodsExtraInfoId
+        defaultValue?.Data[0]?.GoodsExtraInfoId,
       );
 
-      if (independentValue === fieldType.date) {
+      const type = defaultValue?.Data[0]?.GoodsExtraInfo?.Type;
+
+      if (type === fieldType.date) {
         if (id && defaultValue?.Data[0]?.GoodsExtraInfoValue) {
           const dateValue = defaultValue?.Data[0]?.GoodsExtraInfoValue;
 
-          const date = new Date(
-            moment(dateValue, "jYYYY-jMM-jDD").format()
-          ).toISOString();
-          form.setFieldValue("GoodsExtraInfoValue", dayjs(date));
+          const normalized = toEnglishDigits(dateValue);
+          const date = moment(normalized, "jYYYY/jMM/jDD", true).valueOf();
+
+          form.setFieldValue("GoodsExtraInfoValue", date);
         }
       } else {
         form.setFieldValue(
           "GoodsExtraInfoValue",
-          defaultValue?.Data[0]?.GoodsExtraInfoValue
+          defaultValue?.Data[0]?.GoodsExtraInfoValue,
         );
       }
     } else {
       if (independentValue === fieldType.boolean) {
         form.setFieldValue("GoodsExtraInfoValue", "خیر");
       } else if (independentValue === fieldType.date) {
-        const today = dayjs();
+        const today = new Date().valueOf();
         form.setFieldValue("GoodsExtraInfoValue", today);
       } else if (independentValue === fieldType.number) {
         form.setFieldValue("GoodsExtraInfoValue", 0);
@@ -239,7 +221,7 @@ export const FormGoodExtraInfo = ({
   useEffect(() => {
     if (independent?.Result === "Success") {
       const exactItem = independent?.Data?.find(
-        (item) => item?.GoodsExtraInfoId === independentKey
+        (item) => item?.GoodsExtraInfoId === independentKey,
       );
       setIndependentValue(exactItem?.Type);
     }
@@ -305,7 +287,7 @@ export const FormGoodExtraInfo = ({
           <CustomButton
             type="text"
             htmlType="submit"
-            disabled={id ? changeFields.length === 0 : !formIsValid}
+            // disabled={id ? changeFields.length === 0 : !formIsValid}
             className="bg-black-black8 hover:bg-white px-8 border hover:border-black-black8 rounded text-white disabled:text-gray-gray6 text-xs"
           >
             {mutateIsLoading ? (

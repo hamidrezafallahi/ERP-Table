@@ -20,12 +20,15 @@ export const FinalizeVoucherPage = ({ setMobileDrawerContent, form }) => {
     shallowEqual
   );
 
+
+
+
   const pageId = activePage?.pageId;
 
   const info = {
-    addEndpoint: "api/acc/insert/confirmationVouchers",
+    addEndpoint: "/api/finishingvoucher/finishvoucher",
     deleteEndpoint: null,
-    updateEndpoint: "api/acc/insert/confirmationVouchers",
+    updateEndpoint: "/api/finishingvoucher/finishvoucher",
     formIdField: null,
   };
 

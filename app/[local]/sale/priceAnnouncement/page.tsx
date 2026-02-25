@@ -1,16 +1,16 @@
 import PriceAnnouncementTemplate from "@components/templates/priceAnnouncementTemplate";
-import { IInventoryVoucher } from "@services/inv/inventoryVoucher/type";
 import { IRequest } from "@services/reportFile/type";
+import { IPriceAnnouncement } from "@services/sale/priceAnnouncement/type";
 
 export default function PriceAnnouncementPage() {
   return (
-    <PriceAnnouncementTemplate<IInventoryVoucher, IRequest>
+    <PriceAnnouncementTemplate<IPriceAnnouncement, IRequest>
       fieldKey="PriceAnnouncementHeaderId"
       caption={"title.priceAnnouncement"}
-      url="api/inv/select/voucher"
-      listUrl="inv/priceAnnouncementList"
+      url="api/sale/select/saleQuotation"
+      listUrl="sale/priceAnnouncementList"
       titleKey="PriceAnnouncement"
-      // pageIcon="VoucherTypeIcon"
+      pageIcon="IssuingProformaInvoiceIcon"
     />
   );
 }

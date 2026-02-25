@@ -45,6 +45,7 @@ export const Details = ({
   systemId,
   repoId,
   withoutActivation,
+  filteringAction,
 }) => {
   const { mode = "light" } = useDarkMode();
 
@@ -120,7 +121,9 @@ export const Details = ({
     defaultBookmark?.HasBookMark ? defaultBookmark?.HasBookMark : false,
   );
 
-  let finallyActions = actions;
+  let finallyActions = filteringAction
+    ? filteringAction(actions, item)
+    : actions;
 
   if (conditionalActions?.length) {
     finallyActions = finallyActions.map((act) => {

@@ -14,15 +14,13 @@ import {
 import { Cell } from './Cell';
 
 export class Row {
+
   constructor(
     public id: RowId,
     public cells: Map<string, Cell>,
     public rowState: RowState,
     public changeFields: Set<string> = new Set(),
-    public moreDetails:unknown,
- 
-
-
+    public moreDetails: unknown,
   ) { }
   updateChangeFields(columnId: ColumnId): void {
     const cell = this.cells.get(columnId.value);
@@ -66,31 +64,37 @@ export class Row {
   getCells(): ReadonlyMap<string, Cell> {
     return new Map(this.cells);
   }
-  getCell(columnId:string): Cell{
+  getCell(columnId: string): Cell {
     return this.cells.get(columnId)
   }
-  ensureCell(columnId: ColumnId, defaultValue: CellValue,displayValue:CellDisplay) {
+  ensureCell(columnId: ColumnId, defaultValue: CellValue, displayValue: CellDisplay) {
     if (this.cells.has(columnId.value)) return;
-    this.cells.set(columnId.value, new Cell(this.id, columnId, defaultValue, defaultValue,displayValue));
+
+    const newCell = new Cell(this.id, columnId, defaultValue, defaultValue, displayValue);
+    this.cells.set(columnId.value, newCell);
   }
   setRowId(rowId: RowId) {
     this.id.set(rowId);
   }
   setMoreDetails(detail: unknown) {
-    this.moreDetails = detail ;
+    this.moreDetails = detail;
   }
   getMoreDetails() {
-    return this.moreDetails ;
+    return this.moreDetails;
   }
 
   removeCell(columnId: ColumnId) {
     this.cells.delete(columnId.value);
   }
+
+
   clone(): Row {
     const clonedCells = new Map<string, Cell>();
     for (const [k, cell] of this.cells.entries()) {
-      clonedCells.set(k, cell.clone());
+      const clonedCell = cell.clone();
+      clonedCells.set(k, clonedCell);
     }
-    return new Row(this.id, clonedCells, this.rowState,this.changeFields,this.moreDetails );
+    return new Row(this.id, clonedCells, this.rowState,this.changeFields, this.moreDetails);
   }
+
 }

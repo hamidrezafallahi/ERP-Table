@@ -2,7 +2,7 @@
 import React, {
   useEffect,
   useMemo,
-  useRef,
+  useState,
 } from 'react';
 
 import { Form } from 'antd';
@@ -20,13 +20,13 @@ import { ERPTable } from '@components/organisms/erp-table';
 import {
   ERPTableApi,
   ERPTableProps,
-} from '@components/organisms/erp-table/ui/erp-table';
-import {
-  useFullScreen,
-  useInitializePage,
-} from '@hooks/custom';
+} from '@components/organisms/erp-table/ui';
+import { useInitializePage } from '@hooks/custom';
 import { useAppSelector } from '@redux/index';
-import { useGetConditionallyMutation } from '@services/base';
+import {
+  useGetConditionallyMutation,
+  useGetData,
+} from '@services/base';
 import { addNewPage } from '@slice/pages';
 import { PageStateEnum } from '@slice/pages/enum';
 import { IPageConfig } from '@type/elementType';
@@ -55,17 +55,16 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
   const [pageReady, setPageReady] = React.useState(false);
   const t = useTranslations();
   const dispatch = useDispatch();
-  const toggleFullScreen = useFullScreen();
+
   const [form] = Form.useForm();
   const params = useSearchParams();
   const id = Number(params.get("id"));
   const [fetchDefault] = useGetConditionallyMutation();
-  const { initPage, activePage, match } = useAppSelector(
+  const { initPage, activePage } = useAppSelector(
     (state) => ({
       initPage: state.withPersist.init,
       activePage: state?.withPersist?.pages?.find((item) => item.isActive),
       pages: state?.withPersist?.pages,
-      match: state.withPersist.config.initMatch,
     }),
     shallowEqual,
   );
@@ -78,14 +77,13 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
   )?.value;
   const voucherTypeId = vti ? Number(vti) : null;
   const titleKey = "VoucherNumber";
-
   const recordHeight = 40;
-  const deviceHeight = window.innerHeight;
-  const formHeight = 200;
-  const mobileRecordsPerPage = 100;
-  const recordsPerPage = !match
-    ? mobileRecordsPerPage
-    : Math.floor((deviceHeight - formHeight) / recordHeight);
+  const formHeight = 400;
+  const mobileRecordsPerPage = 20;
+  const recordsPerPage = window.matchMedia("(min-width: 768px)").matches
+    ? Math.floor(formHeight / recordHeight)
+    : mobileRecordsPerPage;
+
   const storedData = activePage?.pageData;
   const pageType = PageTypeEnum.Form;
   const {
@@ -110,10 +108,13 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
 
   const [headerId, setHeaderId] = React.useState<number | null>(null);
   const [rows, setRows] = React.useState<any[] | null>(null);
+  const [page, setPage] = React.useState<number>(1);
+  const [totalRecords, setTotalRecords] = React.useState<number>(1);
+  const [pageSize, setPageSize] = React.useState<number>(recordsPerPage);
   const [getToolbarData] = useGetConditionallyMutation();
   const [itemMutate] = useGetConditionallyMutation();
   const initializePage = useInitializePage();
-  const tableApiRef = useRef<ERPTableApi | null>(null);
+  const [tableApi, setTableApi] = useState<ERPTableApi | null>(null);
   const fetchDefaultValues = async (id) => {
     let defaultData = [];
     if (id) {
@@ -199,7 +200,6 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
         };
 
         formData = await fetchDefaultValues(id);
-
         dispatch(
           addNewPage({
             Id: Id,
@@ -235,43 +235,51 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
     };
 
     fetchData();
-  }, []);
+  }, [id]);
 
-  const fetchDefaultDetails = async (headerId: number) => {
-    const detailRes = await fetchDefault({
-      url: detailGetUrl,
-      body: {
-        HeaderId: headerId,
-        RepoViewId: 70003,
-        PagingInfo: {
-          PageNumber: 1,
-          PageRecordCount: recordsPerPage,
-        },
+  const { data: details } = useGetData({
+    url: detailGetUrl,
+    body: {
+      HeaderId: headerId,
+      RepoViewId: 70003,
+      PagingInfo: { PageNumber: page, PageRecordCount: pageSize },
+      OrderInfo: [{ ColName: "RowNum", Asc: true }],
+    },
+    skip: !headerId,
+  });
+  const { data: totalDetails } = useGetData({
+    url: detailGetUrl,
+    body: {
+      HeaderId: headerId,
+      RepoViewId: 70003,
+      PagingInfo: {
+        PageNumber: 1,
+        PageRecordCount: pageSize,
+        OnlyTotalCount: true,
       },
-    }).unwrap();
-
-    if (detailRes.Result === "Success") {
-      return detailRes.Data ?? [];
-    }
-
-    return [];
-  };
+      OrderInfo: [{ ColName: "RowNum", Asc: true }],
+    },
+    skip: !headerId,
+  });
 
   useEffect(() => {
-    if (!headerId) return;
-    const loadDetails = async () => {
-      const details = await fetchDefaultDetails(headerId);
-      const mappedRows = details.map((item, i) => ({
-        id: item[detailFieldKey],
-        values: { ...item },
-       moreDetails: {
-        data: item,          // ← اینجا data می‌ذاریم (یا { item } اگر دوست داری شیء بمونه)
-      },
-      }));
-      setRows(mappedRows);
-    };
-    loadDetails();
-  }, [headerId]);
+    if (totalDetails?.Result === "Success") {
+      setTotalRecords(totalDetails.TotalCount);
+    }
+  }, [totalDetails]);
+
+  useEffect(() => {
+    if (details?.Result === "Success") {
+      const rows = details.Data as Array<Record<string, unknown>>;
+      setRows(
+        rows.map((item) => ({
+          id: item[detailFieldKey],
+          values: { ...item },
+          moreDetails: { data: item },
+        })),
+      );
+    }
+  }, [details]);
 
   const colConfigs = useMemo(() => {
     return columnConfig(vti, internal, NeedReference, StockId, VoucherHeaderId);
@@ -309,10 +317,21 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
 
   const handleSubmit = async () => {
     const formValues = form.getFieldsValue();
+    const ChangeFields = [];
+
+    Object.entries(formValues).forEach(([key, value]: [string, any]) => {
+      if (
+        storedData?.find((i) => i.name === key)?.value !==
+        storedData?.find((i) => i.name === key)?.originalValue
+      ) {
+        ChangeFields.push(key);
+      }
+    });
     const payload = {
       ...formValues,
+      ChangeFields,
       VoucherTypeId: voucherTypeId,
-      Details: mapSnapshotToDetailsDynamic(tableApiRef.current),
+      Details: mapSnapshotToDetailsDynamic(tableApi?.getSnapshot()),
     };
     const res = await itemMutate({
       url: !id ? addUrl : updateUrl,
@@ -338,39 +357,52 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
   //   url: `/api/mng/select/placeConfigValue`,
   //   body: {},
   // });
-  const rowAccess = {
-    denyRoles: ["VIEWER"],
-    // allowRoles: ["ADMIN"],
-    // rule(ctx) {
-    //   return false;
-    // },
-  };
-
+  // const rowAccess = {
+  //   denyRoles: ["VIEWER"],
+  // allowRoles: ["ADMIN"],
+  // rule(ctx) {
+  //   return false;
+  // },
+  // };
   useEffect(() => {
-    if (!tableApiRef.current) {
+    if (!tableApi) {
       return;
     }
-    const unsubscribe = tableApiRef.current.subscribeColumn<number>(
+    const unsubscribe = tableApi.subscribeColumn<number>(
       "Quantity1",
       (values) => {
         console.log("COLUMN CHANGED:", values);
       },
     );
     return () => {
-      unsubscribe();
+      unsubscribe?.();
     };
-  }, [tableApiRef.current]);
+  }, [tableApi]);
 
- const prop = useMemo<ERPTableProps<IMoreProps>>(() => ({
-  actor: testActor,
-  store: "inventoryVoucher",
-  tableKey: params.get("id") ?? activePage?.pageId ?? "",
-  rows,
-  columns: colConfigs,
-  rowAccess,
-  // tableHeight:100,
-  // recordPerPage:6
-}), [activePage?.pageId, colConfigs, rows]);
+  const prop = useMemo<ERPTableProps<IMoreProps>>(
+    () => ({
+      actor: testActor,
+      store: "inventoryVoucher",
+      tableKey: params.get("id") ?? activePage?.pageId ?? "",
+      rows,
+      columns: colConfigs,
+      totalRecord: totalRecords,
+      page,
+      pageSize,
+      tableHeight: formHeight,
+      totalRecords,
+      onPageChange: (e) => {
+        setPage(e);
+      },
+      onPageSizeChange: (p, s) => {
+        setPageSize(s);
+      },
+      // rowAccess,
+      // tableHeight:100,
+      // recordPerPage:6
+    }),
+    [colConfigs, rows],
+  );
   return (
     <div className="relative">
       <button
@@ -385,26 +417,94 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
           {...prop}
           moreDetailComponent={More}
           onReady={(api) => {
-            tableApiRef.current = api;
-
-            const unsubscribe = api.subscribeColumn<number>(
-              "Quantity1",
-              (values) => {
-                console.log(values);
-              },
-            );
+            setTableApi(api);
           }}
         />
       )}
     </div>
   );
 }
+
 interface IMoreProps {
-  data: unknown;  
+  data: unknown
 }
 
-const More = ({ data }:IMoreProps) => {
-  const moreDetail = data;  
-  console.log(moreDetail);
-  return <>test</>;
+const formatValue = (value: unknown) => {
+  if (value === null || value === undefined) return "-";
+  if (typeof value === "boolean") return value ? "بله" : "خیر";
+  return String(value);
+};
+
+const More = ({ data }: IMoreProps) => {
+  const actualData =
+    typeof data === "object" &&
+    data !== null &&
+    "data" in data
+      ? (data as any).data
+      : data;
+
+  const entries = Object.entries(actualData as Record<string, unknown>);
+  return (
+    <div
+      className="gap-x-6 gap-y-3 grid grid-1 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-4 border border-slate-200 rounded-[10px] w-full text-[13px] [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]"
+    >
+      {entries.map(([key, value]) => {
+        if (value === null || value === undefined) return null;
+
+        if (typeof value === "object" && !Array.isArray(value)) {
+          const nestedEntries = Object.entries(
+            value as Record<string, unknown>,
+          );
+
+          return (
+            <div
+              key={key}
+              style={{
+                border: "1px solid #f1f5f9",
+                borderRadius: 8,
+                padding: 12,
+                background: "#f9fafb",
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: 600,
+                  marginBottom: 8,
+                  color: "#334155",
+                  borderBottom: "1px solid #e2e8f0",
+                  paddingBottom: 4,
+                }}
+              >
+                {key}
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 6,
+                }}
+              >
+                {nestedEntries.map(([nKey, nValue]) => (
+                  <div key={nKey}>
+                    <span style={{ color: "#64748b" }}>{nKey}:</span>{" "}
+                    <strong style={{ color: "#0f172a" }}>
+                      {formatValue(nValue)}
+                    </strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div key={key}>
+            <span style={{ color: "#64748b" }}>{key}:</span>{" "}
+            <strong style={{ color: "#0f172a" }}>{formatValue(value)}</strong>
+          </div>
+        );
+      })}
+    </div>
+  );
 };

@@ -7,11 +7,15 @@ export const formConfig: IFormFieldConfig[] = [
     name: "VoucherNumber",
     caption: "شماره سند",
     type: "number",
+    value: undefined,
+    originalValue: undefined
   },
   {
     name: "VoucherDate",
     caption: "تاریخ سند",
     type: "date",
+    value: undefined,
+    originalValue: undefined
   },
   {
     name: "StockId",
@@ -21,7 +25,9 @@ export const formConfig: IFormFieldConfig[] = [
       addWebUrl: "/api/inv/select/stock4SelectOption",
       endpoint: "/api/inv/select/stock4SelectOption",
       repoViewId: 70004,
-    }
+    },
+    value: undefined,
+    originalValue: undefined
   },
   {
     name: "InvoiceHeaderId",
@@ -33,6 +39,8 @@ export const formConfig: IFormFieldConfig[] = [
       // repoViewId: 1052,
     },
     isTitleField: true,
+    value: undefined,
+    originalValue: undefined
   },
 
   {
@@ -46,6 +54,8 @@ export const formConfig: IFormFieldConfig[] = [
     name: "VoucherDesc",
     caption: "شرح سند",
     type: "text",
+    value: undefined,
+    originalValue: undefined
   },
 ];
 const items: ItemType[] = [{ key: "copy", label: ("copy label"), icon: 'RedTrashBin' }, { key: "delete", label: ("delete label"), icon: 'RedTrashBin' }]

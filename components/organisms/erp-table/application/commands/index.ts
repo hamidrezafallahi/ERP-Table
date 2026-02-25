@@ -35,6 +35,11 @@ export interface MoveActiveCellVerticalCommand {
   readonly columnId: string;
   readonly direction: 'up' | 'down';
 }
+export interface MoveVerticalSelectedRows {
+  readonly type: 'MOVE_VERTICAL_SELECTED_ROWS';
+  readonly tableKey: string;
+  readonly direction: 'up' | 'down';
+}
 export interface ActiveCellCommand {
   readonly type: 'ACTIVE_CELL';
   readonly tableKey: string;
@@ -214,6 +219,7 @@ export type TableCommand =
   | ActiveRowCommand
   | MoveActiveCellCommand
   | MoveActiveCellVerticalCommand
+  | MoveVerticalSelectedRows
   | ActiveFirstCellCommand
   | ChangeCellValueCommand
   | ChangeCellDisplayValueCommand

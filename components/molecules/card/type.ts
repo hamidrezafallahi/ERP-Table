@@ -16,7 +16,7 @@ export interface IProps<T> {
     id: number | null,
     additionalId: number | null,
     PendingStatusId: number | null,
-    formViewId: number | null
+    formViewId: number | null,
   ) => void;
   rowFieldKey: string;
   additionalFieldKey?: string;
@@ -32,4 +32,5 @@ export interface IProps<T> {
   totalCount?: number;
   loading?: boolean;
   withoutActivation?: boolean;
+  filteringAction?: (actions: IToolbarMenu[], rowData: T) => IToolbarMenu[];
 }

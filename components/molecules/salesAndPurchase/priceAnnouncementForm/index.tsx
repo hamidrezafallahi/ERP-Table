@@ -23,7 +23,7 @@ export const PriceAnnouncementForm = ({ form }: IProps) => {
         label="تاریخ"
         name="VoucherDate"
         rules={[{ required: true, message: t("form.required") }]}
-        className="col-span-12 lg:col-span-4 !mb-0 !pb-0 text-xs"
+        className="col-span-12 lg:col-span-6 !mb-0 !pb-0 text-xs"
       >
         <NewDatePicker
           config={{
@@ -35,23 +35,10 @@ export const PriceAnnouncementForm = ({ form }: IProps) => {
         />
       </Form.Item>
       <Form.Item
-        label="شماره"
-        name="VoucherNumber"
-        className="col-span-12 lg:col-span-4 !mb-0 !pb-0 text-xs"
-      >
-        <InputText
-          config={{
-            caption: "شماره",
-            name: "VoucherNumber",
-            setFieldValue: form.setFieldValue,
-          }}
-        />
-      </Form.Item>
-      <Form.Item
         label="مشتری"
         name="CustomerId"
         rules={[{ required: true, message: t("form.required") }]}
-        className="col-span-12 lg:col-span-4 !mb-0 !pb-0 text-xs"
+        className="col-span-12 lg:col-span-6 !mb-0 !pb-0 text-xs"
       >
         <DynamicSelect
           dynamicValue={customerConfig}
@@ -74,6 +61,7 @@ export const PriceAnnouncementForm = ({ form }: IProps) => {
         <Form.Item
           label="توضیحات"
           name="VoucherDesc"
+          rules={[{ required: true, message: t("form.required") }]}
           className="flex flex-col !mb-0 !pb-0 text-xs"
         >
           <InputText

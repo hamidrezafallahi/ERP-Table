@@ -208,6 +208,9 @@ export const ChequeReceipt = ({ form }) => {
         DetailDesc: item.DetailDesc,
         StateId: item.DocumentCheque.StateId,
         BankId: item.DocumentCheque.BankId,
+        Bank: {
+          Desc: item.DocumentCheque.BankDesc,
+        },
         Num: item.DocumentCheque.Num,
         MaturityDate: item.DocumentCheque.MaturityDate,
         DocPrice: item.DocumentCheque.DocPrice,
@@ -241,6 +244,9 @@ export const ChequeReceipt = ({ form }) => {
           DetailDesc: item.DetailDesc,
           StateId: item.DocumentCheque.StateId,
           BankId: item.DocumentCheque.BankId,
+          Bank: {
+            Desc: item.DocumentCheque.BankDesc,
+          },
           Num: item.DocumentCheque.Num,
           MaturityDate: item.DocumentCheque.MaturityDate,
           DocPrice: item.DocumentCheque.DocPrice,

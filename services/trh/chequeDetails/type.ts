@@ -9,6 +9,7 @@ export interface IChequeDetails extends IDetail {
   DocumentCheque: {
     StateId: number;
     BankId: number;
+    BankDesc: string;
     Num: string;
     MaturityDate: string;
     DocPrice: number;

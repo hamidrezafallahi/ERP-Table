@@ -38,7 +38,7 @@ interface IProps<T> {
     rowData: T,
     FieldName: string,
     value: any,
-    option?: any
+    option?: any,
   ) => Promise<Partial<T>>;
   width?: number;
   showIdInDesc?: boolean;
@@ -96,10 +96,11 @@ export const RenderSelectField = <T extends IDetail>({
   const rowData = detailData[index];
   const relatedKey = field.replace(/Id$/, "");
   const relatedObject = rowData?.[field] && rowData?.[relatedKey];
+
   const stringTitle =
     relatedObject &&
     Object.values(relatedObject)?.find(
-      (val) => typeof val === "string" && val.trim() !== ""
+      (val) => typeof val === "string" && val.trim() !== "",
     );
   const defaultTitle = stringTitle
     ? stringTitle?.toString()
@@ -118,7 +119,7 @@ export const RenderSelectField = <T extends IDetail>({
     newValue: unknown,
     option: any,
     field: string,
-    index: number
+    index: number,
   ) => {
     const rowData = detailData[index];
 
@@ -130,7 +131,7 @@ export const RenderSelectField = <T extends IDetail>({
           rowData,
           field,
           newValue,
-          option
+          option,
         );
         if (result) {
           independentParameter = result;
@@ -157,7 +158,7 @@ export const RenderSelectField = <T extends IDetail>({
       const targetItem = renderCondition[index];
       if (targetItem) {
         const fieldKeys = Object?.keys(targetItem).filter(
-          (key) => targetItem[key]
+          (key) => targetItem[key],
         );
         const currentFieldIndexLeft = fieldKeys.indexOf(editState.field);
         const newFocusedField = fieldKeys[currentFieldIndexLeft + 1];
@@ -189,7 +190,7 @@ export const RenderSelectField = <T extends IDetail>({
   useEffect(() => {
     if (defaultValue && !rowData[field]) {
       const defaultOption = options.find(
-        (item) => item.value === defaultValue
+        (item) => item.value === defaultValue,
       ) ?? { label: defaultLabel };
       onSelectChange(defaultValue, defaultOption, field, index);
     }
@@ -288,7 +289,7 @@ export const RenderTreeField = <T extends IDetail>({
   const stringTitle =
     relatedObject &&
     Object.values(relatedObject)?.find(
-      (val) => typeof val === "string" && val.trim() !== ""
+      (val) => typeof val === "string" && val.trim() !== "",
     );
   const defaultTitle = stringTitle
     ? stringTitle?.toString()
@@ -307,7 +308,7 @@ export const RenderTreeField = <T extends IDetail>({
     newValue,
     labelList: any,
     field: string,
-    index: number
+    index: number,
   ) => {
     const rowData = detailData[index];
     let independentParameter = {};
@@ -339,7 +340,7 @@ export const RenderTreeField = <T extends IDetail>({
 
       if (targetItem) {
         const fieldKeys = Object?.keys(targetItem).filter(
-          (key) => targetItem[key]
+          (key) => targetItem[key],
         );
         const currentFieldIndexLeft = fieldKeys.indexOf(editState.field);
         const newFocusedField = fieldKeys[currentFieldIndexLeft + 1];
@@ -363,7 +364,7 @@ export const RenderTreeField = <T extends IDetail>({
       const selectedTitle = findItemInNestedData(
         options,
         "value",
-        selectedItem
+        selectedItem,
       );
       setTitle(selectedTitle ? selectedTitle.title : null);
     } else {
@@ -454,7 +455,7 @@ export const RenderStaticValue = <T extends IDetail>({
       setCorrectValue(
         valueType === "price"
           ? correctFnModeVal?.toLocaleString("fa-IR")
-          : correctFnModeVal
+          : correctFnModeVal,
       );
     }
   }, [detailData]);
@@ -463,7 +464,7 @@ export const RenderStaticValue = <T extends IDetail>({
       const value =
         typeof rowData[field] === "number" ? rowData[field] : undefined;
       const correctStaticOption = config?.find(
-        (item) => item.value === value
+        (item) => item.value === value,
       )?.title;
       setCorrectValue(correctStaticOption);
     }

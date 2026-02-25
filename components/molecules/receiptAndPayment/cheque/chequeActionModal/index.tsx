@@ -1,18 +1,11 @@
-import {
-  useEffect,
-  useState,
-} from 'react';
+import { useEffect, useState } from "react";
 
-import {
-  Collapse,
-  CollapseProps,
-  Divider,
-} from 'antd';
+import { Collapse, CollapseProps, Divider } from "antd";
 
-import { HeaderAction } from './header';
-import type { IProps } from './type';
+import { HeaderAction } from "./header";
+import type { IProps } from "./type";
 
-export const ChequeActionModal = ({ ids, children }: IProps) => {
+export const ChequeActionModal = ({ ids, children, handleReturn }: IProps) => {
   const [collapseItems, setCollapseItems] = useState([]);
   const headerUrl = "api/trh/select/check/receipt/operations";
   const headerRepoViewId = 140034;
@@ -45,6 +38,7 @@ export const ChequeActionModal = ({ ids, children }: IProps) => {
             id={ids[0]}
             getUrl={headerUrl}
             repoViewId={headerRepoViewId}
+            handleReturn={handleReturn}
           />
         )}
 

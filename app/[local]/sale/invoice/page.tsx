@@ -1,18 +1,16 @@
-import Form from "@components/templates/form";
-import type {
-  IChequeReceipt,
-  IRequest,
-} from "@services/trh/chequeReceipt/type";
+import InvoiceTemplate from "@components/templates/invoiceTemplate";
+import { IRequest } from "@services/reportFile/type";
+import { IInvoice } from "@services/sale/invoice/type";
 
-export default function InvoiceFormPage() {
+export default function InvoicePage() {
   return (
-    <Form<IChequeReceipt, IRequest>
-      fieldKey="CheckReceiptHeaderId" //
+    <InvoiceTemplate<IInvoice, IRequest>
+      fieldKey="InvoiceHeaderId"
       caption={"title.invoice"}
-      url="api/trh/select/check/receipt" //
-      listUrl="sale/invoice"
-      titleKey="VoucherNumber" //
-      pageIcon=""
+      url="api/sale/select/ProformaInvoice"
+      listUrl="sale/invoiceList"
+      titleKey="invoice"
+      pageIcon="IssuingProformaInvoiceIcon"
     />
   );
 }

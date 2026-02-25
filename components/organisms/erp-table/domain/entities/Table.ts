@@ -24,16 +24,13 @@ import { Cell } from './Cell';
 import { Row } from './Row';
 
 export class Table {
-  private pagination: Pagination = new Pagination(1, 10);
-
   constructor(
     public readonly id: string,
     private rows: Map<number, Row>,
     private columns: Map<string, ColumnSchema>,
+    private pagination: Pagination,
 
-  ) {
-
-  }
+  ) { }
   getColumnSchema(columnId: ColumnId): ColumnSchema | undefined {
     return this.columns.get(columnId.value);
   }
@@ -101,49 +98,63 @@ export class Table {
     return ev;
   }
   addRow(rowId: RowId): RowAdded {
-    const rowsArray = Array.from(this.rows.values());
-    const target = rowsArray.find(r => r.id.value == rowId.value);
-    if (!target) {
-      console.log(rowId)
-      return //throw new Error(`Row ${rowId.value} does not exist`);
-    }
-    const newRowId = new RowId(rowId.value + 1);
+    const target = this.rows.get(rowId.value);
+    if (!target) throw new Error("Row not found");
+
+    const newRowId = new RowId(
+      Math.floor((1 + Math.random()) * 0x10000000000000000)
+    );
+
     const newCells = new Map<string, Cell>();
+
     for (const [colId, cell] of target.getCells().entries()) {
-      const value = cell.getValue();
-      const display = cell.getDisplay();
       newCells.set(
         colId,
         new Cell(
           newRowId,
           new ColumnId(colId),
-          value,
-          value,
-          display
+          cell.getValue(),
+          cell.getValue(),
+          cell.getDisplay()
         )
       );
     }
 
-    const newRow = new Row(newRowId, newCells, new RowState(RowStateEnum.Added), target.changeFields, target.moreDetails);
-    rowsArray.splice(target.id.value, 0, newRow);
-    const rebuilt = new Map<number, Row>();
+    const newRow = new Row(
+      newRowId,
+      newCells,
+      new RowState(RowStateEnum.Added),
+      new Set(),
+      target.moreDetails
+    );
+
+    // 🔹 1️⃣ تبدیل به آرایه
+    const rowsArray = Array.from(this.rows.values());
+
+    // 🔹 2️⃣ مرتب بر اساس index
+    rowsArray.sort((a, b) =>
+      (a.getCell("index")?.getValue().value as number) -
+      (b.getCell("index")?.getValue().value as number)
+    );
+    const targetIndex = rowsArray.findIndex(r => r.id.value === rowId.value);
+    rowsArray.splice(targetIndex + 1, 0, newRow);
     rowsArray.forEach((row, i) => {
       row.changeCell(
         new ColumnId("index"),
         new CellValue(i + 1)
       );
-      row.setRowId(new RowId(i + 1))
-      row.updateChangeFields(new ColumnId("index"))
-      rebuilt.set(i + 1, row);
+      row.updateChangeFields(new ColumnId("index"));
     });
-    this.rows = rebuilt;
 
-
+    this.rows = new Map(
+      rowsArray.map(r => [r.id.value, r])
+    );
+    const totalRows = this.pagination.totalRows;
+    this.pagination = this.pagination.changeTotalRows(totalRows + 1)
     return new RowAdded(newRowId);
   }
   addNewRow(): RowAdded {
-
-    const newRowId = new RowId(this.rows.size + 1);
+    const newRowId = new RowId(Math.floor((1 + Math.random()) * 0x10000000000000000))
     const cells = new Map<string, Cell>();
     const rowId = new RowId(newRowId.value);
     this.getColumns().forEach((column) => {
@@ -161,11 +172,11 @@ export class Table {
     });
     const newRow = new Row(newRowId, cells, new RowState(RowStateEnum.Added), new Set(), undefined);
     this.rows.set(newRowId.value, newRow);
-    const totalRows = this.rows.size;
+    const totalRows = this.pagination.totalRows;
+    this.pagination = this.pagination.changeTotalRows(totalRows + 1)
     const pageSize = this.pagination.pageSize;
     const lastPage = Math.ceil(totalRows / pageSize);
     this.changePage(lastPage);
-
     return new RowAdded(newRowId);
   }
   addColumns(newColumns: ColumnSchema[]): { added: ColumnId[] } {
@@ -239,9 +250,10 @@ export class Table {
   getPagination() {
     return this.pagination;
   }
-  setPagination(pagination:Pagination) {
-    this.pagination=pagination
+  setPagination(pagination: Pagination) {
+    this.pagination = pagination
   }
+
   changePage(page: number) {
     this.pagination = this.pagination.changePage(page);
 
@@ -270,11 +282,14 @@ export class Table {
     if (row.rowState.value == RowStateEnum.Added && this.rows.size == 1) {
       this.rows.delete(rowId.value);
       this.addNewRow()
+      // const totalRows = this.pagination.totalRows;
+      // this.pagination.changeTotalRows(totalRows - 1)
       return new MinimumRowConstraintViolated(rowId);
     }
     if (row.rowState.value == RowStateEnum.Added && this.rows.size > 1) {
       this.rows.delete(rowId.value);
-
+      // const totalRows = this.pagination.totalRows;
+      // this.pagination.changeTotalRows(totalRows - 1)
       return new RowRemoved(rowId);
     } else if (row.rowState.value == RowStateEnum.Unchanged) {
       row.rowState = new RowState(RowStateEnum.Deleted)
@@ -295,15 +310,18 @@ export class Table {
       }
     }
   }
-  reorderRows(draggedRowId: number, droppedRowId: number, position: 'before' | 'after' = 'after'): RowReordered {
-    if (draggedRowId === droppedRowId) {
-      return new RowReordered(draggedRowId, droppedRowId);
+  reorderRows(draggedRowNum: number, droppedRowNum: number, position: 'before' | 'after' = 'after'): RowReordered {
+    if (draggedRowNum === droppedRowNum) {
+      return new RowReordered(draggedRowNum, droppedRowNum);
     }
-    const rowsArray = Array.from(this.rows.values()).sort((a, b) => a.id.value - b.id.value);
-    const fromIndex = rowsArray.findIndex(r => r.id.value === draggedRowId);
-    const toIndex = rowsArray.findIndex(r => r.id.value === droppedRowId);
+
+    const rowsArray = Array.from(this.rows.values()).sort((a, b) =>
+      (a.cells.get('index').getValue().value as number) -
+      (b.cells.get('index').getValue().value as number)
+    ); const fromIndex = rowsArray.findIndex(r => r.id.value === draggedRowNum);
+    const toIndex = rowsArray.findIndex(r => r.id.value === droppedRowNum);
     if (fromIndex === -1 || toIndex === -1) {
-      throw new Error(`Row ${draggedRowId} or ${droppedRowId} does not exist`);
+      throw new Error(`Row ${draggedRowNum} or ${droppedRowNum} does not exist`);
     }
     const [moved] = rowsArray.splice(fromIndex, 1);
     let insertIndex = toIndex;
@@ -311,22 +329,20 @@ export class Table {
       insertIndex = toIndex + 1;
       if (fromIndex < toIndex) insertIndex -= 1;
     } else {
-      // قبل → منطق قدیمی
       if (fromIndex < toIndex) insertIndex -= 1;
     }
 
     rowsArray.splice(insertIndex, 0, moved);
     const rebuilt = new Map<number, Row>();
     rowsArray.forEach((row, i) => {
-      const newId = i + 1;
-      row.changeCell(new ColumnId("index"), new CellValue(newId));
+      const newRowNum = i + 1;
+      row.changeCell(new ColumnId("index"), new CellValue(newRowNum));
       row.updateChangeFields(new ColumnId("index"));
-      row.setRowId(new RowId(newId));
-      rebuilt.set(newId, row);
+      row.setRowId(new RowId(row.id.value));
+      rebuilt.set(row.id.value, row);
     });
     this.rows = rebuilt;
-
-    return new RowReordered(draggedRowId, droppedRowId);
+    return new RowReordered(draggedRowNum, droppedRowNum);
   }
   reorderColumns(sourceIndex: number, destIndex: number): ColumnReordered {
     const colsArray = Array.from(this.columns.values());
@@ -339,13 +355,13 @@ export class Table {
   clone(): Table {
     const clonedRows = new Map<number, Row>();
     for (const [k, row] of this.rows.entries()) {
-      clonedRows.set(k, row.clone());
+
+
+      const clonedColumns = new Map(this.columns);
+      const cloned = new Table(this.id, clonedRows, clonedColumns, this.pagination);
+      cloned.pagination = this.pagination;
+      return cloned;
     }
 
-    const clonedColumns = new Map(this.columns);
-    const cloned = new Table(this.id, clonedRows, clonedColumns);
-    cloned.pagination = this.pagination; // Value Object → safe
-    return cloned;
   }
-
 }

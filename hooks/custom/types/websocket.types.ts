@@ -27,7 +27,7 @@ export type MessageType =
 
 export type ServerMessageType = "Chat" | "Command";
 
-export type CommandType = "UpdatePendingStatus";
+export type CommandType = "UpdatePendingStatus" | "EndYearOperations";
 
 /**
  * Message content type in Content

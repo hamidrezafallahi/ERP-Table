@@ -3,6 +3,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 
 import { Form } from 'antd';
@@ -16,7 +17,7 @@ import {
 import {
   PriceAnnouncementForm,
 } from '@components/molecules/salesAndPurchase/priceAnnouncementForm';
-import { ERPTable } from '@components/organisms/erp-table/ui/erp-table';
+import { ERPTableApi } from '@components/organisms/erp-table/ui';
 import { useInitializePage } from '@hooks/custom';
 import { useAppSelector } from '@redux/index';
 import { useGetConditionallyMutation } from '@services/base';
@@ -28,7 +29,10 @@ import {
   columnConfig,
   formConfig,
 } from './config';
-import { IProps } from './type';
+import {
+  IProps,
+  TableSnapshot,
+} from './type';
 import { usePageLoader } from './usePageLoader';
 
 export default function PriceAnnouncementTemplate<T, K>({ ...props }: IProps) {
@@ -57,14 +61,7 @@ export default function PriceAnnouncementTemplate<T, K>({ ...props }: IProps) {
     : Math.floor((deviceHeight - formHeight) / recordHeight);
   const storedData = activePage?.pageData;
   const pageType = PageTypeEnum.Form;
-  const {
-    pageId,
-    RepoId,
-    SystemId,
-    url: BaseUrl,
-    pageState,
-    originalPageState,
-  } = initPage;
+  const { pageId, RepoId, SystemId, url: BaseUrl } = initPage;
   const { VoucherNumber, CustomerId, VoucherDate, VoucherDesc } =
     useAppSelector((state) => {
       const active = state.withPersist.pages?.find((page) => page.isActive);
@@ -89,10 +86,11 @@ export default function PriceAnnouncementTemplate<T, K>({ ...props }: IProps) {
       };
     }, shallowEqual);
 
+  const [totalPrice, setTotalPrice] = useState(0);
   const [itemMutate] = useGetConditionallyMutation();
 
   // for control table without re-render
-  const tableApiRef = useRef(null);
+  const tableApiRef = useRef<ERPTableApi | null>(null);
 
   // save page in redux and navigation - chnage url - save
   const initializePage = useInitializePage();
@@ -180,6 +178,20 @@ export default function PriceAnnouncementTemplate<T, K>({ ...props }: IProps) {
     }
   };
 
+  const computeTotalPrice = () => {
+    const snapshot = tableApiRef.current?.getSnapshot() as
+      | TableSnapshot
+      | undefined;
+    if (!snapshot?.rows) return;
+
+    const sum = snapshot.rows.reduce((acc: number, row: any) => {
+      const value = Number(row.cells?.Total ?? 0);
+      return acc + (isNaN(value) ? 0 : value);
+    }, 0);
+
+    setTotalPrice(sum);
+  };
+
   return (
     <div className="relative flex flex-col gap-5">
       <button
@@ -196,12 +208,17 @@ export default function PriceAnnouncementTemplate<T, K>({ ...props }: IProps) {
             <span className="font-medium text-gray-gray10 text-xs"></span>
             {t("general.priceAnnouncementDetail")}
           </div>
-          <ERPTable
+          {/* <ERPTable
             {...prop}
             onReady={(api) => {
-              tableApiRef.current = api.getSnapshot();
+              tableApiRef.current = api;
+              computeTotalPrice();
             }}
-          />
+          /> */}
+          <div className="flex justify-between items-center self-end px-5 border-[0.063rem] border-gray-gray6 rounded-lg w-[16.625rem] h-[3.375rem]">
+            <span> جمع کل :</span>
+            <span>{totalPrice.toLocaleString()}</span>
+          </div>
         </div>
       )}
     </div>

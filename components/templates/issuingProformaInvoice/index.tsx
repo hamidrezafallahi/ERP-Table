@@ -2,17 +2,38 @@
 
 import { MainInfoCard } from "@components/molecules/mainInfoCard";
 import { useAppSelector } from "@redux/index";
-import { shallowEqual } from "react-redux";
+import { shallowEqual, useDispatch } from "react-redux";
 import { documentInfoConfig } from "./config";
+import { useEffect } from "react";
+import { addNewPage } from "@slice/pages";
+import { PageTypeEnum } from "@type/enum";
 
 export default function IssuingProformaInvoice() {
-  const { match } = useAppSelector(
+  const dispatch = useDispatch();
+  const { initPage, match } = useAppSelector(
     (state) => ({
       initPage: state.withPersist.init,
       match: state.withPersist.config.initMatch,
     }),
     shallowEqual,
   );
+  useEffect(() => {
+    dispatch(
+      addNewPage({
+        pageId: initPage.pageId,
+        caption: `title.issuingProformaInvoice`,
+        icon: "IssuingProformaInvoiceIcon",
+        pageState: initPage.pageState,
+        originalPageState: initPage.originalPageState,
+        type: PageTypeEnum.Custom,
+        RepoId: initPage.RepoId,
+        SystemId: initPage.SystemId,
+        url: "sale/issuingProformaInvoice",
+        listPageId: initPage?.listPageId,
+      }),
+    );
+  }, []);
+
   return (
     <div
       className={`${

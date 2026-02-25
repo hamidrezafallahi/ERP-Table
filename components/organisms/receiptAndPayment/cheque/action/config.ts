@@ -1,6 +1,6 @@
-import type { IColumnConfig } from '@services/generalType/type';
+import type { IColumnConfig } from "@services/generalType/type";
 
-import { stateConfig } from '../../config';
+import { stateConfig } from "../../config";
 
 export const columnsConfig: IColumnConfig[] = [
   {
@@ -29,9 +29,14 @@ export const columnsConfig: IColumnConfig[] = [
     fieldType: "conditional",
     conditionalConfig: stateConfig,
   },
+  // {
+  //   fieldName: "CheckReceiptHeader.RpWay.RPWayDesc",
+  //   fieldCaption: "نحوه دریافت",
+  //   fieldType: "string",
+  // },
   {
-    fieldName: "CheckReceiptHeader.RpWay.RPWayDesc",
-    fieldCaption: "نحوه دریافت",
+    fieldName: "CheckReceiptHeader.Tafsili.TafsiliDesc",
+    fieldCaption: "صادرکننده چک",
     fieldType: "string",
   },
   {

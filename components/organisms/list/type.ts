@@ -30,6 +30,7 @@ export interface IProps<T, K> {
   rangeFilterKey?: string | null;
   customColumns?: any;
   renderCustomActions?: () => ReactNode;
+  filteringAction?: (actions: IToolbarMenu[], rowData: T) => IToolbarMenu[];
 }
 
 export interface IState {

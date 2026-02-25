@@ -16,24 +16,30 @@ interface Props {
   controller: UITableController;
   tableKey: string;
   store: string;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (page: number, pageSize: number) => void;
 }
 
 export default function ERPTablePagination({
   controller,
-  store,
   tableKey,
+  onPageChange,
+  onPageSizeChange,
 }: Props) {
   const table = controller.getViewState(tableKey);
   const locale = useLocale();
   const direction = locale === "fa" ? "rtl" : "ltr";
   if (!table) return null;
   const { page, pageSize, totalPages, totalRows } = table.pagination;
-  const onPageChange = (e) => {
+  const handlePageChange = (e) => {
     controller.dispatch({ type: "CHANGE_PAGE", page: e });
+    onPageChange(e)
   };
-  const onPageSizeChange = (page, pageSize) => {
+  const handlePageSizeChange = (page, pageSize) => {
     controller.dispatch({ type: "CHANGE_PAGE_SIZE", pageSize: pageSize });
+    onPageSizeChange(page, pageSize)
   };
+
   return (
     <div className="flex items-center gap-3">
       <Pagination
@@ -62,18 +68,19 @@ export default function ERPTablePagination({
         pageSize={pageSize}
         total={totalRows}
         showSizeChanger={true}
-        onShowSizeChange={onPageSizeChange}
+        onShowSizeChange={handlePageSizeChange}
         pageSizeOptions={["10", "20", "50", "100"]}
-        locale={{items_per_page: ""}}
+        // hideOnSinglePage
+        locale={{ items_per_page: "" }}
         showTotal={(total) => (
           <div className="flex items-center gap-1 h-full font-light text-gray-gray10 text-xs">
             <span>{total.toLocaleString("fa-IR")}</span>
-            <span>سطر از</span>
+            <span>سطر در</span>
             <span>{totalPages.toLocaleString("fa-IR")}</span>
             <span>صفحه</span>
           </div>
         )}
-        onChange={onPageChange}
+        onChange={handlePageChange}
         showTitle={false}
       />
     </div>

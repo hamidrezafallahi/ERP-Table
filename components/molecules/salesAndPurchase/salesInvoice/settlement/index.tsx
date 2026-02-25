@@ -482,7 +482,6 @@ export const Settlement = ({ id }: IProps) => {
   }, [amountData, formValues?.PaymentAmount, defaultValue, selectedId]);
 
   const reyhanRef = useRef<HTMLDivElement>(null);
-  console.log(reyhanRef.current?.clientHeight, "reyhan");
 
   return (
     <div className="flex flex-col gap-4 mx-4 my-5 h-[80dvh]">

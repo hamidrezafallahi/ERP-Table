@@ -65,6 +65,7 @@ function DataGridInner<T extends IBaseDto>(
     EditField,
     formUrl,
     withoutActivation,
+    filteringAction,
   }: IProps<T>,
   ref: Ref<HTMLDivElement>,
 ) {
@@ -460,7 +461,13 @@ function DataGridInner<T extends IBaseDto>(
       width: "16rem",
       align: "center",
       render: (_, record) => {
-        const moreActionItem = restActions?.map((action) => {
+        const filteredRestActions = filteringAction
+          ? filteringAction(restActions, record)
+          : restActions;
+        const filteredFirstSixActions = filteringAction
+          ? filteringAction(firstSixActions, record)
+          : firstSixActions;
+        const moreActionItem = filteredRestActions?.map((action) => {
           const isDisabled =
             conditionalActions?.some((el) =>
               el.conditionallyAction === action.MenuDesc
@@ -513,7 +520,7 @@ function DataGridInner<T extends IBaseDto>(
           );
         return (
           <div className="flex justify-center items-center gap-3">
-            {firstSixActions.map((action) => {
+            {filteredFirstSixActions.map((action) => {
               const isDisabled =
                 conditionalActions?.some((el) =>
                   el.conditionallyAction === action.MenuDesc

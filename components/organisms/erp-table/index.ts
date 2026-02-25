@@ -1,7 +1,7 @@
 // index.tsx – نقطه خروجی کامپوننت
 
-export { ERPTable } from './ui/erp-table';
-export { CellRenderer } from './ui/erp-table/cellRenderer';
+export { ERPTable } from './ui';
+export { CellRenderer } from './ui/cellRenderer';
 export { TableEngine } from './engine/tableEngine';
 
 export { createERPTable } from './bootstrap';

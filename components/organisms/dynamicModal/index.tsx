@@ -175,7 +175,7 @@ export default function DynamicModal({
   const handleActionClick = async (
     action: IToolbarMenu,
     id: number,
-    PendingStatusId: number | null
+    PendingStatusId: number | null,
   ) => {
     setSelectedId(id);
     try {
@@ -210,13 +210,16 @@ export default function DynamicModal({
           confirmMode === "Delete"
             ? config.deleteUrl
             : confirmMode === "createNewEdit"
-            ? "api/prd/insert/yearPlan/updateVersion"
-            : config.confirmUrl,
+              ? "api/prd/insert/yearPlan/updateVersion"
+              : config.confirmUrl,
         body: { Id: selectedId },
       }).unwrap();
 
       if (confirmMode === "Delete") {
-        if (confirmResult.Result === "Success") {
+        if (
+          confirmResult.Result === "Success" ||
+          confirmResult.Result === "Pending"
+        ) {
           showSuccessToast(t("toast.successTitle"));
           setSelectedId(null);
 
@@ -234,8 +237,8 @@ export default function DynamicModal({
               (draft) => {
                 if (draft?.Data) draft.Data = [];
               },
-              false
-            )
+              false,
+            ),
           );
 
           setPageNumber(1);
@@ -244,7 +247,10 @@ export default function DynamicModal({
           await refetch();
         }
       } else {
-        if (confirmResult.Result === "Success") {
+        if (
+          confirmResult.Result === "Success" ||
+          confirmResult.Result === "Pending"
+        ) {
           showSuccessToast(t("toast.successTitle"));
           setSelectedId(null);
 
@@ -262,8 +268,8 @@ export default function DynamicModal({
               (draft) => {
                 if (draft?.Data) draft.Data = [];
               },
-              false
-            )
+              false,
+            ),
           );
 
           setPageNumber(1);

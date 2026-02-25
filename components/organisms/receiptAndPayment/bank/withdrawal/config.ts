@@ -23,6 +23,16 @@ export const formConfig: IFormFieldConfig[] = [
     },
   },
   {
+    name: "CurrencyId",
+    caption: "ارز",
+    type: "selectOption",
+    selectEndpoint: {
+      addWebUrl: "/api/trh/select/currencyAvailable",
+      endpoint: "/api/trh/select/currencyAvailable",
+      repoViewId: 140036,
+    },
+  },
+  {
     name: "Price",
     caption: "مبلغ",
     type: "price",

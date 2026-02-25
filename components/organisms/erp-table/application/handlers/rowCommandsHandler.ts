@@ -27,21 +27,19 @@ export class AddNewRowCommandHandler {
   ) { }
 
   async execute(command: AddEmptyRowCommand, actor: Actor) {
-    try{
-    const table = await this.repo.getById(command.store, command.tableKey);
-
-    if (!this.permission.canAddRow({ actor })) {
-      throw new DomainError(
-        'FORBIDDEN',
-        'Actor is not allowed to add a new row',
-        { actor }
-      );
-    }
-
-    const event = table.addNewRow();
-    await this.repo.save(command.store, table);
-    this.audit.log({ type: 'INFORMATION', message: event.type, payload: event.rowId });
-    return event;
+    try {
+      const table = await this.repo.getById(command.store, command.tableKey);
+      if (!this.permission.canAddRow({ actor })) {
+        throw new DomainError(
+          'FORBIDDEN',
+          'Actor is not allowed to add a new row',
+          { actor }
+        );
+      }
+      const event = table.addNewRow();
+      await this.repo.save(command.store, table);
+      this.audit.log({ type: 'INFORMATION', message: event.type, payload: event.rowId });
+      return event;
     } catch (error) {
 
       if (error instanceof DomainError) {
@@ -84,12 +82,10 @@ export class DuplicateRowCommandHandler {
       }
       const rowId = new RowId(command.rowId);
       const event = table.addRow(rowId);
-
       await this.repo.save(command.store, table);
       this.audit.log({ type: 'INFORMATION', message: event.type, payload: event.rowId });
       return event;
     } catch (error) {
-
       if (error instanceof DomainError) {
         this.audit.log({
           type: error.code,

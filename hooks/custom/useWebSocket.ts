@@ -1,18 +1,23 @@
 /* eslint-disable no-console */
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { shallowEqual } from "react-redux";
+import { shallowEqual, useDispatch } from "react-redux";
 
 import { useAppSelector } from "@redux/index";
-import { findingPageState, getCookie } from "@utils/core";
-
+import {
+  finishEndYearOperation,
+  setActiveEndYearStep,
+  setEndYearStepStatus,
+} from "@slice/endYearOperations";
+import { EndYearStepStatusEnum } from "@slice/endYearOperations/type";
 import {
   deletePageByRepo,
   setPageStateByRepo,
   setStatusItemsList,
   setUndoDeleteItemsList,
 } from "@slice/pages";
-import { useDispatch } from "react-redux";
+import { findingPageState, getCookie } from "@utils/core";
+
 import type {
   ConnectionStatus,
   ContentMessage,
@@ -29,8 +34,8 @@ export type {
 
 export interface UseWebSocketOptions extends WebSocketOptions {}
 
-// const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-const baseUrl = "http://216.65.200.215:30000";
+const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+// const baseUrl = "http://216.65.200.215:30000";
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
   const {
@@ -51,7 +56,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       userId: state.withPersist.config.userSession.UserInfo.UserId,
       pages: state?.withPersist?.pages,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const pagesRef = useRef(pages);
@@ -69,11 +74,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
+    null,
   );
   const reconnectCountRef = useRef(0);
   const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
-    null
+    null,
   );
   const messageQueueRef = useRef<WebSocketMessage[]>([]);
   const isManualCloseRef = useRef(false);
@@ -84,7 +89,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       setConnectionStatus(status);
       onStatusChange?.(status);
     },
-    [onStatusChange]
+    [onStatusChange],
   );
 
   // Send heartbeat to keep connection alive
@@ -137,7 +142,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         // If that fails, manually extract the fields using a more lenient approach
         console.warn(
           "⚠️ Standard JSON parse failed, using fallback parser:",
-          err
+          err,
         );
 
         // Extract Type field (simple string match)
@@ -213,7 +218,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
             // The message value might have unescaped control characters
             // We'll return it as-is since it's HTML content that should preserve formatting
             console.log(
-              "✅ Successfully extracted Message using manual parsing"
+              "✅ Successfully extracted Message using manual parsing",
             );
             return {
               Type: messageType as any,
@@ -228,7 +233,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         // This handles cases where the message might span multiple lines
         try {
           const multilineMessageMatch = jsonString.match(
-            /"Message"\s*:\s*"((?:[^"\\]|\\.|[\r\n\t])*?)"\s*[,}]/
+            /"Message"\s*:\s*"((?:[^"\\]|\\.|[\r\n\t])*?)"\s*[,}]/,
           );
           if (
             multilineMessageMatch &&
@@ -248,7 +253,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
               .replace(/\\\\/g, "\\");
 
             console.log(
-              "✅ Successfully extracted Message using regex fallback"
+              "✅ Successfully extracted Message using regex fallback",
             );
             return {
               Type: messageType as any,
@@ -263,7 +268,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         return null;
       }
     },
-    []
+    [],
   );
 
   // Send queued messages
@@ -312,20 +317,21 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       };
 
       ws.onmessage = (event) => {
-        console.log("inWebSocketOnMessage", event);
+        // console.log("inWebSocketOnMessage", event);
         try {
           const rawData = JSON.parse(event.data);
-          console.log("📨 Raw WebSocket message received:", {
-            UserId: rawData.UserId,
-            Type: rawData.Type,
-            ContentLength: rawData.Content?.length,
-            ContentPreview: rawData.Content?.substring(0, 200),
-          });
+          // console.log("📨 Raw WebSocket message received:", {
+          //   UserId: rawData.UserId,
+          //   Type: rawData.Type,
+          //   ContentLength: rawData.Content?.length,
+          //   ContentPreview: rawData.Content?.substring(0, 200),
+          // });
 
           // Transform server message format to WebSocketMessage format
           let data: WebSocketMessage;
 
           // Check if it's the new server message format (UserId, Type, Content)
+
           if (
             rawData.UserId !== undefined &&
             rawData.Type !== undefined &&
@@ -335,16 +341,18 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
             // Only process Chat messages, ignore Command messages
             if (serverResponse.Type !== "Chat") {
-              console.log("⚠️ Ignoring non-Chat message:", serverResponse.Type);
+              const commandType =
+                (serverResponse as any).CommandType ??
+                (serverResponse as any).commandType;
 
               const commandMsg = safeParseJSON(serverResponse.Content);
 
-              if (serverResponse.CommandType === "UpdatePendingStatus") {
-                console.log(
-                  "⚠️ this command for updating pending status",
-                  serverResponse.CommandType,
-                  commandMsg
-                );
+              if (commandType === "UpdatePendingStatus") {
+                // console.log(
+                //   "⚠️ this command for updating pending status",
+                //   serverResponse.CommandType,
+                //   commandMsg,
+                // );
 
                 if (commandMsg["RepoId"] && commandMsg["KeyId"]) {
                   const repoId = commandMsg["RepoId"];
@@ -359,7 +367,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
                         id: Number(keyId),
                         status: Number(status),
                       },
-                    })
+                    }),
                   );
 
                   if (action == "2" && status !== "0") {
@@ -367,12 +375,12 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
                       setUndoDeleteItemsList({
                         RepoId: Number(repoId),
                         deletedId: Number(keyId),
-                      })
+                      }),
                     );
                   }
 
                   const exists = pagesRef.current.findIndex(
-                    (p) => p.RepoId == repoId && p.Key == keyId
+                    (p) => p.RepoId == repoId && p.Key == keyId,
                   );
 
                   if (exists !== -1) {
@@ -381,7 +389,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
                         RepoId: Number(repoId),
                         Key: Number(keyId),
                         pageState: findingPageState(status),
-                      })
+                      }),
                     );
 
                     if (status === "0" && action == "2") {
@@ -390,12 +398,66 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
                           RepoId: Number(repoId),
                           Key: Number(keyId),
                           pageState: findingPageState(status),
-                        })
+                        }),
                       );
                     }
                   }
                 }
               }
+
+              if (commandType === "EndYearOperations") {
+                let status: number | undefined;
+                let activeStep: number | undefined;
+                if (commandMsg != null && typeof commandMsg === "object") {
+                  status =
+                    commandMsg["Status"] !== undefined
+                      ? Number(commandMsg["Status"])
+                      : undefined;
+                  activeStep =
+                    commandMsg["ActiveStep"] !== undefined
+                      ? Number(commandMsg["ActiveStep"])
+                      : undefined;
+                } else {
+                  try {
+                    const parsed =
+                      typeof serverResponse.Content === "string"
+                        ? JSON.parse(serverResponse.Content)
+                        : null;
+                    if (parsed && typeof parsed === "object") {
+                      status =
+                        parsed.Status !== undefined
+                          ? Number(parsed.Status)
+                          : undefined;
+                      activeStep =
+                        parsed.ActiveStep !== undefined
+                          ? Number(parsed.ActiveStep)
+                          : undefined;
+                    }
+                  } catch {
+                    status = undefined;
+                    activeStep = undefined;
+                  }
+                }
+
+                if (
+                  status !== undefined &&
+                  activeStep !== undefined &&
+                  Number.isInteger(activeStep) &&
+                  Number.isInteger(status)
+                ) {
+                  dispatch(setActiveEndYearStep(activeStep as any));
+                  dispatch(
+                    setEndYearStepStatus({
+                      status: status as any,
+                      value: activeStep as any,
+                    }),
+                  );
+                  if (status === EndYearStepStatusEnum.Failed) {
+                    dispatch(finishEndYearOperation());
+                  }
+                }
+              }
+              return;
             }
 
             // Parse Content (which is a JSON string)
@@ -414,16 +476,16 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
               console.error("❌ Failed to parse Content: returned null");
               console.error(
                 "Content string (first 500 chars):",
-                serverResponse.Content?.substring(0, 500)
+                serverResponse.Content?.substring(0, 500),
               );
               return;
             }
 
-            console.log("📦 Parsed ContentMessage:", {
-              Type: contentMessage.Type,
-              MessageLength: contentMessage.Message?.length,
-              MessagePreview: contentMessage.Message?.substring(0, 100),
-            });
+            // console.log("📦 Parsed ContentMessage:", {
+            //   Type: contentMessage.Type,
+            //   MessageLength: contentMessage.Message?.length,
+            //   MessagePreview: contentMessage.Message?.substring(0, 100),
+            // });
 
             // Map ContentMessageType to MessageType
             const messageTypeMap: Record<string, MessageType> = {
@@ -435,10 +497,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
             };
 
             const mappedType = messageTypeMap[contentMessage.Type] || "text";
-            console.log("🔍 Message type mapping:", {
-              originalType: contentMessage.Type,
-              mappedType,
-            });
+            // console.log("🔍 Message type mapping:", {
+            //   originalType: contentMessage.Type,
+            //   mappedType,
+            // });
 
             // Build payload based on content type
             const payload: any = {
@@ -449,7 +511,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
               payload.html = contentMessage.Message;
               console.log(
                 "✅ HTML message extracted, length:",
-                contentMessage.Message?.length
+                contentMessage.Message?.length,
               );
             } else if (contentMessage.Type === "text") {
               payload.text = contentMessage.Message;
@@ -569,7 +631,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
         if (isAuthError) {
           console.log(
-            "🔐 Authentication error detected, checking for token refresh..."
+            "🔐 Authentication error detected, checking for token refresh...",
           );
 
           // If token has changed, reset reconnect counter and try again
@@ -615,7 +677,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
           updateStatus("disconnected");
           reconnectCountRef.current++;
           console.log(
-            `🔄 Reconnecting... (${reconnectCountRef.current}/${reconnectAttempts})`
+            `🔄 Reconnecting... (${reconnectCountRef.current}/${reconnectAttempts})`,
           );
 
           reconnectTimeoutRef.current = setTimeout(() => {
@@ -713,7 +775,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         return false;
       }
     },
-    [connectionStatus, connect]
+    [connectionStatus, connect],
   );
 
   // Send text message
@@ -724,7 +786,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         payload: { text, metadata },
       });
     },
-    [send]
+    [send],
   );
 
   // Send file (image, video, audio)
@@ -755,7 +817,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         reader.readAsDataURL(file);
       });
     },
-    [send]
+    [send],
   );
 
   // Auto connect on mount - only once
@@ -799,6 +861,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
             console.log("📨 Raw WebSocket message received:", {
               UserId: rawData.UserId,
               Type: rawData.Type,
+              CommandType: rawData.CommandType,
               ContentLength: rawData.Content?.length,
               ContentPreview: rawData.Content?.substring(0, 200),
             });
@@ -814,12 +877,117 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
             ) {
               const serverResponse = rawData as ServerWebSocketResponse;
 
-              // Only process Chat messages, ignore Command messages
               if (serverResponse.Type !== "Chat") {
-                console.log(
-                  "⚠️ Ignoring non-Chat message:",
-                  serverResponse.Type
-                );
+                const commandType =
+                  (serverResponse as any).CommandType ??
+                  (serverResponse as any).commandType;
+
+                const commandMsg = safeParseJSON(serverResponse.Content);
+
+                if (commandType === "UpdatePendingStatus") {
+                  if (commandMsg["RepoId"] && commandMsg["KeyId"]) {
+                    const repoId = commandMsg["RepoId"];
+                    const keyId = commandMsg["KeyId"];
+                    const action = commandMsg["ActionMode"];
+                    const status = commandMsg["Status"];
+
+                    dispatch(
+                      setStatusItemsList({
+                        RepoId: Number(repoId),
+                        items: {
+                          id: Number(keyId),
+                          status: Number(status),
+                        },
+                      }),
+                    );
+
+                    if (action == "2" && status !== "0") {
+                      dispatch(
+                        setUndoDeleteItemsList({
+                          RepoId: Number(repoId),
+                          deletedId: Number(keyId),
+                        }),
+                      );
+                    }
+
+                    const exists = pagesRef.current.findIndex(
+                      (p) => p.RepoId == repoId && p.Key == keyId,
+                    );
+
+                    if (exists !== -1) {
+                      dispatch(
+                        setPageStateByRepo({
+                          RepoId: Number(repoId),
+                          Key: Number(keyId),
+                          pageState: findingPageState(status),
+                        }),
+                      );
+
+                      if (status === "0" && action == "2") {
+                        dispatch(
+                          deletePageByRepo({
+                            RepoId: Number(repoId),
+                            Key: Number(keyId),
+                            pageState: findingPageState(status),
+                          }),
+                        );
+                      }
+                    }
+                  }
+                }
+
+                if (commandType === "EndYearOperations") {
+                  let status: number | undefined;
+                  let activeStep: number | undefined;
+                  if (commandMsg != null && typeof commandMsg === "object") {
+                    status =
+                      commandMsg["Status"] !== undefined
+                        ? Number(commandMsg["Status"])
+                        : undefined;
+                    activeStep =
+                      commandMsg["ActiveStep"] !== undefined
+                        ? Number(commandMsg["ActiveStep"])
+                        : undefined;
+                  } else {
+                    try {
+                      const parsed =
+                        typeof serverResponse.Content === "string"
+                          ? JSON.parse(serverResponse.Content)
+                          : null;
+                      if (parsed && typeof parsed === "object") {
+                        status =
+                          parsed.Status !== undefined
+                            ? Number(parsed.Status)
+                            : undefined;
+                        activeStep =
+                          parsed.ActiveStep !== undefined
+                            ? Number(parsed.ActiveStep)
+                            : undefined;
+                      }
+                    } catch {
+                      status = undefined;
+                      activeStep = undefined;
+                    }
+                  }
+
+                  if (
+                    status !== undefined &&
+                    activeStep !== undefined &&
+                    Number.isInteger(activeStep) &&
+                    Number.isInteger(status)
+                  ) {
+                    dispatch(setActiveEndYearStep(activeStep as any));
+                    dispatch(
+                      setEndYearStepStatus({
+                        status: status as any,
+                        value: activeStep as any,
+                      }),
+                    );
+                    if (status === EndYearStepStatusEnum.Failed) {
+                      dispatch(finishEndYearOperation());
+                    }
+                  }
+                }
                 return;
               }
 
@@ -833,7 +1001,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
                 // This should never happen, but handle it just in case
                 console.error(
                   "❌ Unexpected error in safeParseJSON:",
-                  parseErr
+                  parseErr,
                 );
                 contentMessage = null;
               }
@@ -842,7 +1010,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
                 console.error("❌ Failed to parse Content: returned null");
                 console.error(
                   "Content string (first 500 chars):",
-                  serverResponse.Content?.substring(0, 500)
+                  serverResponse.Content?.substring(0, 500),
                 );
                 return;
               }
@@ -877,7 +1045,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
                 payload.html = contentMessage.Message;
                 console.log(
                   "✅ HTML message extracted, length:",
-                  contentMessage.Message?.length
+                  contentMessage.Message?.length,
                 );
               } else if (contentMessage.Type === "text") {
                 payload.text = contentMessage.Message;
@@ -988,7 +1156,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
           if (isAuthError) {
             console.log(
-              "🔐 Authentication error detected, checking for token refresh..."
+              "🔐 Authentication error detected, checking for token refresh...",
             );
 
             // If token has changed, reset reconnect counter and try again
@@ -1033,7 +1201,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
             updateStatus("disconnected");
             reconnectCountRef.current++;
             console.log(
-              `🔄 Reconnecting... (${reconnectCountRef.current}/${reconnectAttempts})`
+              `🔄 Reconnecting... (${reconnectCountRef.current}/${reconnectAttempts})`,
             );
             reconnectTimeoutRef.current = setTimeout(() => {
               connect();

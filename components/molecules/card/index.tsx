@@ -53,6 +53,7 @@ const Card = forwardRef(function Card<T>(
     totalCount,
     loading,
     withoutActivation,
+    filteringAction,
   }: IProps<T> & { containerRef?: Ref<HTMLDivElement> },
   ref: RefAttributes<HTMLDivElement>["ref"],
 ) {
@@ -69,7 +70,7 @@ const Card = forwardRef(function Card<T>(
       lang: state.withPersist.config.lang,
       activePage,
       selectedItems:
-        state.withPersist.listItems.itemsByPage?.[activePage?.pageId],
+        state.withPersist.listItems.itemsByPage?.[activePage?.pageId] ?? [],
       tagsInfo: state.withoutPersist.container.recordsTags,
     };
   }, shallowEqual);
@@ -100,7 +101,7 @@ const Card = forwardRef(function Card<T>(
   const [currentId, setCurrentId] = useState(null);
 
   const handleSelectRow = (item: number) => {
-    if (selectedItems.includes(item)) {
+    if (selectedItems?.includes(item)) {
       dispatch(
         setItems({
           pageId: activePage?.pageId,
@@ -236,7 +237,7 @@ const Card = forwardRef(function Card<T>(
         <div className="flex items-center gap-1">
           {isSelectMode && (
             <Checkbox
-              checked={selectedItems.includes(item[rowFieldKey])}
+              checked={selectedItems?.includes(item[rowFieldKey])}
               onClick={(event) => event.stopPropagation()}
               onChange={() => handleSelectRow(item[rowFieldKey])}
             />
@@ -288,6 +289,7 @@ const Card = forwardRef(function Card<T>(
         bookmarkIsLoading={bookmarkIsLoading}
         columnsConfig={columnsConfig}
         conditionalActions={conditionalActions}
+        filteringAction={filteringAction}
         currentChanges={currentChanges}
         currentId={currentId}
         handleSetBookmark={handleSetBookmark}

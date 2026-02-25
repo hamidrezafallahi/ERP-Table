@@ -42,7 +42,7 @@ type ColumnAccessControl = {
     denyRoles?: string[];
     rule?: (ctx: { actor; row; table }) => boolean;
 };
-type RowAccessControl = {
+export type RowAccessControl = {
     allowRoles?: string[];
     denyRoles?: string[];
     rule?: (ctx: {
@@ -75,10 +75,6 @@ export interface IDetailColumnConfig {
             row: Record<string, unknown>,
             remoteApi: RemoteApi
         ) => Promise<unknown>;
-
-        id?: number;
-        name?: string;
-        age?: number;
         children?: [] | undefined;
     };
     selectOptions?: { label: string, value: string }[]
@@ -96,6 +92,8 @@ export type CreateERPTableConfig<TMoreDetail = unknown> = {
     repo?: TableRepository;
     audit?: AuditLogger;
     permissionPolicy?: PermissionPolicy;
-    tableHeight?: number ;
-    recordPerPage?: number;
+    page:number
+    pageSize:number
+    totalRecords:number
+ 
 };

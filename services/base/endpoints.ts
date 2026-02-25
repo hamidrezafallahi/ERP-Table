@@ -192,4 +192,6 @@ export const endpoints = [
   "repoTag",
   "globalCap",
   "getBackToPreviousStep",
+  "chequeHistory",
+  "chequeInfo",
 ];

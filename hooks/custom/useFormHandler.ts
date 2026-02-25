@@ -49,7 +49,7 @@ export const useFormHandlers = ({
     (state) => ({
       historyItems: state.withPersist.history,
     }),
-    shallowEqual
+    shallowEqual,
   );
   const t = useTranslations();
   const [trigger, { isLoading }] = useCUDDataMutation();
@@ -62,7 +62,7 @@ export const useFormHandlers = ({
   const extractBodyAndChangedFields = useCallback(() => {
     const body: any = {};
     const changedFields: string[] = [];
-    console.log("id", id);
+
     if (!id) {
       formData?.forEach((item: any) => {
         if (
@@ -163,7 +163,7 @@ export const useFormHandlers = ({
         const existItem = historyItems.find(
           (item) =>
             item.key === result.Key &&
-            item.type === (id ? HistoryTypeEnum.Update : HistoryTypeEnum.Add)
+            item.type === (id ? HistoryTypeEnum.Update : HistoryTypeEnum.Add),
         );
         if (!existItem) {
           dispatch(
@@ -188,18 +188,18 @@ export const useFormHandlers = ({
               pageName: activePage.caption,
               name: formData.find((i: any) => i.isTitleField)?.value,
               pageIcon: activePage?.icon,
-            })
+            }),
           );
         }
         const keyName = activePage?.pageData?.find(
-          (i) => i.caption === "MainIdField"
+          (i) => i.caption === "MainIdField",
         )?.name;
         dispatch(
           setPageData({
             name: keyName,
             value: result.Key,
             originalValue: result.Key,
-          })
+          }),
         );
 
         dispatch(setSavePageData(result.Key));
@@ -212,7 +212,7 @@ export const useFormHandlers = ({
               formData.find((i: any) => i.isTitleField)?.value,
             Key: result.Key,
             pageState: pageState,
-          })
+          }),
         );
         return result;
       } else {
@@ -274,7 +274,7 @@ export const useFormHandlers = ({
             setPageState({
               ...listPage,
               pageState: PageStateEnum.NeedReload,
-            })
+            }),
           );
         });
       }
@@ -325,7 +325,7 @@ export const useFormHandlers = ({
           toolbarData: activePage.toolbarData,
           listUrl: activePage.listUrl,
           listPageId: activePage.listPageId,
-        })
+        }),
       );
     }
   }, [activePage]);

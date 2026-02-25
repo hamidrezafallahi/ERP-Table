@@ -1,5 +1,6 @@
 ﻿import { Pagination, Spin, Table, TableColumnsType } from "antd";
 import { useTranslations } from "next-intl";
+import { shallowEqual } from "react-redux";
 
 import {
   CustomButton,
@@ -12,14 +13,15 @@ import {
   NoData,
   RightChevron,
   SpinIcon,
+  Undo,
 } from "@components/atoms/iconComponents";
 import RenderStatus from "@components/molecules/renderStatus";
+import { ActionLabelsEnum } from "@components/organisms/receiptAndPayment/cheque/action/enum";
 import { useDarkMode, useProcessedData } from "@hooks/custom";
 import { useAppSelector } from "@redux/index";
 import type { IColumnConfig } from "@services/generalType/type";
 import { getColoredIcon } from "@utils/core";
 
-import { shallowEqual } from "react-redux";
 import type { IProps } from "./type";
 
 export const ActionGrid = ({
@@ -115,8 +117,8 @@ export const ActionGrid = ({
               MenuId: null,
               Icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"fill="none"><path d="M10 9.16667V13.3333M10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5C14.1421 2.5 17.5 5.85786 17.5 10C17.5 14.1421 14.1421 17.5 10 17.5ZM10.0415 6.66667V6.75L9.9585 6.75016V6.66667H10.0415Z"className="stroke-gray-gray10 dark:stroke-gray-gray1"stroke="stroke-gray-gray10  dark:stroke-gray-gray1"strokeLinecap="round"strokeLinejoin="round"/></svg>`,
               ActionId: null,
-              MenuDesc: "عملیات چک دریافتی",
-              key: "عملیات چک دریافتی",
+              MenuDesc: ActionLabelsEnum.ChequeCirculation,
+              key: ActionLabelsEnum.ChequeCirculation,
               FatherId: null,
               MenuType: null,
               loggedInUserId: null,
@@ -128,7 +130,7 @@ export const ActionGrid = ({
                   <span>{record[item.fieldName]}</span>
                 )}
 
-                <CustomTooltip title="رفتن به چک دریافتی">
+                <CustomTooltip title={ActionLabelsEnum.ChequeCirculation}>
                   <div
                     className="cursor-pointer"
                     onClick={() => onActionClick(action, record)}
@@ -151,8 +153,19 @@ export const ActionGrid = ({
               MenuId: null,
               Icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"fill="none"><path d="M10 9.16667V13.3333M10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5C14.1421 2.5 17.5 5.85786 17.5 10C17.5 14.1421 14.1421 17.5 10 17.5ZM10.0415 6.66667V6.75L9.9585 6.75016V6.66667H10.0415Z"className="stroke-gray-gray10 dark:stroke-gray-gray1"stroke="stroke-gray-gray10  dark:stroke-gray-gray1"strokeLinecap="round"strokeLinejoin="round"/></svg>`,
               ActionId: null,
-              MenuDesc: "وضعیت چک",
-              key: "وضعیت چک",
+              MenuDesc: ActionLabelsEnum.ChequeStatus,
+              key: ActionLabelsEnum.ChequeStatus,
+              FatherId: null,
+              MenuType: null,
+              loggedInUserId: null,
+              condition: "",
+            };
+            const prevStepAction = {
+              MenuId: null,
+              Icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"fill="none"><path d="M10 9.16667V13.3333M10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5C14.1421 2.5 17.5 5.85786 17.5 10C17.5 14.1421 14.1421 17.5 10 17.5ZM10.0415 6.66667V6.75L9.9585 6.75016V6.66667H10.0415Z"className="stroke-gray-gray10 dark:stroke-gray-gray1"stroke="stroke-gray-gray10  dark:stroke-gray-gray1"strokeLinecap="round"strokeLinejoin="round"/></svg>`,
+              ActionId: null,
+              MenuDesc: ActionLabelsEnum.PrevStep,
+              key: ActionLabelsEnum.PrevStep,
               FatherId: null,
               MenuType: null,
               loggedInUserId: null,
@@ -168,8 +181,20 @@ export const ActionGrid = ({
                   className="cursor-pointer"
                   onClick={() => onActionClick(action, record)}
                 >
-                  <Info />
+                  <CustomTooltip title={ActionLabelsEnum.ChequeStatus}>
+                    <Info />
+                  </CustomTooltip>
                 </div>
+                {record["DocumentCheque.StateId"] !== "نزد صندوق" && (
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => onActionClick(prevStepAction, record)}
+                  >
+                    <CustomTooltip title={ActionLabelsEnum.PrevStep}>
+                      <Undo config={{ width: 20, height: 20 }} />
+                    </CustomTooltip>
+                  </div>
+                )}
               </div>
             );
           },

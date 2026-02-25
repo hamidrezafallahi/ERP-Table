@@ -91,16 +91,45 @@ export enum RowOriginEnum {
 }
 
 export class Pagination {
+  public readonly totalRows: number;
+  public readonly totalPages: number;
+  public readonly canPrev: boolean;
+  public readonly canNext: boolean;
+
   constructor(
     public readonly page: number,
-    public readonly pageSize: number
-  ) {}
+    public readonly pageSize: number,
+    totalRows: number
+  ) {
+    this.totalRows = totalRows;
+    this.totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+    this.canPrev = page > 1;
+    this.canNext = page < this.totalPages;
+  }
 
   changePage(page: number): Pagination {
-    return new Pagination(page, this.pageSize);
+    return new Pagination(page, this.pageSize, this.totalRows);
+  }
+  changeTotalRows(totalRows: number): Pagination {
+    return new Pagination(this.page, this.pageSize, totalRows);
   }
 
   changePageSize(size: number): Pagination {
-    return new Pagination(100, size);
+    return new Pagination(
+      Math.min(this.page, Math.ceil(this.totalRows / size)),  
+      size,
+      this.totalRows
+    );
+  }
+
+  toJSON() {
+    return {
+      page: this.page,
+      pageSize: this.pageSize,
+      totalRows: this.totalRows,
+      totalPages: this.totalPages,
+      canPrev: this.canPrev,
+      canNext: this.canNext,
+    };
   }
 }

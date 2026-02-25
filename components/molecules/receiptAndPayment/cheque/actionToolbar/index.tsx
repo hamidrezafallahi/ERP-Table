@@ -26,8 +26,6 @@ import { ActionLabelsEnum } from "@components/organisms/receiptAndPayment/cheque
 import { useDarkMode, useInvalidateTag, useNavigatePage } from "@hooks/custom";
 import PanelList from "@layout/baseLayout/desktop/actionBar/panelList";
 import { useAppSelector } from "@redux/index";
-import { setPageState, setViewData } from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
 import type { IToolbarMenu } from "@type/toolbar";
 import { getColoredIcon, showInfoToast } from "@utils/core";
 
@@ -46,6 +44,7 @@ export const ActionToolbar = ({
   renderGroupAction,
   records,
   rowFieldKey,
+  handleRefreshData,
 }) => {
   const { mode = "light" } = useDarkMode();
 
@@ -316,26 +315,6 @@ export const ActionToolbar = ({
     },
   ];
 
-  const handleRefreshData = () => {
-    invalidate(activePage?.viewData?.url);
-    dispatch(
-      setPageState({
-        ...activePage,
-        pageState: PageStateEnum.Opened,
-      }),
-    );
-    dispatch(
-      setViewData({
-        ...activePage?.viewData,
-        deletedItems: [],
-        statusItems: [],
-        PagingInfo: {
-          PageNumber: 1,
-          PageRecordCount: activePage?.viewData?.PagingInfo?.PageRecordCount,
-        },
-      }),
-    );
-  };
   const pageTitle = activePage?.caption;
 
   return (

@@ -1,5 +1,6 @@
 // engine/TableEngine.ts
 
+import { ConsoleAuditLogger } from '../adapters/infra/consoleAuditLogger';
 import {
   Actor,
   TableCommand,
@@ -7,6 +8,10 @@ import {
 import { TableRepository } from '../application/ports/TableRepository';
 import { TableAppService } from '../application/TableAppService';
 import { Table } from '../domain/entities/Table';
+import {
+  CellValue,
+  ColumnId,
+} from '../domain/value-objects';
 import { TableStore } from './tableStore';
 import {
   TableSnapShot,
@@ -21,69 +26,23 @@ export class TableEngine {
     private readonly app: TableAppService,
     private readonly repo: TableRepository,
     private readonly actor: Actor,
+    private readonly audit: ConsoleAuditLogger,
   ) { }
-private columnListeners = new Map<string, Set<(values: unknown[]) => void>>();
 
-subscribeColumn<T = unknown>(
-  tableKey: string,
-  columnId: string,
-  cb: (values: T[]) => void
-) {
-  const key = `${tableKey}_${columnId}`;
-  if (!this.columnListeners.has(key)) {
-    this.columnListeners.set(key, new Set());
-  }
-  this.columnListeners.get(key)!.add(cb);
-
-  // unsubscribe function
-  return () => {
-    const listeners = this.columnListeners.get(key);
-    if (listeners) {
-      listeners.delete(cb);
-      if (listeners.size === 0) {
-        this.columnListeners.delete(key); // پاک کردن Set خالی برای بهینه‌سازی حافظه
-      }
-    }
-  };
-}
-
-private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
-  const key = `${tableKey}_${columnId}`;
-  const listeners = this.columnListeners.get(key);
-  if (!listeners || listeners.size === 0) return;
-
-  const values = table.getColumnValues(columnId); // برگرداندن تمام مقادیر ستون
-
-  for (const cb of listeners) {
-    try {
-      cb(values);
-    } catch (err) {
-      console.error(`Error in column subscriber for ${columnId}:`, err);
-    }
-  }
-}
-
-  private async registerTable(cmd: {
-    store: string, table: Table
-  }) {
-    const { store, table } = cmd
-    if (this.tables.has(table.id)) {
-      return;
-    }
-    this.tables.set(
-      table.id,
-      new TableStore({
-        table,
-        expandedRows: {},
-        selectedRows: {},
-        activeRowId: null,
-        activeCell: null,
-        rangeAnchorRowId: null
-      })
-    );
+  private async registerTable(cmd: { store: string, table: Table }) {
+    const { store, table } = cmd;
+    if (this.tables.has(table.id)) return;
+    const tableStore = new TableStore({
+      table,
+      expandedRows: {},
+      selectedRows: {},
+      activeRowId: null,
+      activeCell: null,
+      rangeAnchorRowId: null
+    });
+    this.tables.set(table.id, tableStore);
     await this.repo.save(store, table);
   }
-
   private selectFromActiveToLast(cmd: {
     tableKey: string;
     anchorRowId: number;
@@ -105,7 +64,7 @@ private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
       return {
         ...prev,
         selectedRows: nextSelected,
-        rangeAnchorRowId: cmd.anchorRowId, // برای سازگاری با range selection معمولی
+        rangeAnchorRowId: cmd.anchorRowId,
       };
     });
   }
@@ -129,19 +88,27 @@ private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
   }) {
     const { store, tableKey } = cmd;
 
-    const tableStore = this.tables.get(tableKey);
+    const tableStore = this.getStore(tableKey);
     if (!tableStore) {
-      throw new Error(`Table ${tableKey} is not registered`);
+      this.audit.log({
+        type: 'ERROR',
+        message: "Table  is not registered",
+        payload: tableKey
+      });
+      return null
     }
 
     // گرفتن نسخه‌ی اولیه از persistence
     const freshTable = await this.repo.getById(store, tableKey);
 
     if (!freshTable) {
-      throw new Error(`Table ${tableKey} could not be reloaded`);
+      this.audit.log({
+        type: 'ERROR',
+        message: `Table ${tableKey} could not be reloaded`,
+        payload: tableKey
+      });
+      return null
     }
-
-    // reset کامل state (domain + ui state)
     tableStore.setState(prev => ({
       ...prev,
       table: freshTable,
@@ -152,16 +119,18 @@ private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
       rangeAnchorRowId: null,
     }));
   }
-
-
   private getStore(tableKey: string): TableStore<TableState> {
     const store = this.tables.get(tableKey);
     if (!store) {
-      throw new Error(`Table ${tableKey} is not registered`);
+      this.audit.log({
+        type: 'ERROR',
+        message: `Table ${tableKey} could not be found`,
+        payload: tableKey
+      });
+      return null
     }
     return store;
   }
-
   private moveActiveCell(cmd: {
     tableKey: string;
     rowId: number;
@@ -200,97 +169,131 @@ private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
     direction: 'up' | 'down';
   }) {
     const store = this.getStore(cmd.tableKey);
-    store.setState(prev => {
-      const view = this.getViewState(cmd.tableKey);   // ← مهم
-      const { pagination } = view;
-      const visibleRows = view.rows;                  // ردیف‌های صفحه فعلی
-      const currentIndex = visibleRows.findIndex(r => r.id === cmd.rowId);
 
+    store.setState(prev => {
+      const view = this.getViewState(cmd.tableKey);
+      if (!view) return prev;
+
+      const { pagination } = view;
+
+      // ✅ این rows الان از قبل بر اساس index مرتب شده‌اند
+      const visibleRows = view.rows;
+
+      const currentIndex = visibleRows.findIndex(r => r.id === cmd.rowId);
       if (currentIndex === -1) return prev;
 
-      let nextIndex = cmd.direction === 'down' ? currentIndex + 1 : currentIndex - 1;
+      const nextIndex =
+        cmd.direction === 'down'
+          ? currentIndex + 1
+          : currentIndex - 1;
 
-      // داخل صفحه فعلی هستیم؟
+      // ------------------------------
+      // حرکت داخل همان صفحه
+      // ------------------------------
       if (nextIndex >= 0 && nextIndex < visibleRows.length) {
         const nextRow = visibleRows[nextIndex];
+
         return {
           ...prev,
           activeRowId: nextRow.id,
-          activeCell: { rowId: nextRow.id, columnId: cmd.columnId },
+          activeCell: {
+            rowId: nextRow.id,
+            columnId: cmd.columnId,
+          },
         };
       }
 
       // ------------------------------
-      // حالا مرز صفحه
+      // رسیدن به مرز صفحه
       // ------------------------------
-      const shouldGoNextPage = cmd.direction === 'down' && currentIndex === visibleRows.length - 1;
-      const shouldGoPrevPage = cmd.direction === 'up' && currentIndex === 0;
+      const isAtLastRow =
+        cmd.direction === 'down' &&
+        currentIndex === visibleRows.length - 1;
 
-      if (shouldGoNextPage && pagination.canNext) {
-        // به صفحه بعدی → ردیف اول همان ستون
+      const isAtFirstRow =
+        cmd.direction === 'up' &&
+        currentIndex === 0;
+
+      if (isAtLastRow && pagination.canNext) {
         return {
           ...prev,
-          activeCell: null,   // موقتاً پاک می‌کنیم تا بعد از تغییر صفحه ست کنیم
+          activeCell: null, // بعد از تغییر صفحه ست می‌شود
         };
       }
 
-      if (shouldGoPrevPage && pagination.canPrev) {
-        // به صفحه قبلی → ردیف آخر همان ستون
+      if (isAtFirstRow && pagination.canPrev) {
         return {
           ...prev,
           activeCell: null,
         };
       }
 
-      // هیچ جا نمی‌تونیم بریم → بدون تغییر
+      // هیچ حرکتی ممکن نیست
       return prev;
     });
 
-    // بعد از تغییر state، اگر نیاز به تغییر صفحه بود، اینجا انجام بده
+    // ---------------------------------------
+    // بعد از setState → بررسی تغییر صفحه
+    // ---------------------------------------
     const currentView = this.getViewState(cmd.tableKey);
+    if (!currentView) return;
+
     const active = currentView.activeCell;
 
-    if (!active && cmd.direction === 'down' && currentView.pagination.canNext) {
+    // ------------------------------
+    // رفتن به صفحه بعد
+    // ------------------------------
+    if (
+      !active &&
+      cmd.direction === 'down' &&
+      currentView.pagination.canNext
+    ) {
       this.dispatch({
         type: 'CHANGE_PAGE',
         tableKey: cmd.tableKey,
         page: currentView.pagination.page + 1,
-        store: 'your-store-name', // یا از cmd بگیری
+        store: cmd.tableKey,
       }).then(() => {
-        // بعد از لود صفحه جدید، اولین ردیف + همان ستون را فعال کن
         const newView = this.getViewState(cmd.tableKey);
-        if (newView.rows.length > 0) {
-          const firstRowId = newView.rows[0].id;
-          this.setActiveCell({
-            tableKey: cmd.tableKey,
-            rowId: firstRowId,
-            columnId: cmd.columnId,
-          });
-        }
+        if (!newView || newView.rows.length === 0) return;
+        const firstRowId = newView.rows[0].id;
+
+        this.setActiveCell({
+          tableKey: cmd.tableKey,
+          rowId: firstRowId,
+          columnId: cmd.columnId,
+        });
       });
     }
 
-    if (!active && cmd.direction === 'up' && currentView.pagination.canPrev) {
+    // ------------------------------
+    // رفتن به صفحه قبل
+    // ------------------------------
+    if (
+      !active &&
+      cmd.direction === 'up' &&
+      currentView.pagination.canPrev
+    ) {
       this.dispatch({
         type: 'CHANGE_PAGE',
         tableKey: cmd.tableKey,
         page: currentView.pagination.page - 1,
-        store: cmd.tableKey
-,
+        store: cmd.tableKey,
       }).then(() => {
         const newView = this.getViewState(cmd.tableKey);
-        if (newView.rows.length > 0) {
-          const lastRowId = newView.rows[newView.rows.length - 1].id;
-          this.setActiveCell({
-            tableKey: cmd.tableKey,
-            rowId: lastRowId,
-            columnId: cmd.columnId,
-          });
-        }
+        if (!newView || newView.rows.length === 0) return;
+
+        const lastRowId =
+          newView.rows[newView.rows.length - 1].id;
+
+        this.setActiveCell({
+          tableKey: cmd.tableKey,
+          rowId: lastRowId,
+          columnId: cmd.columnId,
+        });
       });
     }
   }
-
   private activateFirstCell(cmd: {
     tableKey: string;
     rowId: number;
@@ -313,148 +316,6 @@ private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
       },
     }));
   }
-  getViewState(tableKey: string): TableViewState {
-    const { table, expandedRows, activeCell, selectedRows } = this.getStore(tableKey).getState();
-    const pagination = table.getPagination();
-    const totalRows = table.getRows().length;
-    const totalPages = Math.max(
-      1,
-      Math.ceil(totalRows / pagination.pageSize)
-    );
-    return {
-      table,
-
-      activeCell,
-      selectedRows,
-      rows: table.getVisibleRows().sort((a, b) => a.id.value - b.id.value).map((row) => {
-        const cells: Record<string, TCell> = {};
-        const columns = table.getColumns();
-        for (const col of columns) {
-          const cell = row.getCells().get(col.id);
-
-          cells[col.id] = {
-            value: cell?.getValue()?.value ?? null,
-            originalValue: cell?.getOriginalValue()?.value ?? null,
-            display: cell?.getDisplay()?.value ?? null,
-          };
-        }
-        return {
-          id: row.id.value,
-          rowState: row.rowState.value,
-          changeFields: row.getChangeFields(),
-          cells,//: Object.fromEntries([...row.getCells()].map(([k, c]) => [k, { value: c.getValue()?.value, originalValue: c.getOriginalValue()?.value }])),
-          isExpanded: !!expandedRows[row.id.value],
-          moreDetails:row.moreDetails
-        }
-      }),
-      deletedRows: [],
-      columns: table.getColumns().map((col) => ({
-        id: col.id,
-        title: col.title,
-        hidden: col.hidden,
-        renderType: col.renderType,
-        editable: col.editable,
-        options: col.selectOptions,
-        indexOptions: col.indexOptions,
-        dynamicValue: col.dynamicValue,
-      })),
-      pagination: {
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-        totalRows,
-        totalPages,
-        canPrev: pagination.page > 1,
-        canNext: pagination.page < totalPages,
-      },
-    }
-  }
-  getSnapShot(tableKey: string): TableSnapShot {
-    const { table } = this.getStore(tableKey).getState();
-    return {
-      table,
-      rows: table.getRows().map(row => ({
-        id: row.id.value,
-        changeFields: row.getChangeFields(),
-        cells: Object.fromEntries(
-          [...row.getCells()].map(([k, c]) => [k, c.getValue()?.value])
-        ),
-        rowState: row.rowState.value,
-        moreDetails:row.moreDetails
-
-      })),
-      deletedRows: [],
-
-    };
-
-  }
-  getExpandedRowData(tableKey: string, rowId: number) {
-    const { table } = this.getStore(tableKey).getState();
-    if (!table) return null;
-    const row = table.getRows().find(r => r.id.value === rowId);
-    if (!row) return null;
-    const rowValues: Record<string, unknown> = {};
-    for (const [colId, cell] of row.getCells().entries()) {
-      rowValues[colId] = cell.getValue().value;
-    }
-    return rowValues;
-  }
-  getActiveCell(tableKey: string) {
-    const store = this.getStore(tableKey).getState();
-    if (!store) return null;
-
-    return store.activeCell;
-  }
-  getActiveRow(tableKey: string) {
-    const store = this.getStore(tableKey).getState();
-    if (!store) return null;
-
-    return store.activeRowId;
-  }
-  isActiveCell(
-    tableKey: string,
-    rowId: number,
-    columnId: string
-  ): boolean {
-    try {
-      const { activeCell } = this.getStore(tableKey).getState();
-      return !!activeCell &&
-        activeCell.rowId === rowId &&
-        activeCell.columnId === columnId;
-    } catch {
-      return false;
-    }
-  }
-  isActiveRow(
-    tableKey: string,
-    rowId: number,
-  ): boolean {
-
-    try {
-      const { activeRowId } = this.getStore(tableKey).getState();
-      return !!activeRowId &&
-        activeRowId === rowId
-    } catch {
-      return false;
-    }
-  }
-  isSelectedRow(tableKey: string, rowId: number): boolean {
-    try {
-      const { selectedRows } = this.getStore(tableKey).getState();
-      return !!selectedRows && !!selectedRows[rowId];
-    } catch {
-      return false;
-    }
-  }
-  isExpandableRow(tableKey: string, rowId: number): boolean {
-      const { table } = this.getStore(tableKey).getState();
-      const row = table.getRow(rowId)
-      const expandAble = row.getMoreDetails()
-      return  !!expandAble;
-  }
-  getSelectedRows(tableKey: string): Record<number,boolean> {
-      return this.getStore(tableKey).getState().selectedRows;
-  }
-
   private setActiveCell(cmd: {
     tableKey: string
     rowId: number
@@ -472,7 +333,6 @@ private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
       ) {
         return prev;
       }
-
       return {
         ...prev,
         activeRowId: cmd.rowId,
@@ -483,7 +343,6 @@ private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
       };
     });
   }
-
   private setActiveRow(cmd: {
     tableKey: string
     rowId: number
@@ -518,11 +377,87 @@ private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
       };
     });
   }
+  private moveVerticalSelectedRows(cmd: {
+    tableKey: string;
+    direction: 'down' | 'up';
+  }) {
+    const store = this.getStore(cmd.tableKey);
+
+    store.setState(prev => {
+      const table = prev.table;
+      const selectedMap = prev.selectedRows;
+
+      const allRows = table.getRows();
+
+      // مرتب بر اساس index
+      const sortedRows = [...allRows].sort((a, b) =>
+        (a.getCell("index")?.getValue()?.value as number) -
+        (b.getCell("index")?.getValue()?.value as number)
+      );
+
+      const selectedRows = sortedRows.filter(r => selectedMap[r.id.value]);
+      if (selectedRows.length === 0) return prev;
+
+      if (cmd.direction === 'up') {
+        // از اولین سطر شروع می‌کنیم
+        for (const row of selectedRows) {
+          const idx = sortedRows.findIndex(r => r.id.value === row.id.value);
+          if (idx === 0) continue; // بالاترین ردیف
+
+          const upperRow = sortedRows[idx - 1];
+
+          // swap index
+          const rowIndex = row.getCell("index")?.getValue()?.value as number;
+          const upperIndex = upperRow.getCell("index")?.getValue()?.value as number;
+
+          row.changeCell(new ColumnId("index"), new CellValue(upperIndex));
+          upperRow.changeCell(new ColumnId("index"), new CellValue(rowIndex));
+
+          // swap position in array to prevent double-swapping
+          sortedRows[idx - 1] = row;
+          sortedRows[idx] = upperRow;
+        }
+      }
+
+      if (cmd.direction === 'down') {
+        // از آخرین سطر شروع می‌کنیم تا تداخل نداشته باشیم
+        for (let i = selectedRows.length - 1; i >= 0; i--) {
+          const row = selectedRows[i];
+          const idx = sortedRows.findIndex(r => r.id.value === row.id.value);
+          if (idx === sortedRows.length - 1) continue; // پایین‌ترین ردیف
+
+          const lowerRow = sortedRows[idx + 1];
+
+          const rowIndex = row.getCell("index")?.getValue()?.value as number;
+          const lowerIndex = lowerRow.getCell("index")?.getValue()?.value as number;
+
+          row.changeCell(new ColumnId("index"), new CellValue(lowerIndex));
+          lowerRow.changeCell(new ColumnId("index"), new CellValue(rowIndex));
+
+          sortedRows[idx] = lowerRow;
+          sortedRows[idx + 1] = row;
+        }
+      }
+
+      return {
+        ...prev,
+        table,
+      };
+    });
+  }
   private setRowExpanded(cmd: {
     tableKey: string, rowId: number, value: boolean
   }) {
     const { rowId, tableKey, value } = cmd
     const store = this.getStore(tableKey);
+    if (!store) {
+      this.audit.log({
+        type: 'ERROR',
+        message: `setRowExpanded store is not found`,
+        payload: tableKey
+      });
+      return null
+    }
     const state = store.getState();
     const key = String(rowId);
     if (!!state.expandedRows[rowId] === value) return;
@@ -535,18 +470,22 @@ private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
       },
     }));
   }
-
   private toggleRowExpanded(cmd: {
     tableKey: string, rowId: number
   }) {
     const { rowId, tableKey } = cmd
-
     const key = String(rowId);
-
     const store = this.getStore(tableKey);
+    if (!store) {
+      this.audit.log({
+        type: 'ERROR',
+        message: `toggleRowExpanded store is not found`,
+        payload: tableKey
+      });
+      return null
+    }
     const state = store.getState();
     const next = !state.expandedRows[key];
-
     store.setState(() => ({
       ...state,
       expandedRows: {
@@ -555,9 +494,17 @@ private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
       },
     }));
   }
-
   private collapseAll(tableKey: string) {
+
     const store = this.getStore(tableKey);
+    if (!store) {
+      this.audit.log({
+        type: 'ERROR',
+        message: `collapseAll store is not found`,
+        payload: tableKey
+      });
+      return null
+    }
     const state = store.getState();
     if (!state.expandedRows || Object.keys(state.expandedRows).length === 0) return;
 
@@ -567,11 +514,10 @@ private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
     }));
   }
   private toggleRowSelection(cmd: {
-    tableKey: string
-    rowId: number
+    tableKey: string;
+    rowId: number;
   }) {
     const store = this.getStore(cmd.tableKey);
-
     store.setState(prev => {
       const isSelected = !!prev.selectedRows[cmd.rowId];
 
@@ -610,60 +556,6 @@ private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
         };
       }
     });
-  }
-
-  private goToPreviousPage(tableKey: string) {
-    const store = this.getStore(tableKey);
-    const pagination = store.getState().table.getPagination();
-    if (pagination.page > 1) {
-      this.dispatch({
-        type: 'CHANGE_PAGE',
-        store: '', // مقدار store رو باید از جایی بگیری
-        tableKey,
-        page: pagination.page - 1,
-      });
-    }
-  }
-
-  private goToNextPage(tableKey: string) {
-    const store = this.getStore(tableKey);
-    const pagination = store.getState().table.getPagination();
-    const totalRows = store.getState().table.getRows().length;
-    const totalPages = Math.ceil(totalRows / pagination.pageSize);
-
-    if (pagination.page < totalPages) {
-      this.dispatch({
-        type: 'CHANGE_PAGE',
-        store: '', // مقدار store رو باید از جایی بگیری
-        tableKey,
-        page: pagination.page + 1,
-      });
-    }
-  }
-
-  private activateFirstCellOfColumn(tableKey: string, columnId: string) {
-    const store = this.getStore(tableKey);
-    const firstRow = store.getState().table.getVisibleRows()[0];
-    if (firstRow) {
-      this.setActiveCell({
-        tableKey,
-        rowId: firstRow.id.value,
-        columnId,
-      });
-    }
-  }
-
-  private activateLastCellOfColumn(tableKey: string, columnId: string) {
-    const store = this.getStore(tableKey);
-    const rows = store.getState().table.getVisibleRows();
-    const lastRow = rows[rows.length - 1];
-    if (lastRow) {
-      this.setActiveCell({
-        tableKey,
-        rowId: lastRow.id.value,
-        columnId,
-      });
-    }
   }
   private selectRange(cmd: {
     tableKey: string
@@ -753,6 +645,9 @@ private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
       case 'SELECT_FROM_ACTIVE_TO_LAST':
         this.selectFromActiveToLast(command);
         return;
+      case 'MOVE_VERTICAL_SELECTED_ROWS':
+        this.moveVerticalSelectedRows(command);
+        return;
       default:
         await this.app.execute(command, this.actor);
         const updated = await this.repo.getById(command.store, command.tableKey);
@@ -764,6 +659,243 @@ private notifyColumnChange(tableKey: string, columnId: string, table: Table) {
         }));
 
     }
+  }
+  getViewState(tableKey: string): TableViewState {
+    const store = this.getStore(tableKey)?.getState();
+    if (!store) {
+      this.audit.log({
+        type: 'ERROR',
+        message: `Table ${tableKey} could not be founded at getViewState`,
+        payload: tableKey
+      });
+      return null
+    }
+    const { table, expandedRows, activeCell, selectedRows } = store
+    const pagination = table.getPagination();
+    const totalRows = table.getPagination().totalRows;
+    const totalPages = table.getPagination().totalPages
+    return {
+      table,
+      activeCell,
+      selectedRows,
+      rows: table.getVisibleRows()
+        .sort((a, b) => {
+          const aIndex = Number(a.getCells().get("index")?.getValue()?.value ?? 0);
+          const bIndex = Number(b.getCells().get("index")?.getValue()?.value ?? 0);
+          return aIndex - bIndex;
+        }).map((row) => {
+          const cells: Record<string, TCell> = {};
+          const columns = table.getColumns();
+          for (const col of columns) {
+            const cell = row.getCells().get(col.id);
+
+            cells[col.id] = {
+              value: cell?.getValue()?.value ?? null,
+              originalValue: cell?.getOriginalValue()?.value ?? null,
+              display: cell?.getDisplay()?.value ?? null,
+            };
+          }
+          return {
+            id: row.id.value,
+            rowState: row.rowState.value,
+            changeFields: row.getChangeFields(),
+            cells,
+            isExpanded: !!expandedRows[row.id.value],
+            moreDetails: row.moreDetails
+          }
+        }),
+      deletedRows: [],
+      columns: table.getColumns().map((col) => ({
+        id: col.id,
+        title: col.title,
+        hidden: col.hidden,
+        renderType: col.renderType,
+        editable: col.editable,
+        options: col.selectOptions,
+        indexOptions: col.indexOptions,
+        dynamicValue: col.dynamicValue,
+      })),
+      pagination:table.getPagination(),
+    }
+  }
+  getSnapShot(tableKey: string): TableSnapShot {
+    const store = this.getStore(tableKey)?.getState();
+    if (!store) {
+      this.audit.log({
+        type: 'ERROR',
+        message: `Table ${tableKey} could not be founded at getViewState`,
+        payload: tableKey
+      });
+      return null
+    }
+    const { table } = store
+    return {
+      table,
+      rows: table.getRows().map(row => ({
+        id: row.id.value,
+        changeFields: row.getChangeFields(),
+        cells: Object.fromEntries(
+          [...row.getCells()].map(([k, c]) => [k, c.getValue()?.value])
+        ),
+        rowState: row.rowState.value,
+        moreDetails: row.moreDetails
+      })),
+    };
+
+  }
+  getExpandedRowData(tableKey: string, rowId: number) {
+    const store = this.getStore(tableKey)?.getState();
+    if (!store) {
+      this.audit.log({
+        type: 'ERROR',
+        message: `Table ${tableKey} could not be founded at getViewState`,
+        payload: tableKey
+      });
+      return null
+    }
+    const { table } = store
+    if (!table) return null;
+    const row = table.getRows().find(r => r.id.value === rowId);
+    if (!row) return null;
+    const rowValues: Record<string, unknown> = {};
+    for (const [colId, cell] of row.getCells().entries()) {
+      rowValues[colId] = cell.getValue().value;
+    }
+    return rowValues;
+  }
+  getActiveCell(tableKey: string) {
+    const store = this.getStore(tableKey).getState();
+    if (!store) {
+      this.audit.log({
+        type: 'ERROR',
+        message: `Active cell is not found`,
+        payload: tableKey
+      });
+      return null
+    }
+
+    return store.activeCell;
+  }
+  getActiveRow(tableKey: string) {
+    const store = this.getStore(tableKey)?.getState();
+    if (!store) {
+      this.audit.log({
+        type: 'ERROR',
+        message: `store could not be founded at getActiveRow`,
+        payload: tableKey
+      });
+      return null
+    }
+    return store.activeRowId;
+  }
+  getSelectedRows(tableKey: string): Record<number, boolean> {
+    const store = this.getStore(tableKey)?.getState();
+    if (!store) {
+      this.audit.log({
+        type: 'ERROR',
+        message: `store could not be founded at getSelectedRows`,
+        payload: tableKey
+      });
+      return null
+    }
+    return store.selectedRows;
+  }
+  getCell(tableKey: string, rowId: number, columnId: string) {
+    const store = this.getStore(tableKey)?.getState();
+    if (!store) {
+      this.audit.log({
+        type: 'ERROR',
+        message: `store could not be founded at getCell`,
+        payload: tableKey
+      });
+      return null
+    }
+    return store.table.getRow(rowId).getCell(columnId);
+  }
+  subscribeColumn<T = unknown>(
+    tableKey: string,
+    columnId: string,
+    cb: (items: Array<{ id: number; rowNum: unknown; value: T }>) => void
+  ) {
+    const store = this.getStore(tableKey);
+    if (!store) {
+      this.audit.log({
+        type: 'ERROR',
+        message: `subscribeColumn store is not found`,
+        payload: tableKey
+      });
+      return null
+    }
+    let prev = this.getViewState(tableKey)
+      .rows.map(r => ({
+        id: r.id,
+        rowNum: r.cells['index']?.value,
+        value: r.cells[columnId]?.value as T
+      }));
+
+    return store.subscribe(() => {
+      const state = this.getViewState(tableKey);
+
+      const next = state.rows.map(r => ({
+        id: r.id,
+        rowNum: r.cells['index']?.value,
+        value: r.cells[columnId]?.value as T
+      }));
+
+      const changed =
+        next.length !== prev.length ||
+        next.some((item, i) =>
+          item.id !== prev[i].id ||
+          item.rowNum !== prev[i].rowNum ||
+          item.value !== prev[i].value
+        );
+
+      if (changed) {
+        prev = next;
+        cb(next);
+      }
+    });
+  }
+  isActiveCell(
+    tableKey: string,
+    rowId: number,
+    columnId: string
+  ): boolean {
+    try {
+      const { activeCell } = this.getStore(tableKey).getState();
+      return !!activeCell &&
+        activeCell.rowId === rowId &&
+        activeCell.columnId === columnId;
+    } catch {
+      return false;
+    }
+  }
+  isSelectedRow(tableKey: string, rowId: number): boolean {
+    try {
+      const { selectedRows } = this.getStore(tableKey).getState();
+      return !!selectedRows && !!selectedRows[rowId];
+    } catch {
+      return false;
+    }
+  }
+  isActiveRow(
+    tableKey: string,
+    rowId: number,
+  ): boolean {
+
+    try {
+      const { activeRowId } = this.getStore(tableKey).getState();
+      return !!activeRowId &&
+        activeRowId === rowId
+    } catch {
+      return false;
+    }
+  }
+  isExpandableRow(tableKey: string, rowId: number): boolean {
+    const { table } = this.getStore(tableKey).getState();
+    const row = table.getRow(rowId)
+    const expandAble = row.getMoreDetails()
+    return !!expandAble;
   }
   subscribe(tableKey: string, cb: () => void) {
     const table = this.getStore(tableKey).subscribe(cb);

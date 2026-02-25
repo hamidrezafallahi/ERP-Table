@@ -27,6 +27,16 @@ export const formConfig: IFormFieldConfig[] = [
     },
   },
   {
+    name: "CurrencyId",
+    caption: "ارز",
+    type: "selectOption",
+    selectEndpoint: {
+      addWebUrl: "/api/sale/select/currencyAvailable",
+      endpoint: "/api/sale/select/currencyAvailable",
+      repoViewId: 130076,
+    },
+  },
+  {
     name: "FishNumber",
     caption: "شماره فیش",
     type: "string",
