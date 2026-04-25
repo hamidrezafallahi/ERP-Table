@@ -464,7 +464,7 @@ export const InventoryVoucherForm = ({ form }) => {
         fieldType: "selectOption",
         dynamicValue: {
           endpoint: "api/inv/select/batch4selectOptionByVoucherTypeId",
-          VoucherTypeId: voucherTypeId,
+          voucherTypeId: voucherTypeId,
         },
         calcIndependent: true,
         conditionKey: "GoodsId",

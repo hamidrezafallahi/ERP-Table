@@ -65,6 +65,8 @@ export class UITableController {
       columnId,
     });
   }
+   
+  
   private setActiveRow(rowId: number) {
     this.engine.dispatch({
       type: 'ACTIVE_ROW',
@@ -167,21 +169,26 @@ export class UITableController {
   }
   private async onKeyDown(e: KeyboardEvent, ctx: KeydownCtx) {
     const { canPrev, canNext, page } = this.engine.getViewState(this.tableKey).pagination;
+    console.log(e, ctx, canPrev, canNext, page)
     const { key, altKey, shiftKey, ctrlKey } = e;
+    console.log( key, altKey, shiftKey, ctrlKey)
     const { tableKey, activeRowId, activeColumnId } = ctx;
+    console.log( tableKey, activeRowId, activeColumnId)
     const selectedRows = this.engine.getSelectedRows(this.tableKey)
     switch (key) {
       case 'n':
-      case 'N': {
-        if (altKey) {
-          e.preventDefault();
-          this.addEmptyRow();
-        }
+        case 'N': {
+          if (altKey) {
+            e.preventDefault();
+            this.addEmptyRow();
+          }
         return;
       }
       case 'd':
-      case 'D': {
-        if (altKey && activeRowId != null) {
+        case 'D': {
+          if (altKey && activeRowId != null) {
+          console.log(e,ctx)
+          console.log(canPrev, canNext, page,activeRowId)
           e.preventDefault();
           this.duplicateRow(activeRowId);
         }
@@ -513,6 +520,7 @@ export class UITableController {
         return
 
       case 'KEY_DOWN':
+        console.log('KEY_DOWN')
         await this.onKeyDown(command.event, command.ctx);
         return;
       case 'TOGGLE_ROW_SELECTED':

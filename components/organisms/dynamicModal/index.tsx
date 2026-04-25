@@ -32,6 +32,7 @@ export default function DynamicModal({
   sourceKey,
   additionalFieldKey,
   config,
+  pageCount,
 }: IProps) {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isConfirmDrawerOpen, setIsConfirmDrawerOpen] = useState(false);
@@ -47,7 +48,7 @@ export default function DynamicModal({
     const locale = state.withPersist.config.lang;
     return { match, locale };
   });
-  const perPageCount = 5;
+  const perPageCount = pageCount || 5;
   const observer = useRef<IntersectionObserver | null>(null);
   const lastItemRef = useRef<HTMLDivElement | null>(null);
   const exactFieldKey = config.sourceFieldKey

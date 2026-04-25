@@ -1,5 +1,7 @@
 // /table/engine/tableStore.ts
 
+import { Row } from '../domain/entities/Row';
+
 type Subscriber = () => void;
 
 export class TableStore<T> {
@@ -13,7 +15,11 @@ export class TableStore<T> {
   }
 
   getState() {
-    return this.state;
+     return this.state;
+  }
+  getRowByRowId(rowId:number):Row {
+    // const row = this.state.table.rows
+    return null//new Row()// null// this.state[;
   }
 
 setState(updater: (prev: T) => T) {

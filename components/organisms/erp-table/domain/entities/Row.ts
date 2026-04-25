@@ -21,22 +21,30 @@ export class Row {
     public rowState: RowState,
     public changeFields: Set<string> = new Set(),
     public moreDetails: unknown,
+    public visibilityCondition:Map<string, Record<string,unknown>>
   ) { }
   updateChangeFields(columnId: ColumnId): void {
+    console.log(columnId)
     const cell = this.cells.get(columnId.value);
+    console.log(columnId)
     if (!cell) return;
+    console.log(columnId)
     const value = cell.getValue();
     const originalValue = cell.getOriginalValue();
     if (this.rowState.value !== RowStateEnum.Added) {
       if (!value.equals(originalValue)) {
+        console.log(columnId)
         this.changeFields.add(columnId.value);
       } else {
+        console.log(columnId)
         this.changeFields.delete(columnId.value);
       }
-
+      
       if (this.changeFields.size > 0) {
+        console.log(columnId)
         this.rowState = new RowState(RowStateEnum.Modified)
       } else {
+        console.log(columnId)
         this.rowState = new RowState(RowStateEnum.Unchanged)
       }
     }
@@ -44,6 +52,11 @@ export class Row {
 
   getChangeFields(): readonly string[] {
     return Array.from(this.changeFields);
+  }
+  getSnapshotChangeFields(): readonly string[] {
+    return Array.from(this.changeFields).map(field => 
+  field.replace("index", "RowNum")
+);
   }
   changeCell(
     columnId: ColumnId,
@@ -79,6 +92,9 @@ export class Row {
   setMoreDetails(detail: unknown) {
     this.moreDetails = detail;
   }
+  setVisibilityCondition(Condition: Map<string, Record<string,unknown>>) {
+    this.visibilityCondition = Condition;
+  }
   getMoreDetails() {
     return this.moreDetails;
   }
@@ -94,7 +110,7 @@ export class Row {
       const clonedCell = cell.clone();
       clonedCells.set(k, clonedCell);
     }
-    return new Row(this.id, clonedCells, this.rowState,this.changeFields, this.moreDetails);
+    return new Row(this.id, clonedCells, this.rowState, this.changeFields, this.moreDetails,this.visibilityCondition);
   }
 
 }

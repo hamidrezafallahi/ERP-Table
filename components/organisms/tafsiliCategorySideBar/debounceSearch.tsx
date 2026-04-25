@@ -8,14 +8,16 @@ import { Magnifier } from "@components/atoms/iconComponents";
 interface IProps {
   setSearch?: (e: any) => void;
 }
-export const DebounceSearch = ({ ...props }: IProps) => {
+export const DebounceSearch = ({ setSearch }: IProps) => {
   const t = useTranslations();
-  const { setSearch } = props;
+
   const [inputValue, setInputValue] = useState<string>();
   const debounceTimeoutRef = useRef(null);
+
   const handleChangeInput = (e) => {
-    setInputValue(e.target.value.trim());
+    setInputValue(e.target.value);
   };
+
   const onClearSearchInput = () => {
     setInputValue("");
   };
@@ -24,7 +26,7 @@ export const DebounceSearch = ({ ...props }: IProps) => {
     if (typeof inputValue !== "undefined") {
       clearTimeout(debounceTimeoutRef.current);
       debounceTimeoutRef.current = setTimeout(async () => {
-        setSearch?.(inputValue);
+        setSearch?.(inputValue.trim());
       }, 808);
     }
   }, [inputValue]);

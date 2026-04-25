@@ -31,7 +31,7 @@ export default function DebounceSearch({ searchPhrase="", setSearchPhrase }: IPr
     return () => {
       clearTimeout(handler);
     };
-  }, [searchTerm]);
+  }, [searchTerm , searchPhrase]);
 
   const handleSearchChange = (event) => {
     const { value } = event.target;

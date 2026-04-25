@@ -25,7 +25,10 @@ export async function createERPTable(config: CreateERPTableConfig) {
   const remoteApi = new FetchRemoteApi();
 
   // ---------- محاسبه pageSize دقیقاً مثل نسخه اولیه ----------
-
+  const page = 1;
+  const pageSize = config.tableHeight
+    ? Math.floor(config.tableHeight / 40)
+    : config.recordPerPage ?? 10;
   // ---------- columns & rows (با چک repo) ----------
   let { columns, columnMeta } = buildColumns(config.columns, config.rows);
   let { rows, table: loadedTable } = await buildRows(
@@ -40,7 +43,7 @@ export async function createERPTable(config: CreateERPTableConfig) {
   if (loadedTable) {
     columns = new Map<string, ColumnSchema>();
     for (const col of config.columns) {
-      const hasValue = loadedTable.getRows().some(r=>r.getCell(col.fieldName)?.getValue()?.value);
+      const hasValue = loadedTable.getRows().some(r => r.getCell(col.fieldName)?.getValue()?.value);
       columns.set(col.fieldName, {
         id: col.fieldName,
         title: col.fieldCaption,
@@ -56,18 +59,15 @@ export async function createERPTable(config: CreateERPTableConfig) {
       });
     }
   }
-
   // ---------- table ----------
-  const table = loadedTable || new Table(config.tableKey, rows, columns, new Pagination(config.page, config.pageSize, config.totalRecords));
-  if (loadedTable) {
+  const table = loadedTable || new Table(config.tableKey, rows, columns, new Pagination(page, pageSize, pageSize)); if (loadedTable) {
     table.setColumns(Array.from(columns.values()));
-    table.setPagination(new Pagination(config.page, config.pageSize, config.totalRecords));
-    await repo.save(config.store, table);
+    table.setPagination(new Pagination(page, pageSize, pageSize)); await repo.save(config.store, table);
   } else {
     await repo.save(config.store, table);
   }
   // ---------- policies & app ----------
-  const permissionPolicy = createPermissionPolicy(config, columnMeta, table);
+  const permissionPolicy = createPermissionPolicy(config, columnMeta, table, repo, audit);
   const app = createTableAppService(repo, audit, permissionPolicy, { columnMeta, remoteApi });
 
   // ---------- engine & controller ----------

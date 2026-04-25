@@ -1,47 +1,37 @@
-import './customStyle.css';
+import "./customStyle.css";
 
-import {
-  useEffect,
-  useState,
-} from 'react';
+import { useEffect, useState } from "react";
 
-import {
-  Dropdown,
-  Skeleton,
-  Table,
-} from 'antd';
-import { useTranslations } from 'next-intl';
-import {
-  shallowEqual,
-  useDispatch,
-} from 'react-redux';
+import { Dropdown, Skeleton, Table } from "antd";
+import { useTranslations } from "next-intl";
+import { shallowEqual, useDispatch } from "react-redux";
 
-import { CustomButton } from '@components/atoms/defaultElements';
-import { DownChevron } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
-import { useGetData } from '@services/base';
-import { setViewData } from '@slice/pages';
-import type { ISelectOption } from '@type/elementType';
+import { CustomButton } from "@components/atoms/defaultElements";
+import { DownChevron } from "@components/atoms/iconComponents";
+import { useAppSelector } from "@redux/index";
+import { useGetData } from "@services/base";
+import { setViewData } from "@slice/pages";
+import type { ISelectOption } from "@type/elementType";
 
 function DocType() {
   const { direction } = useAppSelector(
     (state) => ({
       direction: state.withPersist.config.direction,
     }),
-    shallowEqual
+    shallowEqual,
   );
   const { FilterTypeIds } = useAppSelector(
     (state) => ({
       FilterTypeIds: state.withPersist.pages.find((item) => item.isActive)
         ?.viewData?.FilterTypeIds,
     }),
-    shallowEqual
+    shallowEqual,
   );
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>();
   const [open, setOpen] = useState(false);
   const t = useTranslations();
   const { data, isFetching } = useGetData<ISelectOption[], null>({
-    url: "/api/acc/select/documentType",
+    url: "/api/acc/select/voucherType4searchBox",
     body: {},
   });
   const handleCloseDropdown = () => {
@@ -91,13 +81,13 @@ function DocType() {
             onClick={handleCloseDropdown}
           >
             {data?.Data?.filter((item) =>
-              FilterTypeIds?.includes(item._SelectId)
+              FilterTypeIds?.includes(item._SelectId),
             ).length > 0 ? (
               <>
                 {t("report.header.selected")} (
                 {
                   data?.Data?.filter((item) =>
-                    FilterTypeIds?.includes(item._SelectId)
+                    FilterTypeIds?.includes(item._SelectId),
                   ).length
                 }
                 )
@@ -122,7 +112,7 @@ function CustomTable({ setOpen, selectedRowKeys, setSelectedRowKeys, data }) {
     (state) => ({
       activePage: state.withPersist.pages.find((item) => item.isActive),
     }),
-    shallowEqual
+    shallowEqual,
   );
   const t = useTranslations();
   const dispatch = useDispatch();
@@ -156,7 +146,7 @@ function CustomTable({ setOpen, selectedRowKeys, setSelectedRowKeys, data }) {
       setViewData({
         ...activePage?.viewData,
         FilterTypeIds: selectedRowKeys,
-      })
+      }),
     );
   };
 

@@ -5,6 +5,7 @@ import {
   TableCommand,
 } from './commands';
 import {
+  ApplyDynamicProjectionHandler,
   ChangeCellDisplayValueHandler,
   ChangeCellValueHandler,
 } from './handlers/cellCommandsHandler';
@@ -23,6 +24,7 @@ import {
 } from './handlers/tableCommandHandler';
 
 export class TableAppService {
+
   constructor(
     private readonly changeCellValue: ChangeCellValueHandler,
     private readonly changeCellDisplayValue: ChangeCellDisplayValueHandler,
@@ -35,13 +37,16 @@ export class TableAppService {
     private readonly setPage: ChangePageCommandHandler,
     private readonly deleteTable: DeleteTableCommandHandler,
     private readonly resetTable: ResetTableCommandHandler,
+    private readonly applyDynamicProjection: ApplyDynamicProjectionHandler,
 
-  ) { }
+  ) {}
 
   execute(command: TableCommand, actor: Actor) {
     switch (command.type) {
       case 'CHANGE_CELL_VALUE':
         return this.changeCellValue.execute(command, actor);
+      case 'APPLY_DYNAMIC_PROJECTION':
+        return this.applyDynamicProjection.execute(command, actor);
       case 'CHANGE_CELL_DISPLAY_VALUE':
         return this.changeCellDisplayValue.execute(command, actor);
       case 'ADD_EMPTY_ROW':

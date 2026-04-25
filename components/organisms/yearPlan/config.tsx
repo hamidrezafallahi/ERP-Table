@@ -1,7 +1,9 @@
 "use client";
-import { IDetailColumnConfig } from "@services/generalType/type";
-import type { IFormFieldConfig } from "@type/elementType";
-import { useTranslations } from "next-intl";
+import moment from 'moment';
+import { useTranslations } from 'next-intl';
+
+import { IDetailColumnConfig } from '@services/generalType/type';
+import type { IFormFieldConfig } from '@type/elementType';
 
 export const useFormConfig = () => {
   const t = useTranslations();
@@ -19,8 +21,8 @@ export const useFormConfig = () => {
       name: "Date",
       caption: t("general.date"),
       type: "date",
-      value: undefined,
-      originalValue: undefined,
+      value: moment(new Date()).toISOString(),
+      originalValue: moment(new Date()).toISOString(),
       isTitleField: false,
     },
     {

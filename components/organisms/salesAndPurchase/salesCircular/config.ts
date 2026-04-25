@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 import type { IFormFieldConfig } from '@type/elementType';
 
 interface formConfigType extends IFormFieldConfig {
@@ -18,8 +20,8 @@ export const formConfig: formConfigType[] = [
     name: "SaleRuleDate",
     caption: "تاریخ بخش نامه",
     type: "date",
-    value: undefined,
-    originalValue: undefined,
+    value: moment(new Date()).toISOString(),
+    originalValue: moment(new Date()).toISOString(),
     isTitleField: false,
     colSpan: 2,
   },
@@ -84,8 +86,8 @@ export const formConfig: formConfigType[] = [
     name: "StartDate",
     caption: "تاریخ شروع",
     type: "date",
-    value: undefined,
-    originalValue: undefined,
+    value: moment(new Date()).toISOString(),
+    originalValue: moment(new Date()).toISOString(),
     isTitleField: false,
     colSpan: 5,
   },
@@ -94,8 +96,8 @@ export const formConfig: formConfigType[] = [
     name: "EndDate",
     caption: "تاریخ پایان",
     type: "date",
-    value: undefined,
-    originalValue: undefined,
+    value: moment(new Date()).toISOString(),
+    originalValue: moment(new Date()).toISOString(),
     isTitleField: false,
     colSpan: 6,
   },

@@ -8,6 +8,7 @@ export interface IProps {
   additionalId?: number;
   additionalFieldKey?: string;
   config: IDynamicModalConfig;
+  pageCount?: number;
 }
 
 export interface IDynamicModalConfig {

@@ -139,7 +139,7 @@ export default function Notification() {
         <div className="cursor-pointer">
           <CustomBadge
             count={
-              countData?.ReturnCount && !isNotificationOpen
+              countData?.ReturnCount !== 0 && !isNotificationOpen
                 ? countData?.ReturnCount
                 : undefined
             }

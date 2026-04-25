@@ -202,12 +202,19 @@ export interface ChangeUnitLevelCommand extends BaseTableCommand {
   readonly type: 'SET_UNIT_LEVEL';
   readonly level: number;
 }
+export interface ApplyDynamicProjectionCommand extends BaseTableCommand {
+  readonly type: 'APPLY_DYNAMIC_PROJECTION';
+  readonly tableKey: string;
+  readonly rowId: number;
+  readonly columnId: string;
+
+}
 
 /* ---------- Union ---------- */
 
 export type TableCommand =
   SelectActiveRowToLastCommand
-  |SelectRangeCommand
+  | SelectRangeCommand
   | ToggleRowExpandCommand
   | SelectRowCommand
   | CollapseAllRowsCommand
@@ -233,4 +240,5 @@ export type TableCommand =
   | ChangePageCommand
   | ChangePageSizeCommand
   | ExpandRowCommand
+  | ApplyDynamicProjectionCommand
   | ChangeUnitLevelCommand;

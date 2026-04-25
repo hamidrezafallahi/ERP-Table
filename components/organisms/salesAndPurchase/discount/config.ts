@@ -1,4 +1,6 @@
-import type { IFormFieldConfig } from "@type/elementType";
+import moment from 'moment';
+
+import type { IFormFieldConfig } from '@type/elementType';
 
 interface formConfigType extends IFormFieldConfig {
   rule?: any[];
@@ -103,16 +105,16 @@ export const formConfig: formConfigType[] = [
     name: "EffectiveDate",
     caption: "تاریخ شروع",
     type: "date",
-    value: undefined,
-    originalValue: undefined,
+    value: moment(new Date()).toISOString(),
+    originalValue: moment(new Date()).toISOString(),
     isTitleField: false,
   },
   {
     name: "ExpireDate",
     caption: "تاریخ پایان",
     type: "date",
-    value: undefined,
-    originalValue: undefined,
+    value: moment(new Date()).toISOString(),
+    originalValue: moment(new Date()).toISOString(),
     isTitleField: false,
   },
 

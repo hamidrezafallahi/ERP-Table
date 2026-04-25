@@ -19,6 +19,11 @@ export interface CellChangedEvent extends BaseTableEvent {
   columnId: string;
   newValue: unknown;
 }
+export interface DynamicProjectionEvent extends BaseTableEvent {
+  type: 'DYNAMIC_PROJECTION_DONE';
+  rowId: number;
+  columnId: string;
+}
 export interface CellDisplayChangedEvent extends BaseTableEvent {
   type: 'CELL_DISPLAY_CHANGED';
   rowId: number;
@@ -126,6 +131,7 @@ export interface ValidationFailedEvent extends BaseTableEvent {
 
 export type TableEvent =
   | CellChangedEvent
+  | DynamicProjectionEvent
   | CellDisplayChangedEvent
   | RowAddedEvent
   | NewRowAddedEvent

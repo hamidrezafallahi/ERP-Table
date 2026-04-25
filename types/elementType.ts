@@ -32,7 +32,7 @@ export interface IRequestConfig {
   AccountId?: number;
   TafsiliTypeId?: number;
   InvoiceHeaderId?: number;
-  voucherTypeId?: number;
+  VoucherTypeId?: number;
   BankAccountId?: number;
   FullSearchPhrase?: string;
   Options?: {
@@ -48,6 +48,7 @@ export interface IRequestConfig {
     fieldName: string;
     value: any;
   };
+    
 }
 
 export interface ISelectOption {

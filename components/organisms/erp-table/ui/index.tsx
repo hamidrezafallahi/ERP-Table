@@ -29,8 +29,6 @@ export interface ERPTableProps<
   header?: ReactNode;
   footer?: ReactNode;
   tableHeight:number
-  onPageChange?: (page: number) => void;
-  onPageSizeChange?: (page: number, pageSize: number) => void;
   moreDetailComponent?: React.ComponentType<{ data: TMoreDetail }>;
 }
 export function ERPTable<TMoreDetail = unknown>(
@@ -46,12 +44,8 @@ export function ERPTable<TMoreDetail = unknown>(
     onReady,
     header,
     footer,
-    onPageChange,
-    onPageSizeChange,
-    page,
-    pageSize,
-    totalRecords,
     tableHeight,
+    recordPerPage,
     moreDetailComponent: MoreDetailComponent,
   } = props;
   const toggleFullScreen = useFullScreen();
@@ -62,9 +56,8 @@ export function ERPTable<TMoreDetail = unknown>(
     rows,
     actor,
     rowAccess,
-    page,
-    pageSize,
-    totalRecords
+    tableHeight,
+    recordPerPage,
   });
 
   // ---------- keyboard handler ----------
@@ -137,8 +130,6 @@ export function ERPTable<TMoreDetail = unknown>(
       <div className="flex justify-between items-center gap-3 mt-2 w-full">
         <AddNewRowButton controller={controller} />
         <ERPTablePagination
-          onPageChange={onPageChange}
-          onPageSizeChange={onPageSizeChange}
           controller={controller}
           store={store}
           tableKey={tableKey}

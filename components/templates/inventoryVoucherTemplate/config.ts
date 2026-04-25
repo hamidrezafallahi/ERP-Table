@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 import { IDetailColumnConfig } from '@components/organisms/erp-table';
 import { ItemType } from '@components/organisms/erp-table/engine/type';
 import { IFormFieldConfig } from '@type/elementType';
@@ -14,12 +16,23 @@ export const formConfig: IFormFieldConfig[] = [
     name: "VoucherDate",
     caption: "تاریخ سند",
     type: "date",
-    value: undefined,
-    originalValue: undefined
+    value: moment(new Date()).toISOString(),
+    originalValue: moment(new Date()).toISOString()
   },
   {
     name: "StockId",
     caption: "نام انبار",
+    type: "selectOption",
+    selectEndpoint: {
+      addWebUrl: "/api/inv/select/stock4SelectOption",
+      endpoint: "/api/inv/select/stock4SelectOption",
+      repoViewId: 70004,
+    },
+    value: undefined,
+    originalValue: undefined
+  }, {
+    name: "ToStockId",
+    caption: "به انبار",
     type: "selectOption",
     selectEndpoint: {
       addWebUrl: "/api/inv/select/stock4SelectOption",
@@ -100,7 +113,7 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
         }),
         mapFlags: (res) => {
           return {
-            HasBatchId: res.Data[0].HasBatch && internal && NeedReference,
+            HasBatchId: res.Data[0].HasBatch && !internal,
             HasBatchNum: res.Data[0].HasBatch && internal && res.Data[0].IsSimpleGood,
             HasExpireDate: res.Data[0].HasExpireDate,
             HasLocation: res.Data[0].HasLocation,
@@ -194,6 +207,7 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
       dynamicSource: {
         endpoint: "/api/inv/select/batch4SelectOptionByVoucherTypeId",
         VoucherTypeId: vti,
+        dependOn: { fieldName: "GoodsId", value: null },
         dependsOn: ["GoodsId"],//تغییر چه ستونی باعث واکشی اطلاعات جدید بشه 
         params: { VoucherTypeId: vti }, // چه پارامتر هایی از این سطر ارسال بشه  
       },

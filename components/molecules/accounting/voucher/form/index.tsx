@@ -1,14 +1,14 @@
-import { FC } from "react";
+import { FC } from 'react';
 
-import { Form } from "antd";
-import { useTranslations } from "next-intl";
+import { Form } from 'antd';
+import { useTranslations } from 'next-intl';
 
 import {
   DynamicSelect,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import InputText from "@components/atoms/defaultElements/inputText";
+} from '@components/atoms/defaultElements';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import InputText from '@components/atoms/defaultElements/inputText';
 
 export const VoucherForm: FC<any> = ({ form }) => {
   const t = useTranslations();
@@ -47,6 +47,7 @@ export const VoucherForm: FC<any> = ({ form }) => {
         className="flex flex-col !mb-0 !pb-0 text-xs"
       >
         <NewDatePicker
+        
           config={{
             caption: t("general.voucherDate"),
             name: "VoucherDate",
@@ -113,7 +114,7 @@ export const VoucherForm: FC<any> = ({ form }) => {
         label={t("general.voucherDescription")}
         name="VoucherDesc"
         rules={[
-          { required: true, message: "این فیلد الزامی است.", type: "string" },
+          { required: false, message: "این فیلد الزامی است.", type: "string" },
         ]}
         className="flex flex-col col-span-4 !mb-0 !pb-0 text-xs"
       >

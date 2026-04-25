@@ -92,8 +92,6 @@ export type CreateERPTableConfig<TMoreDetail = unknown> = {
     repo?: TableRepository;
     audit?: AuditLogger;
     permissionPolicy?: PermissionPolicy;
-    page:number
-    pageSize:number
-    totalRecords:number
- 
+    tableHeight?: number ;
+    recordPerPage?: number;
 };

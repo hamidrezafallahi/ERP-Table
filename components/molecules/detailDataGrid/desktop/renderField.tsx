@@ -162,7 +162,7 @@ export const RenderSelectField = <T extends IDetail>({
         );
         const currentFieldIndexLeft = fieldKeys.indexOf(editState.field);
         const newFocusedField = fieldKeys[currentFieldIndexLeft + 1];
-        handleEdit(index, newFocusedField);
+        newValue && handleEdit(index, newFocusedField);
       }
 
       const currentValue = rowData ? rowData[field] : defaultValue;
@@ -344,7 +344,7 @@ export const RenderTreeField = <T extends IDetail>({
         );
         const currentFieldIndexLeft = fieldKeys.indexOf(editState.field);
         const newFocusedField = fieldKeys[currentFieldIndexLeft + 1];
-        handleEdit(index, newFocusedField);
+        newValue && handleEdit(index, newFocusedField);
       }
 
       const currentValue = rowData ? rowData[field] : undefined;

@@ -1,12 +1,14 @@
-import type { IFormFieldConfig } from "@type/elementType";
+import moment from 'moment';
+
+import type { IFormFieldConfig } from '@type/elementType';
 
 export const formConfig: IFormFieldConfig[] = [
   {
     name: "Date",
     caption: "تا تاریخ",
     type: "date",
-    value: undefined,
-    originalValue: undefined,
+    value:  moment(new Date()).toISOString(),
+    originalValue:  moment(new Date()).toISOString(),
     isTitleField: false,
   },
 ];

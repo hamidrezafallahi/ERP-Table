@@ -225,6 +225,17 @@ export const EndYearOperationsForm = ({ setMobileDrawerContent }: any) => {
     );
   };
 
+  const renderSkipStep = () => {
+    return (
+      <div className="p-3 border-2 border-blue-600 rounded-full">
+        {/* <ArrowCircleUpLeft
+          config={{ stroke: "#2563eb", width: 24, height: 24 }}
+        /> */}
+        <span className="w-6 h-6 font-bold text-blue-600">{`---->`}</span>
+      </div>
+    );
+  };
+
   const renderWaitStep = () => {
     return (
       <div className="bg-gray-gray3 p-3 border-2 border-gray-gray6 rounded-full">
@@ -248,12 +259,17 @@ export const EndYearOperationsForm = ({ setMobileDrawerContent }: any) => {
   };
 
   const renderCorrectStep = (status) => {
-    switch (status) {
+    const normalized = Number(status);
+
+    switch (normalized) {
       case EndYearStepStatusEnum.Failed:
         return renderErrorStep();
 
       case EndYearStepStatusEnum.Success:
         return renderSuccessStep();
+
+      case EndYearStepStatusEnum.Skip:
+        return renderSkipStep();
 
       default:
         return renderWaitStep();
@@ -327,7 +343,9 @@ export const EndYearOperationsForm = ({ setMobileDrawerContent }: any) => {
           <span>تاریخ سند</span>
           {isCheck && <span>شماره ردیف</span>}
           {isCheck && <span>شرح ردیف</span>}
-          <span className="col-span-4">خطا</span>
+          <span className={`${!isCheck ? "col-span-6" : "col-span-4"}`}>
+            خطا
+          </span>
         </div>
         <div className="h-[370px] overflow-y-auto">
           {correctErrorList?.map((el, idx) => {
@@ -361,7 +379,9 @@ export const EndYearOperationsForm = ({ setMobileDrawerContent }: any) => {
                 <span>{date}</span>
                 {isCheck && <span>{el?.rowNum}</span>}
                 {isCheck && <span>{el?.detailDesc}</span>}
-                <span className="col-span-4">{el?.errorMessage}</span>
+                <span className={`${!isCheck ? "col-span-6" : "col-span-4"}`}>
+                  {el?.errorMessage}
+                </span>
               </div>
             );
           })}
@@ -548,7 +568,7 @@ export const EndYearOperationsForm = ({ setMobileDrawerContent }: any) => {
       <div className="flex flex-col justify-center items-center gap-2 col-span-2">
         {renderErrors()}
       </div>
-      <Form.Item className="col-span-2 m-0 p-0 text-xs">
+      <Form.Item className="col-span-2 m-0 p-0 pt-4 text-xs">
         <div className="flex flex-col justify-center items-center gap-4 col-span-2">
           <CustomButton
             type="text"

@@ -7,4 +7,6 @@ export const allowedEndPaths = [
   "paymentRequest",
   "invoice",
   "issuingProformaInvoice",
+  "vocherTypeDescription",
+  "tafsiliCategory"
 ];

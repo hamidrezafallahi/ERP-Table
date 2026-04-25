@@ -2,6 +2,7 @@ export enum EndYearStepStatusEnum {
   Pending = 1,
   Success,
   Failed,
+  Skip,
 }
 export enum StepProcessTypeEnum {
   Review = 1,

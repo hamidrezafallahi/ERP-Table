@@ -9,7 +9,10 @@ import {
   setActiveEndYearStep,
   setEndYearStepStatus,
 } from "@slice/endYearOperations";
-import { EndYearStepStatusEnum } from "@slice/endYearOperations/type";
+import {
+  EndYearStepStatusEnum,
+  StepProcessTypeEnum,
+} from "@slice/endYearOperations/type";
 import {
   deletePageByRepo,
   setPageStateByRepo,
@@ -51,10 +54,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
   // Keep userId for potential future use or backward compatibility
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { userId, pages } = useAppSelector(
+  const { userId, pages, finishingMode } = useAppSelector(
     (state) => ({
       userId: state.withPersist.config.userSession.UserInfo.UserId,
       pages: state?.withPersist?.pages,
+      finishingMode: state?.withPersist?.endYearOperations?.mode,
     }),
     shallowEqual,
   );
@@ -452,6 +456,20 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
                       value: activeStep as any,
                     }),
                   );
+
+                  const withoutOpeningComplete =
+                    finishingMode === "withoutOpening" &&
+                    activeStep === StepProcessTypeEnum.ClosingDocument &&
+                    status === EndYearStepStatusEnum.Success;
+                  const withOpeningComplete =
+                    finishingMode === "withOpening" &&
+                    activeStep === StepProcessTypeEnum.OpeningDocument &&
+                    status === EndYearStepStatusEnum.Success;
+
+                  if (withoutOpeningComplete || withOpeningComplete) {
+                    dispatch(finishEndYearOperation());
+                  }
+
                   if (status === EndYearStepStatusEnum.Failed) {
                     dispatch(finishEndYearOperation());
                   }
@@ -983,6 +1001,18 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
                         value: activeStep as any,
                       }),
                     );
+                    const withoutOpeningComplete =
+                      finishingMode === "withoutOpening" &&
+                      activeStep === StepProcessTypeEnum.ClosingDocument &&
+                      status === EndYearStepStatusEnum.Success;
+                    const withOpeningComplete =
+                      finishingMode === "withOpening" &&
+                      activeStep === StepProcessTypeEnum.OpeningDocument &&
+                      status === EndYearStepStatusEnum.Success;
+
+                    if (withoutOpeningComplete || withOpeningComplete) {
+                      dispatch(finishEndYearOperation());
+                    }
                     if (status === EndYearStepStatusEnum.Failed) {
                       dispatch(finishEndYearOperation());
                     }

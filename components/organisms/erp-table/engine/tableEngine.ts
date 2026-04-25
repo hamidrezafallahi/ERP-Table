@@ -3,10 +3,12 @@
 import { ConsoleAuditLogger } from '../adapters/infra/consoleAuditLogger';
 import {
   Actor,
+  ApplyDynamicProjectionCommand,
   TableCommand,
 } from '../application/commands';
 import { TableRepository } from '../application/ports/TableRepository';
 import { TableAppService } from '../application/TableAppService';
+import { Row } from '../domain/entities/Row';
 import { Table } from '../domain/entities/Table';
 import {
   CellValue,
@@ -162,14 +164,23 @@ export class TableEngine {
       },
     }));
   }
-  private moveActiveCellVertical(cmd: {
+  private async moveActiveCellVertical(cmd: {
     tableKey: string;
     rowId: number;
     columnId: string;
     direction: 'up' | 'down';
   }) {
     const store = this.getStore(cmd.tableKey);
-
+    const view = this.getViewState(cmd.tableKey);
+    const visibleRows = view.rows;
+    const currentIndex = visibleRows.findIndex(r => r.id === cmd.rowId);
+    const nextIndex = cmd.direction === 'down' ? currentIndex + 1 : currentIndex - 1;
+    // حرکت داخل همان صفحه
+    if (nextIndex >= 0 && nextIndex < visibleRows.length) {
+      const nextRow = visibleRows[nextIndex];
+      const row = store.getState().table.getRows().find(r => r.id.value === nextRow.id);
+      await this.fetchVisibilityCondition(cmd, row);
+    }
     store.setState(prev => {
       const view = this.getViewState(cmd.tableKey);
       if (!view) return prev;
@@ -192,7 +203,6 @@ export class TableEngine {
       // ------------------------------
       if (nextIndex >= 0 && nextIndex < visibleRows.length) {
         const nextRow = visibleRows[nextIndex];
-
         return {
           ...prev,
           activeRowId: nextRow.id,
@@ -316,13 +326,12 @@ export class TableEngine {
       },
     }));
   }
-  private setActiveCell(cmd: {
+  private async setActiveCell(cmd: {
     tableKey: string
     rowId: number
     columnId: string
   }) {
     const store = this.getStore(cmd.tableKey);
-
     store.setState(prev => {
       const current = prev.activeCell;
 
@@ -333,6 +342,9 @@ export class TableEngine {
       ) {
         return prev;
       }
+
+
+
       return {
         ...prev,
         activeRowId: cmd.rowId,
@@ -343,16 +355,22 @@ export class TableEngine {
       };
     });
   }
-  private setActiveRow(cmd: {
+  private async setActiveRow(cmd: {
     tableKey: string
     rowId: number
   }) {
     const store = this.getStore(cmd.tableKey);
+    const { table } = store.getState()
+    if (!table) return null;
+    const row = table.getRows().find(r => r.id.value === cmd.rowId);
+
+    await this.fetchVisibilityCondition(cmd, row)
+    console.log("fetchVisibilityCondition")
+
     store.setState(prev => {
       if (prev.activeRowId === cmd.rowId) {
         return prev;
       }
-
       return {
         ...prev,
         activeRowId: cmd.rowId,
@@ -362,6 +380,49 @@ export class TableEngine {
       };
     });
   }
+  ///////////////////////////////////////////////////////////////////////////////////////
+  private async fetchVisibilityCondition(cmd: {
+  tableKey: string
+  rowId: number
+}, row: Row) {
+  console.log("fetchVisibilityCondition")
+  const store = this.getStore(cmd.tableKey);
+  const { table } = store.getState()
+  if (!table) return null;
+  
+  const Columns = table.getColumns()
+  const cellDependency = new Set<string>()
+  
+  Columns.filter(col => col.dynamicValue?.dependsOn && col.dynamicValue?.dependsOn.length > 0)
+    .map(col => col.dynamicValue?.dependsOn.map(depend => cellDependency.add(depend)))
+  
+  // استفاده از حلقه for...of به جای forEach
+  for (const col of cellDependency) {
+    const val = row.getCell(col).getValue().value
+     if(val){
+      const command: ApplyDynamicProjectionCommand = {
+        type: "APPLY_DYNAMIC_PROJECTION",
+        store: cmd.tableKey,
+        tableKey: cmd.tableKey,
+        rowId: cmd.rowId,
+        columnId: col,
+      }
+      await this.app.execute(command, this.actor);
+    }
+  }
+  
+  // یک بار بعد از اتمام همه عملیات‌ها، جدول به‌روز شده را دریافت کن
+  const updated = await this.repo.getById(cmd.tableKey, cmd.tableKey);
+  const currentStore = this.getStore(cmd.tableKey);
+  if (currentStore && updated) {
+    const prev = currentStore.getState();
+    currentStore.setState(() => ({
+      ...prev,
+      table: updated,
+    }));
+  }
+}
+  ///////////////////////////////////////////////////////////////////////////////////////
   private setSelectRow(cmd: {
     tableKey: string
     rowId: number
@@ -672,8 +733,11 @@ export class TableEngine {
     }
     const { table, expandedRows, activeCell, selectedRows } = store
     const pagination = table.getPagination();
-    const totalRows = table.getPagination().totalRows;
-    const totalPages = table.getPagination().totalPages
+    const totalRows = table.getRows().length;
+    const totalPages = Math.max(
+      1,
+      Math.ceil(totalRows / pagination.pageSize)
+    );
     return {
       table,
       activeCell,
@@ -715,7 +779,14 @@ export class TableEngine {
         indexOptions: col.indexOptions,
         dynamicValue: col.dynamicValue,
       })),
-      pagination:table.getPagination(),
+      pagination: {
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        totalRows,
+        totalPages,
+        canPrev: pagination.page > 1,
+        canNext: pagination.page < totalPages,
+      },
     }
   }
   getSnapShot(tableKey: string): TableSnapShot {
@@ -733,7 +804,7 @@ export class TableEngine {
       table,
       rows: table.getRows().map(row => ({
         id: row.id.value,
-        changeFields: row.getChangeFields(),
+        changeFields: row.getSnapshotChangeFields(),
         cells: Object.fromEntries(
           [...row.getCells()].map(([k, c]) => [k, c.getValue()?.value])
         ),

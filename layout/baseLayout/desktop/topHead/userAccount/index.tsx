@@ -69,7 +69,7 @@ const UserAccount = ({ ...props }: { list?: boolean }) => {
   };
 
   const initializePage = useInitializePage();
-  const { handleLogout } = useHandle();
+  const { handleLogout,handleFullLogout } = useHandle();
 
   const userInfoRouteHandler = () => {
     removeMenuSide();
@@ -288,6 +288,12 @@ const UserAccount = ({ ...props }: { list?: boolean }) => {
       label: <div className="p-1 text-state-error1">{t("topHead.exit")}</div>,
       icon: <LogOutIcon />,
       onClick: handleLogout,
+    },
+    {
+      key: "108",
+      label: <div className="p-1 text-state-error1">{t("topHead.fulllogout")}</div>,
+      icon: <LogOutIcon />,
+      onClick: handleFullLogout,
     },
   ].filter((item) => !item.hidden);
 

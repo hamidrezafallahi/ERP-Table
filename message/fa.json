@@ -199,7 +199,10 @@
     "invoice": "صورتحساب",
     "paymentRequest": "درخواست پرداخت",
     "endYearOperations": "عملیات پایان سال",
-    "bankStatementInfo": "گردش حساب"
+    "bankStatementInfo": "گردش حساب",
+    "voucherTypeDescription": "شرح پیش فرض",
+    "detailedDescription": "شرح پیش فرض",
+    "tafsiliCategory":"طبفقات تفصیلی"
   },
   "homePage": {
     "title": "Hello world!",
@@ -819,7 +822,9 @@
     "countNumber": "تعداد",
     "insuranceNumber": "شماره بیمه",
     "list": "لیست",
-    "operationStart": "شروع عملیات"
+    "operationStart": "شروع عملیات",
+    "documentType": "نوع سند",
+    "tafsiliCategory":"طبقات تفصیلی"
   },
   "systemSetting": {
     "cheque": "چک",
@@ -1020,7 +1025,8 @@
     "myDevices": "دستگاه های من",
     "otherAccounts": "حساب های دیگر",
     "otherRoles": "نقش های دیگر",
-    "exit": "خروج"
+    "exit": "خروج",
+    "fulllogout": "خروج کامل"
   },
   "taxpayers": {
     "name": "تنظیمات مودیان",
@@ -1107,6 +1113,7 @@
   },
   "bankStatementInfo": {
     "accounts": "حساب ها",
-    "bankStatementTxt": "یک حساب را ابتدا انتخاب نمایید."
+    "bankStatementTxt": "یک حساب را ابتدا انتخاب نمایید.",
+    "pickADateRangeAndHitSearch": "بازه زمانی را انتخاب کرده و روی جستجو کلیک کنید."
   }
 }

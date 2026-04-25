@@ -26,14 +26,19 @@ import DefaultCurrency from "@components/molecules/defaultParameterModal/currenc
 export default function TopHead() {
   const t = useTranslations();
 
-  const { mode, role } = useAppSelector((state) => {
-    const mode = state.withPersist.config.theme;
-    const role = state.withPersist.config.userSession?.RoleDto?.find(
-      (item) => item.isActiveRole
-    );
+  const { mode, role, CurrencyId, YearId, PlaceId, LanguageId } =
+    useAppSelector((state) => {
+      const mode = state.withPersist.config.theme;
+      const CurrencyId = state.withPersist.config.defaultConfigs?.CurrencyId;
+      const YearId = state.withPersist.config.defaultConfigs?.YearId;
+      const LanguageId = state.withPersist.config.defaultConfigs?.LanguageId;
+      const PlaceId = state.withPersist.config.defaultConfigs?.PlaceId;
+      const role = state.withPersist.config.userSession?.RoleDto?.find(
+        (item) => item.isActiveRole,
+      );
 
-    return { mode, role };
-  }, shallowEqual);
+      return { mode, role, CurrencyId, YearId, PlaceId, LanguageId };
+    }, shallowEqual);
 
   const closeBtnRef = useRef<HTMLDivElement | null>(null);
   const toastCounter = useRef(0);
@@ -69,6 +74,17 @@ export default function TopHead() {
 
     return () => unsubscribe();
   }, []);
+
+  const defaultConfigsItems = [
+    { value: CurrencyId !== undefined, Component: DefaultCurrency },
+    { value: YearId !== undefined, Component: DefaultYear },
+    { value: PlaceId !== undefined, Component: DefaultCompany },
+    {
+      value: role === undefined || role?.IsSupporter === true,
+      Component: DefaultLanguage,
+      props: { showReverse: true },
+    },
+  ];
   return (
     <>
       <div className={` w-full h-full flex justify-between items-center`}>
@@ -84,24 +100,17 @@ export default function TopHead() {
             />
           )}
           <div className="flex gap-0">
-            <div className="w-fit">
-              <DefaultCurrency setOpenModal={setOpen} setContent={setContent} />
-            </div>
-            <div className="w-fit">
-              <DefaultYear setOpenModal={setOpen} setContent={setContent} />
-            </div>
-            <div className="w-fit">
-              <DefaultCompany setOpenModal={setOpen} setContent={setContent} />
-            </div>
-            <div className="w-fit">
-              {(role == undefined || role.IsSupporter === true) && (
-                <DefaultLanguage
-                  setOpenModal={setOpen}
-                  setContent={setContent}
-                  showReverse
-                />
-              )}
-            </div>
+            {defaultConfigsItems.map(({ value, Component, props }, index) =>
+              value ? (
+                <div className="w-fit" key={index}>
+                  <Component
+                    setOpenModal={setOpen}
+                    setContent={setContent}
+                    {...props}
+                  />
+                </div>
+              ) : null,
+            )}
           </div>
           <DefaultConfigs setOpenModal={setOpen} setContent={setContent} />
           {!(role == undefined || role.IsSupporter === true) && (

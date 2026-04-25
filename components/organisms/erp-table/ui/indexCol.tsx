@@ -17,6 +17,7 @@ import { CellMeta } from './cellRenderer';
 
 interface IndexColProps {
   tableKey: string;
+  idx:number
   row: {
     id: number;
     cells: Record<string, TCell>;
@@ -28,6 +29,7 @@ interface IndexColProps {
 }
 
 export const IndexCol: React.FC<IndexColProps> = ({
+  idx,
   tableKey,
   row,
   controller,
@@ -162,7 +164,7 @@ export const IndexCol: React.FC<IndexColProps> = ({
           onClick={handleSelectRow}
         />
       )}
-      <div className="w-[18px] text-xs text-center">{index}</div>
+      <div className="w-[20px] text-xs text-center">{idx+1}</div>
 
       {!isDeleted && (
         <>

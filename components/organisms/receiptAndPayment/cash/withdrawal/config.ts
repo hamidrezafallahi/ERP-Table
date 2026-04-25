@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 import type { IDetailColumnConfig } from '@services/generalType/type';
 import type { IFormFieldConfig } from '@type/elementType';
 
@@ -13,8 +15,8 @@ export const formConfig: IFormFieldConfig[] = [
     name: "VoucherDate",
     caption: "تاریخ سند",
     type: "date",
-    value: null,
-    originalValue: null,
+    value: moment(new Date()).toISOString(),
+    originalValue: moment(new Date()).toISOString(),
   },
   {
     name: "CashierId",

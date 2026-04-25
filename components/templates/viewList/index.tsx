@@ -1,24 +1,37 @@
 "use client";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Spin } from "antd";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Spin } from 'antd';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import Title from "@components/atoms/Title";
-import List from "@components/organisms/list";
-import NestedList from "@components/organisms/nestedList";
-import { useInvalidateTag } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
-import { filterTypeStringEnum, type IBaseDto } from "@services/base/type";
-import type { IRequest } from "@services/mng/report/type";
-import { addNewPage, setPageState, setViewData } from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
-import type { IPageConfig } from "@type/elementType";
-import { PageTypeEnum } from "@type/enum";
-import type { IToolbar } from "@type/toolbar";
+import Title from '@components/atoms/Title';
+import List from '@components/organisms/list';
+import NestedList from '@components/organisms/nestedList';
+import { useInvalidateTag } from '@hooks/custom';
+import { useAppSelector } from '@redux/index';
+import { useGetData } from '@services/base';
+import {
+  filterTypeStringEnum,
+  type IBaseDto,
+} from '@services/base/type';
+import type { IRequest } from '@services/mng/report/type';
+import {
+  addNewPage,
+  setPageState,
+  setViewData,
+} from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
+import type { IPageConfig } from '@type/elementType';
+import { PageTypeEnum } from '@type/enum';
+import type { IToolbar } from '@type/toolbar';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export default function ViewList<T extends IBaseDto, K>({
   url,
@@ -62,7 +75,7 @@ export default function ViewList<T extends IBaseDto, K>({
   const data = initPage?.data;
   const id = initPage?.Id;
   const filterValue = initPage?.data?.[filterKey];
-  const bodyValue = initPage?.data?.[bodyKey];
+  const bodyValue = activePage?.data?.[bodyKey];
   const [fetchToolbarData, SetFetchToolbarData] = useState(true);
 
   const recordHeight = 40;

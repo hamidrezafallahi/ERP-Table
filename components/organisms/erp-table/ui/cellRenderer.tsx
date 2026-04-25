@@ -117,14 +117,12 @@ const inputRef = React.useRef<HTMLInputElement | null>(null);
       case "selectOption":
       case "static":
         return val;
-
       case "date":
         if (locale === "fa") {
           return moment(val).format("jYYYY/jMM/jDD");
         } else {
           return moment(val).format("YYYY/MM/DD");
         }
-
       default:
         return "—";
     }

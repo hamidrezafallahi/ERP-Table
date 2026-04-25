@@ -66,6 +66,7 @@ function DataGridInner<T extends IBaseDto>(
     formUrl,
     withoutActivation,
     filteringAction,
+    renderSimple = false
   }: IProps<T>,
   ref: Ref<HTMLDivElement>,
 ) {
@@ -402,7 +403,8 @@ function DataGridInner<T extends IBaseDto>(
         dataIndex: item.fieldName,
         key: item.fieldName,
         align: typeof item.fieldName === "string" ? "right" : "left",
-        render: (text: any, record: any) => {
+        render:   (text: any, record: any) => {
+         if (item.renderFunction) return item.renderFunction(record) 
           return <div className="my-2">{record?.[item.fieldName]}</div>;
         },
       };
@@ -605,7 +607,7 @@ function DataGridInner<T extends IBaseDto>(
   return (
     <div
       className={`${
-        isFullScreen ? "h-[calc(100dvh-130px)]" : "h-[calc(100dvh-200px)]"
+        isFullScreen ? "h-[calc(100dvh-130px)]" : "max-h-[calc(100dvh-200px)] h-[calc(100dvh-290px)]"
       } flex flex-col justify-between w-full `}
     >
       <div
@@ -633,8 +635,11 @@ function DataGridInner<T extends IBaseDto>(
             ),
           }}
           size="small"
-          rowSelection={{
+          rowSelection={ !renderSimple && {
             renderCell: (_value, _record, _index, originNode) => {
+             
+                    
+
               return (
                 <>
                   <div className="flex items-center gap-2 w-[42px]">

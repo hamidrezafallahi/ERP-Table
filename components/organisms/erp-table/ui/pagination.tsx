@@ -16,15 +16,11 @@ interface Props {
   controller: UITableController;
   tableKey: string;
   store: string;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (page: number, pageSize: number) => void;
 }
 
 export default function ERPTablePagination({
   controller,
-  tableKey,
-  onPageChange,
-  onPageSizeChange,
+  tableKey
 }: Props) {
   const table = controller.getViewState(tableKey);
   const locale = useLocale();
@@ -33,11 +29,9 @@ export default function ERPTablePagination({
   const { page, pageSize, totalPages, totalRows } = table.pagination;
   const handlePageChange = (e) => {
     controller.dispatch({ type: "CHANGE_PAGE", page: e });
-    onPageChange(e)
   };
   const handlePageSizeChange = (page, pageSize) => {
     controller.dispatch({ type: "CHANGE_PAGE_SIZE", pageSize: pageSize });
-    onPageSizeChange(page, pageSize)
   };
 
   return (

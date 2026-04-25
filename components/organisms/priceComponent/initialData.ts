@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 export const initialData: any = [
   // {
   //   name: "VoucherNumber",
@@ -11,8 +13,8 @@ export const initialData: any = [
     name: "VoucherDate",
     caption: "تاریخ سند",
     type: "date",
-    value: undefined,
-    originalValue: undefined,
+    value:  moment(new Date()).toISOString(),
+    originalValue: moment(new Date()).toISOString(),
     isTitleField: false,
   },
   {

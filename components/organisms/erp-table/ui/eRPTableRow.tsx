@@ -143,6 +143,7 @@ function ERPTableRowComponent({
               return (
                 <td key={c.id}>
                   <IndexCol
+                  idx={index}
                     tableKey={tableKey}
                     row={row}
                     controller={controller}

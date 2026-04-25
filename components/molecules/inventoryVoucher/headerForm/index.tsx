@@ -33,7 +33,7 @@ export const InventoryVoucherHeaderForm = ({ ...props }: IProps) => {
   const sourceConfig: IRequestConfig = {
     endpoint: "api/inv/select/voucher4selectOption",
     repoViewId: null,
-    voucherTypeId: Number(VoucherReference),
+    VoucherTypeId: Number(VoucherReference),
   };
 
   const stockIdConfig: IRequestConfig = {

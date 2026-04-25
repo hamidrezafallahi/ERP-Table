@@ -97,9 +97,14 @@ export class IndexedDbTableRepository implements TableRepository {
           )
         );
       });
+      const changeFields: Set<string> = new Set()
+      const visibilityCondition: Map<string, Record<string,unknown>> = new Map()
+      if(r.rowState == "Update"){
+        r.cells.filter(c=>c.value !== c.originalValue).map(c=>changeFields.add(c.colId))
+      }
       rowMap.set(
         r.rowId,
-        new Row(new RowId(r.rowId), cells, new RowState(r.rowState), new Set(),r.moreDetails)
+        new Row(new RowId(r.rowId), cells, new RowState(r.rowState), changeFields,r.moreDetails,visibilityCondition)
       );
     });
     return rowMap;

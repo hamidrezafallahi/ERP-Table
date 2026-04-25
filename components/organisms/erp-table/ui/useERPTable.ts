@@ -29,7 +29,7 @@ export function useERPTable(config: CreateERPTableConfig): UseERPTableResult {
   // ---------- bootstrap ----------
   useEffect(() => {
   createERPTable(config).then(({ controller }) => {setController(controller)});
-  }, [config.tableKey, config.columns,config.page]);
+  }, [config.tableKey, config.columns]);
 
   // ---------- subscribe ----------
   useEffect(() => {

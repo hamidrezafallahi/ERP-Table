@@ -30,6 +30,7 @@ export interface IProps<T> {
   withoutActivation?: boolean;
   formUrl?: string;
   filteringAction?: (actions: IToolbarMenu[], rowData: T) => IToolbarMenu[];
+  renderSimple?: boolean
 }
 
 export interface IChangesField {

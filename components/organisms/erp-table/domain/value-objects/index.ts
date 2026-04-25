@@ -42,7 +42,7 @@ export type ColumnSchema = {
   selectOptions?: SelectOption[];
   hidden?: boolean;
   required?: boolean;
-  dynamicValue?: IRequestConfig
+  dynamicValue?:  IRequestConfig & {dependsOn?: string[]}
   editable?: boolean;
   expandable: boolean;
   indexOptions?: (tableId: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, controller: UITableController) => ItemType[];
@@ -110,10 +110,6 @@ export class Pagination {
   changePage(page: number): Pagination {
     return new Pagination(page, this.pageSize, this.totalRows);
   }
-  changeTotalRows(totalRows: number): Pagination {
-    return new Pagination(this.page, this.pageSize, totalRows);
-  }
-
   changePageSize(size: number): Pagination {
     return new Pagination(
       Math.min(this.page, Math.ceil(this.totalRows / size)),  

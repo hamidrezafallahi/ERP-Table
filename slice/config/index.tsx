@@ -38,11 +38,11 @@ export const ConfigsReducer: Slice<IConfig> = createSlice({
     },
     setReportData: (
       state,
-      action: PayloadAction<{ dataSourceName: string; reportData: any[] }>
+      action: PayloadAction<{ dataSourceName: string; reportData: any[] }>,
     ) => {
       const { reportData, dataSourceName } = action.payload;
       const existing = state.reportData.find(
-        (item) => item.dataSourceName === dataSourceName
+        (item) => item.dataSourceName === dataSourceName,
       );
       if (existing) {
         existing.data = reportData;
@@ -52,12 +52,12 @@ export const ConfigsReducer: Slice<IConfig> = createSlice({
     },
     clearReportData: (
       state,
-      action: PayloadAction<{ dataSourceName?: string } | undefined>
+      action: PayloadAction<{ dataSourceName?: string } | undefined>,
     ) => {
       const dataSourceName = action?.payload?.dataSourceName;
       if (dataSourceName) {
         state.reportData = state.reportData.filter(
-          (item) => item.dataSourceName !== dataSourceName
+          (item) => item.dataSourceName !== dataSourceName,
         );
       } else {
         state.reportData = [];
@@ -65,13 +65,13 @@ export const ConfigsReducer: Slice<IConfig> = createSlice({
     },
     setModalIsFullScreen: (
       state,
-      action: PayloadAction<{ fullScreen: boolean }>
+      action: PayloadAction<{ fullScreen: boolean }>,
     ) => {
       state.modalIsFullscreen = action.payload.fullScreen;
     },
     setProgressbar: (
       state,
-      action: PayloadAction<{ id: string; percent: number }>
+      action: PayloadAction<{ id: string; percent: number }>,
     ) => {
       const { id, percent } = action.payload;
       state.progressItems = [
@@ -81,13 +81,13 @@ export const ConfigsReducer: Slice<IConfig> = createSlice({
     },
     setUserSession: (
       state,
-      action: PayloadAction<{ userSession: UserSession }>
+      action: PayloadAction<{ userSession: UserSession }>,
     ) => {
       state.userSession = action.payload.userSession;
     },
     setGlobalAndView: (
       state,
-      action: PayloadAction<{ direction: IConfig["direction"]; lang: TLang }>
+      action: PayloadAction<{ direction: IConfig["direction"]; lang: TLang }>,
     ) => {
       state.lang = action.payload.lang;
       state.direction = action.payload.direction;
@@ -97,19 +97,19 @@ export const ConfigsReducer: Slice<IConfig> = createSlice({
     },
     setMenuBar: (
       state,
-      action: PayloadAction<{ menuBar: { value: number; label: string } }>
+      action: PayloadAction<{ menuBar: { value: number; label: string } }>,
     ) => {
       state.menuBar = action.payload.menuBar;
     },
     setParentPageId: (
       state,
-      action: PayloadAction<{ parentPageId: string }>
+      action: PayloadAction<{ parentPageId: string }>,
     ) => {
       state.parentPageId = action.payload.parentPageId;
     },
     setDefaultConfig: (
       state,
-      action: PayloadAction<Partial<IConfig["defaultConfigs"]>>
+      action: PayloadAction<Partial<IConfig["defaultConfigs"]>>,
     ) => {
       state.defaultConfigs = { ...state.defaultConfigs, ...action.payload };
     },
@@ -145,6 +145,7 @@ export const ConfigsReducer: Slice<IConfig> = createSlice({
         },
       };
     },
+    fullConfigReset: () => initialState,
   },
 });
 
@@ -156,6 +157,7 @@ export const {
   setParentPageId,
   setLanguage,
   resetConfig,
+  fullConfigReset,
   setTheme,
   setUserSession,
   setDefaultConfig,

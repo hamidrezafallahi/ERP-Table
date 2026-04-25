@@ -199,7 +199,10 @@
     "invoice": "Invoice",
     "paymentRequest": "Payment Request",
     "endYearOperations": "End Year Operations",
-    "bankStatementInfo": "bank Statement Info"
+    "bankStatementInfo": "bank Statement Info",
+    "voucherTypeDescription":"Default Description",
+    "detailedDescription":"Default Description",
+    "tafsiliCategory":"Tafsili Category"
   },
   "homePage": {
     "title": "Hello world!",
@@ -795,7 +798,10 @@
     "followUpNumber": "Follow Up Number",
     "countNumber": "Count",
     "insuranceNumber": "Insurance Number",
-    "operationStart": "Starting Operations"
+    "operationStart": "Starting Operations",
+    "documentType":"Document Type",
+    "tafsiliCategory":"Tafsili Category"
+  
   },
   "rate": "Rate",
   "systemSetting": {
@@ -998,7 +1004,8 @@
     "myDevices": "My Devices",
     "otherAccounts": "Other accounts",
     "otherRoles": "Other roles",
-    "exit": "Exit"
+    "exit": "Exit",
+    "fulllogout": "Full logout"
   },
   "myDevices": {
     "thereAreCurrentlyNoActiveDevices": "There are currently no other active devices!",
@@ -1083,6 +1090,7 @@
   },
   "bankStatementInfo": {
     "accounts": "Accounts",
-    "bankStatementTxt": "First, choose an account."
+    "bankStatementTxt": "First, choose an account.",
+    "pickADateRangeAndHitSearch": "Pick a date range and hit Search."
   }
 }

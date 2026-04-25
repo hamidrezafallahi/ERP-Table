@@ -89,6 +89,7 @@ import {
   ShowReport,
 } from '../managementSystem';
 import ListSelectMode from './listSelectMode';
+import DataGrid from '@components/molecules/dataGrid';
 
 export default function ListToolbar({
   formUrl,
@@ -105,6 +106,7 @@ export default function ListToolbar({
   gridData,
   url,
   renderCustomActions,
+  refetchGridData = null
 }) {
   const { mode = "light" } = useDarkMode();
 
@@ -645,9 +647,10 @@ export default function ListToolbar({
         },
       }),
     );
+    refetchGridData && gridData?.Data?.length > 0 &&  refetchGridData()
   };
 
-  const pageTitle = activePage.caption;
+  const pageTitle = activePage?.caption;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

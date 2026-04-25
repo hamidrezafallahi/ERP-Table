@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Tree, TreeProps } from "antd";
 import { ItemType } from "antd/es/menu/interface";
@@ -350,7 +350,6 @@ export default function NestedList<T extends IBaseDto, K>({
                   </CustomTooltip>
                 )}
                 {isActive && renderAddChildAction(item)}
-
                 {isActive &&
                   settingItems &&
                   settingItems?.length > 0 &&
@@ -494,6 +493,24 @@ export default function NestedList<T extends IBaseDto, K>({
     transformedTreeData,
     searchTerm,
   );
+
+  useEffect(() => {
+    if (!searchTerm) return;
+
+    const keysToExpand = getAllKeys(filteredTreeData);
+
+    setExpandedKeys((prev) => {
+      if (
+        prev.length === keysToExpand.length &&
+        prev.every((key, index) => key === keysToExpand[index])
+      ) {
+        return prev;
+      }
+
+      return keysToExpand;
+    });
+  }, [searchTerm, filteredTreeData]);
+
   const expandAll = () => {
     const keysToExpand = getAllKeys(filteredTreeData);
     setExpandedKeys(keysToExpand);
@@ -699,8 +716,8 @@ export default function NestedList<T extends IBaseDto, K>({
           contentClassName={`  ${match ? "!min-w-[520px] h-full" : ""}`}
           headerName={
             id ? (
-              <div className="flex items-start justify-between  flex-col">
-                <div className="flex gap-1 items-center">
+              <div className="flex flex-col justify-between items-start">
+                <div className="flex items-center gap-1">
                   <HeadOfAccountsIcon config={{ width: 18, height: 18 }} />
                   <span className="font-bold text-gray-gray10 dark:text-white lg:text-lg">
                     {t("general.update")}

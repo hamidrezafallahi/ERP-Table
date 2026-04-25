@@ -136,7 +136,6 @@ export class DeleteRowCommandHandler {
       }
 
       await this.repo.save(command.store, table);
-
       this.audit.log({ type: 'INFORMATION', message: event.type, payload: event.rowId });
 
       return event;

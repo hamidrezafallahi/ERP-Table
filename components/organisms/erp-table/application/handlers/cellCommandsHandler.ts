@@ -18,6 +18,7 @@ import {
   RowStateEnum,
 } from '../../domain/value-objects';
 import {
+  ApplyDynamicProjectionCommand,
   ChangeCellDisplayValueCommand,
   ChangeCellValueCommand,
 } from '../commands';
@@ -153,13 +154,6 @@ export class ChangeCellValueHandler {
           validatedValue: command.newValue,
         });
       }
-
-
-
-
-
-
-
       /* ---------- 7. RowState management ---------- */
       const state =
         table
@@ -216,7 +210,7 @@ export class ChangeCellValueHandler {
      ===================================================== */
 
   private async applyRemoteVisibilityRules(input: {
-    table: any;
+    table: Table;
     rowId: RowId;
     changedColumnId: ColumnId;
     newValue: unknown;
@@ -265,6 +259,8 @@ export class ChangeCellValueHandler {
           if (schema) {
             toShow.push({ ...schema, hidden: false });
           }
+          console.log(row)
+
         }
       }
     });
@@ -476,6 +472,7 @@ export class ChangeCellDisplayValueHandler {
     // ---------- لاگ زمان ساخت ----------
 
   }
+  
 
   async execute(
     command: ChangeCellDisplayValueCommand,
@@ -495,7 +492,6 @@ export class ChangeCellDisplayValueHandler {
           { columnId: columnId.value }
         );
       }
-
       /* ---------- 2. editable policy ---------- */
       if (
         schema.editable === false
@@ -506,8 +502,6 @@ export class ChangeCellDisplayValueHandler {
           { rowId: rowId.value, columnId: columnId.value }
         );
       }
-
-
       /* ---------- 3. permission policy ---------- */
       if (
         !this.permissionPolicy.canChangeCell({
@@ -527,9 +521,6 @@ export class ChangeCellDisplayValueHandler {
           }
         );
       }
-
-
-
       /* ---------- 5. domain mutation ---------- */
       const domainEvent = table.changeDisplay(
         rowId,
@@ -546,13 +537,6 @@ export class ChangeCellDisplayValueHandler {
       }
 
       /* ---------- 6. application-level side effects ---------- */
-
-
-
-
-
-
-
       await this.repo.save(command.store, table);
 
       /* ---------- 9. output event ---------- */
@@ -590,3 +574,358 @@ export class ChangeCellDisplayValueHandler {
 
 }
 
+export class ApplyDynamicProjectionHandler {
+  constructor(
+    private readonly repo: TableRepository,
+    private readonly audit: AuditLogger,
+    private readonly permissionPolicy: PermissionPolicy,
+    private readonly dynamic?: DynamicConfig
+  ) {
+    // ---------- لاگ زمان ساخت ----------
+
+  }
+  async execute(
+    command: ApplyDynamicProjectionCommand,
+    actor: Actor
+  ): Promise<TableEvent[]> {
+    const {type,store,tableKey,rowId,columnId} = command
+    const table = await this.repo.getById(store, tableKey);
+    try {
+      const rowId = new RowId(command.rowId);
+      const columnId = new ColumnId(command.columnId);
+      const colValue = table.getRow(rowId.value).getCell(columnId.value).getValue().value
+      
+      if (this.dynamic) {
+        // Phase 2: PURE computation
+        await this.applyComputedColumns({
+          table,
+          rowId,
+          changedColumnId: columnId,
+          remoteApi: this.dynamic!.remoteApi,
+        });
+
+        // Phase 3: remote resolution
+        await this.applyRemoteVisibilityRules({
+          table,
+          rowId,
+          changedColumnId: columnId,
+          newValue:colValue ,
+        });
+
+        // Phase 4: projection
+        this.applyDynamicProjection({
+          table,
+          rowId,
+          changedColumnId: columnId,
+          validatedValue:colValue,
+        });
+      }
+      /* ---------- 7. RowState management ---------- */
+      const state =
+        table
+          .getRows()
+          .find(r => r.id.value === rowId.value)
+          ?.getCells()
+          .get('RowState')
+          ?.getValue()
+          ?.value;
+
+      if (state === RowStateEnum.Unchanged) {
+        table.changeCell(
+          rowId,
+          new ColumnId('RowState'),
+          new CellValue(RowStateEnum.Modified)
+        );
+        table.changeDisplay(
+          rowId,
+          new ColumnId('RowState'),
+          new CellValue(RowStateEnum.Modified)
+        );
+      }
+
+      /* ---------- 8. persist ---------- */
+
+      await this.repo.save(command.store, table);
+
+      /* ---------- 9. output event ---------- */
+      const out: TableEvent = {
+        type: 'CELL_CHANGED',
+        tableId: command.tableKey,
+        rowId: rowId.value,
+        columnId: columnId.value,
+        newValue:colValue ,
+      };
+      this.audit.log({ type: 'INFORMATION', message: out.type, payload: { out } });
+
+      return [out];
+
+    } catch (e: any) {
+      const failed: TableEvent = {
+        type: e,
+        tableId: command.tableKey,
+        reason: e?.message ?? 'Unknown error',
+        details: e?.details ?? String(e),
+      };
+      this.audit.log({ type: failed.type, message: failed.type, payload: { failed } });
+      return [failed];
+    }
+  }
+
+  /* =====================================================
+     helpers (application-layer only)
+     ===================================================== */
+
+  private async applyRemoteVisibilityRules(input: {
+    table: Table;
+    rowId: RowId;
+    changedColumnId: ColumnId;
+    newValue: unknown;
+  }) {
+    const { table, rowId, changedColumnId, newValue } = input;
+    const meta = this.dynamic.columnMeta;
+
+    const changedMeta = meta.get(changedColumnId.value);
+    const resolveOn = changedMeta?.resolveOn;
+    if (!resolveOn) return;
+    if (resolveOn.fieldName !== changedColumnId.value) return;
+
+    const row = table.getRows().find((r: any) => r.id.value === rowId.value);
+    if (!row) return;
+
+    const rowValues: Record<string, any> = {};
+    for (const [colId, cell] of row.getCells().entries()) {
+      rowValues[colId] = cell.getValue().value;
+    }
+
+    const params =
+      typeof resolveOn.buildParams === 'function'
+        ? resolveOn.buildParams(rowValues)
+        : { value: newValue };
+
+    const response = await this.dynamic!.remoteApi.request({
+      endpoint: resolveOn.endpoint,
+      params,
+      method: 'POST',
+    });
+    resolveOn.getResponse?.(response)
+    const flags: Record<string, boolean> =
+      resolveOn.mapFlags?.(response) ?? {};
+
+    const toShow: ColumnSchema[] = [];
+
+    meta.forEach(colCfg => {
+      const v = colCfg.visibility;
+      if (
+        v?.kind === 'whenFlag' &&
+        v.sourceFieldName === changedColumnId.value
+      ) {
+        if (flags[v.flag]) {
+          const colId = new ColumnId(colCfg.fieldName);
+          const schema = table.getColumnSchema(colId);
+          if (schema) {
+            toShow.push({ ...schema, hidden: false });
+          }
+          console.log(row)
+
+        }
+      }
+    });
+
+    if (toShow.length > 0) {
+      table.addColumns(toShow);
+    }
+  }
+
+  private async applyComputedColumns(input: {
+    table: Table;
+    rowId: RowId;
+    changedColumnId: ColumnId;
+    remoteApi: RemoteApi;
+  }) {
+    const { table, rowId, changedColumnId, remoteApi } = input;
+    const meta = this.dynamic!.columnMeta;
+
+    const computedColumns = Array.from(meta.values())
+      .filter(c => c.computed);
+
+    if (computedColumns.length === 0) return;
+
+    const row = table.getRows()
+      .find((r: any) => r.id.value === rowId.value);
+
+    if (!row) return;
+
+    // snapshot row values
+    const rowValues: Record<string, any> = {};
+    for (const [colId, cell] of row.getCells().entries()) {
+      rowValues[colId] = cell.getValue().value;
+    }
+
+    // dependency index
+    const dependents = new Map<string, any[]>();
+    for (const col of computedColumns) {
+      for (const dep of col.computed.dependsOn ?? []) {
+        if (!dependents.has(dep)) dependents.set(dep, []);
+        dependents.get(dep)!.push(col);
+      }
+    }
+
+    // propagation queue
+    const queue: string[] = [changedColumnId.value];
+    const visited = new Set<string>();
+
+    let safetyCounter = 0;
+    const MAX = computedColumns.length + 1;
+
+    while (queue.length > 0) {
+      if (safetyCounter++ > MAX) {
+        throw new Error('Computed cycle detected');
+      }
+      const source = queue.shift()!;
+      const targets = dependents.get(source) ?? [];
+      for (const colCfg of targets) {
+        const targetField = colCfg.fieldName;
+        const targetColId = new ColumnId(targetField);
+        const schema = table.getColumnSchema(targetColId);
+        if (!schema) continue;
+
+        let rawValue = colCfg.computed.compute(rowValues, remoteApi);
+        const newValue = rawValue instanceof Promise ? await rawValue : rawValue;
+
+        const validated = this.validateCellValue(schema.renderType, newValue);
+
+        if (validated.value instanceof Promise) {
+          throw new Error(
+            `Computed column "${targetField}" returned a Promise after validation`
+          );
+        }
+
+
+        const prev = rowValues[targetField];
+        if (Object.is(prev, validated.value)) continue;
+
+        table.changeCell(
+          rowId,
+          targetColId,
+          new CellValue(validated.value)
+        );
+        table.changeDisplay(
+          rowId,
+          targetColId,
+          new CellValue(validated.value)
+        );
+
+        if (schema.displayFormat) {
+          const validatedDisplayValue = this.validateCellValue(
+            schema.renderType,
+            schema.displayFormat(newValue)
+          );
+          table.changeDisplay(
+            rowId,
+            targetColId,
+            new CellValue(validatedDisplayValue.value)
+          );
+        } else {
+          table.changeDisplay(
+            rowId,
+            targetColId,
+            new CellValue(validated.value)
+          );
+        }
+
+        rowValues[targetField] = validated.value;
+        queue.push(targetField);
+        visited.add(targetField);
+      }
+    }
+  }
+
+  private validateCellValue(type: FieldType, value: unknown) {
+    if (type === 'text' || type === 'date') {
+      return typeof value === 'string'
+        ? { ok: true as const, value }
+        : {
+          ok: false as const,
+          error: { message: 'Expected string', details: { value } },
+        };
+    }
+    if (type === 'static') {
+      return { ok: true as const, value }
+    }
+
+    if (type === 'number' || type === 'selectOption') {
+      if (value === '') {
+        return { ok: true as const, value: '' as any };
+      }
+
+      const n =
+        typeof value === 'number'
+          ? value
+          : typeof value === 'string'
+            ? Number(value)
+            : NaN;
+
+      return Number.isFinite(n)
+        ? { ok: true as const, value: n }
+        : {
+          ok: false as const,
+          error: { message: 'Expected number', details: { value } },
+        };
+    }
+    return {
+      ok: false as const,
+      error: { message: 'Unsupported type', details: { type, value } },
+    };
+  }
+  private applyDynamicProjection(input: {
+    table: Table;
+    rowId: RowId;
+    changedColumnId: ColumnId;
+    validatedValue: unknown;
+  }) {
+    const { table, changedColumnId, validatedValue } = input;
+    this.dynamic!.columnMeta.forEach((colMeta, key) => {
+      const col = table.getColumnSchema(new ColumnId(colMeta.fieldName))
+      // dynamicSource projection
+      const depends = colMeta.dynamicSource?.dependsOn;
+      if (depends?.includes(changedColumnId.value)) {
+        const { dynamicSource, ...rest } = colMeta;
+        const { endpoint, dependsOn, ...restDynamic } = dynamicSource ?? {};
+        table.setColumnSchema(
+          new ColumnId(key),
+          {
+            id: rest.fieldName,
+            title: rest.fieldCaption,
+            renderType: rest.fieldType,
+            ...col,
+            dynamicValue: {
+              endpoint,
+              ...restDynamic,
+              dependOn: { fieldName: changedColumnId.value, value: validatedValue },
+
+            },
+          }
+        );
+      }
+
+      // visibility projection
+      if (
+        colMeta.visibility?.kind === 'whenFieldTruthy' &&
+        colMeta.visibility.fieldName === changedColumnId.value
+      ) {
+        const { dynamicSource, ...rest } = colMeta;
+        table.setColumnSchema(
+          new ColumnId(key),
+          {
+            id: rest.fieldName,
+            title: rest.fieldCaption,
+            renderType: rest.fieldType,
+            editable: rest.editable,
+            ...col,
+          }
+        );
+      }
+    });
+  }
+
+}
