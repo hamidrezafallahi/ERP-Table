@@ -132,6 +132,7 @@
     "discountList": "Discount list",
     "discount": "Discount",
     "inventoryVoucherList": "Inventory Voucher List",
+    "VoucherForm": "Voucher form",
     "inventoryVoucherForm": "Inventory Voucher Form",
     "inventoryVoucher": "Inventory Voucher",
     "inventoryVoucherTypeList": "Inventory Voucher Type List",
@@ -203,6 +204,8 @@
     "voucherTypeDescription":"Default Description",
     "detailedDescription":"Default Description",
     "tafsiliCategory":"Tafsili Category"
+       
+
   },
   "homePage": {
     "title": "Hello world!",
@@ -800,7 +803,9 @@
     "insuranceNumber": "Insurance Number",
     "operationStart": "Starting Operations",
     "documentType":"Document Type",
-    "tafsiliCategory":"Tafsili Category"
+    "tafsiliCategory":"Tafsili Category",
+    "selected":"Selected all",
+    "deselectedAll":"DeSelected all"
   
   },
   "rate": "Rate",

@@ -8,8 +8,8 @@ export const formConfig: IFormFieldConfig[] = [
     name: "Date",
     caption: "تا تاریخ",
     type: "date",
-    value:  moment(new Date()).toISOString(),
-    originalValue:  moment(new Date()).toISOString(),
+    value: moment(new Date()).toISOString(),
+    originalValue: moment(new Date()).toISOString(),
     isTitleField: false,
   },
   {
@@ -29,7 +29,7 @@ export const formConfig: IFormFieldConfig[] = [
       {
         caption: "تاریخ سند / ساعت ثبت سند",
         value: VoucherSortTypeEnum.ByDateThenCreateTime,
-      },
+      }
     ],
     originalValue: undefined,
     isTitleField: false,

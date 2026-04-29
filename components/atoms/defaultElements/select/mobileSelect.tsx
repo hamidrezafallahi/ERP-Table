@@ -1,21 +1,16 @@
-import {
-  Dispatch,
-  FC,
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
+import { Dispatch, FC, useCallback, useEffect, useState } from "react";
 
-import { SelectProps } from 'antd';
-import { useTranslations } from 'next-intl';
-import { useDispatch } from 'react-redux';
+import { SelectProps } from "antd";
+import { useTranslations } from "next-intl";
+import { useDispatch } from "react-redux";
 
-import { Reload } from '@components/atoms/iconComponents';
-import { setPageData } from '@slice/pages';
-import { IFormFieldConfig } from '@type/elementType';
+import { Reload } from "@components/atoms/iconComponents";
+import { setPageData } from "@slice/pages";
+import { IFormFieldConfig } from "@type/elementType";
 
-import InputText from '../inputText';
-import { CustomModal } from '../modal';
+import InputText from "../inputText";
+import { CustomModal } from "../modal";
+import { ChevronDownIcon } from "@components/atoms/iconComponents/icons/ChevronDownIcon ";
 
 export interface IProps extends SelectProps {
   config?: IFormFieldConfig;
@@ -74,12 +69,12 @@ export const MobileSelect: FC<IProps> = ({
             type,
             selectEndpoint,
             value: e,
-          })
+          }),
         );
       }
       props.onChange && props.onChange(e);
     },
-    [config]
+    [config],
   );
   const [openModal, setOpenModal] = useState(false);
   const [filteredOptions, setFilteredOptions] = useState(options ?? []);
@@ -98,7 +93,7 @@ export const MobileSelect: FC<IProps> = ({
   useEffect(() => {
     if (searchPhrase) {
       const searchFilter = options.filter((option) =>
-        option.title.includes(searchPhrase)
+        option.title.includes(searchPhrase),
       );
 
       setFilteredOptions(searchFilter);
@@ -110,14 +105,24 @@ export const MobileSelect: FC<IProps> = ({
   return (
     <>
       <div
-        className="flex items-center !bg-gray-gray3 dark:!bg-gray-gray10 px-2 border-1 hover:border-gray-gray5 focus:border-gray-gray5 active:border-gray-gray5 !border-none rounded ring-0 focus:ring-0 w-full h-[42px] text-sm ant-input-outlined"
+        className="flex items-center justify-between !bg-gray-gray3 dark:!bg-gray-gray10 px-2 border-1 hover:border-gray-gray5 focus:border-gray-gray5 active:border-gray-gray5 !border-none rounded ring-0 focus:ring-0 w-full h-[42px] text-sm ant-input-outlined"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           setOpenModal(true);
         }}
       >
-        {selectedTitle ? selectedTitle : t("general.selectField")}
+        <span>{selectedTitle ? selectedTitle : t("general.selectField")}</span>
+
+        <ChevronDownIcon
+          config={{
+            width: 16,
+            height: 16,
+            className: `text-gray-600 transition-transform duration-200 ${
+              openModal ? "rotate-180" : ""
+            }`,
+          }}
+        />
       </div>
 
       {openModal && (
@@ -130,7 +135,7 @@ export const MobileSelect: FC<IProps> = ({
           closeModal={() => setOpenModal(false)}
           isModalOpen={openModal}
           content={
-            <div className="flex flex-col gap-2 p-2 w-full h-[95%]">
+            <div className="flex flex-col gap-3 p-4 w-full h-[calc(100dvh-64px)]">
               {props.showSearch && (
                 <InputText
                   disabled={props.showSearch ? false : true}
@@ -150,7 +155,7 @@ export const MobileSelect: FC<IProps> = ({
                 <div
                   className={`${
                     isFetching ? "animate-spin" : ""
-                  } top-2 left-10 absolute cursor-pointer transition-all duration-400`}
+                  } top-6 left-4 absolute cursor-pointer transition-all duration-400`}
                   onClick={handleRefetch}
                 >
                   <Reload
@@ -163,7 +168,7 @@ export const MobileSelect: FC<IProps> = ({
               )}
 
               <div
-                className="flex flex-col gap-2 p-2 w-full h-[95%] overflow-y-auto"
+                className="flex flex-col gap-2 w-full h-[calc(100dvh-167px)] mb-4 overflow-y-auto"
                 onScroll={handleScroll}
               >
                 {filteredOptions?.length === 0 ? (
@@ -180,10 +185,10 @@ export const MobileSelect: FC<IProps> = ({
                         fieldValue === option.value
                           ? "bg-blue-blue005 font-bold"
                           : ""
-                      } flex items-center gap-2 w-full text-sm p-2 rounded cursor-pointer`}
+                      } flex items-center gap-2 w-full text-sm p-2 rounded cursor-pointer min-h-[44px]`}
                     >
                       {fieldValue === option.value && (
-                        <span className="text-[16px]">✔</span>
+                        <span className="text-base">✔</span>
                       )}
                       <span
                         className={`${

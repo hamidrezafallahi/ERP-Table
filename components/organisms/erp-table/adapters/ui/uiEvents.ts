@@ -109,6 +109,10 @@ export interface ToggleRowSelectedUiCommand extends UICommandBase {
   readonly type: 'TOGGLE_ROW_SELECTED';
  
 }
+export interface TogglePageRowSelectedUiCommand extends UICommandBase {
+  readonly type: 'TOGGLE_PAGE_ROW_SELECTED';
+ 
+}
 export interface RowSelectedUiCommand extends UICommandBase {
   readonly type: 'ROW_SELECTED';
   readonly rowId: number;
@@ -131,6 +135,7 @@ export interface KeyDownUiCommand extends UICommandBase {
 export type UITableCommand =
   ActiveRowUiCommand
   | ToggleRowSelectedUiCommand
+  | TogglePageRowSelectedUiCommand
   | RowSelectedUiCommand
   | UIMoveActiveVerticalCellEvent
   | UIMoveActiveCellEvent

@@ -19,8 +19,8 @@ import type { IAccount } from "@services/acc/account/type";
 import { addNewPage } from "@slice/pages";
 import { PageStateEnum } from "@slice/pages/enum";
 import { PageTypeEnum } from "@type/enum";
-import DynamicModal from "@components/organisms/dynamicModal";
-import { getDefaultDescriptionsConfig } from "./config";
+import SideBarFormContext from "@components/organisms/sideBarForm/sideBarFormContext";
+import { defaultDescriptionsConfig } from "./defaultDescriptionsConfig";
 
 export default function AccountTemplate() {
   const t = useTranslations();
@@ -280,10 +280,10 @@ export default function AccountTemplate() {
           closeModal={() => setIsDefaultDescriptionModalOpen(false)}
           isModalOpen={isDefaultDescriptionModalOpen}
           content={
-            <DynamicModal
-              id={id}
-              sourceKey="accountId"
-              config={getDefaultDescriptionsConfig(id)}
+            <SideBarFormContext
+              config={defaultDescriptionsConfig(id)}
+              typeId={id}
+              isModal={true}
             />
           }
         />

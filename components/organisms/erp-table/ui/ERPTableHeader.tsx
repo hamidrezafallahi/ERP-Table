@@ -10,12 +10,12 @@ interface Props {
 }
 
 export function ERPTableHeader({ controller ,tableKey}: Props) {
-  const table = controller.getViewState(tableKey)
+  const table = controller.getViewState()
   if (!table || !table.columns) return null; 
 
-  const isSelectedAllRows = table.rows.every(row => !!table.selectedRows[row.id]);
-  const handleSelectAllRows = () => {
-    controller.dispatch({type:"TOGGLE_ROW_SELECTED"})
+  const isSelectedActivePageRows = table.rows.every(row => !!table.selectedRows[row.id]);
+  const handleSelectActivePageRows = () => {
+    controller.dispatch({type:"TOGGLE_PAGE_ROW_SELECTED"})
   };
 
   return (
@@ -25,12 +25,12 @@ export function ERPTableHeader({ controller ,tableKey}: Props) {
           <th
             key={col.id}
             scope="col"
-            className="flex justify-start items-center px-2 w-36 text-xs"
+            className="flex justify-start items-center px-2 w-36 min-w-36 text-xs"
           >
             {index === 0 && (
               <CustomCheckbox
-                checked={isSelectedAllRows}
-                onClick={handleSelectAllRows}
+                checked={isSelectedActivePageRows}
+                onClick={handleSelectActivePageRows}
               />
             )}
             {col.title}

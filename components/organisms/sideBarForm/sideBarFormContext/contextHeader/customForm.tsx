@@ -1,36 +1,89 @@
-import React from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Form, Spin } from "antd";
 import { useTranslations } from "next-intl";
 import { CustomButton, CustomTooltip } from "@components/atoms/defaultElements";
 import InputText from "@components/atoms/defaultElements/inputText";
 import { PlusOutline, SpinIcon } from "@components/atoms/iconComponents";
 import { useCUDDataMutation, useGetData } from "@services/base";
+import { FormInstance } from "antd/lib";
+import { IDynamicModalConfig, RecordType } from "../../type";
+import { showSuccessToast } from "@utils/core";
 
-export default function CustomFormVoucherType({ voucherTypeId, form }) {
+interface CustomFormProps {
+  form: FormInstance<any>;
+  typeId: number;
+  config: IDynamicModalConfig;
+  editingRecord: RecordType;
+  setEditingRecord: Dispatch<SetStateAction<RecordType>>;
+}
+
+export default function CustomForm({
+  form,
+  config,
+  typeId,
+  editingRecord,
+  setEditingRecord,
+}: CustomFormProps) {
   const t = useTranslations();
   const [mutateItem, { isLoading: mutateIsLoading }] = useCUDDataMutation();
+  const [originalValues, setOriginalValues] = useState(null);
+  const [changeFields, setChangeFields] = useState<string[]>([]);
+  const formValues = Form.useWatch([], form);
+  const isEdit = !!editingRecord;
+
+  useEffect(() => {
+    if (editingRecord) {
+      form.setFieldsValue({ Desc: editingRecord.Desc });
+      setOriginalValues({ Desc: editingRecord.Desc });
+      setChangeFields([]);
+    } else {
+      form.resetFields();
+      setOriginalValues(null);
+      setChangeFields([]);
+    }
+  }, [editingRecord, form]);
+
+  useEffect(() => {
+    if (!originalValues) return;
+    if (!formValues) return;
+    for (const key in formValues) {
+      if (originalValues[key] !== formValues[key]) {
+        if (!changeFields.includes(key)) {
+          setChangeFields((prev) => [...prev, key]);
+        }
+      }
+    }
+  }, [formValues, originalValues, changeFields]);
 
   const { refetch: ReLoad } = useGetData({
-    url: `/api/acc/select/voucherTypeDescriptions`,
+    url: config.listConfig.selectUrl,
     body: {
       RepoId: 0,
     },
-
-    skip: true,
   });
 
   const handleSubmit = async (values: any) => {
+    const body = isEdit
+      ? {
+          Desc: values.Desc,
+          [config.idFieldKeyUpdate]: editingRecord.VocherTypeDescId,
+          [config.fieldKey]: editingRecord.VocherTypeDescItemId,
+          ChangeFields: changeFields,
+        }
+      : {
+          Desc: values.Desc,
+          [config.idFieldName]: typeId,
+        };
     const res = await mutateItem({
-      url: `/api/acc/insert/voucherTypeDescriptions`,
-      body: {
-        Desc: values.Desc,
-        voucherTypeId,
-      },
+      url: isEdit ? config.updateUrl : config.createUrl,
+      body,
     }).unwrap();
 
     if (res?.Result == "Success") {
+      showSuccessToast(t("toast.successTitle"));
       form.resetFields();
-      ReLoad;
+      setEditingRecord(null);
+      ReLoad();
     }
   };
 
@@ -69,6 +122,8 @@ export default function CustomFormVoucherType({ voucherTypeId, form }) {
             >
               {mutateIsLoading ? (
                 <Spin size="large" indicator={<SpinIcon />} />
+              ) : isEdit ? (
+                t("general.update")
               ) : (
                 t("general.submit")
               )}

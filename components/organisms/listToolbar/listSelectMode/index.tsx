@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import DOMPurify from "dompurify";
 import { useTranslations } from "next-intl";
 
-
 import {
   CustomDropdownButton,
   CustomModal,
@@ -19,7 +18,6 @@ import { getColoredIcon, showInfoToast } from "@utils/core";
 
 export default function ListSelectMode({
   selectedItems,
-
   toolbarData,
   confirmationIsLoading,
   handleConfirmation,
@@ -29,7 +27,7 @@ export default function ListSelectMode({
   const { mode = "light" } = useDarkMode();
   const [isConfirmDrawerOpen, setIsConfirmDrawerOpen] = useState(false);
   const [confirmMode, setConfirmMode] = useState<"Delete" | "Confirm">(
-    "Delete"
+    "Delete",
   );
   const [isAddTagModalOpen, setIsAddTagModalOpen] = useState(false);
 
@@ -43,7 +41,7 @@ export default function ListSelectMode({
             } else {
               showInfoToast(
                 t("toast.minOneItemToast"),
-                ActionLabelsEnum.AddTag as string
+                ActionLabelsEnum.AddTag as string,
               );
             }
             break;
@@ -59,19 +57,23 @@ export default function ListSelectMode({
     const items =
       toolbarData?.GroupMenu?.length > 0
         ? toolbarData?.GroupMenu?.filter(
-            (item) => item.MenuDesc !== ActionLabelsEnum.Delete
+            (item) => item.MenuDesc !== ActionLabelsEnum.Delete,
           )?.map((menuItem: IToolbarMenu) => ({
             key: menuItem?.MenuId,
             label: menuItem?.MenuDesc,
             icon: (
-              <span
-                className="w-6 h-6"
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(
-                    getColoredIcon(menuItem?.Icon, mode)
-                  ),
-                }}
-              />
+              <>
+                {typeof menuItem.Icon === "string" && (
+                  <span
+                    className="w-6 h-6"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(
+                        getColoredIcon(menuItem?.Icon, mode),
+                      ),
+                    }}
+                  />
+                )}
+              </>
             ),
             onClick: () => handleGroupAction(menuItem),
           }))
@@ -86,7 +88,7 @@ export default function ListSelectMode({
     } else {
       showInfoToast(
         t("toast.minOneItemToast"),
-        ActionLabelsEnum.Delete as string
+        ActionLabelsEnum.Delete as string,
       );
     }
   };

@@ -1,5 +1,10 @@
-import { CSSProperties, forwardRef, ReactNode, RefAttributes } from "react";
-
+import {
+  CSSProperties,
+  ForwardedRef,
+  forwardRef,
+  ReactElement,
+  ReactNode,
+} from "react";
 import { Collapse } from "antd";
 import { useTranslations } from "next-intl";
 import { shallowEqual } from "react-redux";
@@ -11,8 +16,13 @@ import { getColoredIcon } from "@utils/core";
 
 import type { IProps } from "./type";
 import { CustomSwitch } from "@components/atoms/defaultElements";
+import { CardSimple } from "./cardSimple";
 
-export const CardDynamicModal = forwardRef(function Card<T>(
+type Ref = HTMLDivElement;
+
+function CardDynamicModalInner<
+  T extends { Inactive?: boolean; PendingStatusId?: number },
+>(
   {
     staticKey,
     data,
@@ -21,17 +31,20 @@ export const CardDynamicModal = forwardRef(function Card<T>(
     onActionClick,
     fieldKey,
     activation,
+    variant = "collapse",
+    customMobileClassName = "h-[calc(100dvh-538px)]",
   }: IProps<T>,
-  ref: RefAttributes<HTMLDivElement>["ref"]
+  ref: React.Ref<Ref>,
 ) {
   const { mode = "light" } = useDarkMode();
 
   const t = useTranslations();
-  const { lang: locale } = useAppSelector(
+  const { lang: locale, match } = useAppSelector(
     (state) => ({
       lang: state.withPersist.config.lang,
+      match: state.withPersist.config.initMatch,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const columnsConfig = columnsList && columnsList?.column;
@@ -81,12 +94,16 @@ export const CardDynamicModal = forwardRef(function Card<T>(
                 onActionClick(action, item[fieldKey], item["PendingStatusId"]);
               }}
             >
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(action.Icon, mode),
-                }}
-                style={{ width: "16px", height: "17px" }}
-              />
+              {typeof action.Icon === "string" ? (
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: getColoredIcon(action.Icon, mode),
+                  }}
+                  style={{ width: "16px", height: "17px" }}
+                />
+              ) : (
+                action.Icon
+              )}
             </span>
           ))}
         {activation?.url && (
@@ -121,24 +138,45 @@ export const CardDynamicModal = forwardRef(function Card<T>(
   }));
 
   return (
-    <div className="hidden-show-scrollBar pt-1 w-full h-[calc(100dvh-300px)] overflow-y-auto">
+    <div
+      className={`${match ? "h-[calc(100dvh-300px)]" : `${customMobileClassName} flex flex-col gap-2`} ${processedData?.length === 0 ? "justify-center" : "justify-start"} hidden-show-scrollBar pt-1 w-full overflow-y-auto`}
+    >
       {processedData?.length > 0 ? (
         <>
-          <Collapse
-            expandIcon={({ isActive }) => (
-              <div className={isActive ? "rotate-180" : ""}>
-                <DownChevron />
-              </div>
-            )}
-            expandIconPosition="end"
-            style={{
-              backgroundColor: "white",
-              padding: 0,
-              margin: 0,
-            }}
-            items={items}
-            bordered={false}
-          />
+          {variant === "collapse" ? (
+            <Collapse
+              expandIcon={({ isActive }) => (
+                <div className={isActive ? "rotate-180" : ""}>
+                  <DownChevron />
+                </div>
+              )}
+              expandIconPosition="end"
+              style={{
+                backgroundColor: "white",
+                padding: 0,
+                margin: 0,
+              }}
+              items={items}
+              bordered={false}
+            />
+          ) : (
+            processedData.map((item, index) => (
+              <CardSimple
+                key={index}
+                item={item}
+                index={index}
+                processedDataLength={processedData.length}
+                staticKey={staticKey}
+                columnsConfig={columnsConfig}
+                actions={actions}
+                fieldKey={fieldKey}
+                activation={activation}
+                mode={mode}
+                onActionClick={onActionClick}
+                ref={ref}
+              />
+            ))
+          )}
         </>
       ) : (
         <div className="flex flex-col justify-center items-center gap-2 m-2">
@@ -148,4 +186,10 @@ export const CardDynamicModal = forwardRef(function Card<T>(
       )}
     </div>
   );
-});
+}
+
+export const CardDynamicModal = forwardRef(CardDynamicModalInner) as <
+  T extends { Inactive?: boolean; PendingStatusId?: number },
+>(
+  props: IProps<T> & { ref?: ForwardedRef<HTMLDivElement> },
+) => ReactElement;

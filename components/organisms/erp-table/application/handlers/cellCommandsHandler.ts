@@ -235,7 +235,6 @@ export class ChangeCellValueHandler {
       typeof resolveOn.buildParams === 'function'
         ? resolveOn.buildParams(rowValues)
         : { value: newValue };
-
     const response = await this.dynamic!.remoteApi.request({
       endpoint: resolveOn.endpoint,
       params,
@@ -246,28 +245,28 @@ export class ChangeCellValueHandler {
       resolveOn.mapFlags?.(response) ?? {};
 
     const toShow: ColumnSchema[] = [];
-
+    const visibilityCondition = new Object() as Record<string, boolean>;
     meta.forEach(colCfg => {
+
       const v = colCfg.visibility;
       if (
         v?.kind === 'whenFlag' &&
         v.sourceFieldName === changedColumnId.value
       ) {
+        const colId = new ColumnId(colCfg.fieldName);
+        const schema = table.getColumnSchema(colId);
+        visibilityCondition[v.flag] = flags[v.flag]
         if (flags[v.flag]) {
-          const colId = new ColumnId(colCfg.fieldName);
-          const schema = table.getColumnSchema(colId);
           if (schema) {
             toShow.push({ ...schema, hidden: false });
           }
-          console.log(row)
-
         }
       }
     });
-
     if (toShow.length > 0) {
       table.addColumns(toShow);
     }
+    row.setVisibilityCondition(visibilityCondition)
   }
 
   private async applyComputedColumns(input: {
@@ -387,7 +386,7 @@ export class ChangeCellValueHandler {
       return { ok: true as const, value }
     }
 
-    if (type === 'number' || type === 'selectOption') {
+    if (type === 'number' ||type === 'price' || type === 'selectOption') {
       if (value === '') {
         return { ok: true as const, value: '' as any };
       }
@@ -472,7 +471,7 @@ export class ChangeCellDisplayValueHandler {
     // ---------- لاگ زمان ساخت ----------
 
   }
-  
+
 
   async execute(
     command: ChangeCellDisplayValueCommand,
@@ -588,13 +587,13 @@ export class ApplyDynamicProjectionHandler {
     command: ApplyDynamicProjectionCommand,
     actor: Actor
   ): Promise<TableEvent[]> {
-    const {type,store,tableKey,rowId,columnId} = command
+    const { type, store, tableKey, rowId, columnId } = command
     const table = await this.repo.getById(store, tableKey);
     try {
       const rowId = new RowId(command.rowId);
       const columnId = new ColumnId(command.columnId);
       const colValue = table.getRow(rowId.value).getCell(columnId.value).getValue().value
-      
+
       if (this.dynamic) {
         // Phase 2: PURE computation
         await this.applyComputedColumns({
@@ -609,7 +608,7 @@ export class ApplyDynamicProjectionHandler {
           table,
           rowId,
           changedColumnId: columnId,
-          newValue:colValue ,
+          newValue: colValue,
         });
 
         // Phase 4: projection
@@ -617,7 +616,7 @@ export class ApplyDynamicProjectionHandler {
           table,
           rowId,
           changedColumnId: columnId,
-          validatedValue:colValue,
+          validatedValue: colValue,
         });
       }
       /* ---------- 7. RowState management ---------- */
@@ -644,7 +643,6 @@ export class ApplyDynamicProjectionHandler {
       }
 
       /* ---------- 8. persist ---------- */
-
       await this.repo.save(command.store, table);
 
       /* ---------- 9. output event ---------- */
@@ -653,7 +651,7 @@ export class ApplyDynamicProjectionHandler {
         tableId: command.tableKey,
         rowId: rowId.value,
         columnId: columnId.value,
-        newValue:colValue ,
+        newValue: colValue,
       };
       this.audit.log({ type: 'INFORMATION', message: out.type, payload: { out } });
 
@@ -683,25 +681,24 @@ export class ApplyDynamicProjectionHandler {
   }) {
     const { table, rowId, changedColumnId, newValue } = input;
     const meta = this.dynamic.columnMeta;
-
     const changedMeta = meta.get(changedColumnId.value);
     const resolveOn = changedMeta?.resolveOn;
     if (!resolveOn) return;
     if (resolveOn.fieldName !== changedColumnId.value) return;
-
     const row = table.getRows().find((r: any) => r.id.value === rowId.value);
     if (!row) return;
-
     const rowValues: Record<string, any> = {};
     for (const [colId, cell] of row.getCells().entries()) {
       rowValues[colId] = cell.getValue().value;
     }
-
     const params =
       typeof resolveOn.buildParams === 'function'
         ? resolveOn.buildParams(rowValues)
         : { value: newValue };
-
+    const visibilityCondition: Record<string, boolean> = row.getVisibilityCondition()
+    if (Object.keys(visibilityCondition).length > 0) {
+      return;
+    }
     const response = await this.dynamic!.remoteApi.request({
       endpoint: resolveOn.endpoint,
       params,
@@ -712,28 +709,29 @@ export class ApplyDynamicProjectionHandler {
       resolveOn.mapFlags?.(response) ?? {};
 
     const toShow: ColumnSchema[] = [];
-
     meta.forEach(colCfg => {
+
       const v = colCfg.visibility;
       if (
         v?.kind === 'whenFlag' &&
         v.sourceFieldName === changedColumnId.value
       ) {
+        const colId = new ColumnId(colCfg.fieldName);
+        const schema = table.getColumnSchema(colId);
+        visibilityCondition[v.flag] = flags[v.flag]
         if (flags[v.flag]) {
-          const colId = new ColumnId(colCfg.fieldName);
-          const schema = table.getColumnSchema(colId);
           if (schema) {
             toShow.push({ ...schema, hidden: false });
           }
-          console.log(row)
-
         }
       }
     });
-
     if (toShow.length > 0) {
       table.addColumns(toShow);
     }
+
+    row.setVisibilityCondition(visibilityCondition)
+
   }
 
   private async applyComputedColumns(input: {
@@ -890,7 +888,7 @@ export class ApplyDynamicProjectionHandler {
       const depends = colMeta.dynamicSource?.dependsOn;
       if (depends?.includes(changedColumnId.value)) {
         const { dynamicSource, ...rest } = colMeta;
-        const { endpoint, dependsOn, ...restDynamic } = dynamicSource ?? {};
+        const { endpoint, dependsOn, params, ...restDynamic } = dynamicSource ?? {};
         table.setColumnSchema(
           new ColumnId(key),
           {
@@ -900,8 +898,10 @@ export class ApplyDynamicProjectionHandler {
             ...col,
             dynamicValue: {
               endpoint,
+              dependsOn,
               ...restDynamic,
               dependOn: { fieldName: changedColumnId.value, value: validatedValue },
+              ...params
 
             },
           }

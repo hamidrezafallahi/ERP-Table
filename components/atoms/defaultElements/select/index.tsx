@@ -1,26 +1,16 @@
-import {
-  FC,
-  useCallback,
-  useEffect,
-} from 'react';
+import { FC, useCallback, useEffect } from "react";
 
-import { Select } from 'antd';
-import { useTranslations } from 'next-intl';
-import {
-  shallowEqual,
-  useDispatch,
-} from 'react-redux';
+import { Select } from "antd";
+import { useTranslations } from "next-intl";
+import { shallowEqual, useDispatch } from "react-redux";
 
-import {
-  PlusOutline,
-  Reload,
-} from '@components/atoms/iconComponents';
-import { useInitializePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
-import { setPageData } from '@slice/pages';
+import { PlusOutline, Reload } from "@components/atoms/iconComponents";
+import { useInitializePage } from "@hooks/custom";
+import { useAppSelector } from "@redux/index";
+import { setPageData } from "@slice/pages";
 
-import { MobileSelect } from './mobileSelect';
-import type { IProps } from './type';
+import { MobileSelect } from "./mobileSelect";
+import type { IProps } from "./type";
 
 export const CustomSelect: FC<IProps> = ({
   ref,
@@ -41,7 +31,7 @@ export const CustomSelect: FC<IProps> = ({
     useAppSelector((state) => {
       const match = state.withPersist.config.initMatch;
       const pageId = state.withPersist.pages.find(
-        (item) => item.isActive
+        (item) => item.isActive,
       )?.pageId;
       const lang = state.withPersist.config.lang;
       const existField = state.withPersist.pages
@@ -70,22 +60,20 @@ export const CustomSelect: FC<IProps> = ({
 
   let defaultValue;
 
-
-    if (config?.name) {
-      if (config.name.includes("CurrencyId")) {
-        defaultValue = Number(globalCurrencyValue);
-      }
-      if (config.name.includes("CashierId")) {
-        defaultValue = Number(globalCashierValue);
-      }
-      if (config.name.includes("YearId")) {
-        defaultValue = Number(globalYearValue);
-      }
-      if (config.name.includes("PlaceId")) {
-        defaultValue = Number(globalPlaceValue);
-      }
+  if (config?.name) {
+    if (config.name.includes("CurrencyId")) {
+      defaultValue = Number(globalCurrencyValue);
     }
-  
+    if (config.name.includes("CashierId")) {
+      defaultValue = Number(globalCashierValue);
+    }
+    if (config.name.includes("YearId")) {
+      defaultValue = Number(globalYearValue);
+    }
+    if (config.name.includes("PlaceId")) {
+      defaultValue = Number(globalPlaceValue);
+    }
+  }
 
   useEffect(() => {
     if (config) {
@@ -115,7 +103,7 @@ export const CustomSelect: FC<IProps> = ({
               type,
               selectEndpoint,
               value: defaultValue,
-            })
+            }),
           );
           setFieldValue && setFieldValue(name, defaultValue);
         }
@@ -150,13 +138,13 @@ export const CustomSelect: FC<IProps> = ({
             type,
             selectEndpoint,
             value: e,
-          })
+          }),
         );
       }
 
       props.onChange && props.onChange(e, option);
     },
-    [config]
+    [config],
   );
 
   const handleAddNew = () => {

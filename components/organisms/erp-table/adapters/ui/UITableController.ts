@@ -5,7 +5,6 @@ import { TableEngine } from '../../engine/tableEngine';
 import { UITableCommand } from './uiEvents';
 
 type KeydownCtx = {
-  tableKey: string;
   activeRowId: number | null;
   activeColumnId: string | null;
 };
@@ -65,11 +64,12 @@ export class UITableController {
       columnId,
     });
   }
-   
-  
+
+
   private setActiveRow(rowId: number) {
     this.engine.dispatch({
       type: 'ACTIVE_ROW',
+      store: this.store,
       tableKey: this.tableKey,
       rowId,
     });
@@ -81,6 +81,7 @@ export class UITableController {
   ) {
     this.engine.dispatch({
       type: 'MOVE_ACTIVE_CELL_VERTICAL',
+      store: this.store,
       tableKey: this.tableKey,
       rowId,
       columnId,
@@ -157,6 +158,12 @@ export class UITableController {
       tableKey: this.tableKey,
     });
   }
+  private async togglePageRowSelect() {
+    await this.engine.dispatch({
+      type: 'TOGGLE_SELECT_PAGE_ROWS',
+      tableKey: this.tableKey,
+    });
+  }
   private selectFromActiveToLast(activeRowId: number) {
 
     if (activeRowId == null) return;
@@ -164,31 +171,24 @@ export class UITableController {
     this.engine.dispatch({
       type: "SELECT_FROM_ACTIVE_TO_LAST",
       tableKey: this.tableKey,
-      anchorRowId: activeRowId,     // نقطه شروع
+      anchorRowId: activeRowId,
     });
   }
   private async onKeyDown(e: KeyboardEvent, ctx: KeydownCtx) {
     const { canPrev, canNext, page } = this.engine.getViewState(this.tableKey).pagination;
-    console.log(e, ctx, canPrev, canNext, page)
-    const { key, altKey, shiftKey, ctrlKey } = e;
-    console.log( key, altKey, shiftKey, ctrlKey)
-    const { tableKey, activeRowId, activeColumnId } = ctx;
-    console.log( tableKey, activeRowId, activeColumnId)
+    const { altKey, shiftKey, ctrlKey, code } = e;
+    const {  activeRowId, activeColumnId } = ctx;
     const selectedRows = this.engine.getSelectedRows(this.tableKey)
-    switch (key) {
-      case 'n':
-        case 'N': {
-          if (altKey) {
-            e.preventDefault();
-            this.addEmptyRow();
-          }
+    switch (code) {
+      case 'KeyN': {
+        if (altKey) {
+          e.preventDefault();
+          this.addEmptyRow();
+        }
         return;
       }
-      case 'd':
-        case 'D': {
-          if (altKey && activeRowId != null) {
-          console.log(e,ctx)
-          console.log(canPrev, canNext, page,activeRowId)
+      case 'KeyD': {
+        if (altKey && activeRowId != null) {
           e.preventDefault();
           this.duplicateRow(activeRowId);
         }
@@ -220,18 +220,21 @@ export class UITableController {
         }
         return;
       }
+      case 'NumpadEnter':
       case 'Enter': {
+        e.preventDefault();
         if (shiftKey) {
-          e.preventDefault();
           await this.collapseAll();
           return;
         } else if (altKey) {
-          e.preventDefault();
           await this.toggleRowExpanded(activeRowId);
           return;
         } else if (activeRowId) {
-          e.preventDefault();
-          this.activateFirstEditableCell(activeRowId);
+          if(!activeColumnId){
+            this.activateFirstEditableCell(activeRowId);
+          }else{
+            this.moveActiveCellVertical(activeRowId, activeColumnId, 'down')
+          }
         }
         return;
       }
@@ -277,22 +280,23 @@ export class UITableController {
         }
       }
       case 'ArrowUp': {
-         if (altKey && selectedRows) {
+        if (altKey && selectedRows) {
           e.preventDefault();
           await this.moveVerticalSelectedRows('up');
           return;
         } else {
-        if (!activeRowId) return;
-        e.preventDefault();
-        this.moveActiveCellVertical(activeRowId, activeColumnId, 'up');
-        return;
-      }}
+          if (!activeRowId) return;
+          e.preventDefault();
+          this.moveActiveCellVertical(activeRowId, activeColumnId, 'up');
+          return;
+        }
+      }
       case 'PageUp': {
         if (!canPrev) return;
         e.preventDefault();
         this.engine.dispatch({
           type: 'CHANGE_PAGE',
-          tableKey,
+          tableKey:this.tableKey,
           page: page - 1,
           store: this.store,
         });
@@ -303,7 +307,7 @@ export class UITableController {
         e.preventDefault();
         this.engine.dispatch({
           type: 'CHANGE_PAGE',
-          tableKey,
+          tableKey:this.tableKey,
           page: page + 1,
           store: this.store,
         });
@@ -320,13 +324,14 @@ export class UITableController {
   ) {
     this.engine.dispatch({
       type: 'MOVE_ACTIVE_CELL',
+      store:this.store,
       tableKey: this.tableKey,
       rowId,
       columnId,
       direction,
     });
   }
-    private moveVerticalSelectedRows(
+  private moveVerticalSelectedRows(
     direction: 'down' | 'up' = 'down'
   ) {
     this.engine.dispatch({
@@ -342,51 +347,58 @@ export class UITableController {
       rowId,
     });
   }
-  getViewState(tableKey: string) {
+  getViewState() {
     try {
-      return this.engine.getViewState(tableKey);
+      return this.engine.getViewState(this.tableKey);
     } catch {
       return null;
     }
   }
-  getSnapShot(tableKey: string) {
+   getAllRows() {
     try {
-      return this.engine.getSnapShot(tableKey);
+      return this.engine.getAllRows(this.tableKey);
     } catch {
       return null;
     }
   }
-  getCell(tableKey: string, rowId: number, columnId: string) {
+  getSnapShot() {
     try {
-      return this.engine.getCell(tableKey, rowId, columnId);
+      return this.engine.getSnapShot(this.tableKey);
     } catch {
       return null;
     }
   }
-  getActiveRow(tableKey: string) {
+  getCell( rowId: number, columnId: string) {
     try {
-      return this.engine.getActiveRow(tableKey);
+      return this.engine.getCell(this.tableKey, rowId, columnId);
     } catch {
       return null;
     }
   }
-  getSelectedRows(tableKey: string) {
+  getActiveRow() {
     try {
-      return this.engine.getSelectedRows(tableKey);
+      return this.engine.getActiveRow(this.tableKey);
     } catch {
       return null;
     }
   }
-  getActiveCell(tableKey: string) {
+  getSelectedRows(): Record<number, boolean> {
     try {
-      return this.engine.getActiveCell(tableKey);
+      return this.engine.getSelectedRows(this.tableKey);
     } catch {
       return null;
     }
   }
-  subscribe(tableKey: string, cb: () => void) {
+  getActiveCell() {
     try {
-      return this.engine.subscribe(tableKey, cb);
+      return this.engine.getActiveCell(this.tableKey);
+    } catch {
+      return null;
+    }
+  }
+  subscribe( cb: () => void) {
+    try {
+      return this.engine.subscribe(this.tableKey, cb);
     } catch {
       return null;
     }
@@ -394,30 +406,30 @@ export class UITableController {
   subscribeColumn(columnId: string, cb: (values: unknown[]) => void) {
     return this.engine.subscribeColumn(this.tableKey, columnId, cb);
   }
-  isActiveCell(tableKey: string, rowId: number, columnId: string) {
+  isActiveCell(rowId: number, columnId: string) {
     try {
-      return this.engine.isActiveCell(tableKey, rowId, columnId);
+      return this.engine.isActiveCell(this.tableKey, rowId, columnId);
     } catch {
       return null;
     }
   }
-  isActiveRow(tableKey: string, rowId: number) {
+  isActiveRow( rowId: number) {
     try {
-      return this.engine.isActiveRow(tableKey, rowId);
+      return this.engine.isActiveRow(this.tableKey, rowId);
     } catch {
       return null;
     }
   }
-  isSelectedRow(tableKey: string, rowId: number) {
+  isSelectedRow(rowId: number) {
     try {
-      return this.engine.isSelectedRow(tableKey, rowId);
+      return this.engine.isSelectedRow(this.tableKey, rowId);
     } catch {
       return null;
     }
   }
-  isExpandableRow(tableKey: string, rowId: number) {
+  isExpandableRow( rowId: number) {
     try {
-      return this.engine.isExpandableRow(tableKey, rowId);
+      return this.engine.isExpandableRow(this.tableKey, rowId);
     } catch {
       return null;
     }
@@ -447,6 +459,7 @@ export class UITableController {
     } else {
       this.engine.dispatch({
         type: "ACTIVE_ROW",
+        store: this.store,
         tableKey: this.tableKey,
         rowId,
       });
@@ -518,9 +531,7 @@ export class UITableController {
       case 'UI_ACTIVE_ROW':
         this.setActiveRow(command.rowId)
         return
-
       case 'KEY_DOWN':
-        console.log('KEY_DOWN')
         await this.onKeyDown(command.event, command.ctx);
         return;
       case 'TOGGLE_ROW_SELECTED':
@@ -528,6 +539,9 @@ export class UITableController {
         return
       case 'ROW_SELECTED':
         this.toggleRowSelect()
+        return
+      case 'TOGGLE_PAGE_ROW_SELECTED':
+        this.togglePageRowSelect()
         return
       default:
         const _exhaustive: never = command;

@@ -144,10 +144,8 @@ export default function Notification() {
                 : undefined
             }
             size="default"
-            className={`absolute bottom-2
-                         rtl:left-3 right-3  
-                        [&>sup]:!shadow-none
-                        [&>sup]:!bg-redBadge`}
+            className="absolute bottom-2 z-10 rtl:left-3 right-3 [&>sup]:!shadow-none [&>sup]:!bg-redBadge"
+            style={{ padding: 0 }}
           />
           <Bell
             config={{

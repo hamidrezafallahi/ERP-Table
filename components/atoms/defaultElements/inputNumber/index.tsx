@@ -1,12 +1,19 @@
-import { KeyboardEvent, useEffect, useState } from "react";
+import {
+  KeyboardEvent,
+  useEffect,
+  useState,
+} from 'react';
 
-import { InputNumber } from "antd";
-import { shallowEqual, useDispatch } from "react-redux";
+import { InputNumber } from 'antd';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
+import { useAppSelector } from '@redux/index';
+import { setPageData } from '@slice/pages';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 const CustomInputNumber = ({
   onChange,

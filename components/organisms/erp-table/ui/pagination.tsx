@@ -22,7 +22,7 @@ export default function ERPTablePagination({
   controller,
   tableKey
 }: Props) {
-  const table = controller.getViewState(tableKey);
+  const table = controller.getViewState();
   const locale = useLocale();
   const direction = locale === "fa" ? "rtl" : "ltr";
   if (!table) return null;

@@ -430,11 +430,17 @@ export default function FormToolbar({
         disabled: isDisabled,
 
         icon: (
-          <span
-            dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(getColoredIcon(menuItem?.Icon, mode)),
-            }}
-          />
+          <>
+            {typeof menuItem.Icon === "string" && (
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(
+                    getColoredIcon(menuItem?.Icon, mode),
+                  ),
+                }}
+              />
+            )}
+          </>
         ),
         onClick: () => handleAction(menuItem),
       };
@@ -446,11 +452,15 @@ export default function FormToolbar({
       key: menuItem.MenuId,
       label: menuItem.MenuDesc,
       icon: (
-        <span
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(getColoredIcon(menuItem.Icon, mode)),
-          }}
-        />
+        <>
+          {typeof menuItem.Icon === "string" && (
+            <span
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(getColoredIcon(menuItem.Icon, mode)),
+              }}
+            />
+          )}
+        </>
       ),
       onClick: () => handleMoreMenuAction(menuItem),
     }));
@@ -888,12 +898,16 @@ export default function FormToolbar({
           contentClassName={`${match ? "w-[520px] h-[470px]" : ""}`}
           headerName={dynamicAction.MenuDesc}
           headerIcon={
-            <div
-              dangerouslySetInnerHTML={{
-                __html: getColoredIcon(dynamicAction.Icon, mode),
-              }}
-              style={{ width: "18px", height: "17px" }}
-            />
+            <>
+              {typeof dynamicAction.Icon === "string" && (
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: getColoredIcon(dynamicAction.Icon, mode),
+                  }}
+                  style={{ width: "18px", height: "17px" }}
+                />
+              )}
+            </>
           }
           closeModal={() => setIsDynamicModalOpen(false)}
           isModalOpen={isDynamicModalOpen}
@@ -943,12 +957,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsGoodVariantValuesModalOpen(false)}
@@ -964,12 +982,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsGoodExtraInfoModalOpen(false)}
@@ -983,12 +1005,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsUserReportModalOpen(false)}
@@ -1002,12 +1028,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsGoodPriceModalOpen(false)}
@@ -1027,12 +1057,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsPersonContactModalOpen(false)}
@@ -1089,12 +1123,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setExpireDateModalIsOpen(false)}
@@ -1116,12 +1154,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setTaxSettingsModalIsOpen(false)}
@@ -1141,12 +1183,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setGoodSettingsModalIsOpen(false)}
@@ -1176,12 +1222,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsGoodQcModalOpen(false)}
@@ -1195,12 +1245,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsStockWarehouseModalOpen(false)}
@@ -1214,12 +1268,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsInventoryControlModalOpen(false)}
@@ -1239,12 +1297,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsTrainingCourseModalOpen(false)}
@@ -1258,12 +1320,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsEducationModalIsOpen(false)}
@@ -1277,12 +1343,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsWorkHistoryModalOpen(false)}
@@ -1296,12 +1366,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsSponsorModalOpen(false)}
@@ -1331,12 +1405,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsSpecialServicesModalOpen(false)}
@@ -1350,12 +1428,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsFormulaParameterModalOpen(false)}
@@ -1369,12 +1451,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsChangeInvoiceCurrencyModalOpen(false)}
@@ -1394,12 +1480,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsChangeInvoiceCurrencyRateModalOpen(false)}
@@ -1419,12 +1509,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsCustomerCreditModalOpen(false)}
@@ -1444,12 +1538,16 @@ export default function FormToolbar({
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof dynamicAction.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => setIsCustomerGroupCreditModalOpen(false)}

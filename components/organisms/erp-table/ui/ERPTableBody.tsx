@@ -1,9 +1,8 @@
 import React, { useRef } from 'react';
 
 import { UITableController } from '../adapters/ui/UITableController';
-import { RowStateEnum } from '../domain/value-objects';
-import { TCell } from '../engine/type';
 import { ERPTableRow } from './eRPTableRow';
+import { IRow } from './type';
 
 interface Props {
   controller: UITableController;
@@ -16,17 +15,14 @@ export function ERPTableBody({
   tableKey,
   moreDetailComponent: MoreDetailComponent,
 }: Props) {
-  const table = controller.getViewState(tableKey);
+  const table = controller.getViewState();
   const dragRowId = useRef<number | null>(null);
   if (!table) return null;
-  const rows: Array<{
-    id: number;
-    rowState: RowStateEnum;
-    cells: Record<string, TCell>;
-    isExpanded: boolean;
-  }> = table.rows;
-  return (
-   <tbody>
+  const rows:  IRow[] = table.rows;
+   return (
+   <tbody
+   className='overflow-x-auto'
+   >
   {rows
     .sort((a, b) => 
       (a.cells['index'].value as number) - 
@@ -36,7 +32,7 @@ export function ERPTableBody({
       <ERPTableRow
         key={row.id}
         row={row}
-        index={index}
+        index={index+((table.pagination.page-1)*table.pagination.pageSize)}
         table={table}
         controller={controller}
         tableKey={tableKey}

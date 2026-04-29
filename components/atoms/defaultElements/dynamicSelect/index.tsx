@@ -25,7 +25,7 @@ export const DynamicSelect: FC<IProps> = ({
   onSearchPhrase,
   config,
   onOptionsChange,
-  showIdInDesc = true,
+  labelValue = "selectDisplay",
   selectFirstDefault = false,
   ...props
 }) => {
@@ -36,9 +36,15 @@ export const DynamicSelect: FC<IProps> = ({
 
   const pageRecordCount = 5000;
 
-  const { endpoint, repoViewId, addButton, dependOn, ...bodyRequest } =
-  dynamicValue;
-  
+  const {
+    endpoint,
+    repoViewId,
+    addButton,
+    dependOn,
+    dependsOn,
+    ...bodyRequest
+  } = dynamicValue;
+ 
 
   const body = {
     ...bodyRequest,
@@ -65,13 +71,16 @@ export const DynamicSelect: FC<IProps> = ({
     body: existBody,
     skip: dependOn ? !dependOn.value : false,
   });
-  
+
   const handleRefetch = () => {
     setPageNumber(1);
-    if(dependOn && !dependOn.value){
-        console.log(dynamicValue)
-      console.log(`هنوز وابستگی ${dependOn.fieldName} پر نشده که بخواهد داده واکشی کند  skip ٝعال هست هنوز `,dependOn)
-    }else{
+    if (dependOn && !dependOn.value) {
+      console.log(dynamicValue);
+      console.log(
+        `هنوز وابستگی ${dependOn.fieldName} پر نشده که بخواهد داده واکشی کند  skip ٝعال هست هنوز `,
+        dependOn,
+      );
+    } else {
       refetch();
     }
   };
@@ -86,7 +95,7 @@ export const DynamicSelect: FC<IProps> = ({
               // label: showIdInDesc
               //   ? `${option._SelectId} - ${option._SelectDisplay}`
               //   : `${option._SelectDisplay}`,
-              label: `${option._SelectDisplay}`,
+              label: labelValue == "selectDisplay"? option._SelectDisplay:option._SelectValue,
               title: option._SelectDisplay,
               option: option,
             };
@@ -104,7 +113,7 @@ export const DynamicSelect: FC<IProps> = ({
             return {
               key: option._SelectId,
               value: option._SelectId,
-              label: option._SelectDisplay,
+              label: labelValue == "selectDisplay"? option._SelectDisplay:option._SelectValue,
               title: option._SelectDisplay,
               option: option,
             };
@@ -122,7 +131,7 @@ export const DynamicSelect: FC<IProps> = ({
               key: option._SelectId,
               value: option._SelectId,
               // label: `${option._SelectId} - ${option._SelectDisplay}`,
-              label: `${option._SelectDisplay}`,
+              label: labelValue == "selectDisplay"? option._SelectDisplay:option._SelectValue,
               title: option._SelectDisplay,
               option: option,
             };
@@ -133,7 +142,7 @@ export const DynamicSelect: FC<IProps> = ({
             return {
               key: option._SelectId,
               value: option._SelectId,
-              label: option._SelectDisplay,
+              label: labelValue == "selectDisplay"? option._SelectDisplay:option._SelectValue,
               title: option._SelectDisplay,
               option: option,
             };
@@ -193,6 +202,7 @@ export const DynamicSelect: FC<IProps> = ({
   return (
     <>
       <CustomSelect
+        labelInValue={false}
         isFetching={isFetching}
         handleRefetch={handleRefetch}
         searchPhrase={searchPhrase}
@@ -215,6 +225,14 @@ export const DynamicSelect: FC<IProps> = ({
               ? t("general.search")
               : t("general.selectField")
         }
+        optionRender={(originNode, info) => {
+          return (
+            <div className="flex justify-between items-center p-2">
+              <span>{originNode.data.title}</span>
+    
+            </div>
+          );
+        }}
         onPopupScroll={handleScroll}
         notFoundContent={isFetching ? "Loading..." : "No options found"}
         onChange={onChange}

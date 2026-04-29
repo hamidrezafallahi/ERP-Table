@@ -21,7 +21,7 @@ export const AccountSettingCard = forwardRef(function Card(
     onActionClick,
     rowIdField,
   }: IProps,
-  ref: RefAttributes<HTMLDivElement>["ref"]
+  ref: RefAttributes<HTMLDivElement>["ref"],
 ) {
   const { mode = "light" } = useDarkMode();
   const t = useTranslations();
@@ -29,7 +29,7 @@ export const AccountSettingCard = forwardRef(function Card(
     (state) => ({
       lang: state.withPersist.config.lang,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const processedData = useProcessedData({ data, columnsConfig, locale });
@@ -76,16 +76,18 @@ export const AccountSettingCard = forwardRef(function Card(
                 onActionClick(
                   action,
                   item[rowIdField],
-                  item["PendingStatusId"]
+                  item["PendingStatusId"],
                 );
               }}
             >
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(action.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              {typeof action.Icon === "string" && (
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: getColoredIcon(action.Icon, mode),
+                  }}
+                  style={{ width: "18px", height: "17px" }}
+                />
+              )}
             </span>
           ))}
       </div>

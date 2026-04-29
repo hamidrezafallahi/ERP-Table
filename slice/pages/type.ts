@@ -9,7 +9,7 @@ import type { IFormFieldConfig } from "@type/elementType";
 import { PageTypeEnum } from "@type/enum";
 import type { IToolbar } from "@type/toolbar";
 
-import { PageStateEnum } from "./enum";
+import { HeaderTypeEnum, PageStateEnum } from "./enum";
 
 export interface IPageElement {
   fieldName: string;
@@ -17,7 +17,7 @@ export interface IPageElement {
   type: "string" | "number" | "boolean" | "date";
 }
 export interface IPage {
-  pageOrder?:number;
+  pageOrder?: number;
   pageId?: string;
   isActive?: boolean;
   isModal?: boolean;
@@ -26,7 +26,6 @@ export interface IPage {
   captionII?: string;
   pageState?: PageStateEnum;
   originalPageState?: PageStateEnum;
-  url: string;
   RepoId: number;
   data?: Record<string, any>;
   SystemId: number;
@@ -45,6 +44,21 @@ export interface IPage {
   withImage?: boolean;
   returnPageId?: string;
   Id?: number;
+  headerType?: HeaderTypeEnum;
+  gridData?: any[];
+  addCaption?: string | null;
+  confirmUrl?: string | null;
+  deleteUrl?: string | null;
+  formUrl?: string | null;
+  isSelectMode?: boolean;
+  renderCustomActions?: any;
+  repoId?: number;
+  rowFieldKey?: string;
+  staticKey?: string;
+  staticKeyII?: string;
+  systemId?: number;
+  url?: string;
+  refetchGridData?: () => void;
 }
 
 export interface IStateItem {

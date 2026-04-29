@@ -30,9 +30,9 @@ export default function Confirmation({
 
   return (
     <div
-      className={`lg:p-4 flex flex-col justify-center items-center gap-2 px-4 rounded custom-confirm-modal`}
+      className={`lg:p-4 flex flex-col justify-center items-center gap-2 rounded custom-confirm-modal`}
     >
-      <span className="mx-4 text-center">{confirmationText}</span>
+      <span className="text-center">{confirmationText}</span>
 
       <div className="flex justify-between gap-4 mt-4 w-full">
         <CustomButton

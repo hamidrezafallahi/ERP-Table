@@ -43,7 +43,9 @@ export async function createERPTable(config: CreateERPTableConfig) {
   if (loadedTable) {
     columns = new Map<string, ColumnSchema>();
     for (const col of config.columns) {
-      const hasValue = loadedTable.getRows().some(r => r.getCell(col.fieldName)?.getValue()?.value);
+      const visibilityValues = loadedTable.getRows().map(r => r.visibilityCondition?.[col.fieldName]);
+      const isVisible = visibilityValues.some(v => v === true);
+      const hasValue = loadedTable.getRows().some(r => r.getCell(col.fieldName)?.getValue()?.value) || isVisible;
       columns.set(col.fieldName, {
         id: col.fieldName,
         title: col.fieldCaption,
@@ -55,7 +57,12 @@ export async function createERPTable(config: CreateERPTableConfig) {
         dynamicValue: col.dynamicSource,
         selectOptions: col.selectOptions,
         indexOptions: col.indexOptions,
+        onChange: col.onChange,
         displayFormat: col.displayFormat,
+        width:col.width,
+        popUpWidth:col.popUpWidth,
+        labelValue:col.labelValue
+
       });
     }
   }

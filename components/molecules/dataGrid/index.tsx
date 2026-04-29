@@ -66,7 +66,7 @@ function DataGridInner<T extends IBaseDto>(
     formUrl,
     withoutActivation,
     filteringAction,
-    renderSimple = false
+    renderSimple = false,
   }: IProps<T>,
   ref: Ref<HTMLDivElement>,
 ) {
@@ -403,8 +403,8 @@ function DataGridInner<T extends IBaseDto>(
         dataIndex: item.fieldName,
         key: item.fieldName,
         align: typeof item.fieldName === "string" ? "right" : "left",
-        render:   (text: any, record: any) => {
-         if (item.renderFunction) return item.renderFunction(record) 
+        render: (text: any, record: any) => {
+          if (item.renderFunction) return item.renderFunction(record);
           return <div className="my-2">{record?.[item.fieldName]}</div>;
         },
       };
@@ -484,11 +484,16 @@ function DataGridInner<T extends IBaseDto>(
             label: action.MenuDesc,
             disabled: isDisabled,
             icon: (
-              <span
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(getColoredIcon(action.Icon, mode)),
-                }}
-              />
+              <span>
+                {typeof action.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(action.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </span>
             ),
             onClick: () => {
               if (!isDisabled) {
@@ -553,16 +558,18 @@ function DataGridInner<T extends IBaseDto>(
                       }
                     }}
                   >
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: getColoredIcon(action.Icon, mode),
-                      }}
-                      style={{
-                        width: "18px",
-                        height: "17px",
-                        opacity: `${isDisabled ? 0.2 : 1}`,
-                      }}
-                    />
+                    {typeof action.Icon === "string" && (
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: getColoredIcon(action.Icon, mode),
+                        }}
+                        style={{
+                          width: "18px",
+                          height: "17px",
+                          opacity: `${isDisabled ? 0.2 : 1}`,
+                        }}
+                      />
+                    )}
                   </span>
                 </CustomTooltip>
               );
@@ -607,7 +614,9 @@ function DataGridInner<T extends IBaseDto>(
   return (
     <div
       className={`${
-        isFullScreen ? "h-[calc(100dvh-130px)]" : "max-h-[calc(100dvh-200px)] h-[calc(100dvh-290px)]"
+        isFullScreen
+          ? "h-[calc(100dvh-130px)]"
+          : "max-h-[calc(100dvh-200px)] h-[calc(100dvh-290px)]"
       } flex flex-col justify-between w-full `}
     >
       <div
@@ -635,82 +644,81 @@ function DataGridInner<T extends IBaseDto>(
             ),
           }}
           size="small"
-          rowSelection={ !renderSimple && {
-            renderCell: (_value, _record, _index, originNode) => {
-             
-                    
-
-              return (
-                <>
-                  <div className="flex items-center gap-2 w-[42px]">
-                    {originNode}
-                    <span
-                      onClick={() =>
-                        handleSetBookmark(
-                          Number(_record[rowFieldKey]),
-                          _record?.HasBookMark,
-                        )
-                      }
-                    >
-                      {currentId &&
-                      currentId === _record[rowFieldKey] &&
-                      bookmarkIsLoading ? (
-                        <Spin size="small" indicator={<SpinIcon />} />
-                      ) : currentChanges &&
-                        currentChanges.find(
-                          (item) => item.id === _record[rowFieldKey],
-                        ) ? (
-                        currentChanges.find(
-                          (item) => item.id === _record[rowFieldKey],
-                        ).HasBookMark === true ? (
+          rowSelection={
+            !renderSimple && {
+              renderCell: (_value, _record, _index, originNode) => {
+                return (
+                  <>
+                    <div className="flex items-center gap-2 w-[42px]">
+                      {originNode}
+                      <span
+                        onClick={() =>
+                          handleSetBookmark(
+                            Number(_record[rowFieldKey]),
+                            _record?.HasBookMark,
+                          )
+                        }
+                      >
+                        {currentId &&
+                        currentId === _record[rowFieldKey] &&
+                        bookmarkIsLoading ? (
+                          <Spin size="small" indicator={<SpinIcon />} />
+                        ) : currentChanges &&
+                          currentChanges.find(
+                            (item) => item.id === _record[rowFieldKey],
+                          ) ? (
+                          currentChanges.find(
+                            (item) => item.id === _record[rowFieldKey],
+                          ).HasBookMark === true ? (
+                            <BookMarkIconFilled />
+                          ) : (
+                            <BookMarkIcon />
+                          )
+                        ) : _record?.HasBookMark ? (
                           <BookMarkIconFilled />
                         ) : (
                           <BookMarkIcon />
-                        )
-                      ) : _record?.HasBookMark ? (
-                        <BookMarkIconFilled />
-                      ) : (
-                        <BookMarkIcon />
-                      )}
-                    </span>
-                  </div>
-                </>
-              );
-            },
-            type: "checkbox",
-            selectedRowKeys: selectedItems?.itemsByPage?.[activePage?.pageId],
-            onChange: (selectedRowKeys, _selectedRows) => {
-              const prev =
-                selectedItems?.itemsByPage?.[activePage?.pageId] ?? [];
-              const currentPageIds = processedData.map(
-                (item) => item[rowFieldKey],
-              );
+                        )}
+                      </span>
+                    </div>
+                  </>
+                );
+              },
+              type: "checkbox",
+              selectedRowKeys: selectedItems?.itemsByPage?.[activePage?.pageId],
+              onChange: (selectedRowKeys, _selectedRows) => {
+                const prev =
+                  selectedItems?.itemsByPage?.[activePage?.pageId] ?? [];
+                const currentPageIds = processedData.map(
+                  (item) => item[rowFieldKey],
+                );
 
-              const itemsFromOtherPages = prev.filter(
-                (item) => !currentPageIds.includes(item),
-              );
+                const itemsFromOtherPages = prev.filter(
+                  (item) => !currentPageIds.includes(item),
+                );
 
-              const numericKeys = selectedRowKeys.filter(
-                (key): key is number => typeof key === "number",
-              );
+                const numericKeys = selectedRowKeys.filter(
+                  (key): key is number => typeof key === "number",
+                );
 
-              const finalItems = Array.from(
-                new Set<number>([...itemsFromOtherPages, ...numericKeys]),
-              );
+                const finalItems = Array.from(
+                  new Set<number>([...itemsFromOtherPages, ...numericKeys]),
+                );
 
-              dispatch(
-                setItems({ pageId: activePage?.pageId, items: finalItems }),
-              );
-            },
-            getCheckboxProps: (record) => ({
-              disabled: activePage?.viewData?.deletedItems?.find(
-                (item) => item === record[rowFieldKey],
-              )
-                ? true
-                : false,
-              name: String(record[rowFieldKey]),
-            }),
-          }}
+                dispatch(
+                  setItems({ pageId: activePage?.pageId, items: finalItems }),
+                );
+              },
+              getCheckboxProps: (record) => ({
+                disabled: activePage?.viewData?.deletedItems?.find(
+                  (item) => item === record[rowFieldKey],
+                )
+                  ? true
+                  : false,
+                name: String(record[rowFieldKey]),
+              }),
+            }
+          }
           pagination={false}
           rowKey={rowFieldKey}
           columns={columns}

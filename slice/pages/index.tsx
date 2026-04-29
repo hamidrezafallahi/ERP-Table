@@ -21,7 +21,7 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
   initialState,
   reducers: {
     addNewPage: (state, action: PayloadAction<IPage>) => {
-      const { pageId, url, Key, returnPageId } = action.payload;
+      const { pageId, url, Key, returnPageId, headerType } = action.payload;
       if (!pageId) return state;
       let newState = state.map((p) => ({ ...p, isActive: false }));
       const existIndexPage = newState.findIndex((p) => p.pageId === pageId);
@@ -36,12 +36,13 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
               ...mutableField,
               pageOrder: newState.length + 1,
               isActive: true,
+              headerType: headerType ?? "None",
             });
           } else {
             newState = newState.map((p, i) =>
               i === existUrlIndex
                 ? { ...p, isActive: true, Key, returnPageId }
-                : p
+                : p,
             );
           }
         } else {
@@ -50,11 +51,20 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
             ...mutableField,
             pageOrder: newState.length + 1,
             isActive: true,
+            headerType: headerType ?? "None",
           });
         }
       } else {
         newState = newState.map((p, i) =>
-          i === existIndexPage ? { ...p, isActive: true, Key, returnPageId } : p
+          i === existIndexPage
+            ? {
+                ...p,
+                isActive: true,
+                Key,
+                returnPageId,
+                headerType: headerType ?? p.headerType,
+              }
+            : p,
         );
       }
 
@@ -62,7 +72,10 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
     },
     setPageOrder: (
       state,
-      action: PayloadAction<{ draggedPageOrder: number; dropPageOrder: number }>
+      action: PayloadAction<{
+        draggedPageOrder: number;
+        dropPageOrder: number;
+      }>,
     ) => {
       const { draggedPageOrder, dropPageOrder } = action.payload;
       return state.map((p) => ({
@@ -71,8 +84,8 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
           p.pageOrder == draggedPageOrder
             ? dropPageOrder
             : p.pageOrder >= dropPageOrder
-            ? p.pageOrder + 1
-            : p.pageOrder,
+              ? p.pageOrder + 1
+              : p.pageOrder,
       }));
     },
     removePage: (state, action: PayloadAction<string>) =>
@@ -95,7 +108,7 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
               pageState: action.payload.pageState,
               Key: action.payload.Key,
             }
-          : p
+          : p,
       ),
 
     setPageStateByRepo: (state, action: PayloadAction<IPage>) =>
@@ -106,13 +119,13 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
               pageState: action.payload.pageState,
               Key: action.payload.Key,
             }
-          : p
+          : p,
       ),
 
     deletePageByRepo: (state, action: PayloadAction<IPage>) =>
       state.filter(
         (p) =>
-          !(p.RepoId === action.payload.RepoId && p.Key === action.payload.Key)
+          !(p.RepoId === action.payload.RepoId && p.Key === action.payload.Key),
       ),
 
     setListStateByRepo: (state, action: PayloadAction<IPage>) =>
@@ -120,7 +133,7 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
         p.RepoId === action.payload.RepoId &&
         (p.type === PageTypeEnum.List || p.type === PageTypeEnum.NestedList)
           ? { ...p, pageState: action.payload.pageState }
-          : p
+          : p,
       ),
 
     setPageCaption: (state, action: PayloadAction<IPage>) =>
@@ -131,7 +144,7 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
               caption: action.payload.caption,
               captionII: action.payload.captionII,
             }
-          : p
+          : p,
       ),
 
     setPageData: (state, action: PayloadAction<IFormFieldConfig>) =>
@@ -156,7 +169,7 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
         const changed = pageData.some((f) =>
           f.type === "array"
             ? f.value?.length !== f.originalValue?.length
-            : f?.value !== f?.originalValue
+            : f?.value !== f?.originalValue,
         );
 
         return {
@@ -170,12 +183,12 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
       state.map((p) =>
         p.isActive && p.type !== PageTypeEnum.List
           ? { ...p, pageData: action.payload }
-          : p
+          : p,
       ),
 
     setSelectedViewIndex: (state, action: PayloadAction<number>) =>
       state.map((p) =>
-        p.isActive ? { ...p, selectedViewIndex: action.payload } : p
+        p.isActive ? { ...p, selectedViewIndex: action.payload } : p,
       ),
 
     setTagsInfo: (state, action: PayloadAction<ITagInfo[]>) =>
@@ -206,7 +219,7 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
 
     setStatusItemsList: (
       state,
-      action: PayloadAction<{ items: IStateItem; RepoId: number }>
+      action: PayloadAction<{ items: IStateItem; RepoId: number }>,
     ) =>
       state.map((p) =>
         p.RepoId === action.payload.RepoId &&
@@ -218,12 +231,12 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
                 statusItems: [...p.viewData.statusItems, action.payload.items],
               },
             }
-          : p
+          : p,
       ),
 
     setUndoDeleteItemsList: (
       state,
-      action: PayloadAction<{ deletedId: number; RepoId: number }>
+      action: PayloadAction<{ deletedId: number; RepoId: number }>,
     ) =>
       state.map((p) =>
         p.RepoId === action.payload.RepoId &&
@@ -234,21 +247,21 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
                 ...p.viewData,
                 deletedItems:
                   p.viewData.deletedItems?.filter(
-                    (id) => id !== action.payload.deletedId
+                    (id) => id !== action.payload.deletedId,
                   ) || [],
               },
             }
-          : p
+          : p,
       ),
 
     setPageInfo: (
       state,
-      action: PayloadAction<{ pageId: string; pageInfo: IPageInfo }>
+      action: PayloadAction<{ pageId: string; pageInfo: IPageInfo }>,
     ) =>
       state.map((p) =>
         p.pageId === action.payload.pageId
           ? { ...p, pageInfo: action.payload.pageInfo }
-          : p
+          : p,
       ),
 
     setShowTags: (state) =>
@@ -258,12 +271,12 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
               ...p,
               viewData: { ...p.viewData, ShowTags: !p.viewData.ShowTags },
             }
-          : p
+          : p,
       ),
 
     setRepoViewIdViewData: (
       state,
-      action: PayloadAction<{ RepoViewId: number }>
+      action: PayloadAction<{ RepoViewId: number }>,
     ) =>
       state.map((p) =>
         p.isActive
@@ -274,19 +287,19 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
                 RepoViewId: action.payload.RepoViewId,
               },
             }
-          : p
+          : p,
       ),
 
     setLevelFromToolbar: (
       state,
-      action: PayloadAction<{ currentLevel: number; nextLevel: number }>
+      action: PayloadAction<{ currentLevel: number; nextLevel: number }>,
     ) => {
       const { currentLevel, nextLevel } = action.payload;
       return state.map((p) => {
         if (!p.isActive) return p;
         const { selectedItems, steps } = p.viewData;
         const foundItem = selectedItems.find(
-          (item) => item.Level === currentLevel
+          (item) => item.Level === currentLevel,
         );
         const FilterIds = steps.map((step) => ({
           Level: step.Level,
@@ -319,7 +332,7 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
 
     setLevelFromTable: (
       state,
-      action: PayloadAction<{ Level: number; item: IRow }>
+      action: PayloadAction<{ Level: number; item: IRow }>,
     ) => {
       const { Level, item } = action.payload;
       return state.map((p) => {
@@ -348,7 +361,7 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
 
     setLevelFromNavbar: (
       state,
-      action: PayloadAction<{ Level: number; index: number }>
+      action: PayloadAction<{ Level: number; index: number }>,
     ) => {
       const { Level, index: order } = action.payload;
       return state.map((p) => {
@@ -376,7 +389,7 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
 
     setSelectedRows: (
       state,
-      action: PayloadAction<{ selectedRows: IStep }>
+      action: PayloadAction<{ selectedRows: IStep }>,
     ) => {
       const { selectedRows } = action.payload;
       return state.map((p) => {
@@ -391,7 +404,7 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
               ? selectedRows.Items.length
                 ? selectedRows
                 : null
-              : item
+              : item,
           )
           .filter(Boolean) as IStep[];
 

@@ -7,40 +7,44 @@ import { ISelectOption } from "@type/elementType";
 import { Skeleton } from "antd";
 import { Dispatch, SetStateAction } from "react";
 
-interface IProps {
-  voucherTypeList: ISelectOption[];
+interface SideBarFormListIProps {
+  dataList: ISelectOption[];
   isFetching: boolean;
-  setVoucherTypeId: Dispatch<SetStateAction<number>>;
+  setTypeId: Dispatch<SetStateAction<number>>;
+  idFieldName: string;
+  typeId:number
 }
 
-export default function VoucherTypeList({
-  voucherTypeList,
+export default function SideBarFormList({
+  dataList,
   isFetching,
-  setVoucherTypeId,
-}: IProps) {
+  setTypeId,
+  idFieldName,
+  typeId
+}: SideBarFormListIProps) {
   const dispatch = useDispatch();
   const t = useTranslations();
 
-  const { selectedVoucherTypeId } = useAppSelector((state) => {
-    const selectedVoucherTypeId = state.withPersist.pages
+  const { selectedId } = useAppSelector((state) => {
+    const selectedId = state.withPersist.pages
       .find((item) => item.isActive)
-      ?.pageData?.find((pro) => pro.name == "selectedVoucherTypeId")?.value;
-    return { selectedVoucherTypeId };
+      ?.pageData?.find((pro) => pro.name == idFieldName)?.value;
+    return { selectedId };
   }, shallowEqual);
 
   const handleVoucherTypeSelected = (e: ISelectOption) => {
     dispatch(
       setPageData({
-        name: "selectedVoucherTypeId",
+        name: "selectedId",
         value: e._SelectId,
       }),
     );
-    setVoucherTypeId(e._SelectId);
+    setTypeId(e._SelectId);
   };
 
   return (
     <>
-      {isFetching && voucherTypeList.length === 0 ? (
+      {isFetching && dataList.length > 0 ? (
         <div className="flex flex-col gap-4 w-full">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton.Button
@@ -51,9 +55,9 @@ export default function VoucherTypeList({
           ))}
           <span className="text-xs text-gray-500 mr-2">در حال بارگذاری...</span>
         </div>
-      ) : voucherTypeList.length > 0 ? (
-        <div className="flex w-full flex-col gap-1 py-2 !h-full items-start overflow-auto">
-          {voucherTypeList.map((voucherType, index) => (
+      ) : dataList.length > 0 ? (
+        <div className="flex w-full flex-col gap-1 !h-full items-start overflow-auto">
+          {dataList.map((voucherType, index) => (
             <div
               className="w-full border-b last:border-b-0"
               key={`${voucherType._SelectId}-${index}`}
@@ -61,7 +65,7 @@ export default function VoucherTypeList({
               <CustomButton
                 type="text"
                 className={`${
-                  selectedVoucherTypeId === voucherType._SelectId &&
+                  typeId === voucherType._SelectId &&
                   "!bg-blue-blue11 hover:!bg-blue-blue11"
                 } mb-1 rounded-md w-full bg-transparent justify-start px-1 !min-h-10`}
                 onClick={() => handleVoucherTypeSelected(voucherType)}
@@ -72,8 +76,8 @@ export default function VoucherTypeList({
           ))}
         </div>
       ) : (
-        <div className="flex justify-center items-center w-full">
-          <p className="pt-10 text-gray-gray95 text-xs text-center">
+        <div className="flex justify-center items-center w-full h-full">
+          <p className="text-gray-gray95 text-xs text-center">
             {t("general.notFoundData")}
           </p>
         </div>

@@ -62,7 +62,7 @@ export const CustomModal = ({
       modalIsFullScreen: state.withPersist.config.modalIsFullscreen,
       match: state.withPersist.config.initMatch,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   useEffect(() => {
@@ -122,18 +122,20 @@ export const CustomModal = ({
                 title
               ) : (
                 <div className="flex flex-col justify-between gap-1">
-                  <div className="flex items-center gap-2">
-                    {headerIcon}
-                    {headerName && (
-                      <span className="font-bold text-gray-gray10 dark:text-white lg:text-lg">
-                        {headerName}
-                      </span>
-                    )}
-                  </div>
+                  {headerIcon || headerName && (
+                    <div className="flex items-center gap-2">
+                      {headerIcon}
+                      {headerName && (
+                        <span className="font-bold text-gray-gray10 dark:text-white lg:text-lg">
+                          {headerName}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   {headerDescription && (
                     <div className="flex gap-2">
                       {/* {headerIcon} */}
-                      <span className="font-light text-gray-gray85 text-xs">
+                      <span className="font-light text-gray-gray85 text-sm">
                         {headerDescription}
                       </span>
                     </div>
@@ -150,7 +152,9 @@ export const CustomModal = ({
                     type="text"
                     onClick={() => {
                       dispatch(
-                        setModalIsFullScreen({ fullScreen: !modalIsFullScreen })
+                        setModalIsFullScreen({
+                          fullScreen: !modalIsFullScreen,
+                        }),
                       );
                     }}
                   >
@@ -184,7 +188,7 @@ export const CustomModal = ({
         className={`
           ${
             !match || modalIsFullScreen
-              ? "!h-[calc(100dvh-60px)]"
+              ? "!h-[calc(100dvh-64px)]"
               : "max-h-[80dvh]"
           }
            ${contentClassName} hidden-show-scrollBar overflow-y-auto`}

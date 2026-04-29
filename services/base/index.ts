@@ -8,11 +8,10 @@ import type {
   ICommandResponse,
   IService,
 } from "./type";
-
 export const apiService = createApi({
   reducerPath: "apiService",
   baseQuery: baseQueryByToken,
-  tagTypes: endpoints.map((endpoint) => endpoint.toLowerCase()),
+  tagTypes: endpoints.map((e) => e.toLowerCase()),
   endpoints: (builder) => ({
     getInfinite: builder.query<
       IBaseQueryResponse<any>,
@@ -25,28 +24,49 @@ export const apiService = createApi({
         id,
       }),
 
-      serializeQueryArgs: ({ queryArgs }) => {
-        if (queryArgs.body?.RepoViewId) {
-          return `${queryArgs.url}-${queryArgs.body.RepoViewId}`;
-        } else return queryArgs.url;
+      // serializeQueryArgs: ({ queryArgs }) => {
+      //   if (queryArgs.body?.RepoViewId) {
+      //     return `${queryArgs.url}-${queryArgs.body.RepoViewId}`;
+      //   } else return queryArgs.url;
+      // },
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        return `${endpointName}-${JSON.stringify(queryArgs)}`;
       },
-      merge: (currentCache, newItems) => {
-        if (!newItems?.Data?.length) return;
+      // merge: (currentCache, newItems) => {
+      //   if (!newItems?.Data?.length) return;
 
-        if (!currentCache.Data) currentCache.Data = [];
+      //   if (!currentCache.Data) currentCache.Data = [];
 
-        const filtered = newItems.Data.filter(
-          (newItem) =>
-            !currentCache.Data.some(
-              (oldItem) => JSON.stringify(oldItem) === JSON.stringify(newItem)
-            )
-        );
+      //   const filtered = newItems.Data.filter(
+      //     (newItem) =>
+      //       !currentCache.Data.some(
+      //         (oldItem) => JSON.stringify(oldItem) === JSON.stringify(newItem),
+      //       ),
+      //   );
 
-        if (filtered.length > 0) {
-          currentCache.Data.push(...filtered);
+      //   if (filtered.length > 0) {
+      //     currentCache.Data.push(...filtered);
+      //   }
+      // },
+      merge: (currentCache, newItems, { arg }) => {
+        //در حالت موبایل بخش refetch data مشکل داشت و بعد از هر تغییری دیتا تغییری نمیکرد بنابراین این merge جایگزین merge قبلی شده.
+        const page = arg?.body?.PagingInfo?.PageNumber;
+        if (!newItems?.Data) return;
+        if (page === 1) {
+          currentCache.Data = newItems.Data;
+          return;
         }
+        if (!currentCache.Data) currentCache.Data = [];
+        const existingIds = new Set(currentCache.Data.map((i) => i.Id));
+        const filtered = newItems.Data.filter(
+          (item) => !existingIds.has(item.Id),
+        );
+        currentCache.Data.push(...filtered);
       },
+
       forceRefetch({ currentArg, previousArg }) {
+        if (!previousArg) return true;
+
         return (
           currentArg.body.PagingInfo.PageNumber !==
           previousArg.body.PagingInfo.PageNumber
@@ -56,7 +76,7 @@ export const apiService = createApi({
       providesTags: (result, error, { url, id }) => {
         const parts = url.split("/");
         const operationIndex = parts?.findIndex(
-          (el) => el.toLowerCase() === "select"
+          (el) => el.toLowerCase() === "select",
         );
         const endpoint =
           parts?.[operationIndex + 1]?.toLowerCase() || "unknown";
@@ -80,7 +100,7 @@ export const apiService = createApi({
         const parts = url.split("/");
 
         const operationIndex = parts?.findIndex(
-          (el) => el.toLowerCase() === "select"
+          (el) => el.toLowerCase() === "select",
         );
         const endpoint =
           parts?.[operationIndex + 1]?.toLowerCase() || "unknown";
@@ -122,7 +142,7 @@ export const apiService = createApi({
                 el.toLowerCase() === "insert" ||
                 el.toLowerCase() === "update" ||
                 el.toLowerCase() === "delete" ||
-                el.toLowerCase() === "inactive"
+                el.toLowerCase() === "inactive",
             );
             const endpoint =
               parts?.[operationIndex + 1]?.toLowerCase() || "unknown";
@@ -139,7 +159,7 @@ export const apiService = createApi({
                 el.toLowerCase() === "insert" ||
                 el.toLowerCase() === "update" ||
                 el.toLowerCase() === "delete" ||
-                el.toLowerCase() === "inactive"
+                el.toLowerCase() === "inactive",
             );
             const endpoint =
               parts?.[operationIndex + 1]?.toLowerCase() || "unknown";
@@ -173,7 +193,7 @@ export const apiService = createApi({
               el.toLowerCase() === "insert" ||
               el.toLowerCase() === "update" ||
               el.toLowerCase() === "delete" ||
-              el.toLowerCase() === "inactive"
+              el.toLowerCase() === "inactive",
           );
           const endpoint =
             parts?.[operationIndex + 1]?.toLowerCase() || "unknown";
@@ -215,7 +235,7 @@ export const useGetInfinite = <T, K = unknown>({
         ...result,
         data: result.data as IBaseQueryResponse<T> | undefined,
       }),
-    }
+    },
   );
 
   return {
@@ -243,7 +263,7 @@ export const useGetData = <T, K = unknown>({
         data: result.data as IBaseQueryResponse<T> | undefined,
       }),
       refetchOnMountOrArgChange: false, //من اینو کامنت کردم چون باعث ارسال ریکوئست با هر تغییر ریداکس میشد.
-    }
+    },
   );
 
   return {

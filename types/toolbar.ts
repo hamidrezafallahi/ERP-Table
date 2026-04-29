@@ -2,6 +2,7 @@ import { ReportTypeEnum } from "@services/mng/report/type";
 
 import type { IRequestConfig } from "./elementType";
 import { PageTypeEnum } from "./enum";
+import { ReactNode } from "react";
 
 export interface IToolbar {
   GridMenu: IToolbarMenu[];
@@ -29,7 +30,25 @@ export interface IToolbarMenu {
   ActionIds?: number[];
   LevelNum?: number;
   MenuDesc?: string;
-  Icon?: string;
+  Icon?: string | ReactNode;
+  FatherId?: number;
+  OrderNum?: number;
+  MenuType?: number;
+  WebLink?: string;
+  AppLink?: string;
+  loggedInUserId: number;
+  LSubMenus?: IToolbarMenu[];
+  Config?: string;
+}
+export interface IMenu {
+  key: string;
+  condition?: string | number;
+  MenuId?: number;
+  ActionId?: number;
+  ActionIds?: number[];
+  LevelNum?: number;
+  MenuDesc?: string;
+  Icon?:  ReactNode;
   FatherId?: number;
   OrderNum?: number;
   MenuType?: number;

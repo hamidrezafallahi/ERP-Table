@@ -36,8 +36,7 @@ export const IndexCol: React.FC<IndexColProps> = ({
   meta,
 }) => {
   const t = useTranslations();
-  const index = row.cells["index"].value as number;
-  const selectedRow = controller.getSelectedRows(tableKey);
+   const selectedRow = controller.getSelectedRows();
   const handleDeleteRow = () => {
      controller.dispatch({ type: "ROW_DELETED", rowId: row.id });
   };
@@ -149,13 +148,13 @@ export const IndexCol: React.FC<IndexColProps> = ({
   };
 
   const isDeleted = row.rowState === RowStateEnum.Deleted;
- const isSelectedRow = controller.isSelectedRow(tableKey, row.id);
-  const isExpandableRow = controller.isExpandableRow(tableKey, row.id); 
+ const isSelectedRow = controller.isSelectedRow(row.id);
+  const isExpandableRow = controller.isExpandableRow(row.id); 
   return (
     <div
       className={` ${
         isDeleted && "cursor-not-allowed"
-      }  flex justify-around items-center gap-2 px-2 w-36 relative`}
+      }  flex justify-around items-center gap-2 px-2 w-36 min-w-36 relative`}
     >
       {!isDeleted && (
         <CustomCheckbox

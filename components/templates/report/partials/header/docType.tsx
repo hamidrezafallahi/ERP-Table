@@ -31,7 +31,7 @@ function DocType() {
   const [open, setOpen] = useState(false);
   const t = useTranslations();
   const { data, isFetching } = useGetData<ISelectOption[], null>({
-    url: "/api/acc/select/voucherType4searchBox",
+    url: "/api/acc/select/VoucherTypeCategoryReport",
     body: {},
   });
   const handleCloseDropdown = () => {

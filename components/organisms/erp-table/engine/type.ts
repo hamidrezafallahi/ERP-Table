@@ -2,20 +2,17 @@ import type * as React from 'react';
 
 import { IRequestConfig } from '@type/elementType';
 
+import { UITableController } from '../adapters/ui/UITableController';
 import { FieldType } from '../bootstrap/type';
 import { Table } from '../domain/entities/Table';
 import { RowStateEnum } from '../domain/value-objects';
+import { IRow } from '../ui/type';
 
 export type TableViewState = {
   table: Table
   activeCell: ActiveCell;
   selectedRows: Record<number, true>;
-  rows: Array<{
-    id: number;
-    rowState: RowStateEnum
-    cells: Record<string, TCell>;
-    isExpanded: boolean;
-  }>;
+  rows: IRow[] ;
   deletedRows: Array<{
     id: string;
     cells: Record<string, unknown>;
@@ -37,7 +34,7 @@ export type TableSnapShot = {
     id: number;
     cells: Record<string, unknown>;
     rowState: RowStateEnum
-    moreDetails:unknown,
+    moreDetails: unknown,
 
 
   }>;
@@ -52,7 +49,12 @@ export type ViewColumn = {
   editable?: boolean;
   options?: { label: string; value: string }[];
   dynamicValue?: IRequestConfig;
-  indexOptions?: any
+  indexOptions?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => ItemType[]
+  onChange?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => void
+  width?: number;
+  popUpWidth?: number
+  labelValue?:'selectDisplay'|'selectValue';
+
 };
 export type ActiveCell = {
   rowId: number;

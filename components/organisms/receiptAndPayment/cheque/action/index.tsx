@@ -380,12 +380,16 @@ export const ChequeAction = () => {
             headerName={state.actionConfig.MenuDesc}
             headerIcon={
               match && (
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: getColoredIcon(state.actionConfig.Icon, mode),
-                  }}
-                  style={{ width: "18px", height: "17px" }}
-                />
+                <>
+                  {typeof state.actionConfig.Icon === "string" && (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: getColoredIcon(state.actionConfig.Icon, mode),
+                      }}
+                      style={{ width: "18px", height: "17px" }}
+                    />
+                  )}
+                </>
               )
             }
             headerDescription={`${
@@ -433,12 +437,16 @@ export const ChequeAction = () => {
             headerName={state.actionConfig.MenuDesc}
             headerIcon={
               match && (
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: getColoredIcon(state.actionConfig.Icon, mode),
-                  }}
-                  style={{ width: "18px", height: "17px" }}
-                />
+                <>
+                  {typeof state.actionConfig.Icon === "string" && (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: getColoredIcon(state.actionConfig.Icon, mode),
+                      }}
+                      style={{ width: "18px", height: "17px" }}
+                    />
+                  )}
+                </>
               )
             }
             headerDescription={`${
@@ -466,12 +474,16 @@ export const ChequeAction = () => {
             headerName={state.actionConfig.MenuDesc}
             headerIcon={
               match && (
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: getColoredIcon(state.actionConfig.Icon, mode),
-                  }}
-                  style={{ width: "18px", height: "17px" }}
-                />
+                <>
+                  {typeof state.actionConfig.Icon === "string" && (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: getColoredIcon(state.actionConfig.Icon, mode),
+                      }}
+                      style={{ width: "18px", height: "17px" }}
+                    />
+                  )}
+                </>
               )
             }
             headerDescription={`${

@@ -1,5 +1,11 @@
+import {
+  QueryActionCreatorResult,
+  QueryDefinition,
+} from "@reduxjs/toolkit/query";
+import { IBaseQueryResponse, IBaseRequest } from "@services/base/type";
 import type { IRequestConfig } from "@type/elementType";
-import type { IToolbarMenu } from "@type/toolbar";
+import type { IMenu } from "@type/toolbar";
+import { useTranslations } from "next-intl";
 
 export interface IProps {
   id: number;
@@ -19,7 +25,9 @@ export interface IDynamicModalConfig {
   updateUrl: string;
   listConfig: IListDynamicModalConfig;
   formConfig: IFormDynamicModalConfig;
-  actions: IToolbarMenu[];
+  actions: IMenu[];
+  idFieldName: string;
+  idFieldKeyUpdate?: string;
 }
 
 interface ListColumn {
@@ -77,4 +85,42 @@ export default interface IVoucherTypeItem {
   Desc: string;
   VocherTypeDescId: number;
   VocherTypeDescItemId: number;
+  Inactive: boolean;
+  PendingStatusId: number;
 }
+
+export type ReloadType = () => QueryActionCreatorResult<
+  QueryDefinition<
+    {
+      url: string;
+      body: IBaseRequest<any>;
+      id: number | string;
+    },
+    (args: any, api: any, extra: any) => Promise<any>,
+    string,
+    IBaseQueryResponse<any>,
+    "apiService"
+  >
+>;
+
+export type TFunction = ReturnType<typeof useTranslations>;
+
+export type RefetchType = () => QueryActionCreatorResult<
+  QueryDefinition<
+    {
+      url: string;
+      body: IBaseRequest<any>;
+      id: number | string;
+    },
+    (args: any, api: any, extraOptions: any) => Promise<any>,
+    string,
+    IBaseQueryResponse<any>,
+    "apiService"
+  >
+>;
+
+export type RecordType = {
+  Desc?: string;
+  VocherTypeDescId?: number;
+  VocherTypeDescItemId?: number;
+};

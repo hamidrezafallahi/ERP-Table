@@ -47,7 +47,7 @@ function TransactionTemplate() {
       const temp = {
         ...parentPage.viewData,
         url: "/api/acc/select/repgardesh",
-        RepoViewId: 5008,
+        RepoViewId: 10008,
         FilterTypeIds: null,
         FilterIds: [
           ...(parentPage.viewData.FilterIds

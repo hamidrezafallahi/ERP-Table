@@ -82,7 +82,7 @@ export const SideMenu = () => {
           <div className={`${lang !== "fa" ? "rotate-180" : ""}`}>
             <MenuArrowBack config={{ width: 14, height: 9 }} />
           </div>
-          <span className="flex items-center max-h-[22px] text-[16px] dark:text-gray-gray05">
+          <span className="flex items-center max-h-[22px] text-base dark:text-gray-gray05">
             {menuBar.label}
           </span>
         </CustomButton>

@@ -62,7 +62,7 @@ import { resetEndYearOperation } from "@slice/endYearOperations";
 import { validateNationalCode } from "./checkingHelper";
 
 export const getColoredIcon = (
-  icon: string,
+  icon: string ,
   mode: "light" | "dark" = "light",
 ): string => {
   if (!icon) return icon;

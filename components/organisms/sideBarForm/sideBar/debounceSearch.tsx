@@ -1,20 +1,18 @@
-import { useEffect, useRef, useState } from "react";
-
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-
 import InputText from "@components/atoms/defaultElements/inputText";
 import { Magnifier } from "@components/atoms/iconComponents";
 
-interface IProps {
+interface DebounceSearchProps {
   setSearch?: (e: any) => void;
 }
-export const DebounceSearch = ({ setSearch }: IProps) => {
-  const t = useTranslations();
 
+export const DebounceSearch = ({ setSearch }: DebounceSearchProps) => {
+  const t = useTranslations();
   const [inputValue, setInputValue] = useState<string>();
   const debounceTimeoutRef = useRef(null);
 
-  const handleChangeInput = (e) => {
+  const handleChangeInput = (e: ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
   };
 

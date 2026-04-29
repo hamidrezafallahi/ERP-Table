@@ -710,6 +710,13 @@ td.ant-table-cell {
 .ant-table-row td:first-child {
   padding-inline-start: 20px !important;
 }
+
+.ant-table-thead > tr > th:first-child {
+  padding-inline-start: 20px !important;
+}
+.ant-table-thead > tr > th:last-child {
+  padding-inline-end: 12px !important;
+}
 /*.............................. yearPlan template styles started ....................................... */
 .disable-interactions * {
   pointer-events: none !important;

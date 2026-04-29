@@ -9,21 +9,15 @@ import { NoData } from '@components/atoms/iconComponents';
 
 import { UITableController } from '../adapters/ui/UITableController';
 import { RowStateEnum } from '../domain/value-objects';
-import { TCell } from '../engine/type';
 import {
   CellMeta,
   CellRenderer,
 } from './cellRenderer';
 import { IndexCol } from './indexCol';
+import { IRow } from './type';
 
 interface ERPTableRowProps {
-  row: {
-    id: number;
-    rowState: RowStateEnum;
-    cells: Record<string, TCell>;
-    isExpanded: boolean;
-    moreDetails?: unknown;
-  };
+  row: IRow 
   index: number;
   table: any;
   controller: UITableController;
@@ -45,8 +39,8 @@ function ERPTableRowComponent({
   const rowNum = row.cells["index"].value as number
   const [dropZone, setDropZone] = useState<"before" | "after" | null>(null);
   const isDeleted = row.rowState === RowStateEnum.Deleted;
-  const isActiveRow = controller.isActiveRow(tableKey, row.id);
-  const isSelectedRow = controller.isSelectedRow(tableKey, row.id);
+  const isActiveRow = controller.isActiveRow(row.id);
+  const isSelectedRow = controller.isSelectedRow(row.id);
 
   const handleRowClick = (e: React.MouseEvent) => {
     controller.onRowClick(row.id, {
@@ -100,7 +94,7 @@ function ERPTableRowComponent({
 
   const rowClass = useMemo(() => {
     return `
-      relative flex items-center border  
+      relative flex items-center border 
       ${isActiveRow ? "border-gray-gray8" : "border-gray-gray5"}
       ${isSelectedRow ? "bg-blue-100" : ""}
       ${
@@ -110,13 +104,13 @@ function ERPTableRowComponent({
             ? "bg-blue-blue11"
             : "bg-main-white"
       }
-      w-full h-9 rounded
+        h-9 rounded 
     `;
   }, [isActiveRow, isSelectedRow, isDeleted, index]);
   return (
     <>
       <tr
-        className={rowClass}
+        className={`${rowClass} w-fit `}
         data-rowid={row.id}
         draggable
         onDragStart={(e) => handleDragStart(e, row.id)}
@@ -128,7 +122,7 @@ function ERPTableRowComponent({
         {table.columns
           .filter((c: any) => !c.hidden)
           .map((c: any, idx: number) => {
-            const meta: CellMeta = {
+             const meta: CellMeta = {
               renderType: c.renderType,
               editable: c.editable,
               tableId: tableKey,
@@ -136,7 +130,12 @@ function ERPTableRowComponent({
               options: c.options,
               dynamicValue: c.dynamicValue,
               indexOptions: c.indexOptions,
+              onChange: c.onChange,
               expandable: c.expandable,
+              width:c.width,
+              popUpWidth:c.popUpWidth,
+              labelValue:c.labelValue
+
             };
 
             if (c.id === "index") {
@@ -154,7 +153,7 @@ function ERPTableRowComponent({
             }
 
             return (
-              <td key={c.id} className="w-36">
+              <td key={c.id} className="w-36 min-w-36">
                 <CellRenderer
                   idx={idx}
                   tableKey={tableKey}

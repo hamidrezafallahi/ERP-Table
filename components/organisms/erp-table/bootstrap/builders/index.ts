@@ -83,7 +83,12 @@ export function buildColumns(
       dynamicValue: col.dynamicSource,
       selectOptions: col.selectOptions,
       indexOptions: col.indexOptions,
+      onChange: col.onChange,
       displayFormat: col.displayFormat,
+      width:col.width,
+      popUpWidth:col.popUpWidth,
+      labelValue:col.labelValue
+
     };
     columns.set(schema.id, schema);
     columnMeta.set(schema.id, col);
@@ -101,7 +106,6 @@ export async function buildRows(
   remoteApi: FetchRemoteApi
 ): Promise<{ rows: Map<number, Row>; table?: Table }> {
   let rowMap = new Map<number, Row>();
-
   // ---------- rows: ابتدا IndexedDB, fallback به ورودی ----------
   if (await repo.exists(store, tableKey)) {
     const persistedTable = await repo.getById(store, tableKey);
@@ -142,6 +146,7 @@ export async function buildRows(
           )
         );
       }
+      const visibilityCondition = new Object() as Record<string, boolean>;
       rowMap.set(
         rowId.value,
         new Row(
@@ -150,7 +155,7 @@ export async function buildRows(
           new RowState(inputRows?.length > 0 ? RowStateEnum.Unchanged : RowStateEnum.Added),
           new Set(),
           r.moreDetails,
-          new Map(),
+          visibilityCondition,
         )
       );
     }

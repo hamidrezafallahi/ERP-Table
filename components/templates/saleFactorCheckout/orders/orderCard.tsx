@@ -417,7 +417,7 @@ export default function OrderCard({ ...props }: IProps) {
             <div
               className={`flex justify-center items-center   ${
                 !match
-                  ? "text-[16px] min-w-7 "
+                  ? "text-base min-w-7 "
                   : "text-[26px] min-w-10 font-bold "
               } text-gray-gray10 dark:text-white`}
             >

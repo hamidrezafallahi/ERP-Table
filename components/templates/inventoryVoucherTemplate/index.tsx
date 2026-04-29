@@ -199,7 +199,6 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
         };
 
         formData = await fetchDefaultValues(id);
-        console.log(formData)
         dispatch(
           addNewPage({
             Id: Id,

@@ -204,7 +204,7 @@ export default function NestedList<T extends IBaseDto, K>({
   const handleAction = async (action: IToolbarMenu) => {
     try {
       setDynamicAction({
-        icon: action.Icon,
+        icon: action.Icon as string,
         label: action.MenuDesc,
         actionConfig: action,
       });
@@ -237,14 +237,15 @@ export default function NestedList<T extends IBaseDto, K>({
                   handleAction(menuItem);
                 }}
               >
-                {/* {menuItem.Icon} */}
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(
-                      getColoredIcon(menuItem.Icon, mode),
-                    ),
-                  }}
-                />
+                {typeof menuItem.Icon === "string" && (
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(
+                        getColoredIcon(menuItem.Icon, mode),
+                      ),
+                    }}
+                  />
+                )}
                 {/* {menuItem.MenuDesc.split(" - ")[1]} */}
                 {menuItem.MenuDesc}
               </span>

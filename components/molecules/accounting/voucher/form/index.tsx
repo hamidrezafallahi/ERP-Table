@@ -19,25 +19,7 @@ export const VoucherForm: FC<any> = ({ form }) => {
       layout="vertical"
       className={`lg:grid lg:grid-cols-4 lg:gap-2 flex flex-col gap-3`}
     >
-      {/* <Form.Item
-        label={t("general.voucherNumber")}
-        name="VoucherNumber"
-        
-        className="flex flex-col !mb-0 !pb-0 text-xs"
-      >
-        <CustomInputNumber
-          config={{
-            caption: t("general.voucherNumber"),
-            name: "VoucherNumber",
-            type: "number",
-            setFieldValue: form.setFieldValue,
-          }}
-          min={0}
-          controls={false}
-          type="number"
-          name="VoucherNumber"
-        />
-      </Form.Item> */}
+
       <Form.Item
         label={t("general.voucherDate")}
         name="VoucherDate"
@@ -93,7 +75,7 @@ export const VoucherForm: FC<any> = ({ form }) => {
         name="ReferNumber"
         rules={
           [
-            // { required: true, message: "این فیلد الزامی است.", type: "number" },
+            { required: true, message: "این فیلد الزامی است.", type: "number" },
           ]
         }
         className="flex flex-col !mb-0 !pb-0 text-xs"

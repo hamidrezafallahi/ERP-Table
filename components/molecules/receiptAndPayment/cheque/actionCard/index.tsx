@@ -284,15 +284,17 @@ const ActionCard = forwardRef(function Card(
                     onActionClick(action, item);
                   }}
                 >
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(
-                        action.Icon.replaceAll(`="18"`, `="24"`),
-                        mode,
-                      ),
-                    }}
-                    style={{ width: "24px", height: "24px" }}
-                  />
+                  {typeof action.Icon === "string" && (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: getColoredIcon(
+                          action.Icon.replaceAll(`="18"`, `="20"`),
+                          mode,
+                        ),
+                      }}
+                      style={{ width: "24px", height: "24px" }}
+                    />
+                  )}
                 </span>
               ))}
           {/* <CustomTooltip

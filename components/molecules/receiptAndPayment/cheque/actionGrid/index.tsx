@@ -244,16 +244,18 @@ export const ActionGrid = ({
                           onActionClick(action, record);
                       }}
                     >
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: getColoredIcon(action.Icon, mode),
-                        }}
-                        style={{
-                          width: "18px",
-                          height: "17px",
-                          opacity: `${1}`,
-                        }}
-                      />
+                        {typeof action.Icon === "string" && (
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: getColoredIcon(action.Icon, mode),
+                            }}
+                            style={{
+                              width: "18px",
+                              height: "17px",
+                              opacity: `${1}`,
+                            }}
+                          />
+                        )}
                     </span>
                   </CustomTooltip>
                 );

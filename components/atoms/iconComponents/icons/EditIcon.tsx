@@ -5,7 +5,7 @@ export const EditIcon = ({ config }: { config?: IIconConfig }) => {
     <svg
       width={config?.width ? `${config.width}` : "24"}
       height={config?.height ? `${config.height}` : "24"}
-      viewBox="0 0 24 24"
+      viewBox="0 0 23 23"
       fill={config?.fill ? `${config.fill}` : "none"}
       xmlns="http://www.w3.org/2000/svg"
     >

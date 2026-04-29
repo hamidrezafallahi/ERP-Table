@@ -1,24 +1,13 @@
-import {
-  Spin,
-  Table,
-  TableColumnsType,
-} from 'antd';
-import { useTranslations } from 'next-intl';
+import { Spin, Table, TableColumnsType } from "antd";
+import { useTranslations } from "next-intl";
 
-import { CustomTooltip } from '@components/atoms/defaultElements';
-import {
-  CloseSm,
-  NoData,
-  SpinIcon,
-} from '@components/atoms/iconComponents';
-import RenderStatus from '@components/molecules/renderStatus';
-import {
-  useDarkMode,
-  useProcessedData,
-} from '@hooks/custom';
-import type { IColumnConfig } from '@services/generalType/type';
-import type { IToolbarMenu } from '@type/toolbar';
-import { getColoredIcon } from '@utils/core';
+import { CustomTooltip } from "@components/atoms/defaultElements";
+import { CloseSm, NoData, SpinIcon } from "@components/atoms/iconComponents";
+import RenderStatus from "@components/molecules/renderStatus";
+import { useDarkMode, useProcessedData } from "@hooks/custom";
+import type { IColumnConfig } from "@services/generalType/type";
+import type { IToolbarMenu } from "@type/toolbar";
+import { getColoredIcon } from "@utils/core";
 
 export const AccountSettingTable = ({
   data,
@@ -41,7 +30,7 @@ export const AccountSettingTable = ({
   const columns: TableColumnsType<any> = columnsConfig?.map(
     (item: IColumnConfig, index: number) => {
       const hasPendingStatus = processedData?.find(
-        (i) => i.PendingStatusId !== undefined
+        (i) => i.PendingStatusId !== undefined,
       );
       const isFirstColumn = index === 0;
 
@@ -86,7 +75,7 @@ export const AccountSettingTable = ({
         dataIndex: item.fieldName,
         key: item.fieldName,
       };
-    }
+    },
   );
   if (actions) {
     columns?.push({
@@ -107,16 +96,18 @@ export const AccountSettingTable = ({
                       handleAction(
                         action,
                         record[rowIdField],
-                        record["PendingStatusId"]
+                        record["PendingStatusId"],
                       )
                     }
                   >
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: getColoredIcon(action.Icon, mode),
-                      }}
-                      style={{ width: "18px", height: "17px" }}
-                    />
+                    {typeof action.Icon === "string" && (
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: getColoredIcon(action.Icon, mode),
+                        }}
+                        style={{ width: "18px", height: "17px" }}
+                      />
+                    )}
                   </span>
                 </CustomTooltip>
               );

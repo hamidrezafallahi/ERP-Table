@@ -87,7 +87,7 @@ function ManagmentAccounts({ ...props }: IManageAccounts) {
           <div
             className={`lg:p-4 flex flex-col justify-center items-center gap-2 px-4 rounded custom-confirm-modal`}
           >
-            <span className="mx-4 text-center">
+            <span className="text-center">
               {t("general.activeAccount") +
                 " " +
                 modalContent?.ManagementAccountDesc +

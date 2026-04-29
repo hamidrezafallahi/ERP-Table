@@ -1,15 +1,18 @@
-import { Ref } from "react";
+import { Ref } from 'react';
 
-import type { FormInstance, SelectProps } from "antd";
+import type {
+  FormInstance,
+  SelectProps,
+} from 'antd';
 
 import type {
   IFormFieldConfig,
   IOption,
   IRequestConfig,
-} from "@type/elementType";
+} from '@type/elementType';
 
 export interface IProps extends SelectProps {
-  dynamicValue: IRequestConfig;
+  dynamicValue: IRequestConfig & {dependsOn?:string[]};
   showId?: boolean;
   selectedId?: number;
   infinite?: boolean;
@@ -23,5 +26,5 @@ export interface IProps extends SelectProps {
   ) => void;
   onOptionsChange?: (options: IOption[]) => void;
   form?: FormInstance;
-  showIdInDesc?: boolean;
+  labelValue?:'selectDisplay'|'selectValue';
 }

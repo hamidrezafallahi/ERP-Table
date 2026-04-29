@@ -77,8 +77,8 @@ export function ERPTable<TMoreDetail = unknown>(
       }
     };
     const handler = (e: KeyboardEvent) => {
-      const activeRow = controller.getActiveRow(tableKey);
-      const activeCell = controller.getActiveCell(tableKey);
+      const activeRow = controller.getActiveRow();
+      const activeCell = controller.getActiveCell();
       controller.dispatch({
         type: "KEY_DOWN",
         event: e,
@@ -100,7 +100,7 @@ export function ERPTable<TMoreDetail = unknown>(
     if (result.ready) {
       const { controller } = result;
       onReady?.({
-        getSnapshot: () => controller.getSnapShot(tableKey),
+        getSnapshot: () => controller.getSnapShot(),
         addNewRows: () => {}, // controller.addNewRows(tableKey,[])},
         subscribeColumn: (columnId, cb) =>
           controller.subscribeColumn(columnId, cb),

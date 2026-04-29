@@ -207,7 +207,7 @@ export const InventoryVoucherForm = ({ form }) => {
     ) {
       locationRequests.current[conditionalValue] = true;
       getIndependentValue({
-        url: `/api/inv/check/isLocationAble`,
+        url: `/api/inv/check/GoodsInfo`,
         body: { GoodsId: conditionalValue, StockId },
       })
         .unwrap()

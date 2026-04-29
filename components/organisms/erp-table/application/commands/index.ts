@@ -21,16 +21,16 @@ export type Actor = {
 
 export interface MoveActiveCellCommand {
   readonly type: 'MOVE_ACTIVE_CELL';
+  readonly store: string;
   readonly tableKey: string;
-
   readonly rowId: number;
   readonly columnId: string;
   readonly direction: 'next' | 'prev';
 }
 export interface MoveActiveCellVerticalCommand {
   readonly type: 'MOVE_ACTIVE_CELL_VERTICAL';
+  readonly store: string;
   readonly tableKey: string;
-
   readonly rowId: number;
   readonly columnId: string;
   readonly direction: 'up' | 'down';
@@ -47,7 +47,7 @@ export interface ActiveCellCommand {
   readonly rowId: number;
   readonly columnId: string;
 }
-export interface ActiveRowCommand {
+export interface ActiveRowCommand extends BaseTableCommand{
   readonly type: 'ACTIVE_ROW';
   readonly tableKey: string;
 
@@ -140,6 +140,13 @@ export interface SelectAllRowsCommand {
 
 
 }
+export interface SelectPageRowsCommand {
+  readonly type: 'TOGGLE_SELECT_PAGE_ROWS';
+  readonly tableKey: string;
+
+
+
+}
 export interface ClearRowSelectionCommand {
   readonly type: 'CLEAR_ROW_SELECTION';
   readonly tableKey: string;
@@ -222,6 +229,7 @@ export type TableCommand =
   | DisposeTableCommand
   | ToggleRowSelectionCommand
   | SelectAllRowsCommand
+  | SelectPageRowsCommand
   | ActiveCellCommand
   | ActiveRowCommand
   | MoveActiveCellCommand

@@ -85,7 +85,7 @@ export default function SideHeader() {
             key: "1",
             label: (
               <div className="flex justify-between items-center gap-2">
-                <span className="font-bold text-[16px] text-black-black3 dark:!text-white">{`${t(
+                <span className="font-bold text-base text-black-black3 dark:!text-white">{`${t(
                   "sidebar.openPages"
                 )}(${pages.length > 0 ? pages.length : 0})`}</span>
 
@@ -132,7 +132,7 @@ export default function SideHeader() {
                 match ? "p-4" : ""
               } flex flex-col justify-center items-center gap-2 px-4 rounded custom-confirm-modal`}
             >
-              <span className="mx-4 text-center">
+              <span className="text-center">
                 {t("general.confirmText")}
               </span>
 
@@ -168,7 +168,7 @@ export default function SideHeader() {
               match ? "p-4" : ""
             } flex flex-col justify-center items-center gap-2 px-4 rounded custom-confirm-modal`}
           >
-            <span className="mx-4 text-center">{t("general.confirmText")}</span>
+            <span className="text-center">{t("general.confirmText")}</span>
 
             <div className="flex flex-wrap justify-between gap-4 mt-4 w-full">
               <CustomButton

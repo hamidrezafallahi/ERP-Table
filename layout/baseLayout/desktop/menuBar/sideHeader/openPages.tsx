@@ -264,7 +264,7 @@ export default function OpenPages() {
                 match ? "p-4" : ""
               } flex flex-col justify-center items-center gap-2 px-4 rounded custom-confirm-modal`}
             >
-              <span className="mx-4 text-center">
+              <span className="text-center">
                 {t("general.confirmText")}
               </span>
 
@@ -321,7 +321,7 @@ export default function OpenPages() {
               match ? "p-4" : ""
             } flex flex-col justify-center items-center gap-2 px-4 rounded custom-confirm-modal`}
           >
-            <span className="mx-4 text-center">{t("general.confirmText")}</span>
+            <span className="text-center">{t("general.confirmText")}</span>
 
             <div className="flex flex-wrap justify-between gap-4 mt-4 w-full">
               <CustomButton

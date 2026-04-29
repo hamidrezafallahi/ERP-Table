@@ -16,6 +16,7 @@ import {
   ItemType,
   TCell,
 } from '../engine/type';
+import { IRow } from './type';
 
 /* ======================================================
    Types
@@ -23,6 +24,9 @@ import {
 
 export type CellMeta = {
   renderType: FieldType;
+  width?: number;
+  popUpWidth?: number;
+  labelValue?:'selectDisplay'|'selectValue';
   editable?: boolean;
   expandable?: boolean;
   options?: { label: string; value: string }[];
@@ -31,6 +35,19 @@ export type CellMeta = {
   // tableKey: string;
   tableId: string;
   columnId: string;
+   onChange?: (
+    tableId: string,
+    rowId: number,
+    row: {
+      id: string | number;
+      cells: Record<string, TCell>;
+      rowState: RowStateEnum;
+      isExpanded: boolean;
+    },
+    controller: UITableController,
+
+  ) => void;
+
   indexOptions?: (
     tableId: string,
     rowId: number,
@@ -41,17 +58,13 @@ export type CellMeta = {
       isExpanded: boolean;
     },
     controller: UITableController,
+
   ) => ItemType[];
 };
 
 interface CellRendererProps {
   tableKey: string;
-  row: {
-    id: number;
-    cells: Record<string, TCell>;
-    rowState: RowStateEnum;
-    isExpanded: boolean;
-  };
+  row: IRow;
   columnId: string;
   idx: number;
   meta?: CellMeta;
@@ -72,13 +85,17 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   tabIndex,
   idx,
 }) => {
-  const viewCell = controller.getCell(tableKey, row.id, columnId);
+  const disable =
+    typeof row.visibilityCondition[columnId] === "boolean" &&
+    row.visibilityCondition[columnId] === false;
+  const viewCell = controller.getCell(row.id, columnId);
   const value = viewCell.getValue().value;
   const display = viewCell.getDisplay().value;
-  const isActive = controller.isActiveCell(tableKey, row.id, columnId);
-const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const isActive = controller.isActiveCell(row.id, columnId);
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
   const locale = useLocale();
   const dispatchChangeValue = (newValue: unknown) => {
+    meta.onChange?.(tableKey, row.id, row, controller)
     controller.dispatch({
       type: "UI_CELL_CHANGE",
       rowId: row.id,
@@ -101,7 +118,6 @@ const inputRef = React.useRef<HTMLInputElement | null>(null);
   const type = meta.renderType;
   const editable = meta.editable;
   const isDeleted = row.rowState === RowStateEnum.Deleted;
-
   const blockDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -117,6 +133,8 @@ const inputRef = React.useRef<HTMLInputElement | null>(null);
       case "selectOption":
       case "static":
         return val;
+      case "price":
+        return `${val} تومان`.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       case "date":
         if (locale === "fa") {
           return moment(val).format("jYYYY/jMM/jDD");
@@ -128,14 +146,18 @@ const inputRef = React.useRef<HTMLInputElement | null>(null);
     }
   };
   useEffect(() => {
-  if (isActive && inputRef.current) {
-    inputRef.current.focus();
-    inputRef.current.select();
-  }
-}, [isActive]);
+    if (isActive && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isActive]);
 
-  if (editable == false || type == "index") {
-    return <span key={idx} className="text-xs">{String(value ?? "")}</span>;
+  if (editable == false || type == "index" || disable) {
+    return (
+      <span key={idx} className="text-xs">
+        {disable ? "disable" : String(value ?? "")}
+      </span>
+    );
   }
   /* ===== view mode ===== */
   if (!isActive || isDeleted) {
@@ -166,7 +188,7 @@ const inputRef = React.useRef<HTMLInputElement | null>(null);
           className={`${isDeleted && "cursor-not-allowed"}
           flex items-center bg-transparent px-3 outline-none 
           focus-visible:outline-none focus:outline-none ring-0 focus:!ring-0 
-          focus:ring-offset-0 w-36 h-8 text-xs transition-colors ]`}
+          focus:ring-offset-0 w-36 min-w-36 h-8 text-xs transition-colors ]`}
           draggable={false}
           onDragStart={blockDrag}
           onDragOver={blockDrag}
@@ -176,6 +198,30 @@ const inputRef = React.useRef<HTMLInputElement | null>(null);
               e.target.value === "" ? "" : Number(e.target.value),
             )
           }
+        />
+      );
+    case "price":
+      return (
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          min={0}
+          key={idx}
+          ref={inputRef}
+          value={value === "" || value == null ? "" : Number(value)}
+          disabled={isDeleted || !editable}
+          className={`${isDeleted && "cursor-not-allowed"}
+          flex items-center bg-transparent px-3 outline-none  !bg-white !rounded  
+          focus-visible:outline-none focus:outline-none ring-0 focus:!ring-0 
+          focus:ring-offset-0 w-36 min-w-36 h-8 text-xs transition-colors ]`}
+          draggable={false}
+          onDragStart={blockDrag}
+          onDragOver={blockDrag}
+          onDrop={blockDrag}
+          onChange={(e) => {
+            dispatchChangeValue(e.target.value);
+          }}
         />
       );
 
@@ -196,7 +242,7 @@ const inputRef = React.useRef<HTMLInputElement | null>(null);
         <select
           key={idx}
           disabled={isDeleted || !editable}
-          className={`!w-36 h-8 ${isDeleted && "cursor-not-allowed"}`}
+          className={`!w-36 !min-w-36 h-8 ${isDeleted && "cursor-not-allowed"}`}
           value={String(value ?? "")}
           onClick={() => activeCell()}
           onChange={(e) => {
@@ -211,10 +257,10 @@ const inputRef = React.useRef<HTMLInputElement | null>(null);
           ))}
         </select>
       );
-
     case "selectOption":
       return (
         <DynamicSelect
+          labelValue={meta.labelValue}
           key={idx}
           showSearch
           onSearchPhrase={(v, o) => {
@@ -223,15 +269,17 @@ const inputRef = React.useRef<HTMLInputElement | null>(null);
               if (o) {
                 dispatchChangeDisplay(o);
               } else {
-                 dispatchChangeDisplay(null);
+                dispatchChangeDisplay(null);
               }
             }
           }}
           autoFocus
+          popupMatchSelectWidth={meta.popUpWidth}
+          popupRender={(menu) => <div className="w-full">{menu}</div>}
           disabled={isDeleted || !editable}
           value={{ value: String(value ?? ""), label: display }}
           dynamicValue={meta?.dynamicValue}
-          className={`!bg-white !border-[0.4px] !border-gray-gray7 !w-36 h-8 ${isDeleted && "cursor-not-allowed"} relative`}
+          className={`!bg-white !border-[0.4px] !border-gray-gray7 !w-36 !min-w-36 h-8 ${isDeleted && "cursor-not-allowed"} relative`}
           infinite
           onClick={() => activeCell()}
           onChange={(v, o) => {
@@ -240,7 +288,7 @@ const inputRef = React.useRef<HTMLInputElement | null>(null);
               if (o?.label) {
                 dispatchChangeDisplay(o.label as string);
               } else {
-                 dispatchChangeDisplay(null);
+                dispatchChangeDisplay(null);
               }
             }
           }}
@@ -249,7 +297,7 @@ const inputRef = React.useRef<HTMLInputElement | null>(null);
     case "static":
       return (
         <span
-        key={idx}
+          key={idx}
           tabIndex={tabIndex}
           className="flex items-center px-2 w-full h-full text-xs cursor-text"
           onClick={() => activeCell()}
@@ -261,13 +309,13 @@ const inputRef = React.useRef<HTMLInputElement | null>(null);
     default:
       return (
         <input
-         key={idx}
+          key={idx}
           ref={inputRef}
           disabled={isDeleted || !editable}
           value={value == null ? "" : String(value)}
           className={`${isDeleted && "cursor-not-allowed"}
             flex items-center bg-transparent px-2 outline-none focus-visible:outline-none
-           focus:outline-none ring-0 focus:!ring-0 focus:ring-offset-0 w-36 h-8 transition-colors ]`}
+           focus:outline-none ring-0 focus:!ring-0 focus:ring-offset-0 w-36 min-w-36 h-8 transition-colors ]`}
           draggable={false}
           onDragStart={blockDrag}
           onDragOver={blockDrag}

@@ -40,15 +40,21 @@ export type ColumnSchema = {
   title: string;
   renderType: FieldType;
   selectOptions?: SelectOption[];
+  editable?: boolean;
   hidden?: boolean;
   required?: boolean;
   dynamicValue?:  IRequestConfig & {dependsOn?: string[]}
-  editable?: boolean;
   expandable: boolean;
   indexOptions?: (tableId: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, controller: UITableController) => ItemType[];
+  onChange?: (tableId: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, controller: UITableController) => void;
   displayFormat?: (value: unknown) => unknown
+  width?: number;
+  popUpWidth?: number
+  labelValue?:'selectDisplay'|'selectValue';
+
   // در ادامه: validator, lookup, formula, dynamicRules...
 };
+
 
 export class RowId {
   constructor(public value: number) { }

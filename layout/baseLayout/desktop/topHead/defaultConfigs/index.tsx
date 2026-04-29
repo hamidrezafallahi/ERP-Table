@@ -31,7 +31,7 @@ function DefaultConfigs({ ...props }) {
       const PlaceId = state.withPersist.config.defaultConfigs?.PlaceId;
       const YearId = state.withPersist.config.defaultConfigs?.YearId;
       const role = state.withPersist.config.userSession?.RoleDto?.find(
-        (item) => item.isActiveRole
+        (item) => item.isActiveRole,
       );
 
       return {
@@ -276,9 +276,7 @@ function DefaultConfigs({ ...props }) {
             <CustomBadge
               count={Object.values(globals).filter((item) => !item).length}
               size="small"
-              className={` absolute top-0  rtl: right-0  left-0 
-            [&>sup]:!shadow-none 
-            [&>sup]:!bg-redBadge`}
+              className="absolute top-0 rtl: right-0  left-0 [&>sup]:!shadow-none [&>sup]:!bg-redBadge"
             />
             <SideFooterIcon
               config={{

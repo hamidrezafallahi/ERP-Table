@@ -1,21 +1,9 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  Drawer,
-  Menu,
-  MenuProps,
-} from 'antd';
-import DOMPurify from 'dompurify';
-import { useTranslations } from 'next-intl';
-import {
-  shallowEqual,
-  useDispatch,
-} from 'react-redux';
+import { Drawer, Menu, MenuProps } from "antd";
+import DOMPurify from "dompurify";
+import { useTranslations } from "next-intl";
+import { shallowEqual, useDispatch } from "react-redux";
 
 import {
   CustomButton,
@@ -23,8 +11,8 @@ import {
   CustomModal,
   CustomSwitch,
   CustomTooltip,
-} from '@components/atoms/defaultElements';
-import { CustomDrawer } from '@components/atoms/defaultElements/drawer';
+} from "@components/atoms/defaultElements";
+import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
 import {
   BoxMinimalistic,
   Close,
@@ -39,57 +27,47 @@ import {
   RemindMeIcon,
   ReportIcon,
   TagIcon,
-} from '@components/atoms/iconComponents';
-import CloseButton from '@components/molecules/closeButton';
-import Confirmation from '@components/molecules/confirmation';
-import ExpandedButton from '@components/molecules/expandedButton';
-import Notification from '@components/molecules/notification';
-import { QuickSearch } from '@components/molecules/quickSearch';
-import { QuickFilterRef } from '@components/molecules/quickSearch/type';
-import RemindMe from '@components/molecules/remindMe';
-import { TagManagement } from '@components/molecules/tag';
+} from "@components/atoms/iconComponents";
+import CloseButton from "@components/molecules/closeButton";
+import Confirmation from "@components/molecules/confirmation";
+import ExpandedButton from "@components/molecules/expandedButton";
+import Notification from "@components/molecules/notification";
+import { QuickSearch } from "@components/molecules/quickSearch";
+import { QuickFilterRef } from "@components/molecules/quickSearch/type";
+import RemindMe from "@components/molecules/remindMe";
+import { TagManagement } from "@components/molecules/tag";
 import {
   useDarkMode,
   useInitializePage,
   useInvalidateTag,
   useNavigatePage,
-} from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
-import { useCUDDataMutation } from '@services/base';
-import { ReportTypeEnum } from '@services/mng/report/type';
-import { clearReportData } from '@slice/config';
-import { addHistory } from '@slice/history';
-import { HistoryTypeEnum } from '@slice/history/enum';
-import {
-  resetItemsByPage,
-  setItems,
-} from '@slice/items';
+} from "@hooks/custom";
+import { useAppSelector } from "@redux/index";
+import { useCUDDataMutation } from "@services/base";
+import { ReportTypeEnum } from "@services/mng/report/type";
+import { clearReportData } from "@slice/config";
+import { addHistory } from "@slice/history";
+import { HistoryTypeEnum } from "@slice/history/enum";
+import { resetItemsByPage, setItems } from "@slice/items";
 import {
   setPageState,
   setPageType,
   setShowTags,
   setViewData,
-} from '@slice/pages';
-import { PageStateEnum } from '@slice/pages/enum';
+} from "@slice/pages";
+import { PageStateEnum } from "@slice/pages/enum";
 import type {
   IReportPosition,
   IToolbarList,
   IToolbarMenu,
-} from '@type/toolbar';
-import {
-  getColoredIcon,
-  showInfoToast,
-  showSuccessToast,
-} from '@utils/core';
+} from "@type/toolbar";
+import { getColoredIcon, showInfoToast, showSuccessToast } from "@utils/core";
 
-import ChatWidget from '../chat';
-import { ActionLabelsEnum } from '../list/enum';
-import {
-  ShowPrinter,
-  ShowReport,
-} from '../managementSystem';
-import ListSelectMode from './listSelectMode';
-import DataGrid from '@components/molecules/dataGrid';
+import ChatWidget from "../chat";
+import { ActionLabelsEnum } from "../list/enum";
+import { ShowPrinter, ShowReport } from "../managementSystem";
+import ListSelectMode from "./listSelectMode";
+import DataGrid from "@components/molecules/dataGrid";
 
 export default function ListToolbar({
   formUrl,
@@ -106,7 +84,8 @@ export default function ListToolbar({
   gridData,
   url,
   renderCustomActions,
-  refetchGridData = null
+  refetchGridData = null,
+  isQuickSearch = true,
 }) {
   const { mode = "light" } = useDarkMode();
 
@@ -334,11 +313,17 @@ export default function ListToolbar({
         key: menuItem.MenuId,
         label: menuItem.MenuDesc,
         icon: (
-          <span
-            dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(getColoredIcon(menuItem.Icon, mode)),
-            }}
-          />
+          <>
+            {typeof menuItem.Icon === "string" && (
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(
+                    getColoredIcon(menuItem.Icon, mode),
+                  ),
+                }}
+              />
+            )}
+          </>
         ),
         onClick: () => handleGroupMenuAction(menuItem),
       };
@@ -405,11 +390,15 @@ export default function ListToolbar({
       key: menuItem.MenuId,
       label: menuItem.MenuDesc,
       icon: (
-        <span
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(getColoredIcon(menuItem.Icon, mode)),
-          }}
-        />
+        <>
+          {typeof menuItem.Icon === "string" && (
+            <span
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(getColoredIcon(menuItem.Icon, mode)),
+              }}
+            />
+          )}
+        </>
       ),
       onClick: () => handleMoreMenuAction(menuItem),
     }));
@@ -486,7 +475,7 @@ export default function ListToolbar({
         SystemId: systemId,
         url: formUrl,
         data: data,
-        returnPageId:activePage.pageId
+        returnPageId: activePage.pageId,
       },
     });
   };
@@ -647,7 +636,7 @@ export default function ListToolbar({
         },
       }),
     );
-    refetchGridData && gridData?.Data?.length > 0 &&  refetchGridData()
+    refetchGridData && gridData?.Data?.length > 0 && refetchGridData();
   };
 
   const pageTitle = activePage?.caption;
@@ -697,12 +686,12 @@ export default function ListToolbar({
   return (
     <>
       {!match && (
-        <div className="top-0 right-0 left-0 z-0 absolute shadow-gray-gray3 shadow-sm w-full !h-[50px]"></div>
+        <div className="top-0 right-0 left-0 z-0 absolute shadow-gray-gray3 shadow-sm w-full !h-[57px]"></div>
       )}
       <div
         className={`${
-          match ? "justify-end" : "justify-between"
-        } flex items-center gap-2 w-full h-full pb-4`}
+          match ? "justify-end" : "justify-between h-[57px]"
+        } flex items-center gap-2 w-full py-3 px-0`}
       >
         {toolbarData &&
           (match ? (
@@ -838,7 +827,7 @@ export default function ListToolbar({
             <div
               className={`${
                 isSearchFocused ? "" : "justify-between gap-2"
-              } flex items-center mt-2 w-full z-10`}
+              } flex items-center w-full z-10`}
             >
               <div className="flex items-center gap-2">
                 <div
@@ -870,21 +859,23 @@ export default function ListToolbar({
                 >
                   {!isSearchFocused && !!userId && <ChatWidget />}
                   {!isSearchFocused && <Notification />}
-                  <div
-                    className={`transition-all rounded duration-500 ${
-                      !match && !isSearchFocused ? "max-w-[26px]" : "w-full"
-                    }`}
-                  >
-                    <QuickSearch
-                      ref={quickFilterRef}
-                      onFocus={() => setIsSearchFocused(true)}
-                      isActive={isSearchFocused}
-                    />
-                  </div>
+                  {isQuickSearch && (
+                    <div
+                      className={`transition-all rounded duration-500 ${
+                        !match && !isSearchFocused ? "max-w-[26px]" : "w-full"
+                      }`}
+                    >
+                      <QuickSearch
+                        ref={quickFilterRef}
+                        onFocus={() => setIsSearchFocused(true)}
+                        isActive={isSearchFocused}
+                      />
+                    </div>
+                  )}
                 </div>
                 {!isSearchFocused && (
                   <div
-                    className="flex justify-end items-center"
+                    className={`${!isQuickSearch ? "ms-2" : "ms-0"} flex justify-end items-center`}
                     onClick={() => setIsMobileMenuDrawerOpen(true)}
                   >
                     <span className="w-4">

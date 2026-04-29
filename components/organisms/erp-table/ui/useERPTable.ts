@@ -34,14 +34,13 @@ export function useERPTable(config: CreateERPTableConfig): UseERPTableResult {
   // ---------- subscribe ----------
   useEffect(() => {
     if (!controller) return;
-    const table = controller.getSnapShot(config.tableKey)
+    const table = controller.getSnapShot()
     if (table) {
       setTable(table);
     }
     const unsubscribe = controller.subscribe(
-      config.tableKey,
       () => {
-        setTable(controller.getSnapShot(config.tableKey));
+        setTable(controller.getSnapShot());
       }
     );
 

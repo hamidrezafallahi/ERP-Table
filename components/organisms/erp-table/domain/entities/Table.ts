@@ -153,9 +153,6 @@ export class Table {
       target.moreDetails,
       target.visibilityCondition
     );
-    console.log(newRow)
-
-    // 🔹 2️⃣ مرتب بر اساس index
     rowsArray.sort((a, b) =>
       (a.getCell("index")?.getValue().value as number) -
       (b.getCell("index")?.getValue().value as number)
@@ -186,7 +183,8 @@ export class Table {
       );
       cells.set(columnId, cell);
     });
-    const newRow = new Row(newRowId, cells, new RowState(RowStateEnum.Added), new Set(), undefined, new Map());
+    const visibilityCondition = new Object() as Record<string, boolean>;
+    const newRow = new Row(newRowId, cells, new RowState(RowStateEnum.Added), new Set(), undefined,visibilityCondition );
     this.rows.set(newRowId.value, newRow);
     const totalRows = this.rows.size;
     const pageSize = this.pagination.pageSize;

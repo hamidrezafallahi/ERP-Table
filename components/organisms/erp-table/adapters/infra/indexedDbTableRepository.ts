@@ -25,6 +25,7 @@ interface SerializedRow {
   cells: SerializedCell[];
   rowState: RowStateEnum;
   moreDetails: unknown;
+  visibilityCondition: Record<string, boolean>
 
 }
 
@@ -46,8 +47,7 @@ export class IndexedDbTableRepository implements TableRepository {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName);
       request.onupgradeneeded = (event) => {
-        // هیچ store پیش‌فرضی ایجاد نمی‌کنیم، داینامیک خواهد بود
-      };
+       };
 
       request.onsuccess = () => {
         const db = request.result;
@@ -71,7 +71,8 @@ export class IndexedDbTableRepository implements TableRepository {
     return rows.map(row => ({
       rowId: row.id.value,
       rowState: row.rowState.value,
-      moreDetails:row.moreDetails,
+      moreDetails: row.moreDetails,
+      visibilityCondition: row.visibilityCondition,
       cells: Array.from(row.getCells().entries()).map(([colId, cell]) => ({
         colId,
         value: cell.getValue().value,
@@ -83,7 +84,7 @@ export class IndexedDbTableRepository implements TableRepository {
 
   private deserializeRows(data: SerializedRow[]): Map<number, Row> {
     const rowMap = new Map<number, Row>();
-    data.forEach(r => {
+     data.forEach(r => {
       const cells = new Map<string, Cell>();
       r.cells.forEach(c => {
         cells.set(
@@ -97,43 +98,41 @@ export class IndexedDbTableRepository implements TableRepository {
           )
         );
       });
-      const changeFields: Set<string> = new Set()
-      const visibilityCondition: Map<string, Record<string,unknown>> = new Map()
-      if(r.rowState == "Update"){
-        r.cells.filter(c=>c.value !== c.originalValue).map(c=>changeFields.add(c.colId))
+       const changeFields: Set<string> = new Set()
+       if (r.rowState == "Update") {
+        r.cells.filter(c => c.value !== c.originalValue).map(c => changeFields.add(c.colId))
       }
       rowMap.set(
         r.rowId,
-        new Row(new RowId(r.rowId), cells, new RowState(r.rowState), changeFields,r.moreDetails,visibilityCondition)
+        new Row(new RowId(r.rowId), cells, new RowState(r.rowState), changeFields, r.moreDetails, r.visibilityCondition)
       );
     });
     return rowMap;
   }
 
- private async ensureStore(db: IDBDatabase, storeName: string): Promise<IDBDatabase> {
-  if (db.objectStoreNames.contains(storeName)) return db;
+  private async ensureStore(db: IDBDatabase, storeName: string): Promise<IDBDatabase> {
+    if (db.objectStoreNames.contains(storeName)) return db;
 
-  db.close();
+    db.close();
 
-  const newDb = await new Promise<IDBDatabase>((resolve, reject) => {
-    const req = indexedDB.open(this.dbName, db.version + 1);
+    const newDb = await new Promise<IDBDatabase>((resolve, reject) => {
+      const req = indexedDB.open(this.dbName, db.version + 1);
 
-    req.onupgradeneeded = (event) => {
-      const upgradedDb = (event.target as IDBOpenDBRequest).result;
-      if (!upgradedDb.objectStoreNames.contains(storeName)) {
-        upgradedDb.createObjectStore(storeName, { keyPath: 'id' });
-      }
-    };
+      req.onupgradeneeded = (event) => {
+        const upgradedDb = (event.target as IDBOpenDBRequest).result;
+        if (!upgradedDb.objectStoreNames.contains(storeName)) {
+          upgradedDb.createObjectStore(storeName, { keyPath: 'id' });
+        }
+      };
 
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
 
-  // 🔥 خیلی مهم
-  this.dbPromise = Promise.resolve(newDb);
+     this.dbPromise = Promise.resolve(newDb);
 
-  return newDb;
-}
+    return newDb;
+  }
 
 
   async save(storeName: string, table: Table): Promise<void> {
@@ -167,7 +166,7 @@ export class IndexedDbTableRepository implements TableRepository {
           reject(new Error(`Table ${tableId} not found`));
           return;
         }
-        resolve(new Table(tableId, this.deserializeRows(req.result.rows), new Map(), new Pagination(1,10,10)));
+        resolve(new Table(tableId, this.deserializeRows(req.result.rows), new Map(), new Pagination(1, 10, 10)));
       };
       req.onerror = () => reject(req.error);
     });

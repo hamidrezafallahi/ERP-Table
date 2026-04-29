@@ -1,8 +1,6 @@
 import React from "react";
-
 import { useTranslations } from "next-intl";
 import { shallowEqual } from "react-redux";
-
 import { CustomButton, CustomTooltip } from "@components/atoms/defaultElements";
 import { Undo } from "@components/atoms/iconComponents";
 import CloseButton from "@components/molecules/closeButton";
@@ -10,12 +8,11 @@ import ExpandedButton from "@components/molecules/expandedButton";
 import { useFormHandlers } from "@hooks/custom";
 import { useAppSelector } from "@redux/index";
 
-export default function VoucherTypeDescriptionsToolbar() {
+export default function SideBarFormToolbar() {
   const t = useTranslations();
 
   const { lang, pages } = useAppSelector((state) => {
     const initPage = state.withPersist.init;
-
     const lang = state.withPersist.config.lang;
     const pages = state.withPersist.pages;
     return { initPage, lang, pages };
@@ -42,7 +39,6 @@ export default function VoucherTypeDescriptionsToolbar() {
       >
         <ExpandedButton />
       </CustomTooltip>
-
       <CustomTooltip
         title={t("formToolbar.revalidate")}
         className="hidden xxl:block"

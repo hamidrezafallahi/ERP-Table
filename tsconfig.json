@@ -57,6 +57,6 @@
     ".next/types/**/*.ts",
     "dynamsoft.config.ts",
     "components/organisms/erp-table/ui/erp-table/ERPTableHeader.فسط"
-  ],
+, "components/templates/access/account/defaultDescriptionsConfig.tsx"  ],
   "exclude": ["node_modules"]
 }

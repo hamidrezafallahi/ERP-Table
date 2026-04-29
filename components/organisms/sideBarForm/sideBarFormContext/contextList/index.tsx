@@ -1,0 +1,66 @@
+import {
+  CardDynamicModal,
+  TableDynamicModal,
+} from "@components/molecules/dynamicModal";
+import { IBaseQueryResponse } from "@services/base/type";
+import IVoucherTypeItem, { IDynamicModalConfig } from "../../type";
+import { IMenu } from "@type/toolbar";
+import { RefObject } from "react";
+
+interface ContextListProps {
+  match: boolean;
+  config: IDynamicModalConfig;
+  cardData: IBaseQueryResponse<unknown[]>;
+  handleActionClick: (
+    action: IMenu,
+    id: number,
+    record: unknown,
+  ) => void;
+  lastItemRef: RefObject<HTMLDivElement>;
+  tableIsLoading: boolean;
+  tableDataWithDesc: IVoucherTypeItem[];
+  locale: string;
+  isModal: boolean;
+}
+
+export function ContextList({
+  match,
+  config,
+  cardData,
+  handleActionClick,
+  lastItemRef,
+  tableIsLoading,
+  tableDataWithDesc,
+  locale,
+  isModal,
+}: ContextListProps) {
+  return (
+    <>
+      {!match ? (
+        <CardDynamicModal
+          actions={config.actions}
+          columnsList={config.listConfig}
+          data={cardData?.Data as IVoucherTypeItem[]}
+          onActionClick={handleActionClick}
+          fieldKey={config.fieldKey}
+          staticKey={config.staticKey}
+          ref={lastItemRef}
+          variant="simple"
+          customMobileClassName={
+            isModal ? "h-[calc(100dvh-303px)]" : "h-[calc(100dvh-538px)]"
+          }
+        />
+      ) : (
+        <TableDynamicModal
+          isLoading={tableIsLoading}
+          actions={config.actions}
+          columnsList={config.listConfig}
+          data={tableDataWithDesc}
+          handleAction={handleActionClick}
+          locale={locale}
+          fieldKey={config.fieldKey}
+        />
+      )}
+    </>
+  );
+}

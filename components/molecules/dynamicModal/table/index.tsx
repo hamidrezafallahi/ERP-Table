@@ -10,7 +10,7 @@ import { columnsSorting, getColoredIcon, renderBadge } from "@utils/core";
 
 import type { IProps } from "./type";
 
-export const TableDynamicModal = ({
+export const TableDynamicModal = <T,>({
   data,
   locale,
   fieldKey,
@@ -20,7 +20,7 @@ export const TableDynamicModal = ({
   isLoading,
   scroll = null,
   activation = null,
-}: IProps) => {
+}: IProps<T>) => {
   const { mode = "light" } = useDarkMode();
 
   const t = useTranslations();
@@ -35,7 +35,7 @@ export const TableDynamicModal = ({
   const hasBadge = columnsConfig?.find((item) => item.fieldType === "badge");
 
   const correctColumns = columnsConfig?.filter(
-    (column) => column?.fieldType !== "badge"
+    (column) => column?.fieldType !== "badge",
   );
 
   const sortedColumns = columnsSorting(correctColumns);
@@ -43,7 +43,7 @@ export const TableDynamicModal = ({
   const columns: TableColumnsType<any> = sortedColumns?.map(
     (item: IColumnConfig, index: number) => {
       const hasPendingStatus = processedData?.find(
-        (i) => i.PendingStatusId !== undefined
+        (i) => i.PendingStatusId !== undefined,
       );
       const isFirstColumn = index === 0;
 
@@ -56,7 +56,7 @@ export const TableDynamicModal = ({
             const badgeValue =
               hasBadge &&
               hasBadge?.conditionalConfig?.find(
-                (el) => el.value === item[hasBadge.fieldName]
+                (el) => el.value === item[hasBadge.fieldName],
               );
             return (
               <div
@@ -92,7 +92,7 @@ export const TableDynamicModal = ({
           align: typeof item.fieldName === "string" ? "right" : "left",
           render: (text: any, record: any) => {
             const badgeValue = hasBadge?.conditionalConfig?.find(
-              (el) => el.value === record[hasBadge?.fieldName]
+              (el) => el.value === record[hasBadge?.fieldName],
             );
 
             return (
@@ -133,7 +133,7 @@ export const TableDynamicModal = ({
           return <div className="my-2">{record?.[item.fieldName]}</div>;
         },
       };
-    }
+    },
   );
 
   if (actions?.length > 0) {
@@ -155,16 +155,21 @@ export const TableDynamicModal = ({
                       handleAction(
                         action,
                         record[fieldKey],
-                        record["PendingStatusId"]
+                        record["PendingStatusId"],
+                        record,
                       )
                     }
                   >
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: getColoredIcon(action.Icon, mode),
-                      }}
-                      style={{ width: "18px", height: "17px" }}
-                    />
+                    {typeof action.Icon === "string" ? (
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: getColoredIcon(action.Icon, mode),
+                        }}
+                        style={{ width: "18px", height: "17px" }}
+                      />
+                    ) : (
+                      action.Icon
+                    )}
                   </span>
                 </CustomTooltip>
               );

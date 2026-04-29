@@ -106,17 +106,17 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
       },
       resolveOn: {
         fieldName: "GoodsId",
-        endpoint: "api/inv/check/isLocationAble",
+        endpoint: "api/inv/check/GoodsInfo",
         buildParams: (row) => ({
           goodsId: Number(row.GoodsId),
           stockId: Number(stockId)
         }),
         mapFlags: (res) => {
           return {
-            HasBatchId: res.Data[0].HasBatch && !internal,
-            HasBatchNum: res.Data[0].HasBatch && internal && res.Data[0].IsSimpleGood,
-            HasExpireDate: res.Data[0].HasExpireDate,
-            HasLocation: res.Data[0].HasLocation,
+            BatchId: res.Data[0].HasBatch && !internal,
+            BatchNo: res.Data[0].HasBatch && internal && res.Data[0].IsSimpleGood,
+            ExpiryDate: res.Data[0].HasExpireDate,
+            InventoryLocationId: res.Data[0].HasLocation,
           }
         },
       },
@@ -140,7 +140,7 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
     {
       fieldName: "Quantity1",
       fieldCaption: "تعداد 1",
-      fieldType: "number",
+      fieldType: "price",
       order: 4,
       visibility: { kind: 'always' },
       // colAccess: { denyRoles: ['VIEWER'],allowRoles:['ADMIN'],rule(ctx) {return false} }
@@ -214,7 +214,7 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
       visibility: {
         kind: "whenFlag",
         sourceFieldName: "GoodsId",
-        flag: "HasBatchId",
+        flag: "BatchId",
       },
     },
     {
@@ -225,7 +225,7 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
       visibility: {
         kind: "whenFlag",
         sourceFieldName: "GoodsId",
-        flag: "HasBatchNum",
+        flag: "BatchNo",
       },
     },
     {
@@ -236,7 +236,7 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
       visibility: {
         kind: "whenFlag",
         sourceFieldName: "GoodsId",
-        flag: "HasExpireDate",
+        flag: "ExpiryDate",
       },
     },
     {
@@ -250,7 +250,7 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
       visibility: {
         kind: "whenFlag",
         sourceFieldName: "GoodsId",
-        flag: "HasLocation",
+        flag: "InventoryLocationId",
       },
     },
     //   {

@@ -95,6 +95,7 @@
     "cashWithdrawalList": "لیست پرداخت از صندوق",
     "cashDepositList": "لیست واریز به صندوق",
     "inventoryVoucherList": "لیست اسناد انبار صادر شده",
+    "VoucherForm": "سند حسابداری",
     "inventoryVoucherForm": " صدور سند انبار",
     "inventoryVoucher": "صدور اسناد انبار",
     "inventoryVoucherTypeList": "لیست اسناد انبار",
@@ -824,7 +825,10 @@
     "list": "لیست",
     "operationStart": "شروع عملیات",
     "documentType": "نوع سند",
-    "tafsiliCategory":"طبقات تفصیلی"
+    "tafsiliCategory":"طبقات تفصیلی",
+    "selected":"انتخاب شده",
+    "deSelectedAll":"لغو همه "
+
   },
   "systemSetting": {
     "cheque": "چک",

@@ -14,6 +14,7 @@ import {
   CellValue,
   ColumnId,
 } from '../domain/value-objects';
+import { IRow } from '../ui/type';
 import { TableStore } from './tableStore';
 import {
   TableSnapShot,
@@ -133,38 +134,160 @@ export class TableEngine {
     }
     return store;
   }
-  private moveActiveCell(cmd: {
+  private async moveActiveCell(cmd: {
+    store: string;
     tableKey: string;
     rowId: number;
     columnId: string;
     direction: 'next' | 'prev';
-  }) {
+}) {
     const store = this.getStore(cmd.tableKey);
-    const state = store.getState();
+    const state = await store.getState();
     const table = state.table;
 
+    // 1. پیدا کردن ستون‌های قابل نمایش و قابل ویرایش
+    const disabledCols = Object.entries(table.getRow(cmd.rowId).getVisibilityCondition())
+        .filter(([, value]) => value === false)
+        .map(([key]) => key);
+
     const columns = table
-      .getColumns()
-      .filter(c => !c.hidden && c.editable && c.id !== 'index');
+        .getColumns()
+        .filter(c => !c.hidden && c.editable && !disabledCols.includes(c.id) && c.id !== 'index');
 
-    const colIndex = columns.findIndex(c => c.id === cmd.columnId);
-    if (colIndex === -1) return;
+    const currentColIndex = columns.findIndex(c => c.id === cmd.columnId);
+    if (currentColIndex === -1) return;
 
-    const nextIndex =
-      cmd.direction === 'next' ? colIndex + 1 : colIndex - 1;
+    // 2. حرکت به ستون قبلی یا بعدی در همان سطر
+    const nextColIndex = cmd.direction === 'next' ? currentColIndex + 1 : currentColIndex - 1;
+    const nextColumn = columns[nextColIndex];
 
-    const nextCol = columns[nextIndex];
-    if (!nextCol) return;
+    // 3. اگر در همان سطر ستون بعدی وجود دارد → فقط ستون را تغییر بده
+    if (nextColumn !== undefined) {
+        store.setState(() => ({
+            ...state,
+            activeCell: {
+                rowId: cmd.rowId,
+                columnId: nextColumn.id,
+            },
+        }));
+        await this.repo.save(cmd.store, store.getState().table);
+        return;
+    }
 
-    store.setState(() => ({
-      ...state,
-      activeCell: {
-        rowId: cmd.rowId,
-        columnId: nextCol.id,
-      },
-    }));
-  }
+    // 4. رسیدیم به آخرین ستون سطر جاری → باید به سطر بعدی/قبلی برویم
+    const allRows = table.getRows();
+    const currentRowIndex = allRows.findIndex(r => r.id.value === cmd.rowId);
+    const isLastRow = currentRowIndex === allRows.length - 1;
+    const isFirstRow = currentRowIndex === 0;
+
+    // 5. حرکت به سطر بعدی (direction === 'next')
+    if (cmd.direction === 'next') {
+        // اگر آخرین سطر است → سطر خالی اضافه کن
+        if (isLastRow) {
+            const newRow = await this.app.execute({
+                type: 'ADD_EMPTY_ROW',
+                store: cmd.store,
+                tableKey: cmd.tableKey,
+                autoActivate: true,
+            }, this.actor);
+
+            const firstColumn = columns[0];
+            store.setState(() => ({
+                ...state,
+                activeRowId: newRow['rowId'].value,
+                activeCell: {
+                    rowId: newRow['rowId'].value,
+                    columnId: firstColumn.id,
+                },
+            }));
+            return;
+        }
+
+        // سطر بعدی را پیدا کن (رد شدن از سطرهای حذف شده)
+        let nextValidRowIndex = -1;
+        for (let offset = 1; currentRowIndex + offset < allRows.length; offset++) {
+            const candidateRow = allRows[currentRowIndex + offset];
+            if (candidateRow.rowState.value !== 'Delete') {
+                nextValidRowIndex = currentRowIndex + offset;
+                break;
+            }
+        }
+
+        // اگر سطر معتبری پیدا شد → برو به اولین ستون آن سطر
+        if (nextValidRowIndex !== -1) {
+            const nextRowId = allRows[nextValidRowIndex].id.value;
+            const firstColumn = columns[0];
+            store.setState(() => ({
+                ...state,
+                activeRowId: nextRowId,
+                activeCell: {
+                    rowId: nextRowId,
+                    columnId: firstColumn.id,
+                },
+            }));
+            await this.repo.save(cmd.tableKey, store.getState().table);
+            return;
+        }
+
+        // هیچ سطر معتبری بعد از سطر جاری وجود ندارد → سطر خالی اضافه کن
+        const newRow = await this.app.execute({
+            type: 'ADD_EMPTY_ROW',
+            store: cmd.store,
+            tableKey: cmd.tableKey,
+            autoActivate: true,
+        }, this.actor);
+
+        const firstColumn = columns[0];
+        store.setState(() => ({
+            ...state,
+            activeRowId: newRow['rowId'].value,
+            activeCell: {
+                rowId: newRow['rowId'].value,
+                columnId: firstColumn.id,
+            },
+        }));
+        return;
+    }
+
+    // 6. حرکت به سطر قبلی (direction === 'prev')
+    if (cmd.direction === 'prev') {
+        // اگر اولین سطر است → هیچ کاری نکن (یا می‌توانی رفتار دیگری تعریف کنی)
+        if (isFirstRow) {
+            return;
+        }
+
+        // سطر قبلی را پیدا کن (رد شدن از سطرهای حذف شده)
+        let prevValidRowIndex = -1;
+        for (let offset = 1; currentRowIndex - offset >= 0; offset++) {
+            const candidateRow = allRows[currentRowIndex - offset];
+            if (candidateRow.rowState.value !== 'Delete') {
+                prevValidRowIndex = currentRowIndex - offset;
+                break;
+            }
+        }
+
+        // اگر سطر معتبری پیدا شد → برو به آخرین ستون قابل ویرایش آن سطر
+        if (prevValidRowIndex !== -1) {
+            const prevRowId = allRows[prevValidRowIndex].id.value;
+            const lastColumn = columns[columns.length - 1];
+            store.setState(() => ({
+                ...state,
+                activeRowId: prevRowId,
+                activeCell: {
+                    rowId: prevRowId,
+                    columnId: lastColumn.id,
+                },
+            }));
+            await this.repo.save(cmd.tableKey, store.getState().table);
+            return;
+        }
+
+        // اگر سطر معتبری پیدا نشد → هیچ کاری نکن (یا می‌توانی رفتار دیگری تعریف کنی)
+        return;
+    }
+}
   private async moveActiveCellVertical(cmd: {
+    store: string;
     tableKey: string;
     rowId: number;
     columnId: string;
@@ -262,7 +385,7 @@ export class TableEngine {
         type: 'CHANGE_PAGE',
         tableKey: cmd.tableKey,
         page: currentView.pagination.page + 1,
-        store: cmd.tableKey,
+        store: cmd.store,
       }).then(() => {
         const newView = this.getViewState(cmd.tableKey);
         if (!newView || newView.rows.length === 0) return;
@@ -288,7 +411,7 @@ export class TableEngine {
         type: 'CHANGE_PAGE',
         tableKey: cmd.tableKey,
         page: currentView.pagination.page - 1,
-        store: cmd.tableKey,
+        store: cmd.store,
       }).then(() => {
         const newView = this.getViewState(cmd.tableKey);
         if (!newView || newView.rows.length === 0) return;
@@ -356,6 +479,7 @@ export class TableEngine {
     });
   }
   private async setActiveRow(cmd: {
+    store: string
     tableKey: string
     rowId: number
   }) {
@@ -365,8 +489,6 @@ export class TableEngine {
     const row = table.getRows().find(r => r.id.value === cmd.rowId);
 
     await this.fetchVisibilityCondition(cmd, row)
-    console.log("fetchVisibilityCondition")
-
     store.setState(prev => {
       if (prev.activeRowId === cmd.rowId) {
         return prev;
@@ -382,46 +504,42 @@ export class TableEngine {
   }
   ///////////////////////////////////////////////////////////////////////////////////////
   private async fetchVisibilityCondition(cmd: {
-  tableKey: string
-  rowId: number
-}, row: Row) {
-  console.log("fetchVisibilityCondition")
-  const store = this.getStore(cmd.tableKey);
-  const { table } = store.getState()
-  if (!table) return null;
-  
-  const Columns = table.getColumns()
-  const cellDependency = new Set<string>()
-  
-  Columns.filter(col => col.dynamicValue?.dependsOn && col.dynamicValue?.dependsOn.length > 0)
-    .map(col => col.dynamicValue?.dependsOn.map(depend => cellDependency.add(depend)))
-  
-  // استفاده از حلقه for...of به جای forEach
-  for (const col of cellDependency) {
-    const val = row.getCell(col).getValue().value
-     if(val){
-      const command: ApplyDynamicProjectionCommand = {
-        type: "APPLY_DYNAMIC_PROJECTION",
-        store: cmd.tableKey,
-        tableKey: cmd.tableKey,
-        rowId: cmd.rowId,
-        columnId: col,
+    store: string
+    tableKey: string
+    rowId: number
+  }, row: Row) {
+    const store = this.getStore(cmd.tableKey);
+    const { table } = store.getState()
+    if (!table) return null;
+
+    const Columns = table.getColumns()
+    const cellDependency = new Set<string>()
+
+    Columns.filter(col => col.dynamicValue?.dependsOn && col.dynamicValue?.dependsOn.length > 0)
+      .map(col => col.dynamicValue?.dependsOn.map(depend => cellDependency.add(depend)))
+    for (const col of cellDependency) {
+      const val = row.getCell(col).getValue().value
+      if (val) {
+        const command: ApplyDynamicProjectionCommand = {
+          type: "APPLY_DYNAMIC_PROJECTION",
+          store: cmd.store,
+          tableKey: cmd.tableKey,
+          rowId: cmd.rowId,
+          columnId: col,
+        }
+        await this.app.execute(command, this.actor);
       }
-      await this.app.execute(command, this.actor);
+    }
+    const updated = await this.repo.getById(cmd.tableKey, cmd.tableKey);
+    const currentStore = this.getStore(cmd.tableKey);
+    if (currentStore && updated) {
+      const prev = currentStore.getState();
+      currentStore.setState(() => ({
+        ...prev,
+        table: updated,
+      }));
     }
   }
-  
-  // یک بار بعد از اتمام همه عملیات‌ها، جدول به‌روز شده را دریافت کن
-  const updated = await this.repo.getById(cmd.tableKey, cmd.tableKey);
-  const currentStore = this.getStore(cmd.tableKey);
-  if (currentStore && updated) {
-    const prev = currentStore.getState();
-    currentStore.setState(() => ({
-      ...prev,
-      table: updated,
-    }));
-  }
-}
   ///////////////////////////////////////////////////////////////////////////////////////
   private setSelectRow(cmd: {
     tableKey: string
@@ -618,6 +736,35 @@ export class TableEngine {
       }
     });
   }
+  private toggleSelectPageRows(cmd: { tableKey: string }) {
+    const store = this.getStore(cmd.tableKey);
+    const pageRows = store.getState().table.getVisibleRows();
+    const selectedRows = store.getState().selectedRows;
+    const allPageRowsSelected = pageRows.every(row => {
+      const rowId = row.id.value; // یا row.id.value.toString() اگر کلیدها رشته هستند
+      return selectedRows.hasOwnProperty(rowId);
+    });
+
+
+
+    store.setState(prev => {
+      if (allPageRowsSelected) {
+        return {
+          ...prev,
+          selectedRows: {},
+        };
+      } else {
+        const nextSelected: Record<number, true> = {};
+        pageRows.forEach(row => {
+          nextSelected[row.id.value] = true;
+        });
+        return {
+          ...prev,
+          selectedRows: nextSelected,
+        };
+      }
+    });
+  }
   private selectRange(cmd: {
     tableKey: string
     rowId: number
@@ -694,6 +841,9 @@ export class TableEngine {
       case 'TOGGLE_SELECT_ALL_ROWS':
         this.toggleSelectAllRows(command);
         return;
+      case 'TOGGLE_SELECT_PAGE_ROWS':
+        this.toggleSelectPageRows(command);
+        return;
       case 'ROW_SELECTION_TOGGLED':
         this.toggleRowSelection(command);
         return;
@@ -738,6 +888,8 @@ export class TableEngine {
       1,
       Math.ceil(totalRows / pagination.pageSize)
     );
+
+
     return {
       table,
       activeCell,
@@ -765,7 +917,9 @@ export class TableEngine {
             changeFields: row.getChangeFields(),
             cells,
             isExpanded: !!expandedRows[row.id.value],
-            moreDetails: row.moreDetails
+            moreDetails: row.moreDetails,
+            visibilityCondition: row.visibilityCondition
+
           }
         }),
       deletedRows: [],
@@ -777,7 +931,11 @@ export class TableEngine {
         editable: col.editable,
         options: col.selectOptions,
         indexOptions: col.indexOptions,
+        onChange: col.onChange,
         dynamicValue: col.dynamicValue,
+        width: col.width,
+        popUpWidth: col.popUpWidth,
+        labelValue: col.labelValue
       })),
       pagination: {
         page: pagination.page,
@@ -788,6 +946,46 @@ export class TableEngine {
         canNext: pagination.page < totalPages,
       },
     }
+  }
+  getAllRows(tableKey: string): IRow[] {
+    const store = this.getStore(tableKey)?.getState();
+    if (!store) {
+      this.audit.log({
+        type: 'ERROR',
+        message: `Table ${tableKey} could not be founded at getViewState`,
+        payload: tableKey
+      });
+      return null
+    }
+    const { table, expandedRows } = store
+    return table.getRows()
+      .sort((a, b) => {
+        const aIndex = Number(a.getCells().get("index")?.getValue()?.value ?? 0);
+        const bIndex = Number(b.getCells().get("index")?.getValue()?.value ?? 0);
+        return aIndex - bIndex;
+      }).map((row) => {
+        const cells: Record<string, TCell> = {};
+        const columns = table.getColumns();
+        for (const col of columns) {
+          const cell = row.getCells().get(col.id);
+
+          cells[col.id] = {
+            value: cell?.getValue()?.value ?? null,
+            originalValue: cell?.getOriginalValue()?.value ?? null,
+            display: cell?.getDisplay()?.value ?? null,
+          };
+        }
+        return {
+          id: row.id.value,
+          rowState: row.rowState.value,
+          changeFields: row.getChangeFields(),
+          cells,
+          isExpanded: !!expandedRows[row.id.value],
+          moreDetails: row.moreDetails,
+          visibilityCondition: row.visibilityCondition
+
+        }
+      })
   }
   getSnapShot(tableKey: string): TableSnapShot {
     const store = this.getStore(tableKey)?.getState();
@@ -897,17 +1095,16 @@ export class TableEngine {
       });
       return null
     }
-    let prev = this.getViewState(tableKey)
-      .rows.map(r => ({
-        id: r.id,
-        rowNum: r.cells['index']?.value,
-        value: r.cells[columnId]?.value as T
-      }));
+    let prev = this.getAllRows(tableKey).map(r => ({
+      id: r.id,
+      rowNum: r.cells['index']?.value,
+      value: r.cells[columnId]?.value as T
+    }));
 
     return store.subscribe(() => {
-      const state = this.getViewState(tableKey);
+      const rows = this.getAllRows(tableKey);
 
-      const next = state.rows.map(r => ({
+      const next = rows.map(r => ({
         id: r.id,
         rowNum: r.cells['index']?.value,
         value: r.cells[columnId]?.value as T

@@ -10,3 +10,9 @@ export enum PageStateEnum {
   PendingErrorUpdate = "8",
   PendingErrorDelete = "9",
 }
+
+export enum HeaderTypeEnum {
+  None = "None",
+  MobileWithSearch = "MobileWithSearch",
+  MobileWithoutSearch = "MobileWithoutSearch",
+}

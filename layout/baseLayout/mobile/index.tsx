@@ -1,14 +1,15 @@
 "use client";
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 
-import { usePathname } from 'next/navigation';
-import { shallowEqual } from 'react-redux';
+import { usePathname } from "next/navigation";
+import { shallowEqual } from "react-redux";
 
-import { useAppSelector } from '@redux/index';
-import { PageTypeEnum } from '@type/enum';
+import { useAppSelector } from "@redux/index";
+import { PageTypeEnum } from "@type/enum";
 
-import Menubar from './menubar';
-import { SideMenu } from './sideMenu';
+import Menubar from "./menubar";
+import { SideMenu } from "./sideMenu";
+import HeaderRenderer from "./HeaderRenderer";
 
 export default function MobileLayout(props: { children: ReactNode }) {
   const { children } = props;
@@ -27,9 +28,10 @@ export default function MobileLayout(props: { children: ReactNode }) {
   return (
     <>
       {/* <MobileHeader /> */}
-      <div className="hidden-show-scrollBar relative bg-white dark:bg-gray-gray12 px-4 h-[calc(100dvh-75px)] overflow-y-auto">
+      <div className="hidden-show-scrollBar relative bg-white dark:bg-gray-gray12 px-4 h-[calc(100dvh-74px)] overflow-y-hidden">
+        <HeaderRenderer />
         {children}
-      <SideMenu />
+        <SideMenu />
       </div>
       {menuBarIsActive && <Menubar />}
     </>

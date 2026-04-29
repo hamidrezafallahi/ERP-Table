@@ -21,30 +21,22 @@ export class Row {
     public rowState: RowState,
     public changeFields: Set<string> = new Set(),
     public moreDetails: unknown,
-    public visibilityCondition:Map<string, Record<string,unknown>>
+    public visibilityCondition: Record<string,boolean>
   ) { }
   updateChangeFields(columnId: ColumnId): void {
-    console.log(columnId)
     const cell = this.cells.get(columnId.value);
-    console.log(columnId)
     if (!cell) return;
-    console.log(columnId)
     const value = cell.getValue();
     const originalValue = cell.getOriginalValue();
     if (this.rowState.value !== RowStateEnum.Added) {
       if (!value.equals(originalValue)) {
-        console.log(columnId)
         this.changeFields.add(columnId.value);
       } else {
-        console.log(columnId)
         this.changeFields.delete(columnId.value);
       }
-      
       if (this.changeFields.size > 0) {
-        console.log(columnId)
         this.rowState = new RowState(RowStateEnum.Modified)
       } else {
-        console.log(columnId)
         this.rowState = new RowState(RowStateEnum.Unchanged)
       }
     }
@@ -92,8 +84,11 @@ export class Row {
   setMoreDetails(detail: unknown) {
     this.moreDetails = detail;
   }
-  setVisibilityCondition(Condition: Map<string, Record<string,unknown>>) {
+  setVisibilityCondition(Condition: Record<string,boolean>) {
     this.visibilityCondition = Condition;
+  }
+  getVisibilityCondition():Record<string,boolean> {
+    return this.visibilityCondition 
   }
   getMoreDetails() {
     return this.moreDetails;

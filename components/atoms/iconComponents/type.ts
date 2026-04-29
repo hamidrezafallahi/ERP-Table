@@ -5,4 +5,5 @@ export interface IIconConfig {
   fill?: string;
   strokeWidth?: number;
   apply?: boolean;
+  className?: string;
 }

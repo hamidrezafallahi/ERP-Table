@@ -118,6 +118,7 @@ export interface IFormFieldConfig {
   maxLength?: number;
   mode?: "text" | "number";
   props?: HtmlProps;
+
 }
 
 export interface IMenuItem {

@@ -43,7 +43,7 @@ export default function PanelForm() {
       minimize: state.withoutPersist.container.minimize,
       activePage: state?.withPersist?.pages?.find((item) => item.isActive),
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const RefId = Number(params.get("id"));
@@ -73,11 +73,8 @@ export default function PanelForm() {
   };
   const attachment = {
     title: (
-      <div>
-        <div className="font-extrabold text-black-black5 text-base">
-          {modalTitle}
-        </div>
-        <div className="font-light text-gray-gray85 text-xs"> </div>
+      <div className="font-extrabold text-black-black5 text-base">
+        {modalTitle}
       </div>
     ),
     content: (
@@ -153,7 +150,7 @@ export default function PanelForm() {
     {
       title: t("general.fullScreenGuide"),
       description: t(
-        "general.usingThisSection,youCanViewThePageContentInFullScreen"
+        "general.usingThisSection,youCanViewThePageContentInFullScreen",
       ),
       target: () => document.getElementById("fullScreenMode"),
     },
@@ -165,7 +162,7 @@ export default function PanelForm() {
     {
       title: t("general.selectFormType"),
       description: t(
-        "general.usingThisSection,youCanSelectAndViewOneOfTheAvailableForms"
+        "general.usingThisSection,youCanSelectAndViewOneOfTheAvailableForms",
       ),
       target: document.getElementById("chooseTypeForm"),
     },
@@ -203,7 +200,7 @@ export default function PanelForm() {
     {
       title: t("general.saveAndNewButtonGuide"),
       description: t(
-        "general.usingThisSection,youCanCreateNewContentAndRestoreContent"
+        "general.usingThisSection,youCanCreateNewContentAndRestoreContent",
       ),
       target: () => document.getElementById("SavePlus"),
     },

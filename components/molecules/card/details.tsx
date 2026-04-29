@@ -218,19 +218,21 @@ export const Details = ({
                         );
                       }}
                     >
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: getColoredIcon(
-                            action.Icon.replaceAll(`="18"`, `="20"`),
-                            mode,
-                          ),
-                        }}
-                        style={{
-                          width: "16px",
-                          height: "19px",
-                          opacity: action.disabled ? 0.2 : 1,
-                        }}
-                      />
+                      {typeof action.Icon === "string" && (
+                        <div
+                          dangerouslySetInnerHTML={{
+                            __html: getColoredIcon(
+                              action.Icon.replaceAll(`="18"`, `="20"`),
+                              mode,
+                            ),
+                          }}
+                          style={{
+                            width: "16px",
+                            height: "19px",
+                            opacity: action.disabled ? 0.2 : 1,
+                          }}
+                        />
+                      )}
                     </span>
                   );
                 })
@@ -253,19 +255,21 @@ export const Details = ({
                         );
                       }}
                     >
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: getColoredIcon(
-                            action.Icon.replaceAll(`="18"`, `="20"`),
-                            mode,
-                          ),
-                        }}
-                        style={{
-                          width: "20px",
-                          height: "20px",
-                          opacity: action.disabled ? 0.2 : 1,
-                        }}
-                      />
+                      {typeof action.Icon === "string" && (
+                        <div
+                          dangerouslySetInnerHTML={{
+                            __html: getColoredIcon(
+                              action.Icon.replaceAll(`="18"`, `="20"`),
+                              mode,
+                            ),
+                          }}
+                          style={{
+                            width: "20px",
+                            height: "20px",
+                            opacity: action.disabled ? 0.2 : 1,
+                          }}
+                        />
+                      )}
                     </span>
                   );
                 })}
@@ -358,19 +362,21 @@ export const Details = ({
                     setActionDrawerIsOpen(false);
                   }}
                 >
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(
-                        action.Icon.replaceAll(`="18"`, `="20"`),
-                        mode,
-                      ),
-                    }}
-                    style={{
-                      width: "16px",
-                      height: "19px",
-                      opacity: action.disabled ? 0.2 : 1,
-                    }}
-                  />
+                  {typeof action.Icon === "string" && (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: getColoredIcon(
+                          action.Icon.replaceAll(`="18"`, `="20"`),
+                          mode,
+                        ),
+                      }}
+                      style={{
+                        width: "16px",
+                        height: "19px",
+                        opacity: action.disabled ? 0.2 : 1,
+                      }}
+                    />
+                  )}
                   <span
                     className={
                       action.disabled

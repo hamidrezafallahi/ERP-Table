@@ -19,7 +19,7 @@ export interface DynamicValueConfig {
     buildParams?: (row: Record<string, unknown>) => Record<string, string | number>;
 }
 
-export type FieldType = 'index' | 'text' | 'number' | 'select' | 'selectOption' | 'date' | 'static';
+export type FieldType = 'index' | 'text' | 'number' | 'price' | 'select' | 'selectOption' | 'date' | 'static';
 
 export type RowInput = { id: number; values?: Record<string, unknown>, moreDetails: unknown };
 
@@ -58,6 +58,7 @@ export interface IDetailColumnConfig {
     order?: number;
     required?: boolean;
     editable?: boolean;
+    disable?: Record<string, boolean>[];
     colAccess?: ColumnAccessControl;
     dynamicSource?: {
         endpoint: string;
@@ -79,7 +80,11 @@ export interface IDetailColumnConfig {
     };
     selectOptions?: { label: string, value: string }[]
     indexOptions?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => ItemType[]
+    onChange?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => void
     displayFormat?: (value: unknown) => unknown;
+    width?: number;
+    popUpWidth?: number
+    labelValue?:'selectDisplay'|'selectValue';
 
 }
 export type CreateERPTableConfig<TMoreDetail = unknown> = {
@@ -92,6 +97,6 @@ export type CreateERPTableConfig<TMoreDetail = unknown> = {
     repo?: TableRepository;
     audit?: AuditLogger;
     permissionPolicy?: PermissionPolicy;
-    tableHeight?: number ;
+    tableHeight?: number;
     recordPerPage?: number;
 };

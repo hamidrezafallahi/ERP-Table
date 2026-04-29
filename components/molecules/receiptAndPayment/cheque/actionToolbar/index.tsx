@@ -204,11 +204,17 @@ export const ActionToolbar = ({
               <Info config={{ stroke: "#000" }} />
             </CustomTooltip>
           ) : (
-            <span
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(getColoredIcon(menuItem.Icon, mode)),
-              }}
-            />
+            <>
+              {typeof menuItem.Icon === "string" && (
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(
+                      getColoredIcon(menuItem.Icon, mode),
+                    ),
+                  }}
+                />
+              )}
+            </>
           ),
           onClick: () => handleGroupMenuAction(menuItem),
         };
@@ -261,11 +267,17 @@ export const ActionToolbar = ({
       key: menuItem.MenuId,
       label: menuItem.MenuDesc,
       icon: (
-        <span
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(getColoredIcon(menuItem.Icon, mode)),
-          }}
-        />
+        <>
+          {typeof menuItem.Icon === "string" ? (
+            <div
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(getColoredIcon(menuItem.Icon, mode)),
+              }}
+            />
+          ) : (
+            menuItem.Icon
+          )}
+        </>
       ),
       onClick: () => handleMoreMenuAction(menuItem),
     }));
@@ -427,12 +439,16 @@ export const ActionToolbar = ({
           headerName={t("general.reminder")}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(state.actionConfig.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof state.actionConfig.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(state.actionConfig.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           closeModal={() => dispatchState({ type: "CLOSE_REMIND_ME_MODAL" })}
@@ -463,12 +479,16 @@ export const ActionToolbar = ({
           headerName={state.actionConfig.MenuDesc}
           headerIcon={
             match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(state.actionConfig.Icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
+              <>
+                {typeof state.actionConfig.Icon === "string" && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(state.actionConfig.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )}
+              </>
             )
           }
           headerDescription="عملیات گروهی"
