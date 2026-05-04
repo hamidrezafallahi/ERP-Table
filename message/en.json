@@ -201,10 +201,16 @@
     "paymentRequest": "Payment Request",
     "endYearOperations": "End Year Operations",
     "bankStatementInfo": "bank Statement Info",
-    "voucherTypeDescription":"Default Description",
-    "detailedDescription":"Default Description",
-    "tafsiliCategory":"Tafsili Category"
-       
+
+    "voucherTypeDescription": "Default Description",
+    "detailedDescription": "Default Description",
+    "tafsiliCategory": "Tafsili Category",
+
+    "currencyDoc": "Currency Exchange Rate Document",
+    "CurrencyDoc": "Currency Exchange Rate Document",
+    "currencyDockList": "Currency Exchange Rate Document List"
+
+
 
   },
   "homePage": {

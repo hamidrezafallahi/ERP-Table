@@ -1,4 +1,3 @@
-import { UITableController } from '../adapters/ui/UITableController';
 import { AuditLogger } from '../application/ports/AuditLogger';
 import { RemoteApi } from '../application/ports/RemoteApi';
 import { TableRepository } from '../application/ports/TableRepository';
@@ -8,10 +7,12 @@ import {
   Actor,
   PermissionPolicy,
 } from '../domain/policies';
+import { IRule } from '../domain/value-objects';
 import {
   ItemType,
   TCell,
 } from '../engine/type';
+import { UITableController } from '../infrastructure/ui/UITableController';
 
 export interface DynamicValueConfig {
     endpoint: string;
@@ -19,7 +20,7 @@ export interface DynamicValueConfig {
     buildParams?: (row: Record<string, unknown>) => Record<string, string | number>;
 }
 
-export type FieldType = 'index' | 'text' | 'number' | 'price' | 'select' | 'selectOption' | 'date' | 'static';
+export type FieldType = 'index' | 'text' |   'number' | 'price' | 'select' | 'selectOption' | 'date' | 'static';
 
 export type RowInput = { id: number; values?: Record<string, unknown>, moreDetails: unknown };
 
@@ -56,7 +57,7 @@ export interface IDetailColumnConfig {
     fieldCaption: string;
     fieldType: FieldType;
     order?: number;
-    required?: boolean;
+    rules?: IRule[];
     editable?: boolean;
     disable?: Record<string, boolean>[];
     colAccess?: ColumnAccessControl;

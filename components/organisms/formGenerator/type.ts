@@ -1,4 +1,8 @@
-import { Dispatch, SetStateAction } from "react";
+import {
+  Dispatch,
+  FC,
+  SetStateAction,
+} from 'react';
 
 export interface IProps {
   caption: string;
@@ -21,4 +25,6 @@ export interface IProps {
   submitCaption?: string;
   withSubmitButton?: boolean;
   hasShorthandFormToolbar?: boolean;
+  Component?:FC<any>|undefined
+
 }

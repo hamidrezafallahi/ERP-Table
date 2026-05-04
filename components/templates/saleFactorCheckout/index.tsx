@@ -12,7 +12,7 @@ import { PageTypeEnum } from '@type/enum';
 
 import CheckoutLayout from './layout';
 
-function CheckoutInvoiceTemplate() {
+export function CheckoutInvoiceTemplate() {
   const { initPage } = useAppSelector(
     (state) => ({
       initPage: state.withPersist.init,
@@ -40,4 +40,3 @@ function CheckoutInvoiceTemplate() {
 
   return <CheckoutLayout />;
 }
-export default CheckoutInvoiceTemplate;

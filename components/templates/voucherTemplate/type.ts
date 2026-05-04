@@ -13,7 +13,7 @@ export interface IProps {
   detailGetUrl: string;
   addUrl: string;
   updateUrl: string;
-  detailCaption: string;
+  tableTitle: string;
   titleKey: string;
   pageIcon?: string;
   conditionalActions?: {

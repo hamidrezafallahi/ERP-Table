@@ -4,14 +4,14 @@ import {
   useState,
 } from 'react';
 
-import {
-  UITableController,
-} from '@components/organisms/erp-table/adapters/ui/UITableController';
 import { createERPTable } from '@components/organisms/erp-table/bootstrap';
 import {
   CreateERPTableConfig,
 } from '@components/organisms/erp-table/bootstrap/type';
 import { TableSnapShot } from '@components/organisms/erp-table/engine/type';
+import {
+  UITableController,
+} from '@components/organisms/erp-table/infrastructure/ui/UITableController';
 
 export type UseERPTableResult =
   | { ready: false }

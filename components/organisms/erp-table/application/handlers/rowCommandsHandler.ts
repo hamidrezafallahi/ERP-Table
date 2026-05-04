@@ -81,7 +81,7 @@ export class DuplicateRowCommandHandler {
         );
       }
       const rowId = new RowId(command.rowId);
-      const event = table.addRow(rowId);
+      const event = table.duplicateRow(rowId);
       await this.repo.save(command.store, table);
       this.audit.log({ type: 'INFORMATION', message: event.type, payload: event.rowId });
       return event;

@@ -1,16 +1,26 @@
-import { FC, useCallback, useEffect } from "react";
+import {
+  FC,
+  useCallback,
+  useEffect,
+} from 'react';
 
-import { Select } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Select } from 'antd';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { PlusOutline, Reload } from "@components/atoms/iconComponents";
-import { useInitializePage } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
+import {
+  PlusOutline,
+  Reload,
+} from '@components/atoms/iconComponents';
+import { useInitializePage } from '@hooks/custom';
+import { useAppSelector } from '@redux/index';
+import { setPageData } from '@slice/pages';
 
-import { MobileSelect } from "./mobileSelect";
-import type { IProps } from "./type";
+import { MobileSelect } from './mobileSelect';
+import type { IProps } from './type';
 
 export const CustomSelect: FC<IProps> = ({
   ref,
@@ -194,7 +204,7 @@ export const CustomSelect: FC<IProps> = ({
                     {menu}
                     {!!addButton && (
                       <div
-                        className="flex gap-2 p-2 font-xs font-bold cursor-pointer"
+                        className="flex gap-2 !h-fit font-xs font-bold cursor-pointer"
                         onClick={handleAddNew}
                       >
                         <PlusOutline />
@@ -240,7 +250,7 @@ export const CustomSelect: FC<IProps> = ({
                     {menu}
                     {!!addButton && (
                       <div
-                        className="flex gap-2 p-2 font-xs font-bold cursor-pointer"
+                        className="flex gap-2 !h-fit font-xs font-bold cursor-pointer"
                         onClick={handleAddNew}
                       >
                         <PlusOutline />

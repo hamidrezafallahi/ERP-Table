@@ -1,33 +1,54 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Pagination } from "antd";
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Pagination } from 'antd';
+import { FormInstance } from 'antd/lib';
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
+import { CustomButton } from '@components/atoms/defaultElements';
 import {
   DownChevron,
   LeftChevron,
   RightChevron,
-} from "@components/atoms/iconComponents";
-import { DetailDataGrid } from "@components/molecules/detailDataGrid";
-import type { IChildHandle } from "@components/molecules/detailDataGrid/mobile/type";
-import { PricingCircularForm } from "@components/molecules/salesAndPurchase/pricingCircular";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
+} from '@components/atoms/iconComponents';
+import { DetailDataGrid } from '@components/molecules/detailDataGrid';
+import type {
+  IChildHandle,
+} from '@components/molecules/detailDataGrid/mobile/type';
+import {
+  PricingCircularForm,
+} from '@components/molecules/salesAndPurchase/pricingCircular';
+import { useAppSelector } from '@redux/index';
+import { useGetData } from '@services/base';
 import type {
   IPricingCircular,
   IRequest,
-} from "@services/sale/pricingCircular/type";
-import type { IPricingCircularDetails } from "@services/sale/pricingCircularDetails/type";
-import { setAllPageData, setPageData, setPageInfo } from "@slice/pages";
+} from '@services/sale/pricingCircular/type';
+import type {
+  IPricingCircularDetails,
+} from '@services/sale/pricingCircularDetails/type';
+import {
+  setAllPageData,
+  setPageData,
+  setPageInfo,
+} from '@slice/pages';
+import { hasStoredValue } from '@utils/core';
 
-import { columnConfig, formConfig } from "./config";
-import { hasStoredValue } from "@utils/core";
+import {
+  columnConfig,
+  formConfig,
+} from './config';
 
-export const PricingCircular = ({ form }) => {
+export const PricingCircular = ({ form }:{ form?:FormInstance }) => {
   const titleKey = "PriceOrderNumber";
   const fieldKey = "PriceOrderHeaderId";
   const alternateKey = "PriceOrderDetailId";

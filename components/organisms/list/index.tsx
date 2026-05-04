@@ -1,39 +1,49 @@
 "use client";
-import { useEffect, useReducer, useRef, useState } from "react";
+import {
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomModal } from "@components/atoms/defaultElements";
-import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
+import { CustomModal } from '@components/atoms/defaultElements';
+import { CustomDrawer } from '@components/atoms/defaultElements/drawer';
 import {
   ExceptionIcon,
   New,
   PhysicalCharacteristicsIcon,
   SettlementIcon,
   TagIcon,
-} from "@components/atoms/iconComponents";
-import Card from "@components/molecules/card";
-import Confirmation from "@components/molecules/confirmation";
-import ContactInfo from "@components/molecules/contactInfo";
-import { CustomerCredit } from "@components/molecules/customerCredit";
-import { CustomerGroupCredit } from "@components/molecules/customerGroupCredit";
-import DataGrid from "@components/molecules/dataGrid";
-import { ExceptionsModal } from "@components/molecules/exceptionsModal";
-import { ExpireDateAccountList } from "@components/molecules/expireDateAccountList";
-import GoodExtraInfo from "@components/molecules/goodExtraInfo";
-import { GoodPrice } from "@components/molecules/goodPrice";
-import { GoodQc } from "@components/molecules/goodQc";
-import { GoodSettings } from "@components/molecules/goodSettings";
-import GoodVariantValues from "@components/molecules/goodVariantValues";
-import { InventoryControl } from "@components/molecules/inventoryControl";
-import { InventoryInspection } from "@components/molecules/inventoryInspection";
-import { UserReport } from "@components/molecules/managementSystem/reports";
+} from '@components/atoms/iconComponents';
+import Card from '@components/molecules/card';
+import Confirmation from '@components/molecules/confirmation';
+import ContactInfo from '@components/molecules/contactInfo';
+import { CustomerCredit } from '@components/molecules/customerCredit';
+import { CustomerGroupCredit } from '@components/molecules/customerGroupCredit';
+import DataGrid from '@components/molecules/dataGrid';
+import { ExceptionsModal } from '@components/molecules/exceptionsModal';
+import {
+  ExpireDateAccountList,
+} from '@components/molecules/expireDateAccountList';
+import GoodExtraInfo from '@components/molecules/goodExtraInfo';
+import { GoodPrice } from '@components/molecules/goodPrice';
+import { GoodQc } from '@components/molecules/goodQc';
+import { GoodSettings } from '@components/molecules/goodSettings';
+import GoodVariantValues from '@components/molecules/goodVariantValues';
+import { InventoryControl } from '@components/molecules/inventoryControl';
+import { InventoryInspection } from '@components/molecules/inventoryInspection';
+import { UserReport } from '@components/molecules/managementSystem/reports';
 import {
   ChangeInvoiceCurrency,
   ChangeInvoiceCurrencyRate,
   Settlement,
-} from "@components/molecules/salesAndPurchase/salesInvoice";
+} from '@components/molecules/salesAndPurchase/salesInvoice';
 import {
   Education,
   History,
@@ -42,35 +52,52 @@ import {
   Sponsor,
   TrainingCourse,
   WorkHistory,
-} from "@components/molecules/staff";
-import { FormulaParameter } from "@components/molecules/staff/formulaParameter";
-import { StockWarehouse } from "@components/molecules/stockWarehouse";
-import { TagManagement } from "@components/molecules/tag";
-import { TaxSettings } from "@components/molecules/taxSettings";
-import ListToolbar from "@components/organisms/listToolbar";
-import { useDarkMode, useInitializePage } from "@hooks/custom";
-import Uploader from "@layout/baseLayout/desktop/actionBar/panelForm/uploader";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import { type IBaseDto, PendingStatusEnum } from "@services/base/type";
-import { addSpecificTags } from "@slice/container";
-import { addHistory } from "@slice/history";
-import { HistoryTypeEnum } from "@slice/history/enum";
-import { setPageState, setStatusItemsList, setViewData } from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
-import { SystemEnum } from "@type/enum";
-import type { IToolbarMenu } from "@type/toolbar";
+} from '@components/molecules/staff';
+import { FormulaParameter } from '@components/molecules/staff/formulaParameter';
+import { StockWarehouse } from '@components/molecules/stockWarehouse';
+import { TagManagement } from '@components/molecules/tag';
+import { TaxSettings } from '@components/molecules/taxSettings';
+import ListToolbar from '@components/organisms/listToolbar';
+import {
+  useDarkMode,
+  useInitializePage,
+} from '@hooks/custom';
+import Uploader from '@layout/baseLayout/desktop/actionBar/panelForm/uploader';
+import { useAppSelector } from '@redux/index';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import {
+  type IBaseDto,
+  PendingStatusEnum,
+} from '@services/base/type';
+import { addSpecificTags } from '@slice/container';
+import { addHistory } from '@slice/history';
+import { HistoryTypeEnum } from '@slice/history/enum';
+import {
+  setPageState,
+  setStatusItemsList,
+  setViewData,
+} from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
+import { SystemEnum } from '@type/enum';
+import type { IToolbarMenu } from '@type/toolbar';
 import {
   findingPageState,
   getColoredIcon,
   showInfoToast,
   showSuccessToast,
-} from "@utils/core";
+} from '@utils/core';
 
-import DynamicModal from "../dynamicModal";
-import { GridToolbar } from "../gridToolbar";
-import { ActionLabelsEnum } from "./enum";
-import type { Action, IProps, IState } from "./type";
+import DynamicModal from '../dynamicModal';
+import { GridToolbar } from '../gridToolbar';
+import { ActionLabelsEnum } from './enum';
+import type {
+  Action,
+  IProps,
+  IState,
+} from './type';
 
 export default function List<T extends IBaseDto, K>({
   url,
@@ -1231,7 +1258,7 @@ export default function List<T extends IBaseDto, K>({
             <div
               className={
                 match
-                  ? `absolute -top-[60px] ${
+                  ? `absolute -top-[70px] ${
                       direction == "rtl" ? "-left-[10px]" : "-right-[10px]"
                     } `
                   : ""

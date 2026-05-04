@@ -11,6 +11,7 @@ import { ContextConfirmationPortals } from "./contextConfirmationPortals";
 import { IDynamicModalConfig, RecordType } from "../type";
 import { useDataManager } from "../hooks/useDataManager";
 import { ContextList } from "./contextList";
+import { SpinIcon } from "@components/atoms/iconComponents";
 
 interface SideBarFormContextProps {
   typeId: number;
@@ -49,6 +50,7 @@ export default function SideBarFormContext({
     cardData,
     tableDataWithDesc,
     refetch,
+    cardIsLoading,
   } = useDataManager({
     config,
     pageNumber,
@@ -85,9 +87,16 @@ export default function SideBarFormContext({
     }
   }, [tableData?.Data]);
 
+const noModal = match
+  ? "h-full p-0"
+  : "h-[calc(100dvh-288px)] border-2 border-dashed rounded p-4";
+
+const hasModal = match
+  ? "h-full border-0 p-4"
+  : "h-[calc(100dvh-64px)] border-0 p-4";
   return (
     <div
-      className={`${match ? "h-full" : isModal ? "h-[calc(100dvh-64px)] border-0" : "h-[calc(100dvh-288px)] border-2 border-dashed rounded p-4"} overflow-hidden hidden-show-scrollBar relative  w-full `}
+      className={`${isModal ? hasModal : noModal} overflow-hidden hidden-show-scrollBar relative w-full`}
     >
       <div
         className={`${match ? "" : isModal ? "" : "h-[calc(100dvh-21.5rem)]"} flex flex-col gap-2 my-2`}
@@ -100,17 +109,23 @@ export default function SideBarFormContext({
           editingRecord={editingRecord}
           setEditingRecord={setEditingRecord}
         />
-        <ContextList
-          match={match}
-          config={config}
-          cardData={cardData}
-          handleActionClick={handleActionClick}
-          lastItemRef={lastItemRef}
-          tableIsLoading={tableIsLoading}
-          tableDataWithDesc={tableDataWithDesc}
-          locale={locale}
-          isModal={isModal}
-        />
+        {cardIsLoading || tableIsLoading ? (
+          <div className="flex justify-center items-center h-[calc(100dvh-23.25rem)] text-gray-400">
+            <SpinIcon config={{ width: 24, height: 24 }} />
+          </div>
+        ) : (
+          <ContextList
+            match={match}
+            config={config}
+            cardData={cardData}
+            handleActionClick={handleActionClick}
+            lastItemRef={lastItemRef}
+            // tableIsLoading={tableIsLoading}
+            tableDataWithDesc={tableDataWithDesc}
+            locale={locale}
+            isModal={isModal}
+          />
+        )}
         {match && (
           <ContextPagination
             perPageCount={perPageCount}

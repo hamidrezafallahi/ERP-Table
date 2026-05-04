@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 
+import { Tooltip } from 'antd';
 import moment from 'moment-jalaali';
 import { useLocale } from 'next-intl';
 
@@ -7,15 +8,17 @@ import {
   DynamicSelect,
   NewDatePicker,
 } from '@components/atoms/defaultElements';
+import { Info } from '@components/atoms/iconComponents';
 import { IRequestConfig } from '@type/elementType';
 
-import { UITableController } from '../adapters/ui/UITableController';
 import { FieldType } from '../bootstrap/type';
 import { RowStateEnum } from '../domain/value-objects';
 import {
   ItemType,
   TCell,
+  ValidCell,
 } from '../engine/type';
+import { UITableController } from '../infrastructure/ui/UITableController';
 import { IRow } from './type';
 
 /* ======================================================
@@ -26,7 +29,7 @@ export type CellMeta = {
   renderType: FieldType;
   width?: number;
   popUpWidth?: number;
-  labelValue?:'selectDisplay'|'selectValue';
+  labelValue?: "selectDisplay" | "selectValue";
   editable?: boolean;
   expandable?: boolean;
   options?: { label: string; value: string }[];
@@ -35,7 +38,7 @@ export type CellMeta = {
   // tableKey: string;
   tableId: string;
   columnId: string;
-   onChange?: (
+  onChange?: (
     tableId: string,
     rowId: number,
     row: {
@@ -45,7 +48,6 @@ export type CellMeta = {
       isExpanded: boolean;
     },
     controller: UITableController,
-
   ) => void;
 
   indexOptions?: (
@@ -58,7 +60,6 @@ export type CellMeta = {
       isExpanded: boolean;
     },
     controller: UITableController,
-
   ) => ItemType[];
 };
 
@@ -92,10 +93,12 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   const value = viewCell.getValue().value;
   const display = viewCell.getDisplay().value;
   const isActive = controller.isActiveCell(row.id, columnId);
+  const validation: ValidCell = controller.isValidCell(row.id, columnId);
+
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const locale = useLocale();
   const dispatchChangeValue = (newValue: unknown) => {
-    meta.onChange?.(tableKey, row.id, row, controller)
+    meta.onChange?.(tableKey, row.id, row, controller);
     controller.dispatch({
       type: "UI_CELL_CHANGE",
       rowId: row.id,
@@ -145,6 +148,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         return "—";
     }
   };
+
   useEffect(() => {
     if (isActive && inputRef.current) {
       inputRef.current.focus();
@@ -154,7 +158,13 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
 
   if (editable == false || type == "index" || disable) {
     return (
-      <span key={idx} className="text-xs">
+      <span
+        key={idx}
+        className={`text-xs
+          ${validation.isValid ? "" : "border border-red-300"}
+
+      `}
+      >
         {disable ? "disable" : String(value ?? "")}
       </span>
     );
@@ -166,12 +176,23 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         key={idx}
         tabIndex={tabIndex}
         disabled={isDeleted}
-        className={`flex items-center  px-2 w-full h-full text-xs ${isDeleted ? "cursor-not-allowed " : "cursor-text"}`}
+        className={`flex items-center justify-between  px-2 w-full h-9 text-xs  
+          ${isDeleted ? "cursor-not-allowed " : "cursor-text"}
+          ${validation.isValid ? "" : "border border-red-300"}
+          
+          `}
         onClick={() => {
           activeCell();
         }}
       >
         {valueParser(display ?? value)}
+        {!validation.isValid && (
+          <Tooltip title={validation.cellError.message}>
+            <span>
+              <Info config={{ width: 18, height: 18, stroke: "#f87171" }} />
+            </span>
+          </Tooltip>
+        )}
       </button>
     );
   }
@@ -188,7 +209,9 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           className={`${isDeleted && "cursor-not-allowed"}
           flex items-center bg-transparent px-3 outline-none 
           focus-visible:outline-none focus:outline-none ring-0 focus:!ring-0 
-          focus:ring-offset-0 w-36 min-w-36 h-8 text-xs transition-colors ]`}
+          focus:ring-offset-0 w-36 min-w-36 h-8 text-xs transition-colors
+             ${validation.isValid ? "" : "border border-red-300"}
+          `}
           draggable={false}
           onDragStart={blockDrag}
           onDragOver={blockDrag}
@@ -214,7 +237,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           className={`${isDeleted && "cursor-not-allowed"}
           flex items-center bg-transparent px-3 outline-none  !bg-white !rounded  
           focus-visible:outline-none focus:outline-none ring-0 focus:!ring-0 
-          focus:ring-offset-0 w-36 min-w-36 h-8 text-xs transition-colors ]`}
+          focus:ring-offset-0 w-36 min-w-36 h-8 text-xs transition-colors 
+             ${validation.isValid ? "" : "border border-red-300"}`}
           draggable={false}
           onDragStart={blockDrag}
           onDragOver={blockDrag}
@@ -279,7 +303,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           disabled={isDeleted || !editable}
           value={{ value: String(value ?? ""), label: display }}
           dynamicValue={meta?.dynamicValue}
-          className={`!bg-white !border-[0.4px] !border-gray-gray7 !w-36 !min-w-36 h-8 ${isDeleted && "cursor-not-allowed"} relative`}
+          className={`!bg-white !border-[0.4px] !border-gray-gray7 !w-36 !min-w-36 h-8 ${isDeleted && "cursor-not-allowed"}    ${validation.isValid ? "" : "border border-red-300"} relative`}
           infinite
           onClick={() => activeCell()}
           onChange={(v, o) => {
@@ -299,12 +323,30 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         <span
           key={idx}
           tabIndex={tabIndex}
-          className="flex items-center px-2 w-full h-full text-xs cursor-text"
+          className={`flex items-center px-2 w-full h-full text-xs cursor-text ${validation.isValid ? "" : "border border-red-300"}`}
           onClick={() => activeCell()}
         >
           {String(display ?? value ?? "") || "—"}
         </span>
       );
+    // case "textArea":
+    //   return (
+    //     <textarea
+    //       key={idx}
+    //       ref={inputRef as any}
+    //       disabled={isDeleted || !editable}
+    //       value={value == null ? "" : String(value)}
+    //       className={`${isDeleted && "cursor-not-allowed"}
+    //         flex items-center bg-transparent px-2 outline-none focus-visible:outline-none
+    //        focus:outline-none ring-0 focus:!ring-0 focus:ring-offset-0 w-36 min-w-36 h-8 transition-colors  ${validation.isValid ? "" : "border border-red-300"}`}
+    //       draggable={false}
+    //       onDragStart={blockDrag}
+    //       onDragOver={blockDrag}
+    //       onDrop={blockDrag}
+    //       onChange={(e) => dispatchChangeValue(e.target.value)}
+    //       onClick={() => activeCell()}
+    //     />
+    //   );
     case "text":
     default:
       return (
@@ -315,7 +357,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           value={value == null ? "" : String(value)}
           className={`${isDeleted && "cursor-not-allowed"}
             flex items-center bg-transparent px-2 outline-none focus-visible:outline-none
-           focus:outline-none ring-0 focus:!ring-0 focus:ring-offset-0 w-36 min-w-36 h-8 transition-colors ]`}
+           focus:outline-none ring-0 focus:!ring-0 focus:ring-offset-0 w-36 min-w-36 h-8 transition-colors ${validation.isValid ? "" : "border border-red-300"}`}
           draggable={false}
           onDragStart={blockDrag}
           onDragOver={blockDrag}

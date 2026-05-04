@@ -1,6 +1,7 @@
 // application/commands/tableCommands.ts
 
 import { Table } from '../../domain/entities/Table';
+import { TableActions } from '../../domain/value-objects';
 
 export interface BaseTableCommand {
   readonly store: string;
@@ -40,6 +41,11 @@ export interface MoveVerticalSelectedRows {
   readonly tableKey: string;
   readonly direction: 'up' | 'down';
 }
+export interface MoveVerticalActiveRow {
+  readonly type: 'MOVE_VERTICAL_ACTIVE_ROW';
+  readonly tableKey: string;
+  readonly direction: 'up' | 'down';
+}
 export interface ActiveCellCommand {
   readonly type: 'ACTIVE_CELL';
   readonly tableKey: string;
@@ -47,7 +53,7 @@ export interface ActiveCellCommand {
   readonly rowId: number;
   readonly columnId: string;
 }
-export interface ActiveRowCommand extends BaseTableCommand{
+export interface ActiveRowCommand extends BaseTableCommand {
   readonly type: 'ACTIVE_ROW';
   readonly tableKey: string;
 
@@ -186,6 +192,10 @@ export interface RegisterTableCommand extends BaseTableCommand {
 export interface DisposeTableCommand extends BaseTableCommand {
   readonly type: 'TABLE_DISPOSED';
 }
+export interface ChangeTableActionCommand extends BaseTableCommand {
+  readonly type: 'SET_TABLE_ACTION';
+  action: TableActions
+}
 
 
 
@@ -235,6 +245,7 @@ export type TableCommand =
   | MoveActiveCellCommand
   | MoveActiveCellVerticalCommand
   | MoveVerticalSelectedRows
+  | MoveVerticalActiveRow
   | ActiveFirstCellCommand
   | ChangeCellValueCommand
   | ChangeCellDisplayValueCommand
@@ -249,4 +260,5 @@ export type TableCommand =
   | ChangePageSizeCommand
   | ExpandRowCommand
   | ApplyDynamicProjectionCommand
-  | ChangeUnitLevelCommand;
+  | ChangeUnitLevelCommand
+  | ChangeTableActionCommand;

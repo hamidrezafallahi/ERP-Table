@@ -1,15 +1,19 @@
 // bootstrap/createERPTable.ts
 
-import { CachedTableRepository } from '../adapters/infra/cachedTableRepository';
-import { ConsoleAuditLogger } from '../adapters/infra/consoleAuditLogger';
-import { FetchRemoteApi } from '../adapters/infra/fetchRemoteApi';
-import { UITableController } from '../adapters/ui/UITableController';
 import { Table } from '../domain/entities/Table';
 import {
   ColumnSchema,
   Pagination,
 } from '../domain/value-objects';
 import { TableEngine } from '../engine/tableEngine';
+import {
+  CachedTableRepository,
+} from '../infrastructure/Repositories/cachedTableRepository';
+import {
+  ConsoleAuditLogger,
+} from '../infrastructure/Repositories/consoleAuditLogger';
+import { FetchRemoteApi } from '../infrastructure/Repositories/fetchRemoteApi';
+import { UITableController } from '../infrastructure/ui/UITableController';
 import {
   buildColumns,
   buildRows,
@@ -53,7 +57,7 @@ export async function createERPTable(config: CreateERPTableConfig) {
         editable: col.editable ?? true,
         expandable: col.fieldName === 'index' && loadedTable.getRows().some(row => row.getMoreDetails()),
         hidden: col.visibility?.kind !== 'always' && !hasValue,
-        required: col.required ?? false,
+        rules: col.rules ?? [],
         dynamicValue: col.dynamicSource,
         selectOptions: col.selectOptions,
         indexOptions: col.indexOptions,
@@ -67,7 +71,7 @@ export async function createERPTable(config: CreateERPTableConfig) {
     }
   }
   // ---------- table ----------
-  const table = loadedTable || new Table(config.tableKey, rows, columns, new Pagination(page, pageSize, pageSize)); if (loadedTable) {
+  const table = loadedTable || new Table(config.tableKey, rows, columns, new Pagination(page, pageSize, pageSize),null); if (loadedTable) {
     table.setColumns(Array.from(columns.values()));
     table.setPagination(new Pagination(page, pageSize, pageSize)); await repo.save(config.store, table);
   } else {

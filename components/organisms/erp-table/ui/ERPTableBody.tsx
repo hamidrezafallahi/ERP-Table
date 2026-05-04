@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 
-import { UITableController } from '../adapters/ui/UITableController';
+import { UITableController } from '../infrastructure/ui/UITableController';
 import { ERPTableRow } from './eRPTableRow';
 import { IRow } from './type';
 

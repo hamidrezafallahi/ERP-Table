@@ -1,8 +1,9 @@
-import Form from "@components/templates/form";
+import { PricingCircular } from '@components/organisms/salesAndPurchase';
+import Form from '@components/templates/form';
 import type {
   IPricingCircular,
   IRequest,
-} from "@services/sale/pricingCircular/type";
+} from '@services/sale/pricingCircular/type';
 
 export default function PricingCircularFormPage() {
   return (
@@ -13,6 +14,7 @@ export default function PricingCircularFormPage() {
       listUrl="sale/pricingCircularList"
       titleKey="PriceOrderDesc"
       pageIcon="DiscountIcon"
+      Component={PricingCircular}
     />
   );
 }

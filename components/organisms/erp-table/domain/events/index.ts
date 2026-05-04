@@ -29,6 +29,15 @@ export class DisplayChanged {
     public readonly newValue: CellValue
   ) { }
 }
+export class Validated {
+  readonly type = 'CELL_VALIDATED';
+  constructor(
+    public readonly rowId: RowId,
+    public readonly columnId: ColumnId,
+    public readonly valid: boolean,
+    public readonly error: string
+  ) { }
+}
 
 export class ColumnReordered {
   readonly type = "COLUMN_REORDERED";

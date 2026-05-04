@@ -1,9 +1,6 @@
 // bootstrap/builders.ts
 
 import {
-  FetchRemoteApi,
-} from '../../adapters/infra/fetchRemoteApi'; // اگر نیاز باشد
-import {
   ApplyDynamicProjectionHandler,
   ChangeCellDisplayValueHandler,
   ChangeCellValueHandler,
@@ -40,6 +37,9 @@ import {
   RowState,
   RowStateEnum,
 } from '../../domain/value-objects';
+import {
+  FetchRemoteApi,
+} from '../../infrastructure/Repositories/fetchRemoteApi'; // اگر نیاز باشد
 import {
   CreateERPTableConfig,
   IDetailColumnConfig,
@@ -79,7 +79,7 @@ export function buildColumns(
       editable: col.computed ? false : col.fieldType === 'index' ? false : true,
       expandable: col.fieldName === 'index',
       hidden: isInitiallyHidden(col, rows),
-      required: col.required,
+      rules: col.rules,
       dynamicValue: col.dynamicSource,
       selectOptions: col.selectOptions,
       indexOptions: col.indexOptions,

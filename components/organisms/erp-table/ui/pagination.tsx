@@ -10,7 +10,7 @@ import {
 } from '@components/atoms/iconComponents';
 import {
   UITableController,
-} from '@components/organisms/erp-table/adapters/ui/UITableController';
+} from '@components/organisms/erp-table/infrastructure/ui/UITableController';
 
 interface Props {
   controller: UITableController;

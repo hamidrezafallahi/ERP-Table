@@ -66,8 +66,8 @@ export default function CustomForm({
     const body = isEdit
       ? {
           Desc: values.Desc,
-          [config.idFieldKeyUpdate]: editingRecord.VocherTypeDescId,
-          [config.fieldKey]: editingRecord.VocherTypeDescItemId,
+          [config.idFieldKeyUpdate]: editingRecord?.[config.idFieldKeyUpdate],
+          [config.fieldKey]: editingRecord?.[config.fieldKey],
           ChangeFields: changeFields,
         }
       : {
@@ -110,6 +110,7 @@ export default function CustomForm({
                 className="px-2 py-[2.8px] bg-gray-gray3 rounded cursor-pointer"
                 onClick={() => {
                   form.resetFields();
+                  setEditingRecord(null);
                 }}
               >
                 <PlusOutline />

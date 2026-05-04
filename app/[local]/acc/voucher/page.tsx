@@ -1,4 +1,4 @@
-import VoucherTemplate from '@components/templates/voucherTemplate';
+import Form from '@components/templates/form';
 import type {
   IRequest,
   IVoucher,
@@ -6,14 +6,14 @@ import type {
 
 export default function VoucherFormPage() {
   return (<>
-    {/* <Form<IVoucher, IRequest>
+    <Form<IVoucher, IRequest>
         titleKey="VoucherHeaderId"
       fieldKey="VoucherHeaderId"
       caption={"title.voucher"}
       url="/api/acc/select/voucher"
       listUrl="acc/voucherList"
-    /> */}
-    <VoucherTemplate<IVoucher, IRequest>
+    />
+    {/* <VoucherTemplate<IVoucher, IRequest>
           headerFieldKey="VoucherHeaderId"
           detailFieldKey='VoucherDetailId'
           caption={"title.VoucherForm"}
@@ -22,11 +22,11 @@ export default function VoucherFormPage() {
           addUrl = "api/acc/insert/voucher"
           updateUrl = "api/acc/update/voucher"
           headerGetUrl="api/acc/select/voucher"
-          detailCaption="اقلام سند"
+          tableTitle="اقلام سند"
           listUrl="acc/voucherList"
           titleKey="VoucherHeaderId"
           pageIcon="VoucherTypeIcon"
-        />
+        /> */}
        </>
 
   );

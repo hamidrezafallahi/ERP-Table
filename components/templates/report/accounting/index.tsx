@@ -9,8 +9,6 @@ import {
 import { CustomTooltip } from '@components/atoms/defaultElements';
 import ExpandedButton from '@components/molecules/expandedButton';
 import { useAppSelector } from '@redux/index';
-import type { IPlaceConfig } from '@services/auth/base/type';
-import { useGetData } from '@services/base';
 import { addNewPage } from '@slice/pages';
 import type { IViewData } from '@slice/pages/type';
 import { PageTypeEnum } from '@type/enum';
@@ -40,13 +38,13 @@ function ReportTemplate() {
     }),
     shallowEqual
   );
-  const { data: AccessResponse } = useGetData<IPlaceConfig[], null>({
-    url: `/api/mng/select/placeConfigValue`,
-    body: {},
-  });
+  // const { data: AccessResponse } = useGetData<IPlaceConfig[], null>({
+  //   url: `/api/mng/select/placeConfigValue`,
+  //   body: {},
+  // });
 
   useEffect(() => {
-    if (AccessResponse?.Result == "Success") {
+    // if (AccessResponse?.Result == "Success") {
       dispatch(
         addNewPage({
           pageId: initPage.pageId,
@@ -60,13 +58,13 @@ function ReportTemplate() {
           url: "/acc/report/accounting",
           viewData: {
             ...initialReport,
-            AccessLevel: AccessResponse.Data[0].AccLevel,
+            AccessLevel:7// AccessResponse.Data[0].AccLevel,
           },
           listUrl: "/acc/report/transaction",
         })
       );
-    }
-  }, [AccessResponse]);
+    // }
+  }, []);
 
   return (
     <div className="relative flex w-full h-full">

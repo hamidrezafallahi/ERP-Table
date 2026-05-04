@@ -51,6 +51,7 @@ export function useDataManager({
   const {
     data: cardData,
     isFetching: cardIsFetching,
+    isLoading:cardIsLoading,
     refetch,
   } = useGetInfinite<unknown[], null>({
     url: config.listConfig.selectUrl,
@@ -78,5 +79,6 @@ export function useDataManager({
     cardIsFetching,
     tableDataWithDesc,
     refetch,
+    cardIsLoading
   };
 }

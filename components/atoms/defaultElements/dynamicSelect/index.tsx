@@ -227,7 +227,7 @@ export const DynamicSelect: FC<IProps> = ({
         }
         optionRender={(originNode, info) => {
           return (
-            <div className="flex justify-between items-center p-2">
+            <div className="flex justify-between items-center !h-fit">
               <span>{originNode.data.title}</span>
     
             </div>

@@ -2,14 +2,17 @@ import type * as React from 'react';
 
 import { IRequestConfig } from '@type/elementType';
 
-import { UITableController } from '../adapters/ui/UITableController';
 import { FieldType } from '../bootstrap/type';
 import { Table } from '../domain/entities/Table';
-import { RowStateEnum } from '../domain/value-objects';
+import {
+  RowStateEnum,
+  TableActions,
+} from '../domain/value-objects';
+import { UITableController } from '../infrastructure/ui/UITableController';
 import { IRow } from '../ui/type';
 
 export type TableViewState = {
-  table: Table
+  // table: Table
   activeCell: ActiveCell;
   selectedRows: Record<number, true>;
   rows: IRow[] ;
@@ -27,6 +30,7 @@ export type TableViewState = {
     canPrev: boolean;
     canNext: boolean;
   };
+  action:TableActions
 };
 export type TableSnapShot = {
   table: Table
@@ -60,7 +64,7 @@ export type ActiveCell = {
   rowId: number;
   columnId: string;
 } | null;
-
+export type ValidCell = {isValid:boolean,cellError:CellError} 
 
 export type TableState = {
   table: Table;
@@ -114,10 +118,18 @@ export type ItemType = {
   extra?: React.ReactNode;
 }
 
+export type ValidationCallback = (result:ValidationCallbackResult) => void;
+export type ValidationCallbackResult={
+   valid: boolean,    
+  errors?: Map<string, CellError>, 
+  data?: any}
 
 
 
 
 
-
-
+export interface CellError {
+  rowId: number;
+  caption: string;
+  message: string;
+ }

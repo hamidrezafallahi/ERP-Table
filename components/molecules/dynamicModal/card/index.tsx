@@ -139,7 +139,7 @@ function CardDynamicModalInner<
 
   return (
     <div
-      className={`${match ? "h-[calc(100dvh-300px)]" : `${customMobileClassName} flex flex-col gap-2`} ${processedData?.length === 0 ? "justify-center" : "justify-start"} hidden-show-scrollBar pt-1 w-full overflow-y-auto`}
+      className={`${match ? "h-[calc(100dvh-300px)] pt-1" : `${customMobileClassName} flex flex-col pt-0 gap-2`} ${processedData?.length === 0 ? "justify-center" : "justify-start"} hidden-show-scrollBar w-full overflow-y-auto`}
     >
       {processedData?.length > 0 ? (
         <>

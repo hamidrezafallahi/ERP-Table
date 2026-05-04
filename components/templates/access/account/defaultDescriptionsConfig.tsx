@@ -6,9 +6,9 @@ export const defaultDescriptionsConfig = (id: number): IDynamicModalConfig => ({
   staticKey: "accountId",
   deleteUrl: "/api/acc/delete/accountDescription",
   createUrl: "/api/acc/insert/accountDescription",
-  updateUrl: "",
+  updateUrl: "/api/acc/update/accountDescription",
   idFieldName: "accountId",
-  idFieldKeyUpdate: "VocherTypeDescId",
+  idFieldKeyUpdate: "AccountDescId",
   listConfig: {
     repoViewId: null,
     RepoId: 0,

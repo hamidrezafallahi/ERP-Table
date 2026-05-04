@@ -167,10 +167,10 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
             CurrencyId: res.Data[0].IsCurrency,
             CurrencyNumber: res.Data[0].IsCurrency,
             CurrencyRate: res.Data[0].IsCurrency,
-            FollowUpDate: res.Data[0].IsFollow,
+            ReferNumber: res.Data[0].IsRefer,
+            ReferDate: res.Data[0].IsRefer,
             FollowUpNumber: res.Data[0].IsFollow,
             Count: res.Data[0].IsNumber,
-            ReferNumber: res.Data[0].IsRefer,
             InsuranceNumber: res.Data[0].IsInsurance,
             IsCurrencyVoucher: res.Data[0].IsCurrencyVoucher,
             // IsError: res.Data[0].IsError,
@@ -187,102 +187,8 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       popUpWidth: 400,
       labelValue: "selectValue",
       order: 2
-    }, {
-      fieldName: "CurrencyId",
-      fieldCaption: t("general.currencyType"),
-      fieldType: "selectOption",
-      order: 3,
-      dynamicSource: {
-        endpoint: "/api/inv/select/batch4SelectOptionByVoucherTypeId",
-        repoViewId: 10017,
-        dependsOn: ["AccountId"],
-        dependOn: { fieldName: "AccountId", value: null }
-      },
-      visibility: {
-        kind: "whenFlag",
-        sourceFieldName: "AccountId",
-        flag: "CurrencyId",
-      },
     },
-    {
-      fieldName: "CurrencyNumber",
-      fieldCaption: t("general.currencyCount"),
-      fieldType: "number",
-      order: 4,
-      visibility: {
-        kind: "whenFlag",
-        sourceFieldName: "AccountId",
-        flag: "CurrencyNumber",
-      },
-    },
-
-    {
-      fieldName: "CurrencyRate",
-      fieldCaption: t("general.currencyRate"),
-      visibility: {
-        kind: "whenFlag",
-        sourceFieldName: "AccountId",
-        flag: "CurrencyRate",
-      },
-      fieldType: "price",
-      order: 5,
-    },
-    {
-      fieldName: "FollowUpDate",
-      fieldCaption: t("general.followUpDate"),
-      fieldType: "date",
-      visibility: {
-        kind: "whenFlag",
-        sourceFieldName: "AccountId",
-        flag: "FollowUpDate",
-      },
-      order: 6,
-    },
-    {
-      fieldName: "FollowUpNumber",
-      fieldCaption: t("general.followUpNumber"),
-      fieldType: "text",
-      visibility: {
-        kind: "whenFlag",
-        sourceFieldName: "AccountId",
-        flag: "FollowUpNumber",
-      },
-      order: 7,
-    },
-    {
-      fieldName: "Count",
-      fieldCaption: t("general.countNumber"),
-      fieldType: "number",
-      visibility: {
-        kind: "whenFlag",
-        sourceFieldName: "AccountId",
-        flag: "Count",
-      },
-      order: 8,
-    },
-    {
-      fieldName: "ReferNumber",
-      fieldCaption: t("general.referNumber"),
-      fieldType: "text",
-      visibility: {
-        kind: "whenFlag",
-        sourceFieldName: "AccountId",
-        flag: "ReferNumber",
-      },
-      order: 9,
-    },
-    {
-      fieldName: "InsuranceNumber",
-      fieldCaption: t("general.insuranceNumber"),
-      fieldType: "text",
-      visibility: {
-        kind: "whenFlag",
-        sourceFieldName: "AccountId",
-        flag: "InsuranceNumber",
-      },
-      order: 10,
-    },
-    {
+      {
       fieldName: "TafsiliId",
       fieldCaption: t("general.tafsili"),
       fieldType: "selectOption",
@@ -293,10 +199,8 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         dependOn: { fieldName: "AccountId", value: null }
       },
       visibility: { kind: "always" },
-      order: 11
-    },
-
-    {
+      order: 3
+    },{
       fieldName: "FifthId",
       fieldCaption: t("general.level5"),
       fieldType: "selectOption",
@@ -311,7 +215,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "FifthId",
       },
-      order: 12
+      order: 4
     },
     {
       fieldName: "SixthId",
@@ -328,7 +232,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "SixthId",
       },
-      order: 13
+      order: 5
     },
     {
       fieldName: "SeventhId",
@@ -345,7 +249,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "SeventhId",
       },
-      order: 14
+      order: 6
     },
     {
       fieldName: "EightId",
@@ -362,7 +266,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "EightId",
       },
-      order: 15
+      order: 7
     },
     {
       fieldName: "NineId",
@@ -379,7 +283,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "NineId",
       },
-      order: 16
+      order: 8
     },
     {
       fieldName: "TenId",
@@ -396,7 +300,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "TenId",
       },
-      order: 17
+      order: 9
     },
     {
       fieldName: "ElevenId",
@@ -413,7 +317,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "ElevenId",
       },
-      order: 18
+      order: 10
     },
     {
       fieldName: "TwelveId",
@@ -430,7 +334,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "TwelveId",
       },
-      order: 19
+      order: 11
     },
     {
       fieldName: "ThirteenId",
@@ -447,52 +351,23 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "ThirteenId",
       },
-      order: 20
-    },
-
-    {
+      order: 12
+    }, {
       fieldName: "DetailDesc",
       fieldCaption: t("general.rowDescription"),
       fieldType: "text",
       visibility: { kind: 'always' },
-      order: 21
+      order: 13
     },
-    {
-      fieldName: "CurrencyId",
-      fieldCaption: t("title.currency"),
-      fieldType: "selectOption",
-      dynamicSource: {
-        endpoint: "/api/acc/select/Currency4SelectOption",
-      },
-      visibility: {
-        kind: "whenFlag",
-        sourceFieldName: "AccountId",
-        flag: "IsCurrencyVoucher",
-      },
-      order: 22
-    },
-    {
-      fieldName: "CurrencyRate",
-      fieldCaption: t("title.currencyRate"),
-      fieldType: "number",
-      visibility: {
-        kind: "whenFlag",
-        sourceFieldName: "AccountId",
-        flag: "IsCurrencyVoucher",
-      },
-      order: 23
-    },
-
-    {
+      {
       fieldName: "Bed",
       fieldCaption: t("general.debit"),
       fieldType: "price",
       visibility: { kind: 'always' },
       onChange: (tableKey, rowId, row, controller) => {
-        console.log(row)
         controller.dispatch({ type: 'UI_CELL_CHANGE', value: 0, rowId, columnId: "Bes" })
       },
-      order: 24,
+      order: 14,
     },
     {
       fieldName: "Bes",
@@ -500,10 +375,96 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       fieldType: "price",
       visibility: { kind: 'always' },
       onChange: (tableKey, rowId, row, controller) => {
-        console.log(row)
         controller.dispatch({ type: 'UI_CELL_CHANGE', value: 0, rowId, columnId: "Bed" })
       },
-      order: 25,
+      order: 15,
+    },
+     {
+      fieldName: "ReferNumber",
+      fieldCaption: t("general.referNumber"),
+      fieldType: "number",
+      rules: [{ type: "number", min: 2, message: " 2 حداقل" }],
+      visibility: {
+        kind: "whenFlag",
+        sourceFieldName: "AccountId",
+        flag: "ReferNumber",
+      },
+      order: 16,
+    },
+     {
+      fieldName: "ReferDate",
+      fieldCaption: t("general.ReferDate"),
+      fieldType: "date",
+      visibility: {
+        kind: "whenFlag",
+        sourceFieldName: "AccountId",
+        flag: "ReferDate",
+      },
+      order: 17,
+    },{
+      fieldName: "CurrencyId",
+      fieldCaption: t("general.currencyType"),
+      fieldType: "selectOption",
+      order: 18,
+      dynamicSource: {
+        endpoint: "/api/inv/select/batch4SelectOptionByVoucherTypeId",
+        repoViewId: 10017,
+        dependsOn: ["AccountId"],
+        dependOn: { fieldName: "AccountId", value: null }
+      },
+      visibility: {
+        kind: "whenFlag",
+        sourceFieldName: "AccountId",
+        flag: "CurrencyId",
+      },
+    },
+    {
+      fieldName: "CurrencyNumber",
+      fieldCaption: t("general.currencyCount"),
+      fieldType: "number",
+      rules: [{ type: "number", min: 2, message: " 2 حداقل" }],
+      order: 19,
+      visibility: {
+        kind: "whenFlag",
+        sourceFieldName: "AccountId",
+        flag: "CurrencyNumber",
+      },
+    },
+    {
+      fieldName: "Count",
+      fieldCaption: t("general.countNumber"),
+      fieldType: "number",
+      visibility: {
+        kind: "whenFlag",
+        sourceFieldName: "AccountId",
+        flag: "Count",
+      },
+      order: 20,
+    },
+    {
+      fieldName: "FollowUpNumber",
+      fieldCaption: t("general.followUpNumber"),
+      fieldType: "number",
+      visibility: {
+        kind: "whenFlag",
+        sourceFieldName: "AccountId",
+        flag: "FollowUpNumber",
+      },
+      order: 21,
+    },
+    {
+      fieldName: "InsuranceNumber",
+      fieldCaption: t("general.insuranceNumber"),
+      fieldType: "number",
+      visibility: {
+        kind: "whenFlag",
+        sourceFieldName: "AccountId",
+        flag: "InsuranceNumber",
+      },
+      order: 22,
     }
   ]
 };
+
+
+

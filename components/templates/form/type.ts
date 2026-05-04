@@ -1,6 +1,10 @@
-import { Dispatch, ReactNode, SetStateAction } from "react";
+import {
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+} from 'react';
 
-import { CheckboxOptionType } from "antd";
+import { CheckboxOptionType } from 'antd';
 
 export interface FieldType {
   type?: boolean;
@@ -57,4 +61,5 @@ export interface IProps {
   submitCaption?: string;
   withSubmitButton?: boolean;
   hasShorthandFormToolbar?:boolean
+  Component?:any
 }

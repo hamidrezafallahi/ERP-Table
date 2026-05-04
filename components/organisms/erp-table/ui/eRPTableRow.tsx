@@ -7,8 +7,8 @@ import { useTranslations } from 'next-intl';
 
 import { NoData } from '@components/atoms/iconComponents';
 
-import { UITableController } from '../adapters/ui/UITableController';
 import { RowStateEnum } from '../domain/value-objects';
+import { UITableController } from '../infrastructure/ui/UITableController';
 import {
   CellMeta,
   CellRenderer,
@@ -17,7 +17,7 @@ import { IndexCol } from './indexCol';
 import { IRow } from './type';
 
 interface ERPTableRowProps {
-  row: IRow 
+  row: IRow;
   index: number;
   table: any;
   controller: UITableController;
@@ -36,13 +36,13 @@ function ERPTableRowComponent({
   moreDetailComponent: MoreDetailComponent,
 }: ERPTableRowProps) {
   const t = useTranslations();
-  const rowNum = row.cells["index"].value as number
+  const rowNum = row.cells["index"].value as number;
   const [dropZone, setDropZone] = useState<"before" | "after" | null>(null);
   const isDeleted = row.rowState === RowStateEnum.Deleted;
   const isActiveRow = controller.isActiveRow(row.id);
   const isSelectedRow = controller.isSelectedRow(row.id);
-
-  const handleRowClick = (e: React.MouseEvent) => {
+  const isCut = controller.isCutRow(row.id);
+   const handleRowClick = (e: React.MouseEvent) => {
     controller.onRowClick(row.id, {
       ctrlKey: e.ctrlKey,
       shiftKey: e.shiftKey,
@@ -91,7 +91,6 @@ function ERPTableRowComponent({
 
     setDropZone(null);
   };
-
   const rowClass = useMemo(() => {
     return `
       relative flex items-center border 
@@ -104,9 +103,10 @@ function ERPTableRowComponent({
             ? "bg-blue-blue11"
             : "bg-main-white"
       }
+      ${isCut ? " border-dashed opacity-30" : ""}
         h-9 rounded 
     `;
-  }, [isActiveRow, isSelectedRow, isDeleted, index]);
+  }, [isActiveRow, isSelectedRow, isDeleted, index, isCut]);
   return (
     <>
       <tr
@@ -122,7 +122,7 @@ function ERPTableRowComponent({
         {table.columns
           .filter((c: any) => !c.hidden)
           .map((c: any, idx: number) => {
-             const meta: CellMeta = {
+            const meta: CellMeta = {
               renderType: c.renderType,
               editable: c.editable,
               tableId: tableKey,
@@ -132,17 +132,16 @@ function ERPTableRowComponent({
               indexOptions: c.indexOptions,
               onChange: c.onChange,
               expandable: c.expandable,
-              width:c.width,
-              popUpWidth:c.popUpWidth,
-              labelValue:c.labelValue
-
+              width: c.width,
+              popUpWidth: c.popUpWidth,
+              labelValue: c.labelValue,
             };
 
             if (c.id === "index") {
               return (
                 <td key={c.id}>
                   <IndexCol
-                  idx={index}
+                    idx={index}
                     tableKey={tableKey}
                     row={row}
                     controller={controller}

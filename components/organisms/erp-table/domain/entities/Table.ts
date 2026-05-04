@@ -20,6 +20,7 @@ import {
   RowId,
   RowState,
   RowStateEnum,
+  TableActions,
 } from '../value-objects';
 import { Cell } from './Cell';
 import { Row } from './Row';
@@ -30,7 +31,7 @@ export class Table {
     private rows: Map<number, Row>,
     private columns: Map<string, ColumnSchema>,
     private pagination: Pagination,
-
+    private action: TableActions,
   ) { }
   getColumnSchema(columnId: ColumnId): ColumnSchema | undefined {
     return this.columns.get(columnId.value);
@@ -74,7 +75,6 @@ export class Table {
       }
     }
   }
-
   changeCell(
     rowId: RowId,
     columnId: ColumnId,
@@ -98,7 +98,7 @@ export class Table {
     const ev = row.changeDisplay(columnId, value);
     return ev;
   }
-  addRow(rowId: RowId): RowAdded {
+  duplicateRow(rowId: RowId): RowAdded {
     const target = this.rows.get(rowId.value);
     if (!target) throw new Error("Row not found");
     const rowsArray = Array.from(this.rows.values());
@@ -166,6 +166,95 @@ export class Table {
 
     return new RowAdded(newRowId);
   }
+  addRow(targetRowId: number, placedRowId?: number | undefined): RowAdded {
+    const target = this.rows.get(targetRowId);
+    if (!target) throw new Error("Row not found");
+    let placeIndex;
+    let x = 0;
+
+    const rowsArray = Array.from(this.rows.values()).sort((a, b) =>
+      (a.getCell("index")?.getValue().value as number) -
+      (b.getCell("index")?.getValue().value as number)
+    );
+    if (placedRowId) {
+      console.log("اگر pasteInsert کنه")
+      const placedRow = rowsArray.find(r => r.id.value === placedRowId)
+      placeIndex = rowsArray.findIndex(r => r.id.value === placedRowId)
+      const placeIndexValue = placedRow.getCell("index")?.getValue().value as number;
+      const nextRow = placeIndex < rowsArray.length - 1 ? rowsArray[placeIndex + 1] : undefined;
+      if (nextRow) {
+        console.log("اگر سطر بعدی وجود داشت")
+        const nextIndexValue = nextRow.getCell("index")?.getValue().value as number;
+        console.log(targetRowId, placedRowId, nextIndexValue, rowsArray)
+        x = (placeIndexValue + nextIndexValue) / 2;
+      } else {
+        console.log("اگر سطر بعدی وجود نداشت")
+        console.log(targetRowId, placedRowId, rowsArray)
+        x = placeIndexValue + 1
+      }
+    } else {
+      console.log("اگر فقط paste کرده بود یا ")
+      const lastRowIndexValue = rowsArray[ rowsArray.length-1].getCell("index").getValue().value as number
+      x = lastRowIndexValue + 1
+      console.log(lastRowIndexValue)
+
+
+    }
+
+    const newRowId = new RowId(
+      Math.floor((1 + Math.random()) * 0x10000000000000000)
+    );
+    const newCells = new Map<string, Cell>();
+    const newIndex = new CellValue(x)
+    const newDisplay = new CellDisplay(x)
+    for (const [colId, cell] of target.getCells().entries()) {
+      if (colId == "index") {
+        newCells.set(
+          colId,
+          new Cell(
+            newRowId,
+            new ColumnId(colId),
+            newIndex,
+            newIndex,
+            newDisplay
+          )
+        );
+      } else {
+        newCells.set(
+          colId,
+          new Cell(
+            newRowId,
+            new ColumnId(colId),
+            cell.getValue(),
+            cell.getValue(),
+            cell.getDisplay()
+          )
+        );
+      }
+
+    }
+
+    const newRow = new Row(
+      newRowId,
+      newCells,
+      new RowState(RowStateEnum.Added),
+      new Set(),
+      target.moreDetails,
+      target.visibilityCondition
+    );
+    rowsArray.sort((a, b) =>
+      (a.getCell("index")?.getValue().value as number) -
+      (b.getCell("index")?.getValue().value as number)
+    );
+
+    rowsArray.splice(placeIndex + 1, 0, newRow);
+
+    this.rows = new Map(
+      rowsArray.map(r => [r.id.value, r])
+    );
+
+    return new RowAdded(newRowId);
+  }
   addNewRow(): RowAdded {
     const newRowId = new RowId(Math.floor((1 + Math.random()) * 0x10000000000000000))
     const cells = new Map<string, Cell>();
@@ -184,7 +273,7 @@ export class Table {
       cells.set(columnId, cell);
     });
     const visibilityCondition = new Object() as Record<string, boolean>;
-    const newRow = new Row(newRowId, cells, new RowState(RowStateEnum.Added), new Set(), undefined,visibilityCondition );
+    const newRow = new Row(newRowId, cells, new RowState(RowStateEnum.Added), new Set(), undefined, visibilityCondition);
     this.rows.set(newRowId.value, newRow);
     const totalRows = this.rows.size;
     const pageSize = this.pagination.pageSize;
@@ -205,7 +294,7 @@ export class Table {
         this.columns.set(key, {
           ...existing,
           title: incoming.title,
-          required: incoming.required,
+          rules: incoming.rules,
           editable: incoming.editable,
           renderType: existing.renderType,
           hidden: shouldUnhide ? false : existing.hidden,
@@ -266,7 +355,9 @@ export class Table {
   setPagination(pagination: Pagination) {
     this.pagination = pagination
   }
-
+  setTableAction(action: TableActions) {
+    this.action = action
+  }
   changePage(page: number) {
     this.pagination = this.pagination.changePage(page);
 
@@ -281,6 +372,9 @@ export class Table {
     const start = (this.pagination.page - 1) * this.pagination.pageSize;
     const end = start + this.pagination.pageSize;
     return this.getRows().slice(start, end);
+  }
+  getTableAction() {
+    return this.action
   }
   addRows(newRows: Row[]) {
     newRows.forEach((r) => {
@@ -372,7 +466,7 @@ export class Table {
     const clonedRows = new Map<number, Row>();
     for (const [k, row] of this.rows.entries()) {
       const clonedColumns = new Map(this.columns);
-      const cloned = new Table(this.id, clonedRows, clonedColumns, this.pagination);
+      const cloned = new Table(this.id, clonedRows, clonedColumns, this.pagination, null);
       cloned.pagination = this.pagination;
       return cloned;
     }

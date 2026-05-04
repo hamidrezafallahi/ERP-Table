@@ -1,6 +1,6 @@
-import FormGenerator from "@components/organisms/formGenerator";
+import FormGenerator from '@components/organisms/formGenerator';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export default function Form<T, K>({
   caption,
@@ -20,6 +20,7 @@ export default function Form<T, K>({
   submitCaption,
   withSubmitButton = true,
   hasShorthandFormToolbar,
+  Component
 }: IProps) {
   return (
     <FormGenerator<T, K>
@@ -40,6 +41,7 @@ export default function Form<T, K>({
       submitCaption={submitCaption}
       withSubmitButton={withSubmitButton}
       hasShorthandFormToolbar={hasShorthandFormToolbar}
+      Component={Component}
     />
   );
 }

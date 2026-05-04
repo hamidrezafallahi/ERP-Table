@@ -1,11 +1,11 @@
 import { IRequestConfig } from '@type/elementType';
 
-import { UITableController } from '../../adapters/ui/UITableController';
 import { FieldType } from '../../bootstrap/type';
 import {
   ItemType,
   TCell,
 } from '../../engine/type';
+import { UITableController } from '../../infrastructure/ui/UITableController';
 
 //domain/value-object
 export class CellValue {
@@ -35,6 +35,23 @@ export type SelectOption = {
   value: string;
 };
 
+export type IRule = {
+  type?: string | 'array' | 'object' | 'enum' | 'date' | 'number' | 'integer' | 'float' | 'boolean' | 'email' | 'url' | 'hex' | RegExp;
+  required?: boolean;
+  whitespace?: boolean;
+  message?: string ;
+  transform?: (value: any) => any;
+  pattern?: string | RegExp;
+  min?: number;
+  max?: number;
+  len?: number;
+  enum?: any[];
+  validator?: (rule: IRule, value: any, callback: (error?: string[]) => void) => void | Promise<void>;
+  asyncValidator?: (rule: IRule, value: any) => Promise<void>;
+  warningOnly?: boolean;
+  validateTrigger?: string | string[];
+};
+
 export type ColumnSchema = {
   id: string;
   title: string;
@@ -42,7 +59,7 @@ export type ColumnSchema = {
   selectOptions?: SelectOption[];
   editable?: boolean;
   hidden?: boolean;
-  required?: boolean;
+  rules?: IRule[];
   dynamicValue?:  IRequestConfig & {dependsOn?: string[]}
   expandable: boolean;
   indexOptions?: (tableId: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, controller: UITableController) => ItemType[];
@@ -95,6 +112,8 @@ export enum RowOriginEnum {
   New = "Update",
 
 }
+export type TableActions ="copy"|"cut"|"paste"|"pasteInsert"| null
+
 
 export class Pagination {
   public readonly totalRows: number;

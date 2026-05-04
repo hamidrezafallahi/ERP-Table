@@ -30,7 +30,10 @@ import { addNewPage } from '@slice/pages';
 import { PageStateEnum } from '@slice/pages/enum';
 import { IPageConfig } from '@type/elementType';
 import { PageTypeEnum } from '@type/enum';
-import { showSuccessToast } from '@utils/core';
+import {
+  showErrorToast,
+  showSuccessToast,
+} from '@utils/core';
 
 import {
   columnConfig,
@@ -50,8 +53,9 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
     detailGetUrl,
     addUrl,
     updateUrl,
-    detailCaption,
+    tableTitle,
   } = props;
+
   const [pageReady, setPageReady] = React.useState(false);
   const [rows, setRows] = React.useState<any[] | null>(null);
   const [sum, setSum] = React.useState<{ bed: number; bes: number }>({
@@ -283,7 +287,6 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
   const testActor = { userId: "12", roles: ["ADMIN"] };
 
   function mapSnapshotToDetailsDynamic(snapshot: any) {
-    console.log(snapshot.rows);
     return snapshot.rows
       .filter((row: any) => row.rowState !== "None")
       .map((row: any) => {
@@ -308,45 +311,53 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
   }
 
   const handleSubmit = async () => {
-    const formValues = Object.fromEntries(
-      Object.entries(form.getFieldsValue()).filter(
-        ([key, value]) => value !== null && value !== undefined,
-      ),
-    );
-    const ChangeFields = [];
+    const validationFn = tableApi?.validation();
+    validationFn(async (result) => {
+      if (!result.valid) {
+        showErrorToast("فیلد های جدول ایراد دارد");
+        return;
+      } else {
+        const formValues = Object.fromEntries(
+          Object.entries(form.getFieldsValue()).filter(
+            ([key, value]) => value !== null && value !== undefined,
+          ),
+        );
+        const ChangeFields = [];
 
-    Object.entries(formValues).forEach(([key, value]: [string, any]) => {
-      if (
-        storedData?.find((i) => i.name === key)?.value !==
-          storedData?.find((i) => i.name === key)?.originalValue &&
-        id !== 0
-      ) {
-        ChangeFields.push(key);
+        Object.entries(formValues).forEach(([key, value]: [string, any]) => {
+          if (
+            storedData?.find((i) => i.name === key)?.value !==
+              storedData?.find((i) => i.name === key)?.originalValue &&
+            id !== 0
+          ) {
+            ChangeFields.push(key);
+          }
+        });
+        const payload = {
+          ...formValues,
+          ChangeFields: ChangeFields.length > 0 ? ChangeFields : undefined,
+          Details: mapSnapshotToDetailsDynamic(tableApi?.getSnapshot()),
+          VoucherHeaderId: id !== 0 ? id : undefined,
+        };
+        const res = await itemMutate({
+          url: !id ? addUrl : updateUrl,
+          body: payload,
+        }).unwrap();
+        if (res?.Result == "Success") {
+          showSuccessToast(t("toast.successTitle"), t(caption));
+          initializePage({
+            config: {
+              ...initData,
+              RepoId: activePage.RepoId,
+              SystemId: activePage.SystemId,
+              url: listUrl,
+              pageId: returnPageId,
+              data: initData,
+            },
+          });
+        }
       }
     });
-    const payload = {
-      ...formValues,
-      ChangeFields: ChangeFields.length > 0 ? ChangeFields : undefined,
-      Details: mapSnapshotToDetailsDynamic(tableApi?.getSnapshot()),
-      VoucherHeaderId: id !== 0 ? id : undefined,
-    };
-    const res = await itemMutate({
-      url: !id ? addUrl : updateUrl,
-      body: payload,
-    }).unwrap();
-    if (res?.Result == "Success") {
-      showSuccessToast(t("toast.successTitle"), t(caption));
-      initializePage({
-        config: {
-          ...initData,
-          RepoId: activePage.RepoId,
-          SystemId: activePage.SystemId,
-          url: listUrl,
-          pageId: returnPageId,
-          data: initData,
-        },
-      });
-    }
   };
 
   // const { data: renderUnitData } = useGetData<IPlaceConfig[], null>({
@@ -398,6 +409,7 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
       rows,
       columns: colConfigs,
       tableHeight: formHeight,
+      tableTitle,
       // rowAccess,
       // tableHeight:100,
       // recordPerPage:6
@@ -416,7 +428,7 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
         </button>
       </div>
       <VoucherForm form={form} />
-      <div className="text-gray-gray10 text-sm">{detailCaption}</div>
+
       {pageReady &&
         activePage?.pageId &&
         VoucherTypeId &&

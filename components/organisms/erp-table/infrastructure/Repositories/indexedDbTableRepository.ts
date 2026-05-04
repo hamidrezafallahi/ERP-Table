@@ -166,7 +166,7 @@ export class IndexedDbTableRepository implements TableRepository {
           reject(new Error(`Table ${tableId} not found`));
           return;
         }
-        resolve(new Table(tableId, this.deserializeRows(req.result.rows), new Map(), new Pagination(1, 10, 10)));
+        resolve(new Table(tableId, this.deserializeRows(req.result.rows), new Map(), new Pagination(1, 10, 10),null));
       };
       req.onerror = () => reject(req.error);
     });

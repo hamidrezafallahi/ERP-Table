@@ -10,9 +10,9 @@ import {
   Undo,
 } from '@components/atoms/iconComponents';
 
-import { UITableController } from '../adapters/ui/UITableController';
 import { RowStateEnum } from '../domain/value-objects';
 import { TCell } from '../engine/type';
+import { UITableController } from '../infrastructure/ui/UITableController';
 import { CellMeta } from './cellRenderer';
 
 interface IndexColProps {
@@ -69,69 +69,69 @@ export const IndexCol: React.FC<IndexColProps> = ({
     {
       type: "divider",
     },
-    {
-      key: "3",
-      disabled: Object.keys(selectedRow).length === 0,
-      label: (
-        <span
-          className="flex text-sm"
-          onClick={() => {
-            // setAllowCopy(true);
-          }}
-        >
-          {t("general.copy")}
-        </span>
-      ),
-      extra: "Ctrl + Enter",
-    },
-    {
-      key: "4",
-      disabled: Object.keys(selectedRow).length === 0,
-      label: (
-        <span
-          className="flex text-sm"
-          onClick={() => {
-            // handleGroupPasteRow(index);
-          }}
-        >
-          {t("general.paste")}
-        </span>
-      ),
-      extra: "Ctrl + Enter",
-    },
-    {
-      key: "5",
-      disabled: Object.keys(selectedRow).length === 0,
-      label: (
-        <span
-          className="flex text-sm"
-          onClick={() => {
-            // handleGroupPasteRowAsNew(index);
-          }}
-        >
-          {t("general.pasteAsNew")}
-        </span>
-      ),
-      // extra: "Ctrl + Enter",
-    },
-    {
-      key: "6",
-      disabled: Object.keys(selectedRow).length === 0,
-      label: (
-        <span
-          className="flex text-sm"
-          onClick={() => {
-            // handleGroupDelete();
-          }}
-        >
-          {t("general.selectedGroupDelete")}
-        </span>
-      ),
-      // extra: "Ctrl + Enter",
-    },
-    {
-      type: "divider",
-    },
+    // {
+    //   key: "3",
+    //   disabled: Object.keys(selectedRow).length === 0,
+    //   label: (
+    //     <span
+    //       className="flex text-sm"
+    //       onClick={() => {
+    //         // setAllowCopy(true);
+    //       }}
+    //     >
+    //       {t("general.copy")}
+    //     </span>
+    //   ),
+    //   extra: "Ctrl + Enter",
+    // },
+    // {
+    //   key: "4",
+    //   disabled: Object.keys(selectedRow).length === 0,
+    //   label: (
+    //     <span
+    //       className="flex text-sm"
+    //       onClick={() => {
+    //         // handleGroupPasteRow(index);
+    //       }}
+    //     >
+    //       {t("general.paste")}
+    //     </span>
+    //   ),
+    //   extra: "Ctrl + Enter",
+    // },
+    // {
+    //   key: "5",
+    //   disabled: Object.keys(selectedRow).length === 0,
+    //   label: (
+    //     <span
+    //       className="flex text-sm"
+    //       onClick={() => {
+    //         // handleGroupPasteRowAsNew(index);
+    //       }}
+    //     >
+    //       {t("general.pasteAsNew")}
+    //     </span>
+    //   ),
+    //   // extra: "Ctrl + Enter",
+    // },
+    // {
+    //   key: "6",
+    //   disabled: Object.keys(selectedRow).length === 0,
+    //   label: (
+    //     <span
+    //       className="flex text-sm"
+    //       onClick={() => {
+    //         // handleGroupDelete();
+    //       }}
+    //     >
+    //       {t("general.selectedGroupDelete")}
+    //     </span>
+    //   ),
+    //   // extra: "Ctrl + Enter",
+    // },
+    // {
+    //   type: "divider",
+    // },
     ...(meta.indexOptions?.(tableKey, row.id, row, controller) || []),
   ];
 

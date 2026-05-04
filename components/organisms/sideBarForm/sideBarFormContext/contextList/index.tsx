@@ -17,7 +17,6 @@ interface ContextListProps {
     record: unknown,
   ) => void;
   lastItemRef: RefObject<HTMLDivElement>;
-  tableIsLoading: boolean;
   tableDataWithDesc: IVoucherTypeItem[];
   locale: string;
   isModal: boolean;
@@ -29,7 +28,6 @@ export function ContextList({
   cardData,
   handleActionClick,
   lastItemRef,
-  tableIsLoading,
   tableDataWithDesc,
   locale,
   isModal,
@@ -52,7 +50,7 @@ export function ContextList({
         />
       ) : (
         <TableDynamicModal
-          isLoading={tableIsLoading}
+          isLoading={false}
           actions={config.actions}
           columnsList={config.listConfig}
           data={tableDataWithDesc}

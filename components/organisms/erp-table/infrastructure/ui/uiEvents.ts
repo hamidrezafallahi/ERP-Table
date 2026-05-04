@@ -1,6 +1,7 @@
 // adapters/ui/uiEvents.ts
 
 import { Table } from '../../domain/entities/Table';
+import { TableActions } from '../../domain/value-objects';
 
 /* ---------- Base ---------- */
 
@@ -117,6 +118,14 @@ export interface RowSelectedUiCommand extends UICommandBase {
   readonly type: 'ROW_SELECTED';
   readonly rowId: number;
 }
+/* ---------- Table ---------- */
+
+export interface ActionTableUiCommand extends UICommandBase {
+  readonly type: 'UI_ACTION_TABLE';
+   readonly action: TableActions;
+
+
+}
  
 /* ---------- Keyboard ---------- */
 
@@ -152,4 +161,5 @@ export type UITableCommand =
   | RegisterTableUiCommand
   | ToggleRowExpandedUiCommand
   | ReorderRowUiCommand
+  | ActionTableUiCommand
   | KeyDownUiCommand;

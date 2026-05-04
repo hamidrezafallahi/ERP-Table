@@ -8,9 +8,10 @@ import React, {
 import { useFullScreen } from '@hooks/custom';
 
 import { CreateERPTableConfig } from '../bootstrap/type';
-import { AddNewRowButton } from './addNewRowButton';
+import { ValidationCallback } from '../engine/type';
 import { ERPTableBody } from './ERPTableBody';
 import { ERPTableHeader } from './ERPTableHeader';
+import { GroupActionButtons } from './groupActionButtons';
 import ERPTablePagination from './pagination';
 import { useERPTable } from './useERPTable';
 
@@ -20,15 +21,17 @@ export type ERPTableApi = {
     columnId: string,
     cb: (values: T[]) => void,
   ) => () => void;
+  validation: () => (cb: ValidationCallback) => void;
   addNewRows: () => void;
 };
 export interface ERPTableProps<
   TMoreDetail = unknown,
 > extends CreateERPTableConfig<TMoreDetail> {
   onReady?: (api: ERPTableApi) => void;
+  tableTitle?: string;
   header?: ReactNode;
   footer?: ReactNode;
-  tableHeight:number
+  tableHeight: number;
   moreDetailComponent?: React.ComponentType<{ data: TMoreDetail }>;
 }
 export function ERPTable<TMoreDetail = unknown>(
@@ -42,6 +45,7 @@ export function ERPTable<TMoreDetail = unknown>(
     store,
     tableKey,
     onReady,
+    tableTitle,
     header,
     footer,
     tableHeight,
@@ -102,6 +106,7 @@ export function ERPTable<TMoreDetail = unknown>(
       onReady?.({
         getSnapshot: () => controller.getSnapShot(),
         addNewRows: () => {}, // controller.addNewRows(tableKey,[])},
+        validation: () => controller.validation(),
         subscribeColumn: (columnId, cb) =>
           controller.subscribeColumn(columnId, cb),
       });
@@ -110,34 +115,40 @@ export function ERPTable<TMoreDetail = unknown>(
   if (!result.ready) return null;
   const { controller } = result;
   return (
-    <div className="flex flex-col w-full h-full">
-      {header}
-      <div
-        className="flex-1 overflow-y-auto"
-        style={{ maxHeight: tableHeight ?? "100%" }}
-      >
-        <table className="w-full border-collapse table-fixed">
-          <ERPTableHeader controller={controller} tableKey={tableKey} />
-          <ERPTableBody
+    <>
+      <div className="flex flex-col py-2 w-full h-full">
+        {tableTitle}
+        <div
+          className="flex-1 overflow-y-auto"
+          style={{ maxHeight: tableHeight ?? "100%" }}
+        >
+          <table className="w-full border-collapse table-fixed">
+            <ERPTableHeader
+              controller={controller}
+              tableKey={tableKey}
+              header={header}
+            />
+            <ERPTableBody
+              controller={controller}
+              tableKey={tableKey}
+              moreDetailComponent={MoreDetailComponent}
+            />
+          </table>
+        </div>
+
+        {/* Pagination و دکمه‌ها همیشه زیر */}
+        <div className="flex justify-between items-center gap-3 mt-2 w-full">
+          <GroupActionButtons controller={controller} />
+          <ERPTablePagination
             controller={controller}
+            store={store}
             tableKey={tableKey}
-            moreDetailComponent={MoreDetailComponent}
           />
-        </table>
-      </div>
+        </div>
 
-      {/* Pagination و دکمه‌ها همیشه زیر */}
-      <div className="flex justify-between items-center gap-3 mt-2 w-full">
-        <AddNewRowButton controller={controller} />
-        <ERPTablePagination
-          controller={controller}
-          store={store}
-          tableKey={tableKey}
-        />
+        {/* footer دلخواه */}
+        {footer}
       </div>
-
-      {/* footer دلخواه */}
-      {footer}
-    </div>
+    </>
   );
 }
