@@ -1,7 +1,6 @@
 import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { CustomButton } from "@components/atoms/defaultElements";
-import { useAppSelector } from "@redux/index";
 import { setPageData } from "@slice/pages";
 import { ISelectOption } from "@type/elementType";
 import { Skeleton } from "antd";
@@ -10,27 +9,19 @@ import { Dispatch, SetStateAction } from "react";
 interface SideBarFormListIProps {
   dataList: ISelectOption[];
   isFetching: boolean;
-  setTypeId: Dispatch<SetStateAction<number>>;
+  setTypeId: Dispatch<SetStateAction<number | undefined>>;
   idFieldName: string;
-  typeId:number
+  typeId: number;
 }
 
 export default function SideBarFormList({
   dataList,
   isFetching,
   setTypeId,
-  idFieldName,
-  typeId
+  typeId,
 }: SideBarFormListIProps) {
   const dispatch = useDispatch();
   const t = useTranslations();
-
-  const { selectedId } = useAppSelector((state) => {
-    const selectedId = state.withPersist.pages
-      .find((item) => item.isActive)
-      ?.pageData?.find((pro) => pro.name == idFieldName)?.value;
-    return { selectedId };
-  }, shallowEqual);
 
   const handleVoucherTypeSelected = (e: ISelectOption) => {
     dispatch(
@@ -41,6 +32,10 @@ export default function SideBarFormList({
     );
     setTypeId(e._SelectId);
   };
+
+  const sortedDataList = [...dataList].sort(
+    (a, b) => a._SelectId - b._SelectId,
+  );
 
   return (
     <>
@@ -57,7 +52,7 @@ export default function SideBarFormList({
         </div>
       ) : dataList.length > 0 ? (
         <div className="flex w-full flex-col gap-1 !h-full items-start overflow-auto">
-          {dataList.map((voucherType, index) => (
+          {sortedDataList.map((voucherType, index) => (
             <div
               className="w-full border-b last:border-b-0"
               key={`${voucherType._SelectId}-${index}`}

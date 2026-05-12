@@ -3,10 +3,6 @@
 import { Table } from '../../domain/entities/Table';
 import { TableActions } from '../../domain/value-objects';
 import { TableEngine } from '../../engine/tableEngine';
-import {
-  ValidationCallbackResult,
-  ValidCell,
-} from '../../engine/type';
 import { UITableCommand } from './uiEvents';
 
 type KeydownCtx = {
@@ -127,6 +123,13 @@ export class UITableController {
       tableKey: this.tableKey,
       rowId,
     });
+  }  private deleteRows( ) {
+    this.engine.dispatch({
+      type: 'ROWS_DELETED',
+      store: this.store,
+      tableKey: this.tableKey,
+ 
+    });
   }
   private deleteTable() {
     this.engine.dispatch({
@@ -230,17 +233,25 @@ export class UITableController {
       case 'NumpadEnter':
       case 'Enter': {
         e.preventDefault();
-        if (shiftKey) {
-          await this.collapseAll();
-          return;
-        } else if (altKey) {
-          await this.toggleRowExpanded(activeRowId);
-          return;
-        } else if (activeRowId) {
+        // if (shiftKey) {
+        //   await this.collapseAll();
+        //   return;
+        // }
+        //  else if (altKey) {
+        //   await this.toggleRowExpanded(activeRowId);
+        //   return;
+        // }  else 
+       
+          if (activeRowId) {
           if (!activeColumnId) {
             this.activateFirstEditableCell(activeRowId);
           } else {
-            this.moveActiveCellVertical(activeRowId, activeColumnId, 'down')
+             e.preventDefault();
+          this.moveToNextCell(
+            activeRowId,
+            activeColumnId,
+            shiftKey ? 'prev' : 'next'
+          );
           }
         }
         return;
@@ -472,11 +483,7 @@ export class UITableController {
   subscribeColumn(columnId: string, cb: (values: unknown[]) => void) {
     return this.engine.subscribeColumn(this.tableKey, columnId, cb);
   }
- validation: () => (callback: (result: ValidationCallbackResult) => void) => void = () => (callback) => {
-  this.engine.validation(this.tableKey, (result) => {
-    callback(result);   
-  });
-}
+
   isActiveCell(rowId: number, columnId: string) {
     try {
       return this.engine.isActiveCell(this.tableKey, rowId, columnId);
@@ -484,13 +491,7 @@ export class UITableController {
       return null;
     }
   }
-  isValidCell(rowId: number, columnId: string):ValidCell {
-    try {
-      return this.engine.isValidCell(this.tableKey, rowId, columnId);
-    } catch {
-      return null;
-    }
-  }
+
   isActiveRow(rowId: number) {
     try {
       return this.engine.isActiveRow(this.tableKey, rowId);
@@ -512,13 +513,7 @@ export class UITableController {
       return null;
     }
   }
-  isExpandableRow(rowId: number) {
-    try {
-      return this.engine.isExpandableRow(this.tableKey, rowId);
-    } catch {
-      return null;
-    }
-  }
+ 
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
@@ -584,6 +579,9 @@ export class UITableController {
       case 'ROW_DELETED':
         this.deleteRow(command.rowId);
         return;
+      case 'UI_DELETE_SELECTED_ROW':
+        this.deleteRows();
+        return;
       case 'TABLE_DELETED':
         this.deleteTable();
         return;
@@ -639,3 +637,18 @@ export class UITableController {
 
 
 }
+
+
+
+//  validation: () => (callback: (result: ValidationCallbackResult) => void) => void = () => (callback) => {
+//   this.engine.validation(this.tableKey, (result) => {
+//     callback(result);   
+//   });
+// }
+  // isValidCell(rowId: number, columnId: string):ValidCell {
+  //   try {
+  //     return //this.engine.isValidCell(this.tableKey, rowId, columnId);
+  //   } catch {
+  //     return null;
+  //   }
+  // }

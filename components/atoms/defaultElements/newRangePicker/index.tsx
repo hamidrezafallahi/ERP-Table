@@ -31,13 +31,13 @@ export const NewRangePicker = ({
     (state) => ({
       locale: state.withPersist.config.lang,
       initElement: config
-        ? state.withPersist.pages
+        ? (state.withPersist.pages
             .find((item) => item.isActive)
             ?.pageData?.find((element) => element.name === config.name)
-            ?.value ?? null
+            ?.value ?? null)
         : undefined,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const defaultClass = `!bg-gray-gray3 dark:!bg-gray-gray10 rounded !w-full ${className} !border-none `;
@@ -67,7 +67,7 @@ export const NewRangePicker = ({
             type,
             selectEndpoint,
             value: Data.date,
-          })
+          }),
         );
       }
     }
@@ -105,17 +105,19 @@ export const NewRangePicker = ({
       {config ? (
         //   <TimePicker value={inputValue} onChange={handleChange} />
         <RangePicker
-          {...restProps as any}
+          {...(restProps as any)}
           defaultValue={inputValue}
           onChange={handleChange}
           className={defaultClass}
           showComparison={false}
+          exportType="IsoString"
           calendarType={locale == "fa" ? "jalali" : "gregorian"}
         />
       ) : (
         <RangePicker
-          {...restProps as any}
+          {...(restProps as any)}
           onChange={handleChange}
+          exportType="IsoString"
           calendarType={locale == "fa" ? "jalali" : "gregorian"}
         />
       )}

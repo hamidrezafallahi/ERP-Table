@@ -13,15 +13,19 @@ interface ContextConfirmationPortalsProps {
   setIsConfirmModalOpen: Dispatch<SetStateAction<boolean>>;
 }
 
-export function ContextConfirmationPortals({
-  isConfirmModalOpen,
-  setIsConfirmModalOpen,
-  selectedId,
-  handleConfirmation,
-  triggerIsLoading,
-  isConfirmDrawerOpen,
-  setIsConfirmDrawerOpen,
-}: ContextConfirmationPortalsProps) {
+export function ContextConfirmationPortals(
+  props: ContextConfirmationPortalsProps,
+) {
+  const {
+    isConfirmModalOpen,
+    setIsConfirmModalOpen,
+    selectedId,
+    handleConfirmation,
+    triggerIsLoading,
+    isConfirmDrawerOpen,
+    setIsConfirmDrawerOpen,
+  } = props;
+
   return (
     <>
       {isConfirmModalOpen && (

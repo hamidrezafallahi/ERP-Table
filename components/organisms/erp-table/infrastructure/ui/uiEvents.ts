@@ -86,6 +86,9 @@ export interface DeleteRowUiCommand extends UICommandBase {
   readonly type: 'ROW_DELETED';
   readonly rowId: number;
 }
+export interface DeleteSelectedRowsUiCommand extends UICommandBase {
+  readonly type: 'UI_DELETE_SELECTED_ROW';
+ }
 export interface DeleteTableUiCommand extends UICommandBase {
   readonly type: 'TABLE_DELETED';
 }
@@ -162,4 +165,5 @@ export type UITableCommand =
   | ToggleRowExpandedUiCommand
   | ReorderRowUiCommand
   | ActionTableUiCommand
+  | DeleteSelectedRowsUiCommand
   | KeyDownUiCommand;

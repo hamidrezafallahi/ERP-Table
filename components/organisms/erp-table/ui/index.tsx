@@ -5,10 +5,15 @@ import React, {
   useEffect,
 } from 'react';
 
-import { useFullScreen } from '@hooks/custom';
+import { shallowEqual } from 'react-redux';
+
+import {
+  useFullScreen,
+  useMediaQuery,
+} from '@hooks/custom';
+import { useAppSelector } from '@redux/index';
 
 import { CreateERPTableConfig } from '../bootstrap/type';
-import { ValidationCallback } from '../engine/type';
 import { ERPTableBody } from './ERPTableBody';
 import { ERPTableHeader } from './ERPTableHeader';
 import { GroupActionButtons } from './groupActionButtons';
@@ -21,7 +26,7 @@ export type ERPTableApi = {
     columnId: string,
     cb: (values: T[]) => void,
   ) => () => void;
-  validation: () => (cb: ValidationCallback) => void;
+  // validation: () => (cb: ValidationCallback) => void;
   addNewRows: () => void;
 };
 export interface ERPTableProps<
@@ -53,6 +58,14 @@ export function ERPTable<TMoreDetail = unknown>(
     moreDetailComponent: MoreDetailComponent,
   } = props;
   const toggleFullScreen = useFullScreen();
+  const { match } = useMediaQuery("XLUP");
+  const { match: xXlMatch } = useMediaQuery("XXLUP");
+
+  const { menuBarIsOpen, actionBarIsOpen } = useAppSelector((state) => {
+    const menuBarIsOpen = !state.withPersist.config.fullScreen;
+    const actionBarIsOpen = !state.withoutPersist.container.minimize;
+    return { menuBarIsOpen, actionBarIsOpen };
+  }, shallowEqual);
   const result = useERPTable({
     store,
     tableKey,
@@ -106,7 +119,7 @@ export function ERPTable<TMoreDetail = unknown>(
       onReady?.({
         getSnapshot: () => controller.getSnapShot(),
         addNewRows: () => {}, // controller.addNewRows(tableKey,[])},
-        validation: () => controller.validation(),
+        // validation: () => controller.validation(),
         subscribeColumn: (columnId, cb) =>
           controller.subscribeColumn(columnId, cb),
       });
@@ -114,41 +127,53 @@ export function ERPTable<TMoreDetail = unknown>(
   }, [result.ready]);
   if (!result.ready) return null;
   const { controller } = result;
+  const getMenuWidth = () => {
+    if (!menuBarIsOpen) return 0;
+    return xXlMatch ? 280 : 260;
+  };
+  const getActionWidth = () => {
+    if (!actionBarIsOpen) return 100;
+    return xXlMatch ? 310 : 145;
+  };
+  const menuSideWidth = getMenuWidth();
+  const actionSideWidth = getActionWidth();
+  const maxWidth =
+    typeof window !== "undefined"
+      ? window.innerWidth - (menuSideWidth + actionSideWidth)
+      : "100%";
   return (
-    <>
-      <div className="flex flex-col py-2 w-full h-full">
-        {tableTitle}
-        <div
-          className="flex-1 overflow-y-auto"
-          style={{ maxHeight: tableHeight ?? "100%" }}
-        >
-          <table className="w-full border-collapse table-fixed">
-            <ERPTableHeader
-              controller={controller}
-              tableKey={tableKey}
-              header={header}
-            />
-            <ERPTableBody
-              controller={controller}
-              tableKey={tableKey}
-              moreDetailComponent={MoreDetailComponent}
-            />
-          </table>
-        </div>
-
-        {/* Pagination و دکمه‌ها همیشه زیر */}
-        <div className="flex justify-between items-center gap-3 mt-2 w-full">
-          <GroupActionButtons controller={controller} />
-          <ERPTablePagination
+    <div className="flex flex-col w-full h-full transition-all duration-200">
+      {tableTitle}
+      <div
+        className={`overflow-auto `}
+        style={{
+          height: tableHeight ?? "100%",
+          width: typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth,
+        }}
+      >
+        <table className="w-full border-collapse">
+          <ERPTableHeader
             controller={controller}
-            store={store}
             tableKey={tableKey}
+            header={header}
           />
-        </div>
-
-        {/* footer دلخواه */}
-        {footer}
+          <ERPTableBody
+            controller={controller}
+            tableKey={tableKey}
+            moreDetailComponent={MoreDetailComponent}
+          />
+        </table>
       </div>
-    </>
+      <div className="flex justify-between items-center gap-3 w-full">
+        <GroupActionButtons controller={controller} />
+        <ERPTablePagination
+          controller={controller}
+          store={store}
+          tableKey={tableKey}
+        />
+      </div>
+      {/* footer دلخواه */}
+      {footer}
+    </div>
   );
 }

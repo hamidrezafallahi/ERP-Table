@@ -42,4 +42,8 @@ export enum ActionLabelsEnum {
   GoodMeasurementUnit = "واحد شمارش فرعی",
   CustomerCredit = "اعتبار مشتریان",
   CustomerGroupCredit = "اعتبار گروه مشتریان",
+  DocumentMerge = "ادغام اسناد",
+  CurrencyConversion = "صدور سند حسابداری",
+  DeleteAccountingDocument = "حذف سند حسابداری",
+  RelatedAccountingDocument = "سند حسابداری مربوطه",
 }

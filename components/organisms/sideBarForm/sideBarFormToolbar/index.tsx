@@ -10,7 +10,6 @@ import { useAppSelector } from "@redux/index";
 
 export default function SideBarFormToolbar() {
   const t = useTranslations();
-
   const { lang, pages } = useAppSelector((state) => {
     const initPage = state.withPersist.init;
     const lang = state.withPersist.config.lang;

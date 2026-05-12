@@ -3,7 +3,10 @@ import {
   SetStateAction,
 } from 'react';
 
+import { FormInstance } from 'antd';
+
 export interface IProps {
+  form?: FormInstance<any>;
   caption: string;
   captionII?: string;
   listUrl: string;

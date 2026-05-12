@@ -32,7 +32,7 @@ export const ChequeActionModal = ({ ids, children, handleReturn }: IProps) => {
 
   return (
     <>
-      <div className="flex flex-col gap-2 m-2">
+      <div className="flex flex-col gap-2 m-4">
         {ids.length === 1 && (
           <HeaderAction
             id={ids[0]}

@@ -33,6 +33,7 @@ export const ExpandedRowContent: React.FC<Props> = ({ row, controller, tableId,t
         const meta: CellMeta = {
           renderType: col.renderType,
           editable: col.editable,
+          className:col.className,
           tableId,
           columnId: col.id,
           options: col.options,

@@ -1,20 +1,32 @@
-import Form from '@components/templates/form';
+import FormGenerator from '@components/organisms/formGenerator';
+import VoucherTemplate from '@components/templates/voucherTemplate';
 import type {
   IRequest,
   IVoucher,
 } from '@services/acc/voucher/type';
 
 export default function VoucherFormPage() {
-  return (<>
-    <Form<IVoucher, IRequest>
+  return (
+    <>
+      <FormGenerator<IVoucher, IRequest>
+        caption={"title.VoucherForm"}
+        detailGetUrl="api/acc/select/voucherDetail"
+        fieldKey="asd"
+        url="asd"
+        addUrl="api/acc/insert/voucher"
+        updateUrl="api/acc/update/voucher"
+        headerGetUrl="api/acc/select/voucher"
+        tableTitle="اقلام سند"
+        listUrl="acc/voucherList"
         titleKey="VoucherHeaderId"
-      fieldKey="VoucherHeaderId"
-      caption={"title.voucher"}
-      url="/api/acc/select/voucher"
-      listUrl="acc/voucherList"
-    />
-    {/* <VoucherTemplate<IVoucher, IRequest>
-          headerFieldKey="VoucherHeaderId"
+        detailFieldKey="VoucherDetailId"
+        pageIcon="VoucherTypeIcon"
+        Component={VoucherTemplate}
+        fromIndexedDb
+        headerFieldKey="VoucherTypeId"
+      />
+
+      {/* <VoucherTemplate<IVoucher, IRequest>
           detailFieldKey='VoucherDetailId'
           caption={"title.VoucherForm"}
           captionII=''
@@ -27,7 +39,6 @@ export default function VoucherFormPage() {
           titleKey="VoucherHeaderId"
           pageIcon="VoucherTypeIcon"
         /> */}
-       </>
-
+    </>
   );
 }

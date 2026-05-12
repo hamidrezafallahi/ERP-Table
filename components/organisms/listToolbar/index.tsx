@@ -16,6 +16,7 @@ import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
 import {
   BoxMinimalistic,
   Close,
+  DocumentMergeIcon,
   Dots,
   DownChevron,
   GroupActionIcon,
@@ -67,7 +68,8 @@ import ChatWidget from "../chat";
 import { ActionLabelsEnum } from "../list/enum";
 import { ShowPrinter, ShowReport } from "../managementSystem";
 import ListSelectMode from "./listSelectMode";
-import DataGrid from "@components/molecules/dataGrid";
+import { ActiveModal, ModalCofigProps } from "./type";
+import { DocumentMerge } from "@components/molecules/documnetMerge";
 
 export default function ListToolbar({
   formUrl,
@@ -118,17 +120,15 @@ export default function ListToolbar({
   const [listName, setListName] = useState(t("general.showList"));
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isConfirmDrawerOpen, setIsConfirmDrawerOpen] = useState(false);
-  const [isRemindMeModalOpen, setIsRemindMeModalOpen] = useState(false);
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [reportId, setReportId] = useState(null);
   const [printId, setPrintId] = useState(null);
-  const [isAddTagModalOpen, setIsAddTagModalOpen] = useState(false);
-  // const [isPanelModalOpen, setIsPanelModalOpen] = useState(false);
   const [isMobileMenuDrawerOpen, setIsMobileMenuDrawerOpen] = useState(false);
   const [confirmMode, setConfirmMode] = useState<"Delete" | "Confirm">(
     "Delete",
   );
+
+
+  const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const displayListItems = useMemo(() => {
     if (!toolbarData?.List?.ListProp) return [];
 
@@ -180,8 +180,7 @@ export default function ListToolbar({
   const reportItems = useMemo(() => {
     const handleChangeReport = (report: IReportPosition) => {
       setReportId(report?.ReportId);
-
-      setIsReportModalOpen(true);
+      setActiveModal("report");
     };
 
     const correctReportItems = toolbarData?.ReportPosition?.filter(
@@ -209,7 +208,7 @@ export default function ListToolbar({
         selectedItems.itemsByPage?.[activePage?.pageId] &&
         selectedItems.itemsByPage?.[activePage?.pageId]?.length > 0
       ) {
-        setIsPrintModalOpen(true);
+        setActiveModal("print");
         setPrintId(print?.ReportId);
       } else {
         showInfoToast(
@@ -288,7 +287,7 @@ export default function ListToolbar({
               selectedItems.itemsByPage?.[activePage?.pageId] &&
               selectedItems.itemsByPage?.[activePage?.pageId]?.length > 0
             ) {
-              setIsAddTagModalOpen(true);
+              setActiveModal("addTag");
             } else {
               showInfoToast(
                 t("toast.minOneItemToast"),
@@ -296,7 +295,20 @@ export default function ListToolbar({
               );
             }
             break;
-
+          case ActionLabelsEnum.DocumentMerge as string:
+            if (
+              selectedItems &&
+              selectedItems.itemsByPage?.[activePage?.pageId] &&
+              selectedItems.itemsByPage?.[activePage?.pageId]?.length > 0
+            ) {
+              setActiveModal("documentMerge");
+            } else {
+              showInfoToast(
+                t("toast.minOneItemToast"),
+                ActionLabelsEnum.DocumentMerge as string,
+              );
+            }
+            break;
           default:
             null;
             break;
@@ -368,7 +380,7 @@ export default function ListToolbar({
               selectedItems.itemsByPage?.[activePage?.pageId] &&
               selectedItems.itemsByPage?.[activePage?.pageId]?.length === 1
             ) {
-              setIsRemindMeModalOpen(true);
+              setActiveModal("remindMe");
             } else {
               showInfoToast(
                 t("toast.remindMeToast"),
@@ -683,6 +695,91 @@ export default function ListToolbar({
     }
   }, [toolbarData, listName, t]);
 
+  const modalRegistry: Record<
+    Exclude<ActiveModal, null>,
+    Omit<ModalCofigProps, "isOpen">
+  > = {
+    addTag: {
+      key: "addTag",
+      onClose: () => setActiveModal(null),
+      headerName: t("modal.tags"),
+      headerIcon: <TagIcon />,
+      contentClassName: match ? "w-[520px]" : "",
+      content: (
+        <div className="p-2">
+          <TagManagement
+            refIds={selectedItems?.itemsByPage?.[activePage?.pageId] ?? []}
+          />
+        </div>
+      ),
+    },
+
+    documentMerge: {
+      key: "documentMerge",
+      onClose: () => setActiveModal(null),
+      headerName: t("modal.documentMerge"),
+      headerIcon: <DocumentMergeIcon />,
+      contentClassName: match ? "w-[520px]" : "",
+      content: (
+        <div className="p-2">
+          <DocumentMerge
+            refIds={selectedItems?.itemsByPage?.[activePage?.pageId] ?? []}
+            setActiveModal={setActiveModal}
+            activeModal={activeModal}
+          />
+        </div>
+      ),
+    },
+
+    report: {
+      key: "report",
+      withFullscreen: true,
+      onClose: () => {
+        dispatch(clearReportData(null));
+        setActiveModal(null);
+      },
+      headerName: t("general.report"),
+      headerIcon: <ReportIcon />,
+      contentClassName: match
+        ? "min-w-[950px] overflow-hidden"
+        : "overflow-hidden",
+      content: <ShowReport url={url} reportId={reportId} />,
+    },
+
+    print: {
+      key: "print",
+      withFullscreen: true,
+      onClose: () => setActiveModal(null),
+      headerName: t("general.print"),
+      headerIcon: <Printer />,
+      contentClassName: match
+        ? "min-w-[800px] overflow-hidden"
+        : "overflow-hidden",
+      content: (
+        <ShowPrinter
+          printId={printId}
+          ids={selectedItems?.itemsByPage?.[activePage?.pageId] ?? []}
+        />
+      ),
+    },
+
+    remindMe: {
+      key: "remindMe",
+      onClose: () => setActiveModal(null),
+      headerName: t("general.reminder"),
+      headerIcon: <RemindMeIcon />,
+      contentClassName: match ? "w-[520px]" : "",
+      content: (
+        <RemindMe
+          isOpen
+          repoId={repoId}
+          refId={selectedItems?.itemsByPage?.[activePage?.pageId]?.[0]}
+          onClose={() => setActiveModal(null)}
+        />
+      ),
+    },
+  };
+
   return (
     <>
       {!match && (
@@ -805,7 +902,6 @@ export default function ListToolbar({
                   </div>
                 </CustomDropdownButton>
               )}
-
               {groupMenuItems.length > 0 && (
                 <CustomDropdownButton
                   placement={lang === "fa" ? "bottomRight" : "bottomLeft"}
@@ -962,80 +1058,16 @@ export default function ListToolbar({
         }
       />
 
-      {isRemindMeModalOpen && (
+      {activeModal && (
         <CustomModal
-          contentClassName={`${match ? "w-[520px]" : ""}`}
-          headerIcon={<RemindMeIcon />}
-          headerName={t("general.reminder")}
-          closeModal={() => setIsRemindMeModalOpen(false)}
-          isModalOpen={isRemindMeModalOpen}
-          content={
-            <RemindMe
-              isOpen={isRemindMeModalOpen}
-              repoId={repoId}
-              refId={selectedItems?.itemsByPage?.[activePage?.pageId]?.[0]}
-              onClose={() => setIsRemindMeModalOpen(false)}
-            />
-          }
-        />
-      )}
-      {/* {isPanelModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[520px]" : ""}`}
-          headerName={t("sidebar.listPanel")}
-          closeModal={() => setIsPanelModalOpen(false)}
-          isModalOpen={isPanelModalOpen}
-          content={<PanelList />}
-        />
-      )} */}
-
-      {isAddTagModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[520px]" : ""}`}
-          headerName={t("modal.tags")}
-          headerIcon={<TagIcon />}
-          closeModal={() => setIsAddTagModalOpen(false)}
-          isModalOpen={isAddTagModalOpen}
-          content={
-            <div className="p-2">
-              <TagManagement
-                refIds={selectedItems?.itemsByPage?.[activePage?.pageId] ?? []}
-              />
-            </div>
-          }
-        />
-      )}
-      {isReportModalOpen && (
-        <CustomModal
-          withFullscreen
-          contentClassName={`${match ? "min-w-[950px] " : ""}  overflow-hidden`}
-          headerIcon={<ReportIcon />}
-          headerName={t("general.report")}
-          closeModal={() => {
-            dispatch(clearReportData(null));
-            setIsReportModalOpen(false);
-          }}
-          isModalOpen={isReportModalOpen}
-          content={<ShowReport url={url} reportId={reportId} />}
-        />
-      )}
-
-      {isPrintModalOpen && (
-        <CustomModal
-          withFullscreen
-          contentClassName={`${match ? "min-w-[800px] " : ""}  overflow-hidden`}
-          headerIcon={<Printer />}
-          headerName={t("general.print")}
-          closeModal={() => {
-            setIsPrintModalOpen(false);
-          }}
-          isModalOpen={isPrintModalOpen}
-          content={
-            <ShowPrinter
-              printId={printId}
-              ids={selectedItems?.itemsByPage?.[activePage?.pageId] ?? []}
-            />
-          }
+          key={modalRegistry[activeModal].key}
+          isModalOpen
+          closeModal={modalRegistry[activeModal].onClose}
+          headerName={modalRegistry[activeModal].headerName}
+          headerIcon={modalRegistry[activeModal].headerIcon}
+          contentClassName={modalRegistry[activeModal].contentClassName}
+          withFullscreen={modalRegistry[activeModal].withFullscreen}
+          content={modalRegistry[activeModal].content}
         />
       )}
 

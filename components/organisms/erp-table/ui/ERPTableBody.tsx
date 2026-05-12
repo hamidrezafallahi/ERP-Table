@@ -21,7 +21,7 @@ export function ERPTableBody({
   const rows:  IRow[] = table.rows;
    return (
    <tbody
-   className='overflow-x-auto'
+   className='w-full min-w-0 overflow-x-auto'
    >
   {rows
     .sort((a, b) => 

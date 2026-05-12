@@ -1,17 +1,27 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Skeleton } from "antd";
-import { useTranslations } from "next-intl";
-import dynamic from "next/dynamic";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Skeleton } from 'antd';
+import { useTranslations } from 'next-intl';
+import dynamic from 'next/dynamic';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { useAppSelector } from "@redux/index";
-import { useCUDFormDataMutation, useGetData } from "@services/base";
-import { setProgressbar } from "@slice/config";
-import { showSuccessToast } from "@utils/core";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { useAppSelector } from '@redux/index';
+import {
+  useCUDFormDataMutation,
+  useGetData,
+} from '@services/base';
+import { setProgressbar } from '@slice/config';
+import { showSuccessToast } from '@utils/core';
 
-import RenderAttachmentsRow from "./RenderAttachmentsRow";
+import RenderAttachmentsRow from './RenderAttachmentsRow';
 
 const RenderRow = dynamic(() => import("./RenderRow"), {
   loading: () => <Skeleton active className="p-5 w-full h-full" />,
@@ -29,7 +39,7 @@ const CaptureByCamera = dynamic(() => import("./captureByCamera"), {
   loading: () => <Skeleton active className="p-5 w-full h-full" />,
 });
 interface IUpload {
-  setModalTitle: any;
+  setModalTitle?:any;
   RefId: number;
   RepoId: number;
   counterRefetch?: () => void;

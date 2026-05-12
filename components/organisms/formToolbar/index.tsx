@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, ReactNode, useEffect, useMemo, useState } from "react";
 
 import { Drawer, Menu, Spin } from "antd";
 import { MenuProps } from "antd/lib";
@@ -18,18 +18,18 @@ import {
   FormIcon,
   MenuArrowBack,
   MenuSquareIcon,
-  PhysicalCharacteristicsIcon,
   PlusOutline,
   Printer,
   RemindMeIcon,
   ReportIcon,
   SavePlus,
-  SettlementIcon,
   SpinIcon,
   Undo,
 } from "@components/atoms/iconComponents";
 import CloseButton from "@components/molecules/closeButton";
 import ContactInfo from "@components/molecules/contactInfo";
+import { CustomerCredit } from "@components/molecules/customerCredit";
+import { CustomerGroupCredit } from "@components/molecules/customerGroupCredit";
 import ExpandedButton from "@components/molecules/expandedButton";
 import { ExpireDateAccountList } from "@components/molecules/expireDateAccountList";
 import GoodExtraInfo from "@components/molecules/goodExtraInfo";
@@ -63,7 +63,6 @@ import {
   useNavigatePage,
   useNavigateRecordsForm,
 } from "@hooks/custom";
-import PanelForm from "@layout/baseLayout/desktop/actionBar/panelForm";
 import Uploader from "@layout/baseLayout/desktop/actionBar/panelForm/uploader";
 import { useAppSelector } from "@redux/index";
 import { ReportTypeEnum } from "@services/mng/report/type";
@@ -83,14 +82,17 @@ import {
   renderPageState,
 } from "@utils/core";
 
-import { CustomerCredit } from "@components/molecules/customerCredit";
-import { CustomerGroupCredit } from "@components/molecules/customerGroupCredit";
 import ChatWidget from "../chat";
 import DynamicModal from "../dynamicModal";
 import { ActionLabelsEnum } from "../list/enum";
 import { ShowPrinter, ShowReport } from "../managementSystem";
 import ShorthandFormToolbar from "./shorthandFormToolbar";
 import type { IProps } from "./type";
+import CurrencyConversion from "@components/molecules/currencyConversion";
+
+const PanelForm = lazy(
+  () => import("@layout/baseLayout/desktop/actionBar/panelForm"),
+);
 
 export default function FormToolbar({
   listUrl,
@@ -106,6 +108,8 @@ export default function FormToolbar({
   submitCaption,
   withSubmitButton = true,
   hasShorthandFormToolbar,
+  fromIndexedDb = false,
+  loadingFromOutsideComponents,
 }: IProps) {
   const t = useTranslations();
   const dispatch = useDispatch();
@@ -133,62 +137,21 @@ export default function FormToolbar({
   const selectedViewIndex = activePage?.selectedViewIndex ?? 0;
 
   const [formName, setFormName] = useState(t("formToolbar.displayList"));
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDynamicModalOpen, setIsDynamicModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState<ReactNode | null>(null);
   const [dynamicAction, setDynamicAction] = useState<IToolbarMenu>(null);
-  const [attachmentTitle, setAttachmentTitle] = useState(t("general.pictures"));
-  const [isRemindMeModalOpen, setIsRemindMeModalOpen] = useState(false);
-  const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false);
-  const [isPanelModalOpen, setIsPanelModalOpen] = useState(false);
+  // const [attachmentTitle, setAttachmentTitle] = useState(t("general.pictures"));
   const [isMobileMenuDrawerOpen, setIsMobileMenuDrawerOpen] = useState(false);
-  const [isGoodExtraInfoModalOpen, setIsGoodExtraInfoModalOpen] =
-    useState(false);
-  const [isUserReportModalOpen, setIsUserReportModalOpen] = useState(false);
-  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
-  const [isGoodQcModalOpen, setIsGoodQcModalOpen] = useState(false);
   const [isStockWarehouseModalOpen, setIsStockWarehouseModalOpen] =
     useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-
   const [reportId, setReportId] = useState(null);
   const [printId, setPrintId] = useState(null);
-  const [isGoodPriceModalOpen, setIsGoodPriceModalOpen] = useState(false);
-  const [isPersonContactModalOpen, setIsPersonContactModalOpen] =
-    useState(false);
-  const [isGoodVariantValuesModalOpen, setIsGoodVariantValuesModalOpen] =
-    useState(false);
-  const [settlementModalIsOpen, setSettlementModalIsOpen] = useState(false);
-  const [goodSettingsModalIsOpen, setGoodSettingsModalIsOpen] = useState(false);
-  const [taxSettingsModalIsOpen, setTaxSettingsModalIsOpen] = useState(false);
-  const [expireDateModalIsOpen, setExpireDateModalIsOpen] = useState(false);
-  const [isInventoryControlModalOpen, setIsInventoryControlModalOpen] =
-    useState(false);
-  const [isTrainingCourseModalOpen, setIsTrainingCourseModalOpen] =
-    useState(false);
-  const [isEducationModalIsOpen, setIsEducationModalIsOpen] = useState(false);
-  const [isWorkHistoryModalOpen, setIsWorkHistoryModalOpen] = useState(false);
-  const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
-
-  const [
-    isPhysicalCharacteristicsModalOpen,
-    setIsPhysicalCharacteristicsModalOpen,
-  ] = useState(false);
-  const [isSpecialServicesModalOpen, setIsSpecialServicesModalOpen] =
-    useState(false);
-  const [isFormulaParameterModalOpen, setIsFormulaParameterModalOpen] =
-    useState(false);
-  const [
-    isChangeInvoiceCurrencyModalOpen,
-    setIsChangeInvoiceCurrencyModalOpen,
-  ] = useState(false);
   const [
     isChangeInvoiceCurrencyRateModalOpen,
     setIsChangeInvoiceCurrencyRateModalOpen,
   ] = useState(false);
-  const [isCustomerCreditModalOpen, setIsCustomerCreditModalOpen] =
-    useState(false);
-  const [isCustomerGroupCreditModalOpen, setIsCustomerGroupCreditModalOpen] =
-    useState(false);
-
   const {
     handleAdd,
     handleReset,
@@ -222,7 +185,15 @@ export default function FormToolbar({
     try {
       switch (menuItem.MenuDesc) {
         case ActionLabelsEnum.RemindMe as string:
-          setIsRemindMeModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(
+            <RemindMe
+              repoId={activePage.RepoId}
+              refId={id}
+              onClose={() => setIsModalOpen(false)}
+              isOpen={isModalOpen}
+            />,
+          );
           break;
         default:
           null;
@@ -238,73 +209,187 @@ export default function FormToolbar({
 
       switch (action.MenuDesc) {
         case ActionLabelsEnum.Attachment as string:
-          setIsAttachmentModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(
+            <Uploader
+              onlyAcceptImage
+              RefId={id}
+              // setModalTitle={setAttachmentTitle}
+              RepoId={activePage.RepoId}
+            />,
+          );
           break;
         case ActionLabelsEnum.GoodVariantValues as string:
-          setIsGoodVariantValuesModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(
+            <GoodVariantValues
+              id={id}
+              sourceKey={fieldKey}
+              listUrl={listUrl}
+            />,
+          );
           break;
         case ActionLabelsEnum.GoodExtraInfo as string:
-          setIsGoodExtraInfoModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(<GoodExtraInfo id={id} sourceKey={fieldKey} />);
           break;
         case ActionLabelsEnum.UserReport as string:
-          setIsUserReportModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(<UserReport id={id} sourceKey={fieldKey} />);
           break;
         case ActionLabelsEnum.GoodPrice as string:
-          setIsGoodPriceModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(
+            <GoodPrice
+              id={id}
+              sourceKey={fieldKey}
+              handleClose={() => setIsModalOpen(false)}
+            />,
+          );
           break;
         case ActionLabelsEnum.PersonContact as string:
-          setIsPersonContactModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(<ContactInfo id={id} sourceKey={fieldKey} />);
           break;
         case ActionLabelsEnum.ExpireDate as string:
-          setTaxSettingsModalIsOpen(true);
+          setIsModalOpen(true);
+          setModalContent(
+            <TaxSettings
+              id={id}
+              sourceKey={fieldKey}
+              handleClose={() => setIsModalOpen(false)}
+            />,
+          );
           break;
         case ActionLabelsEnum.TaxSettings as string:
-          setExpireDateModalIsOpen(true);
+          setIsModalOpen(true);
+          setModalContent(
+            <ExpireDateAccountList
+              id={id}
+              sourceKey={fieldKey}
+              handleClose={() => {
+                setIsModalOpen(false);
+              }}
+            />,
+          );
           break;
         case ActionLabelsEnum.GoodSettings as string:
-          setGoodSettingsModalIsOpen(true);
+          setIsModalOpen(true);
+          setModalContent(
+            <GoodSettings
+              id={id}
+              sourceKey={fieldKey}
+              handleClose={() => setIsModalOpen(false)}
+            />,
+          );
           break;
         case ActionLabelsEnum.Settlement as string:
-          setSettlementModalIsOpen(true);
+          setIsModalOpen(true);
+          setModalContent(<Settlement id={id} />);
           break;
         case ActionLabelsEnum.GoodQc as string:
-          setIsGoodQcModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(<GoodQc id={id} sourceKey={fieldKey as string} />);
           break;
         case ActionLabelsEnum.InventoryControl as string:
-          setIsInventoryControlModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(
+            <InventoryControl
+              id={id}
+              sourceKey={fieldKey}
+              handleClose={() => setIsModalOpen(false)}
+            />,
+          );
           break;
         case ActionLabelsEnum.TrainingCourse as string:
-          setIsTrainingCourseModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(<TrainingCourse id={id} />);
           break;
         case ActionLabelsEnum.Education as string:
-          setIsEducationModalIsOpen(true);
+          setIsModalOpen(true);
+          setModalContent(<Education id={id} />);
           break;
         case ActionLabelsEnum.WorkHistory as string:
-          setIsWorkHistoryModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(<WorkHistory id={id} />);
           break;
         case ActionLabelsEnum.Sponsor as string:
-          setIsSponsorModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(<Sponsor id={id} />);
           break;
         case ActionLabelsEnum.PhysicalCharacteristics as string:
-          setIsPhysicalCharacteristicsModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(
+            <PhysicalCharacteristicsModal
+              id={id}
+              sourceKey={fieldKey}
+              handleClose={() => setIsModalOpen(false)}
+            />,
+          );
           break;
         case ActionLabelsEnum.SpecialServices as string:
-          setIsSpecialServicesModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(<SpecialServices id={id} />);
           break;
         case ActionLabelsEnum.FormulaParameter as string:
-          setIsFormulaParameterModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(<FormulaParameter id={id} />);
           break;
         case ActionLabelsEnum.ChangeInvoiceCurrency as string:
-          setIsChangeInvoiceCurrencyModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(
+            <ChangeInvoiceCurrency
+              id={id}
+              sourceKey={fieldKey}
+              handleClose={() => setIsModalOpen(false)}
+            />,
+          );
           break;
         case ActionLabelsEnum.ChangeInvoiceCurrencyRate as string:
           setIsChangeInvoiceCurrencyRateModalOpen(true);
           break;
         case ActionLabelsEnum.CustomerCredit as string:
-          setIsCustomerCreditModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(
+            <CustomerCredit
+              id={id}
+              sourceKey={fieldKey}
+              handleClose={() => setIsModalOpen(false)}
+            />,
+          );
           break;
         case ActionLabelsEnum.CustomerGroupCredit as string:
-          setIsCustomerGroupCreditModalOpen(true);
+          setIsModalOpen(true);
+          setModalContent(
+            <CustomerGroupCredit
+              id={id}
+              sourceKey={fieldKey}
+              handleClose={() => setIsModalOpen(false)}
+            />,
+          );
+          break;
+        case ActionLabelsEnum.DeleteAccountingDocument as string:
+          setIsModalOpen(true);
+          setModalContent(
+            <CurrencyConversion
+              id={id}
+              sourceKey={fieldKey}
+              rowId={id}
+              mode="delete"
+              handleClose={() => setIsModalOpen(false)}
+            />,
+          );
+          break;
+        case ActionLabelsEnum.CurrencyConversion as string:
+          setIsModalOpen(true);
+          setModalContent(
+            <CurrencyConversion
+              id={id}
+              sourceKey={fieldKey}
+              rowId={id}
+              handleClose={() => setIsModalOpen(false)}
+            />,
+          );
           break;
         default:
           setIsDynamicModalOpen(true);
@@ -368,8 +453,8 @@ export default function FormToolbar({
   const printItems = useMemo(() => {
     const handleChangeList = (print: IReportPosition) => {
       setPrintId(print?.ReportId);
-
-      setIsPrintModalOpen(true);
+      setIsModalOpen(true);
+      setModalContent(<ShowPrinter printId={printId} ids={[id]} />);
     };
 
     const correctPrintItems = toolbarData?.ReportPosition?.filter(
@@ -416,12 +501,16 @@ export default function FormToolbar({
     if (!filteredMoreAction) return [];
     return filteredMoreAction.map((menuItem: IToolbarMenu) => {
       const isDisabled =
-        conditionalActions?.some(
-          (el) =>
-            el.conditionallyAction === menuItem.MenuDesc &&
-            !activePage?.pageData?.find(
-              (item) => item.name === el.conditionalProperty,
-            )?.originalValue,
+        conditionalActions?.some((el) =>
+          el.conditionallyAction === menuItem.MenuDesc
+            ? el.opposite
+              ? !!activePage?.pageData?.find(
+                  (item) => item.name === el.conditionalProperty,
+                )?.originalValue
+              : !activePage?.pageData?.find(
+                  (item) => item.name === el.conditionalProperty,
+                )?.originalValue
+            : false,
         ) ?? false;
 
       return {
@@ -465,6 +554,7 @@ export default function FormToolbar({
       onClick: () => handleMoreMenuAction(menuItem),
     }));
   }, [toolbarData, id, mode]);
+
   const moreItems = useMemo(() => {
     if (id) {
       return [...moreMenuItems, ...moreActionItems, remindMeItem];
@@ -546,7 +636,13 @@ export default function FormToolbar({
               <SavePlus config={{ width: 16, height: 16 }} />
             </div>
           ),
-          onClick: handleSubmitAndClean,
+          onClick: () => {
+            if (fromIndexedDb) {
+              form?.submit();
+            } else {
+              handleSubmitAndClean();
+            }
+          },
           type: "item",
         },
       ],
@@ -568,16 +664,24 @@ export default function FormToolbar({
       label: t("general.save"),
       key: "1",
       onClick: () => {
-        handleSelectedSubmit("1");
-        handleSubmit();
+        if (fromIndexedDb) {
+          form?.submit();
+        } else {
+          handleSelectedSubmit("1");
+          handleSubmit();
+        }
       },
     },
     {
       label: t("general.saveAndClose"),
       key: "2",
       onClick: () => {
-        handleSelectedSubmit("2");
-        handleSubmitAndClose();
+        if (fromIndexedDb) {
+          form?.submit();
+        } else {
+          handleSelectedSubmit("2");
+          handleSubmit();
+        }
       },
     },
   ];
@@ -640,7 +744,13 @@ export default function FormToolbar({
               {hasShorthandFormToolbar && (
                 <ShorthandFormToolbar
                   handleReset={handleReset}
-                  handleSubmitAndSave={handleSubmitAndClean}
+                  handleSubmitAndSave={
+                    fromIndexedDb
+                      ? () => {
+                          form?.submit();
+                        }
+                      : handleSubmitAndClean
+                  }
                   handleAdd={handleAdd}
                   handleNextItem={handleNextItem}
                   handlePrevItem={handlePrevItem}
@@ -730,11 +840,11 @@ export default function FormToolbar({
                   rootClassName="hidden xxl:flex"
                 />
               )}
-              {/* <CustomButton className="hidden xxl:flex bg-gray-gray3 dark:bg-gray-gray11 dark:hover:!bg-gray-gray12 p-[6px] !border-none rounded h-full">
+              <CustomButton className="hidden xxl:flex bg-gray-gray3 dark:bg-gray-gray11 dark:hover:!bg-gray-gray12 p-[6px] !border-none rounded h-full">
                 <span>
                   <Printer />
                 </span>
-              </CustomButton> */}
+              </CustomButton>
             </div>
           ) : (
             <div className="z-10 flex justify-between items-center mt-2 w-full">
@@ -780,7 +890,10 @@ export default function FormToolbar({
                   {!!userId && <ChatWidget />}
                   <div
                     className="flex bg-white dark:bg-gray-gray11 rounded h-full"
-                    onClick={() => setIsPanelModalOpen(true)}
+                    onClick={() => {
+                      setIsModalOpen(true);
+                      setModalContent(<PanelForm />);
+                    }}
                   >
                     <MenuSquareIcon />
                   </div>
@@ -845,7 +958,13 @@ export default function FormToolbar({
                     loading={isLoading}
                     type="text"
                     className="flex justify-center items-center bg-gray-gray3 hover:bg-gray-gray8 dark:bg-gray-gray11 px-[6px] border rounded h-9 text-gray dark:text-white"
-                    onClick={handleSubmitAndClean}
+                    onClick={() => {
+                      if (fromIndexedDb) {
+                        form?.submit();
+                      } else {
+                        handleSubmitAndClean();
+                      }
+                    }}
                     id="SavePlus"
                   >
                     <SavePlus />
@@ -856,7 +975,7 @@ export default function FormToolbar({
                     <span onClick={activeSubmitButton?.onClick}>
                       {activeSubmitButton?.label}
                     </span>
-                    {isLoading && (
+                    {(isLoading || loadingFromOutsideComponents) && (
                       <Spin
                         size="small"
                         indicator={
@@ -881,10 +1000,16 @@ export default function FormToolbar({
               </>
             ) : (
               <CustomButton
-                loading={isLoading}
+                loading={isLoading || loadingFromOutsideComponents}
                 type="text"
                 className={`flex flex-1 lg:flex-none justify-center items-center bg-black-black8 !hover:bg-white px-3  border hover:border-black-black8 rounded h-9 text-white dark:bg-gray-gray11 dark:text-white !text-sm`}
-                onClick={handleSubmitAndClose}
+                onClick={
+                  fromIndexedDb
+                    ? () => {
+                        form?.submit();
+                      }
+                    : handleSubmitAndClose
+                }
               >
                 {submitCaption}
               </CustomButton>
@@ -892,7 +1017,6 @@ export default function FormToolbar({
           </>
         )}
       </div>
-
       {isDynamicModalOpen && (
         <CustomModal
           contentClassName={`${match ? "w-[520px] h-[470px]" : ""}`}
@@ -925,135 +1049,10 @@ export default function FormToolbar({
           }
         />
       )}
-      {isRemindMeModalOpen && id && (
-        <CustomModal
-          contentClassName={`${match ? "w-[520px]" : ""}`}
-          headerIcon={<RemindMeIcon />}
-          headerName={t("general.reminder")}
-          closeModal={() => setIsRemindMeModalOpen(false)}
-          isModalOpen={isRemindMeModalOpen}
-          content={
-            <RemindMe
-              repoId={activePage.RepoId}
-              refId={id}
-              onClose={() => setIsRemindMeModalOpen(false)}
-              isOpen={isRemindMeModalOpen}
-            />
-          }
-        />
-      )}
-      {isPanelModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[520px]" : ""}`}
-          headerName={t("sidebar.formPanel")}
-          closeModal={() => setIsPanelModalOpen(false)}
-          isModalOpen={isPanelModalOpen}
-          content={<PanelForm />}
-        />
-      )}
-      {isGoodVariantValuesModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[520px] h-[470px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsGoodVariantValuesModalOpen(false)}
-          isModalOpen={isGoodVariantValuesModalOpen}
-          content={
-            <GoodVariantValues id={id} sourceKey={fieldKey} listUrl={listUrl} />
-          }
-        />
-      )}
-      {isGoodExtraInfoModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[520px] h-[470px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsGoodExtraInfoModalOpen(false)}
-          isModalOpen={isGoodExtraInfoModalOpen}
-          content={<GoodExtraInfo id={id} sourceKey={fieldKey} />}
-        />
-      )}
-      {isUserReportModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[520px] h-[470px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsUserReportModalOpen(false)}
-          isModalOpen={isUserReportModalOpen}
-          content={<UserReport id={id} sourceKey={fieldKey} />}
-        />
-      )}
-      {isGoodPriceModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[520px] h-[470px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsGoodPriceModalOpen(false)}
-          isModalOpen={isGoodPriceModalOpen}
-          content={
-            <GoodPrice
-              id={id}
-              sourceKey={fieldKey}
-              handleClose={() => setIsGoodPriceModalOpen(false)}
-            />
-          }
-        />
-      )}
-      {isPersonContactModalOpen && (
+      {isModalOpen && (
         <CustomModal
           contentClassName={`${match ? "!min-w-max h-full" : ""}`}
+          // headerName={attachmentTitle}
           headerName={dynamicAction.MenuDesc}
           headerIcon={
             match && (
@@ -1069,25 +1068,9 @@ export default function FormToolbar({
               </>
             )
           }
-          closeModal={() => setIsPersonContactModalOpen(false)}
-          isModalOpen={isPersonContactModalOpen}
-          content={<ContactInfo id={id} sourceKey={fieldKey} />}
-        />
-      )}
-      {isAttachmentModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "!min-w-max h-full" : ""}`}
-          headerName={attachmentTitle}
-          closeModal={() => setIsAttachmentModalOpen(false)}
-          isModalOpen={isAttachmentModalOpen}
-          content={
-            <Uploader
-              onlyAcceptImage
-              RefId={id}
-              setModalTitle={setAttachmentTitle}
-              RepoId={activePage.RepoId}
-            />
-          }
+          closeModal={() => setIsModalOpen(false)}
+          isModalOpen={isModalOpen}
+          content={modalContent}
         />
       )}
       {isReportModalOpen && (
@@ -1104,141 +1087,8 @@ export default function FormToolbar({
           content={<ShowReport url={getUrl} reportId={reportId} />}
         />
       )}
-      {isPrintModalOpen && (
-        <CustomModal
-          withFullscreen
-          contentClassName={`${match ? "min-w-[800px] " : ""}  overflow-hidden`}
-          headerIcon={<Printer />}
-          headerName={t("general.print")}
-          closeModal={() => {
-            setIsPrintModalOpen(false);
-          }}
-          isModalOpen={isPrintModalOpen}
-          content={<ShowPrinter printId={printId} ids={[id]} />}
-        />
-      )}
-      {expireDateModalIsOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[520px] h-[200px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setExpireDateModalIsOpen(false)}
-          isModalOpen={expireDateModalIsOpen}
-          content={
-            <ExpireDateAccountList
-              id={id}
-              sourceKey={fieldKey}
-              handleClose={() => {
-                setExpireDateModalIsOpen(false);
-              }}
-            />
-          }
-        />
-      )}
-      {taxSettingsModalIsOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[540px] h-[300px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setTaxSettingsModalIsOpen(false)}
-          isModalOpen={taxSettingsModalIsOpen}
-          content={
-            <TaxSettings
-              id={id}
-              sourceKey={fieldKey}
-              handleClose={() => setTaxSettingsModalIsOpen(false)}
-            />
-          }
-        />
-      )}
-      {goodSettingsModalIsOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[520px] !h-[500px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setGoodSettingsModalIsOpen(false)}
-          isModalOpen={goodSettingsModalIsOpen}
-          content={
-            <GoodSettings
-              id={id}
-              sourceKey={fieldKey}
-              handleClose={() => setGoodSettingsModalIsOpen(false)}
-            />
-          }
-        />
-      )}
-      {settlementModalIsOpen && (
-        <CustomModal
-          contentClassName={`${match ? "!w-[750px] h-full" : ""}`}
-          headerName={t("general.invoiceSettlement")}
-          headerIcon={match ? <SettlementIcon /> : null}
-          closeModal={() => setSettlementModalIsOpen(false)}
-          isModalOpen={settlementModalIsOpen}
-          content={<Settlement id={id} />}
-        />
-      )}
-      {isGoodQcModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "!w-[620px] h-[470px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsGoodQcModalOpen(false)}
-          isModalOpen={isGoodQcModalOpen}
-          content={<GoodQc id={id} sourceKey={fieldKey as string} />}
-        />
-      )}
+
+      {/* این ایراد داره و هیچ جا دستور باز شدن نداره  */}
       {isStockWarehouseModalOpen && (
         <CustomModal
           contentClassName={`${match ? "!w-[720px] h-[520px]" : ""}`}
@@ -1260,218 +1110,6 @@ export default function FormToolbar({
           closeModal={() => setIsStockWarehouseModalOpen(false)}
           isModalOpen={isStockWarehouseModalOpen}
           content={<StockWarehouse id={id} sourceKey={fieldKey as string} />}
-        />
-      )}
-      {isInventoryControlModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[520px] h-[280px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsInventoryControlModalOpen(false)}
-          isModalOpen={isInventoryControlModalOpen}
-          content={
-            <InventoryControl
-              id={id}
-              sourceKey={fieldKey}
-              handleClose={() => setIsInventoryControlModalOpen(false)}
-            />
-          }
-        />
-      )}
-      {isTrainingCourseModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "!min-w-max h-[550px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsTrainingCourseModalOpen(false)}
-          isModalOpen={isTrainingCourseModalOpen}
-          content={<TrainingCourse id={id} />}
-        />
-      )}
-      {isEducationModalIsOpen && (
-        <CustomModal
-          contentClassName={`${match ? "!min-w-max h-[550px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsEducationModalIsOpen(false)}
-          isModalOpen={isEducationModalIsOpen}
-          content={<Education id={id} />}
-        />
-      )}
-      {isWorkHistoryModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "!min-w-max h-[550px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsWorkHistoryModalOpen(false)}
-          isModalOpen={isWorkHistoryModalOpen}
-          content={<WorkHistory id={id} />}
-        />
-      )}
-      {isSponsorModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "!min-w-max h-[550px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsSponsorModalOpen(false)}
-          isModalOpen={isSponsorModalOpen}
-          content={<Sponsor id={id} />}
-        />
-      )}
-      {isPhysicalCharacteristicsModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[800px] h-[550px]" : ""}`}
-          headerName={t("general.physicalCharacteristics")}
-          headerIcon={match ? <PhysicalCharacteristicsIcon /> : null}
-          closeModal={() => setIsPhysicalCharacteristicsModalOpen(false)}
-          isModalOpen={isPhysicalCharacteristicsModalOpen}
-          content={
-            <PhysicalCharacteristicsModal
-              id={id}
-              sourceKey={fieldKey}
-              handleClose={() => setIsPhysicalCharacteristicsModalOpen(false)}
-            />
-          }
-        />
-      )}
-      {isSpecialServicesModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "!min-w-max h-[550px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsSpecialServicesModalOpen(false)}
-          isModalOpen={isSpecialServicesModalOpen}
-          content={<SpecialServices id={id} />}
-        />
-      )}
-      {isFormulaParameterModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "!w-[900px] !h-[570px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsFormulaParameterModalOpen(false)}
-          isModalOpen={isFormulaParameterModalOpen}
-          content={<FormulaParameter id={id} />}
-        />
-      )}
-      {isChangeInvoiceCurrencyModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[520px] h-[470px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsChangeInvoiceCurrencyModalOpen(false)}
-          isModalOpen={isChangeInvoiceCurrencyModalOpen}
-          content={
-            <ChangeInvoiceCurrency
-              id={id}
-              sourceKey={fieldKey}
-              handleClose={() => setIsChangeInvoiceCurrencyModalOpen(false)}
-            />
-          }
         />
       )}
       {isChangeInvoiceCurrencyRateModalOpen && (
@@ -1499,64 +1137,6 @@ export default function FormToolbar({
               id={id}
               sourceKey={fieldKey}
               handleClose={() => setIsChangeInvoiceCurrencyRateModalOpen(false)}
-            />
-          }
-        />
-      )}
-      {isCustomerCreditModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[540px] h-[220px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsCustomerCreditModalOpen(false)}
-          isModalOpen={isCustomerCreditModalOpen}
-          content={
-            <CustomerCredit
-              id={id}
-              sourceKey={fieldKey}
-              handleClose={() => setIsCustomerCreditModalOpen(false)}
-            />
-          }
-        />
-      )}
-      {isCustomerGroupCreditModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[540px] h-[220px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
-          headerIcon={
-            match && (
-              <>
-                {typeof dynamicAction.Icon === "string" && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
-                    }}
-                    style={{ width: "18px", height: "17px" }}
-                  />
-                )}
-              </>
-            )
-          }
-          closeModal={() => setIsCustomerGroupCreditModalOpen(false)}
-          isModalOpen={isCustomerGroupCreditModalOpen}
-          content={
-            <CustomerGroupCredit
-              id={id}
-              sourceKey={fieldKey}
-              handleClose={() => setIsCustomerGroupCreditModalOpen(false)}
             />
           }
         />

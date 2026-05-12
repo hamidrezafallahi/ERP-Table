@@ -19,7 +19,7 @@ export class Cell {
     private display: CellDisplay
   ) {}
   changeValue(newValue: CellValue): CellChanged | null {
-    if (this.value.equals(newValue)) return null;
+    // if (this.value.equals(newValue)) return null;
     this.value = newValue;
     return new CellChanged(this.rowId, this.columnId, newValue);
   }

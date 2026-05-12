@@ -201,17 +201,13 @@
     "paymentRequest": "Payment Request",
     "endYearOperations": "End Year Operations",
     "bankStatementInfo": "bank Statement Info",
-
     "voucherTypeDescription": "Default Description",
     "detailedDescription": "Default Description",
     "tafsiliCategory": "Tafsili Category",
-
     "currencyDoc": "Currency Exchange Rate Document",
     "CurrencyDoc": "Currency Exchange Rate Document",
-    "currencyDockList": "Currency Exchange Rate Document List"
-
-
-
+    "currencyDockList": "Currency Exchange Rate Document List",
+    "comprehensiveReport": "Comprehensive Report"
   },
   "homePage": {
     "title": "Hello world!",
@@ -502,6 +498,7 @@
     "voucherDate": "Voucher Date",
     "voucherType": "Voucher Type",
     "referNumber": "Reference Number",
+    "referDate": "Reference Date",
     "adjustToZeroBalance": "Adjust to Zero Balance",
     "swapDebtorCreditor": "Swap Debtor and Creditor",
     "replicateRow": "Replicate Row",
@@ -536,6 +533,8 @@
     "activate": "Activate",
     "refuse": "Cancel",
     "addNewRow": "Add New Row",
+    "toggle": "Toggle",
+    "cut": "cut",
     "paste": "Paste",
     "pasteAsNew": "Paste as New",
     "copy": "Copy Selected Rows",
@@ -808,11 +807,25 @@
     "countNumber": "Count",
     "insuranceNumber": "Insurance Number",
     "operationStart": "Starting Operations",
-    "documentType":"Document Type",
-    "tafsiliCategory":"Tafsili Category",
-    "selected":"Selected all",
-    "deselectedAll":"DeSelected all"
-  
+    "documentType": "Document Type",
+    "tafsiliCategory": "Tafsili Category",
+    "selected": "Selected all",
+    "deselectedAll": "DeSelected all",
+    "addCategory": "Add Category",
+    "vouchersCount": "Vouchers Count",
+    "currencyConversionDesc": "Upon issuing the foreign exchange revaluation document, the equivalent accounting entry will be recorded.",
+    "deleteAccountingDocumentDesc": "By deleting accounting document No. {voucherNumber}, the corresponding accounting document will also be deleted.",
+    "issuingAnAccountingEntry": "Issuing An Accounting Entry",
+    "deleteAccountingDocument": "DeleteAccountingDocument",
+    "asset": "Asset",
+    "liability": "Liability",
+    "equity": "Equity",
+    "revenue": "Revenue",
+    "expense": "Expense",
+    "cashRial": "CashRial",
+    "cashCurrency": "CashCurrency",
+    "bankRial": "BankRial",
+    "bankCurrency": "BankCurrency"
   },
   "rate": "Rate",
   "systemSetting": {
@@ -906,7 +919,8 @@
     "usedParts": "Used parts:"
   },
   "modal": {
-    "tags": "Tags"
+    "tags": "Tags",
+    "documentMerge": "Document Merge"
   },
   "formToolbar": {
     "displayList": "Display Form",

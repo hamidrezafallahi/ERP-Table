@@ -1,49 +1,39 @@
 "use client";
-import {
-  useEffect,
-  useReducer,
-  useRef,
-  useState,
-} from 'react';
+import { useEffect, useReducer, useRef, useState } from "react";
 
-import { useTranslations } from 'next-intl';
-import {
-  shallowEqual,
-  useDispatch,
-} from 'react-redux';
+import { useTranslations } from "next-intl";
+import { shallowEqual, useDispatch } from "react-redux";
 
-import { CustomModal } from '@components/atoms/defaultElements';
-import { CustomDrawer } from '@components/atoms/defaultElements/drawer';
+import { CustomModal } from "@components/atoms/defaultElements";
+import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
 import {
   ExceptionIcon,
   New,
   PhysicalCharacteristicsIcon,
   SettlementIcon,
   TagIcon,
-} from '@components/atoms/iconComponents';
-import Card from '@components/molecules/card';
-import Confirmation from '@components/molecules/confirmation';
-import ContactInfo from '@components/molecules/contactInfo';
-import { CustomerCredit } from '@components/molecules/customerCredit';
-import { CustomerGroupCredit } from '@components/molecules/customerGroupCredit';
-import DataGrid from '@components/molecules/dataGrid';
-import { ExceptionsModal } from '@components/molecules/exceptionsModal';
-import {
-  ExpireDateAccountList,
-} from '@components/molecules/expireDateAccountList';
-import GoodExtraInfo from '@components/molecules/goodExtraInfo';
-import { GoodPrice } from '@components/molecules/goodPrice';
-import { GoodQc } from '@components/molecules/goodQc';
-import { GoodSettings } from '@components/molecules/goodSettings';
-import GoodVariantValues from '@components/molecules/goodVariantValues';
-import { InventoryControl } from '@components/molecules/inventoryControl';
-import { InventoryInspection } from '@components/molecules/inventoryInspection';
-import { UserReport } from '@components/molecules/managementSystem/reports';
+} from "@components/atoms/iconComponents";
+import Card from "@components/molecules/card";
+import Confirmation from "@components/molecules/confirmation";
+import ContactInfo from "@components/molecules/contactInfo";
+import { CustomerCredit } from "@components/molecules/customerCredit";
+import { CustomerGroupCredit } from "@components/molecules/customerGroupCredit";
+import DataGrid from "@components/molecules/dataGrid";
+import { ExceptionsModal } from "@components/molecules/exceptionsModal";
+import { ExpireDateAccountList } from "@components/molecules/expireDateAccountList";
+import GoodExtraInfo from "@components/molecules/goodExtraInfo";
+import { GoodPrice } from "@components/molecules/goodPrice";
+import { GoodQc } from "@components/molecules/goodQc";
+import { GoodSettings } from "@components/molecules/goodSettings";
+import GoodVariantValues from "@components/molecules/goodVariantValues";
+import { InventoryControl } from "@components/molecules/inventoryControl";
+import { InventoryInspection } from "@components/molecules/inventoryInspection";
+import { UserReport } from "@components/molecules/managementSystem/reports";
 import {
   ChangeInvoiceCurrency,
   ChangeInvoiceCurrencyRate,
   Settlement,
-} from '@components/molecules/salesAndPurchase/salesInvoice';
+} from "@components/molecules/salesAndPurchase/salesInvoice";
 import {
   Education,
   History,
@@ -52,52 +42,36 @@ import {
   Sponsor,
   TrainingCourse,
   WorkHistory,
-} from '@components/molecules/staff';
-import { FormulaParameter } from '@components/molecules/staff/formulaParameter';
-import { StockWarehouse } from '@components/molecules/stockWarehouse';
-import { TagManagement } from '@components/molecules/tag';
-import { TaxSettings } from '@components/molecules/taxSettings';
-import ListToolbar from '@components/organisms/listToolbar';
-import {
-  useDarkMode,
-  useInitializePage,
-} from '@hooks/custom';
-import Uploader from '@layout/baseLayout/desktop/actionBar/panelForm/uploader';
-import { useAppSelector } from '@redux/index';
-import {
-  useCUDDataMutation,
-  useGetData,
-} from '@services/base';
-import {
-  type IBaseDto,
-  PendingStatusEnum,
-} from '@services/base/type';
-import { addSpecificTags } from '@slice/container';
-import { addHistory } from '@slice/history';
-import { HistoryTypeEnum } from '@slice/history/enum';
-import {
-  setPageState,
-  setStatusItemsList,
-  setViewData,
-} from '@slice/pages';
-import { PageStateEnum } from '@slice/pages/enum';
-import { SystemEnum } from '@type/enum';
-import type { IToolbarMenu } from '@type/toolbar';
+} from "@components/molecules/staff";
+import { FormulaParameter } from "@components/molecules/staff/formulaParameter";
+import { StockWarehouse } from "@components/molecules/stockWarehouse";
+import { TagManagement } from "@components/molecules/tag";
+import { TaxSettings } from "@components/molecules/taxSettings";
+import ListToolbar from "@components/organisms/listToolbar";
+import { useDarkMode, useInitializePage } from "@hooks/custom";
+import Uploader from "@layout/baseLayout/desktop/actionBar/panelForm/uploader";
+import { useAppSelector } from "@redux/index";
+import { useCUDDataMutation, useGetData } from "@services/base";
+import { type IBaseDto, PendingStatusEnum } from "@services/base/type";
+import { addSpecificTags } from "@slice/container";
+import { addHistory } from "@slice/history";
+import { HistoryTypeEnum } from "@slice/history/enum";
+import { setPageState, setStatusItemsList, setViewData } from "@slice/pages";
+import { PageStateEnum } from "@slice/pages/enum";
+import { SystemEnum } from "@type/enum";
+import type { IToolbarMenu } from "@type/toolbar";
 import {
   findingPageState,
   getColoredIcon,
   showInfoToast,
   showSuccessToast,
-} from '@utils/core';
+} from "@utils/core";
 
-import DynamicModal from '../dynamicModal';
-import { GridToolbar } from '../gridToolbar';
-import { ActionLabelsEnum } from './enum';
-import type {
-  Action,
-  IProps,
-  IState,
-} from './type';
+import DynamicModal from "../dynamicModal";
+import { GridToolbar } from "../gridToolbar";
+import { ActionLabelsEnum } from "./enum";
+import type { Action, IProps, IState } from "./type";
+import CurrencyConversion from "@components/molecules/currencyConversion";
 
 export default function List<T extends IBaseDto, K>({
   url,
@@ -122,6 +96,8 @@ export default function List<T extends IBaseDto, K>({
   bodyValue,
   renderCustomActions,
   filteringAction,
+  isShowChangeStatus = false,
+  system,
 }: IProps<T, K>) {
   const { mode = "light" } = useDarkMode();
   const t = useTranslations();
@@ -327,6 +303,8 @@ export default function List<T extends IBaseDto, K>({
     goodExtraInfoModalIsOpen: false,
     goodPriceModalIsOpen: false,
     personContactModalIsOpen: false,
+    currencyConversionModalIsOpen: false,
+    deleteAccountingDocumentModalIsOpen: false,
     userReportModalIsOpen: false,
     expireDateModalIsOpen: false,
     goodSettingsModalIsOpen: false,
@@ -430,6 +408,30 @@ export default function List<T extends IBaseDto, K>({
           ...state,
           personContactModalIsOpen: true,
           actionConfig: action.payload,
+        };
+      case "OPEN_CURRENCY_CONVERSION_MODAL":
+        return {
+          ...state,
+          currencyConversionModalIsOpen: true,
+          actionConfig: action.payload,
+        };
+      case "OPEN_DELETE_ACCOUNTING_DOCUMENT_MODAL":
+        return {
+          ...state,
+          deleteAccountingDocumentModalIsOpen: true,
+          actionConfig: action.payload,
+        };
+      case "CLOSE_DELETE_ACCOUNTING_DOCUMENT_MODAL":
+        return {
+          ...state,
+          deleteAccountingDocumentModalIsOpen: false,
+          actionConfig: null,
+        };
+      case "CLOSE_CURRENCY_CONVERSION_MODAL":
+        return {
+          ...state,
+          currencyConversionModalIsOpen: false,
+          actionConfig: null,
         };
       case "CLOSE_PERSON_CONTACT_MODAL":
         return {
@@ -766,6 +768,10 @@ export default function List<T extends IBaseDto, K>({
     const correctData: any = gridData?.Data?.find(
       (item) => item[rowFieldKey] === id,
     );
+    const voucherId = (
+      gridData?.Data?.find((item) => item[rowFieldKey] === selectedId) as any
+    )?.VoucherHeaderId;
+
     if (isDeleted) {
       showInfoToast(t("toast.needReload"));
     } else {
@@ -787,7 +793,25 @@ export default function List<T extends IBaseDto, K>({
                 returnPageId: activePage.pageId,
               },
             });
+            break;
+          case ActionLabelsEnum.RelatedAccountingDocument as string:
+            console.log(voucherId, "voucherId");
 
+            // initializePage({
+            //   config: {
+            //     RepoId: repoId,
+            //     SystemId: systemId,
+            //     url: `acc/voucher?id=${voucherId}`,
+            //     pageState: PageStateEnum.Opened,
+            //     originalPageState: PageStateEnum.Opened,
+            //     Id: Number(voucherId),
+            //     listPageId: activePage.pageId,
+            //     Key: Number(voucherId),
+            //     selectedView: formViewId ? formViewId : null,
+            //     data: activePage.data,
+            //     returnPageId: activePage.pageId,
+            //   },
+            // });
             break;
           case ActionLabelsEnum.Show as string:
             initializePage({
@@ -900,6 +924,18 @@ export default function List<T extends IBaseDto, K>({
           case ActionLabelsEnum.PersonContact as string:
             dispatchState({
               type: "OPEN_PERSON_CONTACT_MODAL",
+              payload: action,
+            });
+            break;
+          case ActionLabelsEnum.CurrencyConversion as string:
+            dispatchState({
+              type: "OPEN_CURRENCY_CONVERSION_MODAL",
+              payload: action,
+            });
+            break;
+          case ActionLabelsEnum.DeleteAccountingDocument as string:
+            dispatchState({
+              type: "OPEN_DELETE_ACCOUNTING_DOCUMENT_MODAL",
               payload: action,
             });
             break;
@@ -1250,6 +1286,7 @@ export default function List<T extends IBaseDto, K>({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
   return (
     <div className="flex flex-col items-center">
       {toolbarData && (
@@ -1309,6 +1346,8 @@ export default function List<T extends IBaseDto, K>({
               loading={gridIsLoading}
               withoutActivation={withoutActivation}
               filteringAction={filteringAction}
+              isShowChangeStatus={isShowChangeStatus}
+              system={system}
             />
           ) : (
             <DataGrid
@@ -1331,6 +1370,8 @@ export default function List<T extends IBaseDto, K>({
               formUrl={formUrl}
               ref={tableRef}
               withoutActivation={withoutActivation}
+              isShowChangeStatus={isShowChangeStatus}
+              system={system}
             />
           )}
 
@@ -1576,6 +1617,104 @@ export default function List<T extends IBaseDto, K>({
                 <ContactInfo
                   id={selectedId}
                   sourceKey={rowFieldKey as string}
+                />
+              }
+            />
+          )}
+          {state.currencyConversionModalIsOpen && (
+            <CustomModal
+              contentClassName={`${match ? "w-[520px] " : ""}`}
+              headerName={state.actionConfig.MenuDesc}
+              className="top-[5vh] bottom-[15vh] h-[80dvh]"
+              headerIcon={
+                match && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(state.actionConfig.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )
+              }
+              headerDescription={`${
+                gridData?.Data?.find(
+                  (item) => item[rowFieldKey] === selectedId,
+                )[staticKey]
+              }
+              `}
+              closeModal={() =>
+                dispatchState({ type: "CLOSE_CURRENCY_CONVERSION_MODAL" })
+              }
+              isModalOpen={state.currencyConversionModalIsOpen}
+              content={
+                <CurrencyConversion
+                  id={selectedId}
+                  sourceKey={rowFieldKey as string}
+                  rowId={
+                    (
+                      gridData?.Data?.find(
+                        (item) => item[rowFieldKey] === selectedId,
+                      ) as any
+                    )?.CostConversionId
+                  }
+                  voucherNumber={
+                    (
+                      gridData?.Data?.find(
+                        (item) => item[rowFieldKey] === selectedId,
+                      ) as any
+                    )?.VoucherNumber
+                  }
+                  closeModal={() =>
+                    dispatchState({ type: "CLOSE_CURRENCY_CONVERSION_MODAL" })
+                  }
+                />
+              }
+            />
+          )}
+          {state.deleteAccountingDocumentModalIsOpen && (
+            <CustomModal
+              contentClassName={`${match ? "w-[520px] " : ""}`}
+              headerName={state.actionConfig.MenuDesc}
+              className="top-[5vh] bottom-[15vh] h-[80dvh]"
+              headerIcon={
+                match && (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: getColoredIcon(state.actionConfig.Icon, mode),
+                    }}
+                    style={{ width: "18px", height: "17px" }}
+                  />
+                )
+              }
+              headerDescription={`${
+                gridData?.Data?.find(
+                  (item) => item[rowFieldKey] === selectedId,
+                )[staticKey]
+              }
+              `}
+              closeModal={() =>
+                dispatchState({
+                  type: "CLOSE_DELETE_ACCOUNTING_DOCUMENT_MODAL",
+                })
+              }
+              isModalOpen={state.deleteAccountingDocumentModalIsOpen}
+              content={
+                <CurrencyConversion
+                  id={selectedId}
+                  sourceKey={rowFieldKey as string}
+                  rowId={
+                    (
+                      gridData?.Data?.find(
+                        (item) => item[rowFieldKey] === selectedId,
+                      ) as any
+                    )?.CostConversionId
+                  }
+                  mode="delete"
+                  closeModal={() =>
+                    dispatchState({
+                      type: "CLOSE_DELETE_ACCOUNTING_DOCUMENT_MODAL",
+                    })
+                  }
                 />
               }
             />

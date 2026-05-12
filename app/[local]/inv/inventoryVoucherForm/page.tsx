@@ -1,3 +1,4 @@
+import FormGenerator from '@components/organisms/formGenerator';
 import InventoryVoucherTemplate
   from '@components/templates/inventoryVoucherTemplate';
 import {
@@ -7,28 +8,30 @@ import {
 
 export default function InventoryVoucherFormPage() {
   return (
-    // <Form<IInventoryVoucher, IRequest>
-    //   fieldKey="VoucherHeaderId"
-    //   caption={""}
-    //   url="api/inv/select/voucher"
+    <FormGenerator<IInventoryVoucher, IRequest>
+      fieldKey="VoucherHeaderId"
+      caption={""}
+      url="api/inv/select/voucher"
+      listUrl="inv/inventoryVoucherList"
+      titleKey="VoucherNumber"
+      pageIcon="VoucherTypeIcon"
+      fromIndexedDb
+      Component={InventoryVoucherTemplate}
+    />
+    // // <>
+    // <InventoryVoucherTemplate<IInventoryVoucher, IRequest>
+    //   headerFieldKey="VoucherHeaderId"
+    //   detailFieldKey='VoucherDetailId'
+    //   caption={"title.inventoryVoucherForm"}
+    //   captionII=''
+    //   headerGetUrl="api/inv/select/voucher/header"
+    //   detailGetUrl="api/inv/select/voucher/detail"
+    //   addUrl = "api/inv/insert/voucher"
+    //   updateUrl = "api/inv/update/voucher"
     //   listUrl="inv/inventoryVoucherList"
     //   titleKey="VoucherNumber"
     //   pageIcon="VoucherTypeIcon"
     // />
-    // // <>
-    <InventoryVoucherTemplate<IInventoryVoucher, IRequest>
-      headerFieldKey="VoucherHeaderId"
-      detailFieldKey='VoucherDetailId'
-      caption={"title.inventoryVoucherForm"}
-      captionII=''
-      headerGetUrl="api/inv/select/voucher/header"
-      detailGetUrl="api/inv/select/voucher/detail"
-      addUrl = "api/inv/insert/voucher"
-      updateUrl = "api/inv/update/voucher"
-      listUrl="inv/inventoryVoucherList"
-      titleKey="VoucherNumber"
-      pageIcon="VoucherTypeIcon"
-    />
     //   </>
   )
 }

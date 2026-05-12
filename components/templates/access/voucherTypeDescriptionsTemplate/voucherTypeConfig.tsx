@@ -1,5 +1,5 @@
 import { EditIcon, TrashBin } from "@components/atoms/iconComponents";
-import { IDynamicModalConfig } from "@components/organisms/sideBarForm/type";
+import { IDynamicModalConfig } from "@components/organisms/sideBarForm/types";
 
 export const voucherTypeConfig = (
   voucherTypeId: number,
@@ -10,7 +10,7 @@ export const voucherTypeConfig = (
   createUrl: "/api/acc/insert/voucherTypeDescriptions",
   updateUrl: "/api/acc/update/voucherTypeDescriptions",
   idFieldName: "voucherTypeId",
-  idFieldKeyUpdate:"VocherTypeDescId",
+  idFieldKeyUpdate: "VocherTypeDescId",
   listConfig: {
     repoViewId: null,
     RepoId: 0,
@@ -22,12 +22,15 @@ export const voucherTypeConfig = (
     IsDisableCommentCount: false,
     IsDisableSidebarStats: false,
     IsDisableCount: false,
+    transform: (item) => ({
+      ...item,
+    }),
   },
   formConfig: { fields: [] },
   actions: [
     {
       MenuId: null,
-      Icon:<TrashBin/>,
+      Icon: <TrashBin />,
       ActionId: null,
       MenuDesc: "حذف",
       key: "حذف",
@@ -38,7 +41,7 @@ export const voucherTypeConfig = (
     },
     {
       MenuId: null,
-      Icon:<EditIcon config={{width:18,height:18}}/>,
+      Icon: <EditIcon config={{ width: 18, height: 18 }} />,
       ActionId: null,
       MenuDesc: "ویرایش",
       key: "ویرایش",

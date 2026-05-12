@@ -1,27 +1,27 @@
 import { Play } from "@components/atoms/iconComponents";
 import { Divider } from "antd";
 import { useTranslations } from "next-intl";
-import { FormInstance } from "antd/lib";
-import { IDynamicModalConfig, RecordType } from "../../type";
+import { CustomFormBaseProps, CustomFormComponentProps } from "../../types";
 import CustomForm from "./customForm";
-import { Dispatch, SetStateAction } from "react";
 
-interface ContextHeaderProps {
-  form: FormInstance<any>;
-  typeId: number;
-  config: IDynamicModalConfig;
-  editingRecord: RecordType;
-  setEditingRecord: Dispatch<SetStateAction<RecordType>>;
+interface ContextHeaderProps extends CustomFormBaseProps {
+  ExternalCustomForm?: React.ComponentType<CustomFormComponentProps>;
 }
 
-export function ContextHeader({
-  form,
-  typeId,
-  config,
-  editingRecord,
-  setEditingRecord,
-}: ContextHeaderProps) {
+export function ContextHeader(props: ContextHeaderProps) {
+  const {
+    form,
+    typeId,
+    config,
+    editingRecord,
+    setEditingRecord,
+    ExternalCustomForm,
+    refetchCard,
+    refetchTable,
+  } = props;
   const t = useTranslations();
+
+  const CustomFormComponent = ExternalCustomForm ?? CustomForm;
 
   return (
     <>
@@ -31,12 +31,14 @@ export function ContextHeader({
           {t("general.newItem")}
         </p>
       </div>
-      <CustomForm
+      <CustomFormComponent
         typeId={typeId}
         form={form}
         config={config}
         editingRecord={editingRecord}
         setEditingRecord={setEditingRecord}
+        refetchCard={refetchCard}
+        refetchTable={refetchTable}
       />
       <Divider className="my-2" />
     </>

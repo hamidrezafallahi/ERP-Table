@@ -1,7 +1,16 @@
-import { createSlice, PayloadAction, Slice } from "@reduxjs/toolkit";
-import { UserSession } from "@services/auth/base/type";
+import {
+  createSlice,
+  PayloadAction,
+  Slice,
+} from '@reduxjs/toolkit';
+import { UserSession } from '@services/auth/base/type';
 
-import type { IConfig, TLang, TTheme } from "./type";
+import type {
+  IConfig,
+  IPlaceConfig,
+  TLang,
+  TTheme,
+} from './type';
 
 const initialState: IConfig = {
   fullScreen: false,
@@ -27,6 +36,7 @@ const initialState: IConfig = {
   parentPageId: "",
   theme: "light",
   defaultConfigs: null,
+  placeConfigs:[]
 };
 
 export const ConfigsReducer: Slice<IConfig> = createSlice({
@@ -129,6 +139,9 @@ export const ConfigsReducer: Slice<IConfig> = createSlice({
         }
       });
     },
+     setPlaceConfigs: (state, action: PayloadAction<{ placeConfigs:IPlaceConfig[]  }>) => {
+          state.placeConfigs = action.payload.placeConfigs;
+        },
     resetConfig: (state) => {
       return {
         ...state,
@@ -166,6 +179,7 @@ export const {
   clearReportData,
   setInitMatch,
   mergeConfig,
+  setPlaceConfigs
 } = ConfigsReducer.actions;
 
 export default ConfigsReducer.reducer;

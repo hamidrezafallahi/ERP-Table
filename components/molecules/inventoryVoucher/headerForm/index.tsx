@@ -17,17 +17,33 @@ import type { IRequestConfig } from '@type/elementType';
 
 interface IProps {
   form: FormInstance;
+  onSubmitCallback?:()=>void
 }
 export const InventoryVoucherHeaderForm = ({ ...props }: IProps) => {
-  const {NeedReference,VoucherReference,isInventoryTransfer,label,hasThirdParty,tafsiliTypeId}=useAppSelector((state)=>({
-    NeedReference:state.withPersist.pages.find(p=>p.isActive)?.data?.NeedReference,
-    VoucherReference:state.withPersist.pages.find(p=>p.isActive)?.data?.VoucherReference,
-    isInventoryTransfer:state.withPersist.pages.find(p=>p.isActive)?.data?.isInventoryTransfer,
-    label:state.withPersist.pages.find(p=>p.isActive)?.data?.label,
-    hasThirdParty:state.withPersist.pages.find(p=>p.isActive)?.data?.hasThirdParty,
-    tafsiliTypeId:state.withPersist.pages.find(p=>p.isActive)?.data?.tafsiliTypeId
-}), shallowEqual);
-  const { form } = props;
+  const {
+    NeedReference,
+    VoucherReference,
+    isInventoryTransfer,
+    label,
+    hasThirdParty,
+    tafsiliTypeId,
+  } = useAppSelector(
+    (state) => ({
+      NeedReference: state.withPersist.pages.find((p) => p.isActive)?.data
+        ?.NeedReference,
+      VoucherReference: state.withPersist.pages.find((p) => p.isActive)?.data
+        ?.VoucherReference,
+      isInventoryTransfer: state.withPersist.pages.find((p) => p.isActive)?.data
+        ?.isInventoryTransfer,
+      label: state.withPersist.pages.find((p) => p.isActive)?.data?.label,
+      hasThirdParty: state.withPersist.pages.find((p) => p.isActive)?.data
+        ?.hasThirdParty,
+      tafsiliTypeId: state.withPersist.pages.find((p) => p.isActive)?.data
+        ?.tafsiliTypeId,
+    }),
+    shallowEqual,
+  );
+  const { form,onSubmitCallback } = props;
   const t = useTranslations();
 
   const sourceConfig: IRequestConfig = {
@@ -48,12 +64,14 @@ export const InventoryVoucherHeaderForm = ({ ...props }: IProps) => {
   };
   return (
     <>
-      <Title  captionII={label} />
+      <Title captionII={label} />
       <Form
         form={form}
+        onFinish={()=>{onSubmitCallback?.()}}
         name="inventoryVoucherHeaderForm"
         layout="vertical"
         className={`flex flex-col gap-2 lg:grid lg:grid-cols-4 lg:gap-3 max-h-[calc(100dvh-160px)] h-auto overflow-y-auto hidden-show-scrollBar`}
+
       >
         <Form.Item
           label="تاریخ سند"

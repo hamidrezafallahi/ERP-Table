@@ -2,6 +2,7 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { CustomTooltip } from '@components/atoms/defaultElements';
 import {
   ClipboardIcon,
   CutIcon,
@@ -40,72 +41,79 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
     controller.dispatch({ type: "UI_ACTION_TABLE", action });
   };
   const handleDeleteSelectedRows = () => {
-    // controller.dispatch({ type: "UI_ACTION_TABLE",action });
+    controller.dispatch({ type: "UI_DELETE_SELECTED_ROW" });
   };
   return (
     <div className="flex flex-1 justify-start items-center gap-2">
-      <button
-        type="button"
-        className="flex justify-center items-center p-1 border rounded"
-        onClick={handleAddRow}
-      >
-        <PlusIcon config={{ width: 18, height: 18 }} />
-      </button>
-      <button
-        type="button"
-        disabled={count == 0}
-        className={`flex justify-center items-center p-1 border rounded ${count == 0 && "opacity-40"}`}
-        onClick={() => {
-          handleChangeTableAction("copy");
-        }}
-      >
-        <GuaranteeReceive config={{ width: 18, height: 18 }} />
-      </button>
-      <button
-        type="button"
-        disabled={count == 0}
-        className={`flex justify-center items-center p-1 border rounded ${count == 0 && "opacity-40"}`}
-        onClick={() => {
-          handleChangeTableAction("cut");
-        }}
-      >
-        <CutIcon config={{ width: 18, height: 18 }} />
-      </button>
+      <CustomTooltip title={t("general.addNewRow")}>
+        <button
+          type="button"
+          className="flex justify-center items-center p-1 border rounded"
+          onClick={handleAddRow}
+        >
+          <PlusIcon config={{ width: 18, height: 18 }} />
+        </button>
+      </CustomTooltip>
+      <CustomTooltip title={t("general.copy")}>
+        <button
+          type="button"
+          disabled={count == 0}
+          className={`flex justify-center items-center p-1 border rounded ${count == 0 && "opacity-40"}`}
+          onClick={() => {
+            handleChangeTableAction("copy");
+          }}
+        >
+          <GuaranteeReceive config={{ width: 18, height: 18 }} />
+        </button>
+      </CustomTooltip>
+      <CustomTooltip title={t("general.cut")}>
+        <button
+          type="button"
+          disabled={count == 0}
+          className={`flex justify-center items-center p-1 border rounded ${count == 0 && "opacity-40"}`}
+          onClick={() => {
+            handleChangeTableAction("cut");
+          }}
+        >
+          <CutIcon config={{ width: 18, height: 18 }} />
+        </button>
+      </CustomTooltip>
+      <CustomTooltip title={t("general.paste")}>
+        <button
+          type="button"
+          disabled={
+            !((tableAction == "copy" || tableAction == "cut") && count != 0)
+          }
+          className={`flex justify-center items-center p-1 border rounded ${!((tableAction == "copy" || tableAction == "cut") && count != 0) && "opacity-40"}`}
+          onClick={() => {
+            handleChangeTableAction("paste");
+          }}
+        >
+          <ClipboardIcon config={{ width: 18, height: 18 }} />
+        </button>
+      </CustomTooltip>
+      <CustomTooltip title={t("general.delete")}>
+        <button
+          type="button"
+          disabled={count == 0}
+          className={`flex justify-center items-center p-1 border rounded ${count == 0 && "opacity-40"}`}
+          onClick={handleDeleteSelectedRows}
+        >
+          <TrashBin config={{ width: 18, height: 18 }} />
+        </button>
+      </CustomTooltip>
+      <CustomTooltip title={t("general.toggle")}>
+        <button
+          onClick={handleSelectAllRows}
+          className="flex justify-center items-center p-1 border rounded"
+        >
+          <Layers config={{ width: 18, height: 18 }} />
+        </button>
+      </CustomTooltip>
 
-      <button
-        type="button"
-        disabled={
-          !((tableAction == "copy" || tableAction == "cut") && count != 0)
-        }
-        className={`flex justify-center items-center p-1 border rounded ${!((tableAction == "copy" || tableAction == "cut") && count != 0) && "opacity-40"}`}
-        onClick={() => {
-          handleChangeTableAction("paste");
-        }}
-      >
-        <ClipboardIcon config={{ width: 18, height: 18 }} />
-      </button>
-
-      <button
-        type="button"
-        disabled={count == 0}
-        className={`flex justify-center items-center p-1 border rounded ${count == 0 && "opacity-40"}`}
-        onClick={handleDeleteSelectedRows}
-      >
-        <TrashBin config={{ width: 18, height: 18 }} />
-      </button>
-
-      <button 
-      onClick={handleSelectAllRows}
-      className="flex justify-center items-center p-1 border rounded">
-        <Layers config={{ width: 18, height: 18 }} />
-        
-      </button>
-
-      <button
-        className="px-2 text-black-black6 text-xs"
-      >
-        {t("general.selected") } {count}
-      </button>
+        <span className="px-2 text-black-black6 text-xs">
+          {t("general.selected")} {count}
+        </span>
     </div>
   );
 };

@@ -1,22 +1,32 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Dropdown, MenuProps } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import {
+  Dropdown,
+  MenuProps,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { CustomBadge } from "@components/atoms/defaultElements";
-import { SideFooterIcon } from "@components/atoms/iconComponents";
-import DefaultCash from "@components/molecules/defaultParameterModal/cash";
-import DefaultCompany from "@components/molecules/defaultParameterModal/company";
-import DefaultCurrency from "@components/molecules/defaultParameterModal/currency";
-import DefaultLanguage from "@components/molecules/defaultParameterModal/language";
-import DefaultYear from "@components/molecules/defaultParameterModal/year";
-import { useDarkMode } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { IDefaultConfigs } from "@slice/config/type";
+import { CustomBadge } from '@components/atoms/defaultElements';
+import { SideFooterIcon } from '@components/atoms/iconComponents';
+import DefaultCash from '@components/molecules/defaultParameterModal/cash';
+import DefaultCompany
+  from '@components/molecules/defaultParameterModal/company';
+import DefaultCurrency
+  from '@components/molecules/defaultParameterModal/currency';
+import DefaultLanguage
+  from '@components/molecules/defaultParameterModal/language';
+import DefaultYear from '@components/molecules/defaultParameterModal/year';
+import { useDarkMode } from '@hooks/custom';
+import { useGetPlaceConfigs } from '@hooks/custom/useGetPlaceConfigs';
+import { useAppSelector } from '@redux/index';
+import { IDefaultConfigs } from '@slice/config/type';
 
-import HelperDelay from "./helperDelay";
-import { IRequiredStep } from "./type";
+import HelperDelay from './helperDelay';
+import { IRequiredStep } from './type';
 
 function DefaultConfigs({ ...props }) {
   const { setOpenModal, setContent } = props;
@@ -47,7 +57,7 @@ function DefaultConfigs({ ...props }) {
     useState<boolean>(false);
   const [requiredSteps, setRequiredSteps] = useState<IRequiredStep[]>();
   const t = useTranslations();
-
+const {getPlaceConfigs}=useGetPlaceConfigs()
   const handleOpenDropdown = () => {
     setOpenDropdown(!openDropdown);
   };
@@ -185,6 +195,7 @@ function DefaultConfigs({ ...props }) {
       setTourConditionalClose(false);
     }
     if (undefinedList == 0) {
+      getPlaceConfigs()
       setOpenDropdown(false);
     }
   };
@@ -276,7 +287,7 @@ function DefaultConfigs({ ...props }) {
             <CustomBadge
               count={Object.values(globals).filter((item) => !item).length}
               size="small"
-              className="absolute top-0 rtl: right-0  left-0 [&>sup]:!shadow-none [&>sup]:!bg-redBadge"
+              className="top-0 right-0 left-0 absolute [&>sup]:!bg-redBadge [&>sup]:!shadow-none rtl:"
             />
             <SideFooterIcon
               config={{

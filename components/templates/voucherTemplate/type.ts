@@ -3,7 +3,11 @@ import {
   SetStateAction,
 } from 'react';
 
+import { FormInstance } from 'antd';
+
 export interface IProps {
+  form:FormInstance<any>;
+  setIsFormSubmitting:(boolean)=>void
   caption: string;
   captionII?: string;
   listUrl: string;

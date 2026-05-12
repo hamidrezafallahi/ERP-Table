@@ -5,17 +5,16 @@ import { useAppSelector } from "@redux/index";
 import { useEffect, useState } from "react";
 import { addNewPage } from "@slice/pages";
 import { PageTypeEnum } from "@type/enum";
-import TafsiliCategoryToolbar from "./tafsiliCategoryToolbar";
-import DynamicModal from "@components/organisms/dynamicModal";
-import { getTafsiliCategoryConfig } from "./config";
-import { useTranslations } from "next-intl";
-import { TafsiliCategorySideBar } from "@components/organisms/tafsiliCategorySideBar";
+import SideBarForm from "@components/organisms/sideBarForm";
+import { tafsiliCategoryConfig } from "./tafsiliCategoryConfig";
+import { HeaderTypeEnum } from "@slice/pages/enum";
+import CustomFormContext from "@components/organisms/tafsiliCategory/tafsiliCategoryContext";
+import { TafsiliCategorySideBar } from "@components/organisms/tafsiliCategory/tafsiliCategorySideBar";
 
 export default function TafsiliCategoryTemplate() {
   const [tafsiliCategoryId, setTafsiliCategoryId] = useState<number>(undefined);
-
   const dispatch = useDispatch();
-  const { initPage } = useAppSelector(
+  const { initPage, match } = useAppSelector(
     (state) => ({
       initPage: state.withPersist.init,
       match: state.withPersist.config.initMatch,
@@ -36,33 +35,25 @@ export default function TafsiliCategoryTemplate() {
         SystemId: initPage.SystemId,
         url: "acc/tafsiliCategory",
         listPageId: initPage?.listPageId,
+        headerType: HeaderTypeEnum.MobileWithoutSearch,
+        returnPageId: initPage.pageId,
       }),
     );
   }, []);
 
   return (
-    <div className="relative">
-      <Title caption={"title.webHook"} />
-      <div className="relative flex lg:flex-row items-center flex-col gap-4 h-full">
-        <TafsiliCategoryToolbar />
-        <TafsiliCategorySideBar />
-        {tafsiliCategoryId ? (
-          <div
-            className={`hidden-show-scrollBar relative p-4 border-2 border-dashed rounded w-full h-[calc(100dvh-165px)] overflow-auto`}
-          >
-            <DynamicModal
-              id={tafsiliCategoryId}
-              sourceKey="tafsiliId"
-              config={getTafsiliCategoryConfig(tafsiliCategoryId)}
-              pageCount={12}
-            />
-          </div>
-        ) : (
-          <div className="flex justify-center items-center w-full h-full text-gray-400">
-            لطفاً ابتدا طبقه تفصیلی را انتخاب کنید.
-          </div>
-        )}
-      </div>
+    <div
+      className={`${match ? "h-full mt-0" : "h-[calc(100dvh-10rem)] mt-4 overflow-hidden"} relative`}
+    >
+      <Title caption={"title.tafsiliCategory"} />
+      <SideBarForm
+        id={tafsiliCategoryId}
+        setId={setTafsiliCategoryId}
+        config={tafsiliCategoryConfig(tafsiliCategoryId)}
+        sideBarTitle={"طبقه تفصیلی"}
+        ExternalSidebar={TafsiliCategorySideBar}
+        ExternalCustomForm={CustomFormContext}
+      />
     </div>
   );
 }

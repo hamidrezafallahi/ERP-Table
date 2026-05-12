@@ -98,6 +98,9 @@ export interface DeleteRowCommand extends BaseTableCommand {
   readonly rowId: number;
 
 }
+export interface DeleteRowsCommand extends BaseTableCommand {
+  readonly type: 'ROWS_DELETED';
+}
 export interface ExpandRowCommand {
   readonly type: 'ROW_EXPANDED';
   readonly tableKey: string,
@@ -252,6 +255,7 @@ export type TableCommand =
   | AddEmptyRowCommand
   | DuplicateRowCommand
   | DeleteRowCommand
+  | DeleteRowsCommand
   | DeleteTableCommand
   | ResetTableCommand
   | RowReorderedCommand

@@ -1,25 +1,19 @@
 import { CustomButton } from "@components/atoms/defaultElements";
 import { LeftChevron, RightChevron } from "@components/atoms/iconComponents";
-import { IBaseQueryResponse } from "@services/base/type";
 import { Pagination } from "antd";
-import IVoucherTypeItem from "../../type";
 import { Dispatch, SetStateAction } from "react";
 
 interface ContextPaginationProps {
   perPageCount: number;
-  tableTotal: IBaseQueryResponse<IVoucherTypeItem[]>;
-  tableData: IBaseQueryResponse<IVoucherTypeItem[]>;
+  tableTotal: any;
+  tableData: any;
   pageNumber: number;
   setPageNumber: Dispatch<SetStateAction<number>>;
 }
 
-export function ContextPagination({
-  perPageCount,
-  tableTotal,
-  tableData,
-  pageNumber,
-  setPageNumber,
-}: ContextPaginationProps) {
+export function ContextPagination(props: ContextPaginationProps) {
+  const { perPageCount, tableTotal, tableData, pageNumber, setPageNumber } =
+    props;
   if (!tableData || tableTotal?.TotalCount < perPageCount) return null;
   return (
     <Pagination

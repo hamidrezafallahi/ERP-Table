@@ -28,7 +28,6 @@ export const formConfig: IFormFieldConfig[] = [
     name: "ReferNumber",
     caption: "شماره ارجاع",
     type: "number",
-
     value: undefined,
     originalValue: undefined
   },
@@ -49,6 +48,10 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       fieldCaption: " ردیف - عملیات",
       fieldType: "index",
       order: 1,
+      enableDeleteButton: true,
+      enableExpandButton: false,
+      enableMoveButton: true,
+      enableOptionsButton: true,
       visibility: { kind: 'always' },
       indexOptions: (tableKey, rowId, row, controller) => {
         const AllRows = controller.getAllRows()
@@ -62,7 +65,6 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
           if (sumBed === sumBes) {
             return
           } else if (sumBed > sumBes) {
-            console.log("الان بدهکار کلی هستی")
             if (rowBed >= rowBes) {//چک شد
               console.log("الان بدهکار کلی هستی  و در سطر هم بدهکاری")
               if (rowBed > sumDifference) {
@@ -72,23 +74,17 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
                 controller.dispatch({ type: 'UI_CELL_CHANGE', value: sumDifference - rowBed, rowId, columnId: "Bes" })
                 controller.dispatch({ type: 'UI_CELL_CHANGE', value: 0, rowId, columnId: "Bed", })
               }
-            } else {//چک شد
-              console.log("الان بدهکار کلی هستی  و در سطر بستانکاری و بدهی کل بزرگتر از بستانکاری سطر هست")
+            } else {
               controller.dispatch({ type: 'UI_CELL_CHANGE', value: sumDifference + rowBes, rowId, columnId: "Bes", })
             }
           } else {
-            console.log("الان بستانکار کلی هستی")
             if (rowBed >= rowBes) {
-              console.log("الان بستانکار کلی هستی  و در سطر بدهکاری ")
               controller.dispatch({ type: 'UI_CELL_CHANGE', value: rowBed + sumDifference, rowId, columnId: "Bed", })
-            } else { // چک شده 
-              console.log("الان بستانکار کلی هستی  و در سطر هم بستانکاری")
+            } else {
               if (sumDifference >= rowBes) {
-                console.log("ولی بستانکاری کل بزرگتر از بستانکاری سطر هست  الان بستانکار کلی هستی  و در سطر هم بستانکاری")
                 controller.dispatch({ type: 'UI_CELL_CHANGE', value: sumDifference - rowBes, rowId, columnId: "Bed", })
                 controller.dispatch({ type: 'UI_CELL_CHANGE', value: 0, rowId, columnId: "Bes", })
               } else {
-                console.log(" ولی بستانکاری کل کوچکتر از بستانکاری سطر است الان بستانکار کلی هستی  و در سطر هم بستانکاری")
                 controller.dispatch({ type: 'UI_CELL_CHANGE', value: rowBes - sumDifference, rowId, columnId: "Bes", })
               }
             }
@@ -99,7 +95,6 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
           if (rowIndex && activeCol) {
             const previousRowValue = AllRows[rowIndex - 1].cells[activeCol]?.value
             if (previousRowValue) {
-
               controller.dispatch({ type: 'UI_CELL_CHANGE', value: previousRowValue, rowId, columnId: activeCol, })
             }
           }
@@ -110,12 +105,6 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
           controller.dispatch({ type: 'UI_CELL_CHANGE', value: rowBed, rowId, columnId: "Bes" })
           controller.dispatch({ type: 'UI_CELL_CHANGE', value: rowBes, rowId, columnId: "Bed", })
         }
-
-
-
-
-
-
         return [
           {
             key: "10",
@@ -142,6 +131,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       visibility: { kind: 'always' },
       dynamicSource: {
         endpoint: "api/acc/select/account/moeen",
+        OrderInfo: [{ Asc: true, ColName: "AccountId" }]
         // repoViewId: 130063
       },
       resolveOn: {
@@ -149,7 +139,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         endpoint: "api/acc/select/account4voucher",
         buildParams: (row) => ({
           Id: Number(row.AccountId),
-          repoViewId: 10001
+          repoViewId: 10001,
         }),
         mapFlags: (res) => {
           const temp = res.Data[0]
@@ -183,24 +173,31 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       //   return `نمایشگر - ${value}`
       // },
 
-      width: 144,
+      minWidth: 144,
       popUpWidth: 400,
       labelValue: "selectValue",
       order: 2
     },
-      {
+    {
       fieldName: "TafsiliId",
       fieldCaption: t("general.tafsili"),
       fieldType: "selectOption",
+      minWidth: 90,
       dynamicSource: {
         endpoint: "/api/acc/select/tafsiliLevel4",
         repoViewId: 10017,
         dependsOn: ["AccountId"],
         dependOn: { fieldName: "AccountId", value: null }
       },
-      visibility: { kind: "always" },
+
+      visibility: {
+        kind: "always",
+
+      },
+            labelValue: "selectValue",
+
       order: 3
-    },{
+    }, {
       fieldName: "FifthId",
       fieldCaption: t("general.level5"),
       fieldType: "selectOption",
@@ -215,6 +212,8 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "FifthId",
       },
+            labelValue: "selectValue",
+
       order: 4
     },
     {
@@ -232,6 +231,8 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "SixthId",
       },
+            labelValue: "selectValue",
+
       order: 5
     },
     {
@@ -249,6 +250,8 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "SeventhId",
       },
+            labelValue: "selectValue",
+
       order: 6
     },
     {
@@ -266,6 +269,8 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "EightId",
       },
+            labelValue: "selectValue",
+
       order: 7
     },
     {
@@ -283,6 +288,8 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "NineId",
       },
+            labelValue: "selectValue",
+
       order: 8
     },
     {
@@ -300,6 +307,8 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "TenId",
       },
+            labelValue: "selectValue",
+
       order: 9
     },
     {
@@ -317,6 +326,8 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "ElevenId",
       },
+            labelValue: "selectValue",
+
       order: 10
     },
     {
@@ -334,6 +345,8 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "TwelveId",
       },
+            labelValue: "selectValue",
+
       order: 11
     },
     {
@@ -351,15 +364,24 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "ThirteenId",
       },
+            labelValue: "selectValue",
+
       order: 12
     }, {
       fieldName: "DetailDesc",
       fieldCaption: t("general.rowDescription"),
-      fieldType: "text",
+      fieldType: "text",//must be description after complete desc component
+      // dynamicSource: {
+      //   endpoint: "/api/acc/select/accountDescription",
+      //   dependsOn: ["AccountId"],
+      //   dependOn: { fieldName: "id", value: null }
+
+      // },
+      style: { width: 250 },
       visibility: { kind: 'always' },
       order: 13
     },
-      {
+    {
       fieldName: "Bed",
       fieldCaption: t("general.debit"),
       fieldType: "price",
@@ -379,7 +401,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       },
       order: 15,
     },
-     {
+    {
       fieldName: "ReferNumber",
       fieldCaption: t("general.referNumber"),
       fieldType: "number",
@@ -391,9 +413,9 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       },
       order: 16,
     },
-     {
+    {
       fieldName: "ReferDate",
-      fieldCaption: t("general.ReferDate"),
+      fieldCaption: t("general.referDate"),
       fieldType: "date",
       visibility: {
         kind: "whenFlag",
@@ -401,16 +423,17 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         flag: "ReferDate",
       },
       order: 17,
-    },{
+    }, {
       fieldName: "CurrencyId",
       fieldCaption: t("general.currencyType"),
       fieldType: "selectOption",
+            labelValue: "selectValue",
+
       order: 18,
       dynamicSource: {
-        endpoint: "/api/inv/select/batch4SelectOptionByVoucherTypeId",
-        repoViewId: 10017,
-        dependsOn: ["AccountId"],
-        dependOn: { fieldName: "AccountId", value: null }
+        endpoint: "/api/sale/select/currency",
+        repoViewId: 130065,
+        // PagingInfo:{ PageRecordCount: 5000, PageNumber: 1 }
       },
       visibility: {
         kind: "whenFlag",
@@ -444,7 +467,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
     {
       fieldName: "FollowUpNumber",
       fieldCaption: t("general.followUpNumber"),
-      fieldType: "number",
+      fieldType: "text",
       visibility: {
         kind: "whenFlag",
         sourceFieldName: "AccountId",

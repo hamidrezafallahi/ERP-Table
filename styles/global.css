@@ -140,6 +140,9 @@ th.ant-table-cell {
   z-index: -10 !important;
 }
 
+.documentsMerge .ant-form-item-row {
+  width: 100%;
+}
 th.ant-table-cell.ant-table-cell-fix-right.ant-table-cell-fix-right-first {
   padding: 0 !important;
   position: sticky !important;
@@ -742,10 +745,7 @@ td.ant-table-cell {
 .ant-table-cell-fix-right:nth-of-type(2) {
   right: 58px !important;
 }
-.ant-select-open .ant-select-arrow {
-  transform: rotate(180deg);
-  transition: transform 0.2s ease;
-}
+
 .customYearPlanTable > .ant-table-cell-fix-right:nth-of-type(1) {
   background-color: #fff !important;
 }

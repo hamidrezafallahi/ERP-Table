@@ -130,7 +130,7 @@ erp-table
            ├── cellRenderer.tsx
            ├── ERPTableBody.tsx
            │── ERPTableHeader.tsx
-           └── hooks
-               └── useERPTable.ts
+           └── useERPTable.ts
+               
  
  

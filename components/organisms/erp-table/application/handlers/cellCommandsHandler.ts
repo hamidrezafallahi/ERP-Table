@@ -99,13 +99,13 @@ export class ChangeCellValueHandler {
         command.newValue
       );
 
-      if (!validated.ok) {
-        throw new DomainError(
-          'INVALID_VALUE',
-          validated.error.message,
-          validated.error.details
-        );
-      }
+      // if (!validated.ok) {
+      //   throw new DomainError(
+      //     'INVALID_VALUE',
+      //     validated.error.message,
+      //     validated.error.details
+      //   );
+      // }
 
       /* ---------- 5. domain mutation ---------- */
       const domainEvent = table.changeCell(
@@ -217,20 +217,19 @@ export class ChangeCellValueHandler {
   }) {
     const { table, rowId, changedColumnId, newValue } = input;
     const meta = this.dynamic.columnMeta;
-
     const changedMeta = meta.get(changedColumnId.value);
     const resolveOn = changedMeta?.resolveOn;
     if (!resolveOn) return;
     if (resolveOn.fieldName !== changedColumnId.value) return;
-
     const row = table.getRows().find((r: any) => r.id.value === rowId.value);
     if (!row) return;
-
     const rowValues: Record<string, any> = {};
     for (const [colId, cell] of row.getCells().entries()) {
       rowValues[colId] = cell.getValue().value;
     }
-
+    if (newValue == null) {
+      console.log("newValue is null return from here")
+    }
     const params =
       typeof resolveOn.buildParams === 'function'
         ? resolveOn.buildParams(rowValues)
@@ -247,26 +246,35 @@ export class ChangeCellValueHandler {
     const toShow: ColumnSchema[] = [];
     const visibilityCondition = new Object() as Record<string, boolean>;
     meta.forEach(colCfg => {
-
       const v = colCfg.visibility;
       if (
         v?.kind === 'whenFlag' &&
         v.sourceFieldName === changedColumnId.value
       ) {
         const colId = new ColumnId(colCfg.fieldName);
+        const cell = row.getCell(colCfg.fieldName)
+        cell.changeValue(new CellValue(null))
+        cell.changeDisplay(new CellValue(null))
         const schema = table.getColumnSchema(colId);
-        visibilityCondition[v.flag] = flags[v.flag]
+        visibilityCondition[v.flag] = flags[v.flag] ?? false
         if (flags[v.flag]) {
           if (schema) {
             toShow.push({ ...schema, hidden: false });
           }
         }
       }
+      const dependency = colCfg.dynamicSource?.dependsOn;
+      if (dependency && dependency.length > 0 && !Object.hasOwn(visibilityCondition, colCfg.fieldName)) {
+        const cell = row.getCell(colCfg.fieldName)
+        cell.changeValue(new CellValue(null))
+        cell.changeDisplay(new CellValue(null))
+      }
     });
     if (toShow.length > 0) {
       table.addColumns(toShow);
     }
     row.setVisibilityCondition(visibilityCondition)
+    //clean cells 
   }
 
   private async applyComputedColumns(input: {
@@ -386,18 +394,17 @@ export class ChangeCellValueHandler {
       return { ok: true as const, value }
     }
 
-    if (type === 'number' ||type === 'price' || type === 'selectOption') {
-      if (value === '') {
-        return { ok: true as const, value: '' as any };
+    if (type === 'number' || type === 'price' || type === 'selectOption') {
+      // اضافه شدن چک برای undefined
+      if (value === '' || value === undefined) {
+        return { ok: true as const, value: value as any };
       }
-
       const n =
         typeof value === 'number'
           ? value
           : typeof value === 'string'
             ? Number(value)
             : NaN;
-
       return Number.isFinite(n)
         ? { ok: true as const, value: n }
         : {
@@ -862,7 +869,7 @@ export class ApplyDynamicProjectionHandler {
           : typeof value === 'string'
             ? Number(value)
             : NaN;
-
+      console.log(n)
       return Number.isFinite(n)
         ? { ok: true as const, value: n }
         : {

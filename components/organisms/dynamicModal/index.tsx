@@ -286,7 +286,7 @@ export default function DynamicModal({
 
   return (
     <>
-      <div className="flex flex-col gap-2 m-2">
+      <div className="flex flex-col gap-2 m-4">
         {config?.formConfig !== null && (
           <>
             <FormDynamicModal

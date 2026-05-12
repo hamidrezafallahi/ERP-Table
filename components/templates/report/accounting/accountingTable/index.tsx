@@ -1,8 +1,13 @@
-import { shallowEqual, useDispatch } from "react-redux";
-import MainTable from "../../partials/Table"
-import useFetchDataForReport from "../hook/useFetchDataForReport";
-import { setLevelFromTable } from "@slice/pages";
-import { useAppSelector } from "@redux/index";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import { useAppSelector } from '@redux/index';
+import { setLevelFromTable } from '@slice/pages';
+
+import MainTable from '../../partials/Table';
+import useFetchDataForReport from '../hook/useFetchDataForReport';
 
 function AccountingTable() {
 
@@ -10,7 +15,8 @@ function AccountingTable() {
     const { activePage } = useAppSelector((state) => ({activePage: state?.withPersist?.pages?.find((item) => item.isActive === true),}),shallowEqual);
     const dispatch = useDispatch();
     const handleRowClick = (record:any) => {
-      dispatch(setLevelFromTable({ Level: activePage?.viewData?.Level, item: record }));
+
+      dispatch(setLevelFromTable({ Level: activePage?.viewData?.Level+1, item: record }));
 
     };
 

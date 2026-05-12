@@ -43,20 +43,19 @@ function RangeFilter({ handleSubmit, handleReject }: IProps) {
     }
   };
 
-  const HandleSubmitDate = (type, data) => {
-    // set array state
-    if (type == "date") {
-      if (data.date.from !== null && data.date.to !== null) {
+  const HandleSubmitDate = (type, date) => {
+    if (type == "range") {
+      if (date.date.from !== null && date.date.to !== null) {
         dispatch(
           setViewData({
             ...viewData,
-            FromDate: data.date.from,
-            ToDate: data.date.to,
+            FromDate: date.date.from,
+            ToDate: date.date.to,
             YearIds: [],
           })
         );
         if (handleSubmit) {
-          handleSubmit(type, data.date, []);
+          handleSubmit(type, date.date, []);
         }
       }
     } else if (type == "financial") {
@@ -65,11 +64,11 @@ function RangeFilter({ handleSubmit, handleReject }: IProps) {
           ...viewData,
           FromDate: null,
           ToDate: null,
-          YearIds: data.customData?.yearIds,
+          YearIds: date.customData?.yearIds,
         })
       );
       if (handleSubmit) {
-        handleSubmit(type, { from: null, to: null }, data.yearIds);
+        handleSubmit(type, { from: null, to: null }, date.yearIds);
       }
     }
   };
@@ -91,6 +90,7 @@ function RangeFilter({ handleSubmit, handleReject }: IProps) {
   return (
     <RangePicker
       // showComparison={false}
+      exportType='IsoString'
       calendarType={lang == "fa" ? "jalali" : "gregorian"}
       handleSubmit={({ type, Data }) => {
         HandleSubmitDate(type, Data);

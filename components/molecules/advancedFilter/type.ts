@@ -1,6 +1,6 @@
-import type { IFilter } from "@services/base/type";
-import type { IViewData } from "@slice/pages/type";
-import type { IRequestConfig } from "@type/elementType";
+import type { IFilter } from '@services/base/type';
+import type { IViewData } from '@slice/pages/type';
+import type { IRequestConfig } from '@type/elementType';
 
 export interface IProps {
   data: IData[];
@@ -17,7 +17,7 @@ export interface IData {
   value: string;
   label: string;
   type: string;
-  valueOption: IRequestConfig;
+  valueOption?: IRequestConfig;
 }
 
 export interface IAdvancedFilter {

@@ -5,15 +5,23 @@ import {
 } from 'react';
 
 export interface IProps {
+  detailFieldKey?: string
+  headerFieldKey?: string
+  tableTitle?: string
+  addUrl?: string
+  updateUrl?: string
+  headerGetUrl?: string
   caption: string;
   fieldKey: string;
   titleKey: string | string[];
   listUrl: string;
   url: string;
+  detailGetUrl?: string;
   pageIcon?: string;
   conditionalActions?: {
     conditionalProperty: string;
-    conditionallyAction?: string;
+      conditionallyAction?: string;
+      opposite?: boolean;
   }[];
   isModal?: boolean;
   parentPageId?: string;
@@ -25,6 +33,7 @@ export interface IProps {
   submitCaption?: string;
   withSubmitButton?: boolean;
   hasShorthandFormToolbar?: boolean;
-  Component?:FC<any>|undefined
+  Component?: FC<any> | undefined
+  fromIndexedDb?: boolean;
 
 }

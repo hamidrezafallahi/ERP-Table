@@ -9,6 +9,7 @@ import type {
   IFormFieldConfig,
   IOption,
   IRequestConfig,
+  ISelectOption,
 } from '@type/elementType';
 
 export interface IProps extends SelectProps {
@@ -27,4 +28,7 @@ export interface IProps extends SelectProps {
   onOptionsChange?: (options: IOption[]) => void;
   form?: FormInstance;
   labelValue?:'selectDisplay'|'selectValue';
+  showIdInDesc?: boolean;
+  displayFormatter?: (option: ISelectOption) => string;
+
 }

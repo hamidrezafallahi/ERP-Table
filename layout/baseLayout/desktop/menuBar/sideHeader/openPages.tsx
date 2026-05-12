@@ -183,7 +183,6 @@ export default function OpenPages() {
                   item.isActive && "text-main-black font-bold  dark:text-white "
                 } `}
             >
-
               <CustomButton
                 ghost
                 className={`!border-none`}
@@ -264,9 +263,7 @@ export default function OpenPages() {
                 match ? "p-4" : ""
               } flex flex-col justify-center items-center gap-2 px-4 rounded custom-confirm-modal`}
             >
-              <span className="text-center">
-                {t("general.confirmText")}
-              </span>
+              <span className="text-center">{t("general.confirmText")}</span>
 
               <div className="flex justify-between gap-4 mt-4 w-full">
                 <CustomButton
@@ -277,8 +274,10 @@ export default function OpenPages() {
                   {t("general.no")}
                 </CustomButton>
                 <CustomButton
-                  type="text"
+                   
                   onClick={() => handleConfirm(page)}
+                  data-pageid={page?.pageId}
+                  data-id={page?.Id}
                   className="bg-black-black8 hover:bg-white px-10 py-2 border hover:border-black-black8 rounded ring-0 w-full text-[12px] text-white"
                 >
                   {t("general.yes")}

@@ -1,14 +1,17 @@
-import { useCallback } from "react";
+import { useCallback } from 'react';
 
-import { FormInstance } from "antd";
-import { useTranslations } from "next-intl";
-import { usePathname } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { FormInstance } from 'antd';
+import { useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation } from "@services/base";
-import { addHistory } from "@slice/history";
-import { HistoryTypeEnum } from "@slice/history/enum";
+import { useAppSelector } from '@redux/index';
+import { useCUDDataMutation } from '@services/base';
+import { addHistory } from '@slice/history';
+import { HistoryTypeEnum } from '@slice/history/enum';
 import {
   addNewPage,
   removePage,
@@ -16,18 +19,18 @@ import {
   setPageData,
   setPageState,
   setSavePageData,
-} from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
-import type { IPage } from "@slice/pages/type";
+} from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
+import type { IPage } from '@slice/pages/type';
 import {
   findingPageState,
   showInfoToast,
   showSuccessToast,
   transformDotNotationToNested,
-} from "@utils/core";
+} from '@utils/core';
 
-import { useInitializePage } from "./useInitializePage";
-import { useNavigatePage } from "./useNavigatePage";
+import { useInitializePage } from './useInitializePage';
+import { useNavigatePage } from './useNavigatePage';
 
 export const useFormHandlers = ({
   pages,
@@ -38,7 +41,6 @@ export const useFormHandlers = ({
   pages: IPage[];
   activePage: IPage;
   form?: FormInstance<any>;
-
   mutationSystemId?: number;
 }) => {
   const dispatch = useDispatch();
@@ -140,84 +142,85 @@ export const useFormHandlers = ({
 
     try {
       await currentForm?.validateFields();
-      const { body, changedFields } = extractBodyAndChangedFields();
+        const { body, changedFields } = extractBodyAndChangedFields();
 
-      const cleanBody = transformDotNotationToNested(body);
-      const result = await trigger({
-        url: id
-          ? activePage?.pageInfo?.updateEndpoint
-          : activePage?.pageInfo?.addEndpoint,
-        body: id
-          ? {
+        const cleanBody = transformDotNotationToNested(body);
+        const result = await trigger({
+          url: id
+            ? activePage?.pageInfo?.updateEndpoint
+            : activePage?.pageInfo?.addEndpoint,
+          body: id
+            ? {
               ...cleanBody,
               ChangeFields: changedFields,
             }
-          : cleanBody,
-        id: id || null,
-      }).unwrap();
+            : cleanBody,
+          id: id || null,
+        }).unwrap();
 
-      if (result?.Result === "Success" || result?.Result === "Pending") {
-        if (result?.Result === "Success") showSuccessToast(t("toast.save"));
-        if (result?.Result === "Pending") showInfoToast(t("toast.Pending"));
-        const pageState = findingPageState(result.PendingStatusId.toString());
-        const existItem = historyItems.find(
-          (item) =>
-            item.key === result.Key &&
-            item.type === (id ? HistoryTypeEnum.Update : HistoryTypeEnum.Add),
-        );
-        if (!existItem) {
+        if (result?.Result === "Success" || result?.Result === "Pending") {
+          if (result?.Result === "Success") showSuccessToast(t("toast.save"));
+          if (result?.Result === "Pending") showInfoToast(t("toast.Pending"));
+          const pageState = findingPageState(result.PendingStatusId.toString());
+          const existItem = historyItems.find(
+            (item) =>
+              item.key === result.Key &&
+              item.type === (id ? HistoryTypeEnum.Update : HistoryTypeEnum.Add),
+          );
+          if (!existItem) {
+            dispatch(
+              addHistory({
+                initConfig: {
+                  RepoId: activePage.RepoId,
+                  SystemId: activePage.SystemId,
+                  url: !id
+                    ? `${activePage.url}?id=${result.Key}`
+                    : activePage.url,
+                  pageId: activePage.pageId,
+                  Id: result.Key,
+                  originalPageState: null,
+                  pageState: null,
+                  listPageId: activePage.listPageId,
+                  returnPageId: activePage.returnPageId,
+                  selectedView: activePage.selectedView,
+                  Key: result.Key,
+                },
+                key: result.Key,
+                type: id ? HistoryTypeEnum.Update : HistoryTypeEnum.Add,
+                pageName: activePage.caption,
+                name: formData.find((i: any) => i.isTitleField)?.value,
+                pageIcon: activePage?.icon,
+              }),
+            );
+          }
+          const keyName = activePage?.pageData?.find(
+            (i) => i.caption === "MainIdField",
+          )?.name;
           dispatch(
-            addHistory({
-              initConfig: {
-                RepoId: activePage.RepoId,
-                SystemId: activePage.SystemId,
-                url: !id
-                  ? `${activePage.url}?id=${result.Key}`
-                  : activePage.url,
-                pageId: activePage.pageId,
-                Id: result.Key,
-                originalPageState: null,
-                pageState: null,
-                listPageId: activePage.listPageId,
-                returnPageId: activePage.returnPageId,
-                selectedView: activePage.selectedView,
-                Key: result.Key,
-              },
-              key: result.Key,
-              type: id ? HistoryTypeEnum.Update : HistoryTypeEnum.Add,
-              pageName: activePage.caption,
-              name: formData.find((i: any) => i.isTitleField)?.value,
-              pageIcon: activePage?.icon,
+            setPageData({
+              name: keyName,
+              value: result.Key,
+              originalValue: result.Key,
             }),
           );
-        }
-        const keyName = activePage?.pageData?.find(
-          (i) => i.caption === "MainIdField",
-        )?.name;
-        dispatch(
-          setPageData({
-            name: keyName,
-            value: result.Key,
-            originalValue: result.Key,
-          }),
-        );
 
-        dispatch(setSavePageData(result.Key));
-        dispatch(
-          setPageState({
-            ...activePage,
-            caption:
-              activePage.caption +
-              " - " +
-              formData.find((i: any) => i.isTitleField)?.value,
-            Key: result.Key,
-            pageState: pageState,
-          }),
-        );
-        return result;
-      } else {
-        return false;
-      }
+          dispatch(setSavePageData(result.Key));
+          dispatch(
+            setPageState({
+              ...activePage,
+              caption:
+                activePage.caption +
+                " - " +
+                formData.find((i: any) => i.isTitleField)?.value,
+              Key: result.Key,
+              pageState: pageState,
+            }),
+          );
+          return result;
+        } else {
+          return false;
+        }
+      
     } catch (error) {
       null;
     }

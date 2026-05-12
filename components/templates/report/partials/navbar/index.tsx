@@ -58,7 +58,7 @@ function Navbar({ active }) {
         active
           ? fullScreen
             ? "w-[1154px] lg:w-[1250px]"
-            : "lg:w-[884px] lg:w-[980px]"
+            : "lg:w-[884px] "
           : fullScreen
           ? "w-[1280px] lg:w-[1378px]"
           : "w-[1012px] lg:w-[1108px]"

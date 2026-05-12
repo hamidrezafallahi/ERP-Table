@@ -1,13 +1,15 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect } from "react";
 import { Form, Spin } from "antd";
 import { useTranslations } from "next-intl";
 import { CustomButton, CustomTooltip } from "@components/atoms/defaultElements";
 import InputText from "@components/atoms/defaultElements/inputText";
 import { PlusOutline, SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation, useGetData } from "@services/base";
+import { useCUDDataMutation } from "@services/base";
 import { FormInstance } from "antd/lib";
-import { IDynamicModalConfig, RecordType } from "../../type";
+import { IDynamicModalConfig, RecordType, ReloadType } from "../../types";
 import { showSuccessToast } from "@utils/core";
+import { useFormChangeFields } from "../../hooks/useFormChangeFields";
+import { useAppSelector } from "@redux/index";
 
 interface CustomFormProps {
   form: FormInstance<any>;
@@ -15,52 +17,42 @@ interface CustomFormProps {
   config: IDynamicModalConfig;
   editingRecord: RecordType;
   setEditingRecord: Dispatch<SetStateAction<RecordType>>;
+  refetchCard: ReloadType;
+  refetchTable: ReloadType;
 }
 
-export default function CustomForm({
-  form,
-  config,
-  typeId,
-  editingRecord,
-  setEditingRecord,
-}: CustomFormProps) {
+export default function CustomForm(props: CustomFormProps) {
+  const {
+    form,
+    config,
+    typeId,
+    editingRecord,
+    setEditingRecord,
+    refetchCard,
+    refetchTable,
+  } = props;
+
   const t = useTranslations();
   const [mutateItem, { isLoading: mutateIsLoading }] = useCUDDataMutation();
-  const [originalValues, setOriginalValues] = useState(null);
-  const [changeFields, setChangeFields] = useState<string[]>([]);
   const formValues = Form.useWatch([], form);
   const isEdit = !!editingRecord;
+  const { match } = useAppSelector((state) => {
+    const match = state.withPersist.config.initMatch;
+    return { match };
+  });
+
+  const { setInitialValues, reset, changeFields } = useFormChangeFields(
+    form,
+    formValues,
+  );
 
   useEffect(() => {
     if (editingRecord) {
-      form.setFieldsValue({ Desc: editingRecord.Desc });
-      setOriginalValues({ Desc: editingRecord.Desc });
-      setChangeFields([]);
+      setInitialValues({ Desc: editingRecord.Desc });
     } else {
-      form.resetFields();
-      setOriginalValues(null);
-      setChangeFields([]);
+      reset();
     }
-  }, [editingRecord, form]);
-
-  useEffect(() => {
-    if (!originalValues) return;
-    if (!formValues) return;
-    for (const key in formValues) {
-      if (originalValues[key] !== formValues[key]) {
-        if (!changeFields.includes(key)) {
-          setChangeFields((prev) => [...prev, key]);
-        }
-      }
-    }
-  }, [formValues, originalValues, changeFields]);
-
-  const { refetch: ReLoad } = useGetData({
-    url: config.listConfig.selectUrl,
-    body: {
-      RepoId: 0,
-    },
-  });
+  }, [editingRecord]);
 
   const handleSubmit = async (values: any) => {
     const body = isEdit
@@ -83,7 +75,7 @@ export default function CustomForm({
       showSuccessToast(t("toast.successTitle"));
       form.resetFields();
       setEditingRecord(null);
-      ReLoad();
+      match ? refetchTable() : refetchCard();
     }
   };
 
@@ -109,7 +101,7 @@ export default function CustomForm({
               <span
                 className="px-2 py-[2.8px] bg-gray-gray3 rounded cursor-pointer"
                 onClick={() => {
-                  form.resetFields();
+                  reset();
                   setEditingRecord(null);
                 }}
               >

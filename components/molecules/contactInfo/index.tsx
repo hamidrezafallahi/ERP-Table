@@ -38,7 +38,7 @@ import type { IToolbarMenu } from '@type/toolbar';
 import { showSuccessToast } from '@utils/core';
 
 import { config } from '../contactInfo/config';
-import { FormContactInfo } from '../contactInfo/form';
+import { FormContactInfo } from './formContactInfo';
 import {
   CardDynamicModal,
   TableDynamicModal,
@@ -212,7 +212,6 @@ export default function ContactInfo({ id, sourceKey }: IProps) {
           fieldKey={fieldKey}
         />
         <Divider className="m-2" />
-
         {!match ? (
           <CardDynamicModal
             actions={config.actions}

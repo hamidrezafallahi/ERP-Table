@@ -1,25 +1,39 @@
 "use client";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { useForm } from "antd/es/form/Form";
-import { useTranslations } from "next-intl";
-import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
-import DarkLogo from "public/images/ArianTechDark.png";
-import LightLogo from "public/images/ArianTechLight.png";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useForm } from 'antd/es/form/Form';
+import { useTranslations } from 'next-intl';
+import Image from 'next/image';
+import {
+  useRouter,
+  useSearchParams,
+} from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import {
   CustomButton,
   CustomDropdownButton,
-} from "@components/atoms/defaultElements";
+} from '@components/atoms/defaultElements';
 import {
   LoginLanguageIcon,
   RightArrow,
-} from "@components/atoms/iconComponents";
-import Title from "@components/atoms/Title";
-import { useDeviceInfo, useFcmToken, useNavigatePage } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
+} from '@components/atoms/iconComponents';
+import Title from '@components/atoms/Title';
+import {
+  useDeviceInfo,
+  useFcmToken,
+  useNavigatePage,
+} from '@hooks/custom';
+import { useGetPlaceConfigs } from '@hooks/custom/useGetPlaceConfigs';
+import DarkLogo from '@public/images/ArianTechDark.png';
+import LightLogo from '@public/images/ArianTechLight.png';
+import { useAppSelector } from '@redux/index';
 import {
   useForgetPassWordMutation,
   useLoginByPasswordMutation,
@@ -27,27 +41,35 @@ import {
   useSendOtpCodeMutation,
   useSendOtpMutation,
   useSetNewPassWordMutation,
-} from "@services/auth/base";
-import { ManagementAccount } from "@services/auth/base/type";
-import { apiService } from "@services/base";
-import { setDefaultConfig, setLanguage, setUserSession } from "@slice/config";
-import { createCookie, randomString, showErrorToast } from "@utils/core";
+} from '@services/auth/base';
+import { ManagementAccount } from '@services/auth/base/type';
+import { apiService } from '@services/base';
+import {
+  setDefaultConfig,
+  setLanguage,
+  setUserSession,
+} from '@slice/config';
+import {
+  createCookie,
+  randomString,
+  showErrorToast,
+} from '@utils/core';
 
-import BuyAccount from "./buyAccount";
-import CallAdmin from "./callAdmin";
-import CreateAccount from "./createAccount";
-import DoNotExistForm from "./doNotExistForm";
-import Forget from "./forget";
-import ForgetNewPassword from "./forgetNewPassword";
-import ForgetOtp from "./forgetOtp";
-import LoginForm from "./loginForm";
-import ManagmentAccounts from "./managmentAccounts";
-import NewPassWord from "./newPassWord";
-import OtpLoginForm from "./otpLoginForm";
-import PasswordLoginForm from "./passwordLoginForm";
-import SuccessfulChangePass from "./successfulChangePass";
-import type { IFieldType } from "./type";
-import WelcomeStep from "./welcomeStep";
+import BuyAccount from './buyAccount';
+import CallAdmin from './callAdmin';
+import CreateAccount from './createAccount';
+import DoNotExistForm from './doNotExistForm';
+import Forget from './forget';
+import ForgetNewPassword from './forgetNewPassword';
+import ForgetOtp from './forgetOtp';
+import LoginForm from './loginForm';
+import ManagmentAccounts from './managmentAccounts';
+import NewPassWord from './newPassWord';
+import OtpLoginForm from './otpLoginForm';
+import PasswordLoginForm from './passwordLoginForm';
+import SuccessfulChangePass from './successfulChangePass';
+import type { IFieldType } from './type';
+import WelcomeStep from './welcomeStep';
 
 export type TStep =
   | "login"
@@ -75,7 +97,7 @@ export default function Login() {
       lang: state.withPersist.config.lang,
       theme: state.withPersist.config.theme,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const [form] = useForm<IFieldType>();
@@ -99,8 +121,9 @@ export default function Login() {
   const [ForgetPassWord, { isLoading: isForgetPassWordLoading }] =
     useForgetPassWordMutation();
   const { navigateLast } = useNavigatePage();
+  const { getPlaceConfigs } = useGetPlaceConfigs();
   const [token, setToken] = useState(
-    preDeviceToken?.length > 0 ? preDeviceToken : randomString(80)
+    preDeviceToken?.length > 0 ? preDeviceToken : randomString(80),
   );
 
   const [acceptAccountModalOpen, setAcceptAccountModalOpen] = useState(false);
@@ -144,8 +167,7 @@ export default function Login() {
         token: resetPasswordToken,
       }).unwrap();
 
-      console.log("SetNewPassWord response:", res);
-
+ 
       if (res?.Result === true) {
         form.setFieldValue("password", pass);
         setStep("welcome");
@@ -187,23 +209,23 @@ export default function Login() {
           setManagementAccounts(res.ManagementAccounts);
           setStep("managementAccounts");
         }
-
+        
         // createCookie("_auth", res.access_token, 6);
         // createCookie("_rAuth", res.refresh_token, 6);
         // dispatch(
-        //   setUserSession({
-        //     userSession: res.UserSession,
-        //   })
-        // );
-        // dispatch(
-        //   setDefaultConfig({
-        //     ManagementAccountId: {
-        //       id: res.ManagementAccounts[0].ManagementAccountId,
-        //       desc: res.ManagementAccounts[0].ManagementAccountDesc,
-        //     },
-        //   })
-        // );
-        // localStorage.setItem("fcm_token", token);
+          //   setUserSession({
+            //     userSession: res.UserSession,
+            //   })
+            // );
+            // dispatch(
+              //   setDefaultConfig({
+                //     ManagementAccountId: {
+                  //       id: res.ManagementAccounts[0].ManagementAccountId,
+                  //       desc: res.ManagementAccounts[0].ManagementAccountDesc,
+                  //     },
+                  //   })
+                  // );
+                  // localStorage.setItem("fcm_token", token);
         // navigateLast();
       } else {
         showErrorToast(res.Error);
@@ -221,7 +243,7 @@ export default function Login() {
   const handleLoginByAccount = async (item: ManagementAccount) => {
     const pass = form.getFieldValue("password");
     const phoneNumber = form.getFieldValue("phoneNumber");
-    const res = await loginByPassword({
+     const res = await loginByPassword({
       Grant_Type: "password",
       DeviceToken: token,
       DeviceType: deviceInfo.mobile ? 2 : 1,
@@ -232,7 +254,7 @@ export default function Login() {
       Refresh_Token: null,
       ManagementAccountId: item.ManagementAccountId,
     }).unwrap();
-    if (res?.Result == "Success") {
+      if (res?.Result == "Success") {
       if (res.IsExpire) {
         if (res.UserSession?.UserInfo?.IsAdmin) {
           setStep("buyAccount");
@@ -253,7 +275,7 @@ export default function Login() {
                 isActiveRole: index == 0,
               })),
             },
-          })
+          }),
         );
         dispatch(
           setDefaultConfig({
@@ -261,10 +283,10 @@ export default function Login() {
               id: item.ManagementAccountId,
               desc: item.ManagementAccountDesc,
             },
-          })
+          }),
         );
         localStorage.setItem("fcm_token", token);
-
+        getPlaceConfigs()
         navigateLast();
       }
     } else {

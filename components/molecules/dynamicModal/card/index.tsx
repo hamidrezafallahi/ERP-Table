@@ -47,8 +47,30 @@ function CardDynamicModalInner<
     shallowEqual,
   );
 
+  const flattenData = (data) => {
+    return data?.map((item) => {
+      const flatItem = { ...item };
+
+      Object.entries(item).forEach(([key, value]) => {
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          Object.entries(value).forEach(([nestedKey, nestedValue]) => {
+            flatItem[`${key}.${nestedKey}`] = nestedValue;
+            flatItem[nestedKey] ??= nestedValue; // برای staticKey مثل TafsiliDesc
+          });
+        }
+      });
+
+      return flatItem;
+    });
+  };
   const columnsConfig = columnsList && columnsList?.column;
-  const processedData = useProcessedData({ data, columnsConfig, locale });
+  const flattenedData = flattenData(data);
+
+  const processedData = useProcessedData({
+    data: flattenedData,
+    columnsConfig,
+    locale,
+  });
   const Header = (item: any, index: number) => {
     const displayData: ReactNode = item[staticKey] as ReactNode;
     return (

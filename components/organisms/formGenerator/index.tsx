@@ -1,5 +1,5 @@
 "use client";
-import "./style.css";
+import './style.css';
 
 import React, {
   useCallback,
@@ -7,30 +7,48 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from "react";
+} from 'react';
 
-import { Drawer, Form } from "antd";
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Drawer,
+  Form,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { MenuDrawerIcon } from "@components/atoms/iconComponents";
-import Title from "@components/atoms/Title";
-import Comments from "@components/molecules/comments";
-import FormToolbar from "@components/organisms/formToolbar";
-import DynamicLoaderComponent from "@components/templates/dynamicLoaderComponent";
-import { useFormHandlers, useFullScreen } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { useGetConditionallyMutation, useGetData } from "@services/base";
-import { addNewPage } from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
-import type { IPageConfig } from "@type/elementType";
-import { PageTypeEnum } from "@type/enum";
-import type { IToolbar } from "@type/toolbar";
-import { formRulesReturner, renderFormField } from "@utils/core";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { MenuDrawerIcon } from '@components/atoms/iconComponents';
+import Title from '@components/atoms/Title';
+import Comments from '@components/molecules/comments';
+import DynamicLoaderComponent
+  from '@components/templates/dynamicLoaderComponent';
+// import DynamicLoaderComponent
+//   from '@components/templates/dynamicLoaderComponent';
+import {
+  useFormHandlers,
+  useFullScreen,
+} from '@hooks/custom';
+import { useAppSelector } from '@redux/index';
+import {
+  useGetConditionallyMutation,
+  useGetData,
+} from '@services/base';
+import { addNewPage } from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
+import type { IPageConfig } from '@type/elementType';
+import { PageTypeEnum } from '@type/enum';
+import type { IToolbar } from '@type/toolbar';
+import {
+  formRulesReturner,
+  renderFormField,
+} from '@utils/core';
 
-import type { IProps } from "./type";
+import FormToolbar from '../formToolbar';
+import type { IProps } from './type';
 
 const safeParse = (s: any) => {
   try {
@@ -39,7 +57,8 @@ const safeParse = (s: any) => {
     return null;
   }
 };
-export default function FormGenerator<T, K>({
+export default function FormGenerator<T, K>({...props}: IProps) {
+  const {
   caption,
   fieldKey,
   titleKey,
@@ -57,7 +76,9 @@ export default function FormGenerator<T, K>({
   submitCaption,
   withSubmitButton = true,
   hasShorthandFormToolbar,
-}: IProps) {
+  Component = undefined,
+  fromIndexedDb = false,
+} = props
   const t = useTranslations();
   const dispatch = useDispatch();
   const toggleFullScreen = useFullScreen();
@@ -65,6 +86,7 @@ export default function FormGenerator<T, K>({
   const id = Number(params.get("id"));
   const [mobileDrawerContent, setMobileDrawerContent] = useState(null);
   const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
+  const [isFormSubmitting, setIsFormSubmitting] = useState(false); 
   const [mobileDrawerHeight, setMobileDrawerHeight] = useState(160);
   const [fields, setFields] = useState([]);
 
@@ -86,7 +108,6 @@ export default function FormGenerator<T, K>({
     url: BaseUrl,
     pageState,
     originalPageState,
-    Id,
     selectedView,
     listPageId,
     Key,
@@ -106,7 +127,7 @@ export default function FormGenerator<T, K>({
   });
   useEffect(() => {
     if (dataToolbar?.Result) {
-      setToolbar(dataToolbar.Data);
+        setToolbar(dataToolbar.Data);
     }
   }, [dataToolbar]);
   const Config: IPageConfig = useMemo(() => {
@@ -201,130 +222,131 @@ export default function FormGenerator<T, K>({
     }
   }, [formData, activePage?.pageData]);
   useEffect(() => {
-    const setNewPage = async () => {
-      let pageData = [];
-      try {
-        const info = {
-          addEndpoint: Config.addEndpoint,
-          deleteEndpoint: Config.deleteEndpoint,
-          updateEndpoint: Config.updateEndpoint,
-          formIdField: Config.formIdField,
-        };
-        let defaultValue = undefined;
-        let TagsInfo = undefined;
-        if (id) {
-          const config = safeParse(
-            toolbar?.List?.ListProp?.[activePage?.selectedViewIndex ?? 0]
-              ?.Config,
-          );
-          if (!Config.data) {
-            const res = await getDefaults({
-              url: url,
-              body: {
-                RepoViewId: config.repoViewId,
-                Id: id,
-                ShowBookmarked: true,
-                ShowTags: true,
-              },
-              id: id,
-            }).unwrap();
+    if (!fromIndexedDb) {
+      const setNewPage = async () => {
+        let pageData = [];
+        try {
+          const info = {
+            addEndpoint: Config.addEndpoint,
+            deleteEndpoint: Config.deleteEndpoint,
+            updateEndpoint: Config.updateEndpoint,
+            formIdField: Config.formIdField,
+          };
+          let defaultValue = undefined;
+          let TagsInfo = undefined;
+          if (id) {
+            const config = safeParse(
+              toolbar?.List?.ListProp?.[activePage?.selectedViewIndex ?? 0]
+                ?.Config,
+            );
+            if (!Config.data) {
+              const res = await getDefaults({
+                url: url,
+                body: {
+                  RepoViewId: config.repoViewId,
+                  Id: id,
+                  ShowBookmarked: true,
+                  ShowTags: true,
+                },
+                id: id,
+              }).unwrap();
 
-            if (res.Result === "Success" && res.Data?.[0]) {
-              defaultValue = res.Data[0];
-              TagsInfo = defaultValue.TagsInfo;
+              if (res.Result === "Success" && res.Data?.[0]) {
+                defaultValue = res.Data[0];
+                TagsInfo = defaultValue.TagsInfo;
+              }
             }
           }
-        }
-        if (defaultValue) {
-          pageData = formData.map((item) => {
-            const undefinedValue =
-              item.type === "checkBox"
-                ? false
-                : item.type === "bool"
+          if (defaultValue) {
+            pageData = formData.map((item) => {
+              const undefinedValue =
+                item.type === "checkBox"
                   ? false
-                  : item.type === "radio"
-                    ? item.radioValues?.[0]?.value
-                    : item.type === "array"
-                      ? []
-                      : undefined;
-            return {
-              ...item,
-              value: defaultValue[item.name] ?? undefinedValue,
-              originalValue: defaultValue[item.name] ?? undefinedValue,
-              isTitleField: Array.isArray(titleKey)
-                ? titleKey.includes(item.name)
-                : item.name === titleKey,
-            };
-          });
-        } else if (formData.length > 0) {
-          pageData = formData.map((item) => {
-            const undefinedValue =
-              item.type === "checkBox"
-                ? false
-                : item.type === "bool"
+                  : item.type === "bool"
+                    ? false
+                    : item.type === "radio"
+                      ? item.radioValues?.[0]?.value
+                      : item.type === "array"
+                        ? []
+                        : undefined;
+              return {
+                ...item,
+                value: defaultValue[item.name] ?? undefinedValue,
+                originalValue: defaultValue[item.name] ?? undefinedValue,
+                isTitleField: Array.isArray(titleKey)
+                  ? titleKey.includes(item.name)
+                  : item.name === titleKey,
+              };
+            });
+          } else if (formData.length > 0) {
+            pageData = formData.map((item) => {
+              const undefinedValue =
+                item.type === "checkBox"
                   ? false
-                  : item.type === "radio"
-                    ? item.radioValues?.[0]?.value
-                    : item.type === "array"
-                      ? []
-                      : undefined;
-            return {
-              ...item,
-              value: undefinedValue,
-              originalValue: undefinedValue,
-              isTitleField: Array.isArray(titleKey)
-                ? titleKey.includes(item.name)
-                : item.name === titleKey,
-            };
-          });
-        }
+                  : item.type === "bool"
+                    ? false
+                    : item.type === "radio"
+                      ? item.radioValues?.[0]?.value
+                      : item.type === "array"
+                        ? []
+                        : undefined;
+              return {
+                ...item,
+                value: undefinedValue,
+                originalValue: undefinedValue,
+                isTitleField: Array.isArray(titleKey)
+                  ? titleKey.includes(item.name)
+                  : item.name === titleKey,
+              };
+            });
+          }
 
-        if (formData.length > 0) {
-          pageData.push({
-            name: fieldKey,
-            caption: "MainIdField",
-            value: id ? id : null,
-            originalValue: id ? id : null,
-            type: "hidden",
-          });
+          if (formData.length > 0) {
+            pageData.push({
+              name: fieldKey,
+              caption: "MainIdField",
+              value: id ? id : null,
+              originalValue: id ? id : null,
+              type: "hidden",
+            });
+          }
+          dispatch(
+            addNewPage({
+              pageId,
+              icon: pageIcon,
+              caption: caption,
+              captionII: initPage.caption ?? "",
+              pageState: pageState ? pageState : PageStateEnum.Opened,
+              originalPageState: originalPageState
+                ? originalPageState
+                : PageStateEnum.Opened,
+              type: pageType,
+              RepoId,
+              SystemId,
+              url: BaseUrl,
+              withImage: withImage,
+              TagsInfo,
+              pageData: pageData,
+              pageInfo: info,
+              toolbarData: toolbar,
+              listUrl,
+              isModal: isModal,
+              parentPageId: parentPageId,
+              listPageId,
+              Key,
+              returnPageId,
+              selectedView: selectedView,
+              selectedViewIndex: 0,
+              data: data,
+            }),
+          );
+        } catch (error) {
+          null;
         }
-
-        dispatch(
-          addNewPage({
-            pageId,
-            icon: pageIcon,
-            caption: caption,
-            captionII: initPage.caption ?? "",
-            pageState: pageState ? pageState : PageStateEnum.Opened,
-            originalPageState: originalPageState
-              ? originalPageState
-              : PageStateEnum.Opened,
-            type: pageType,
-            RepoId,
-            SystemId,
-            url: BaseUrl,
-            withImage: withImage,
-            TagsInfo,
-            pageData: pageData,
-            pageInfo: info,
-            toolbarData: toolbar,
-            listUrl,
-            isModal: isModal,
-            parentPageId: parentPageId,
-            listPageId,
-            Key,
-            returnPageId,
-            selectedView: selectedView,
-            selectedViewIndex: 0,
-            data: data,
-          }),
-        );
-      } catch (error) {
-        null;
+      };
+      if (formData?.length > 0 || Config?.data) {
+        setNewPage();
       }
-    };
-    if (formData?.length > 0 || Config?.data) {
-      setNewPage();
     }
   }, [formData, titleKey, id, Config?.data]);
 
@@ -349,7 +371,7 @@ export default function FormGenerator<T, K>({
             match ? `absolute -top-[60px] rtl:-left-[10px] -right-[10px]` : ""
           }
         >
-          <FormToolbar
+           <FormToolbar
             form={form}
             selectedView={selectedView ?? activePage?.selectedView ?? 0}
             listUrl={listUrl}
@@ -367,64 +389,76 @@ export default function FormGenerator<T, K>({
             submitCaption={submitCaption}
             withSubmitButton={withSubmitButton}
             hasShorthandFormToolbar={hasShorthandFormToolbar}
-          />
+            fromIndexedDb={fromIndexedDb}
+            loadingFromOutsideComponents={isFormSubmitting}
+          />  
         </div>
         <div className="hidden-show-scrollBar flex flex-col gap-10 mt-4 lg:mt-0 h-full max-h-[calc(100dvh-160px)] overflow-auto">
-          {Config?.data ? (
-            <DynamicLoaderComponent
-              componentName={Config?.data}
-              props={{ setMobileDrawerContent, setMobileDrawerHeight, form }}
-            />
-          ) : (
-            <Form
-              onValuesChange={handleValuesChange}
-              className="gap-5 s:gap-y-16 xs:gap-8 grid grid-cols-4"
+          {
+          Component ? (
+            <Component
+              setMobileDrawerContent={setMobileDrawerContent}
+              setMobileDrawerHeight={setMobileDrawerHeight}
+              setIsFormSubmitting={setIsFormSubmitting}
               form={form}
-            >
-              {Config?.fields &&
-                fields
-                  ?.filter((item) => item.type !== "info")
-                  .sort((a, b) => a.order - b.order)
-                  .map((item, index) => {
-                    const colSpan = `lg:col-span-${item?.colSpan}`;
-                    return (
-                      <Form.Item
-                        key={index}
-                        label={item.type !== "checkBox" ? item.caption : ""}
-                        tooltip={
-                          item.help
-                            ? { title: item.help, color: "#585858" }
-                            : null
-                        }
-                        rules={formRulesReturner(item.rules)}
-                        validateTrigger="onBlur"
-                        name={item.name}
-                        layout="vertical"
-                        valuePropName={`${
-                          item.type == "checkBox" ? "checked" : "value"
-                        }`}
-                        getValueFromEvent={(e) =>
-                          item.type == "checkBox"
-                            ? e.target.checked
-                            : item.type === "number" ||
-                                item.type === "price" ||
-                                item.type === "selectOption" ||
-                                item.type === "date"
-                              ? e
-                              : e?.target?.value
-                        }
-                        className={`m-0 p-0 col-span-4
+              {...props}
+            />
+          ) : 
+          Config?.data ? 
+           <DynamicLoaderComponent
+               componentName={Config?.data}
+               props={{ setMobileDrawerContent, setMobileDrawerHeight, form }}
+             />
+            : 
+          <Form
+            onValuesChange={handleValuesChange}
+            className="gap-5 s:gap-y-16 xs:gap-8 grid grid-cols-4"
+            form={form}
+          >
+            {Config?.fields &&
+              fields
+                ?.filter((item) => item.type !== "info")
+                .sort((a, b) => a.order - b.order)
+                .map((item, index) => {
+                  const colSpan = `lg:col-span-${item?.colSpan}`;
+                  return (
+                    <Form.Item
+                      key={index}
+                      label={item.type !== "checkBox" ? item.caption : ""}
+                      tooltip={
+                        item.help
+                          ? { title: item.help, color: "#585858" }
+                          : null
+                      }
+                      rules={formRulesReturner(item.rules)}
+                      validateTrigger="onBlur"
+                      name={item.name}
+                      layout="vertical"
+                      valuePropName={`${
+                        item.type == "checkBox" ? "checked" : "value"
+                      }`}
+                      getValueFromEvent={(e) =>
+                        item.type == "checkBox"
+                          ? e.target.checked
+                          : item.type === "number" ||
+                              item.type === "price" ||
+                              item.type === "selectOption" ||
+                              item.type === "date"
+                            ? e
+                            : e?.target?.value
+                      }
+                      className={`m-0 p-0 col-span-4
                       ${item.type === "checkBox" ? "content-end" : ""}
                       ${item.type == "noShow" ? "hidden lg:block" : ""}
                       ${item.colSpan ? `${colSpan}` : `lg:col-span-2`}
                        `}
-                      >
-                        {renderFormField(item, form, !!id, index === 0)}
-                      </Form.Item>
-                    );
-                  })}
-            </Form>
-          )}
+                    >
+                      {renderFormField(item, form, !!id, index === 0)}
+                    </Form.Item>
+                  );
+                })}
+          </Form>
+           } 
           {!!id && activePage?.RepoId && (
             <Comments referId={Number(id)} repoId={activePage.RepoId} />
           )}

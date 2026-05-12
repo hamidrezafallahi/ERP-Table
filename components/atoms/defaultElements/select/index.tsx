@@ -1,35 +1,26 @@
-import {
-  FC,
-  useCallback,
-  useEffect,
-} from 'react';
+import { FC, useCallback, useEffect } from "react";
 
-import { Select } from 'antd';
-import { useTranslations } from 'next-intl';
-import {
-  shallowEqual,
-  useDispatch,
-} from 'react-redux';
+import { Select } from "antd";
+import { useTranslations } from "next-intl";
+import { shallowEqual, useDispatch } from "react-redux";
 
-import {
-  PlusOutline,
-  Reload,
-} from '@components/atoms/iconComponents';
-import { useInitializePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
-import { setPageData } from '@slice/pages';
+import { PlusOutline, Reload } from "@components/atoms/iconComponents";
+import { useInitializePage } from "@hooks/custom";
+import { useAppSelector } from "@redux/index";
+import { setPageData } from "@slice/pages";
 
-import { MobileSelect } from './mobileSelect';
-import type { IProps } from './type';
+import { MobileSelect } from "./mobileSelect";
+import type { IProps } from "./type";
 
 export const CustomSelect: FC<IProps> = ({
   ref,
+  handleScroll,
   searchPhrase,
   setSearchPhrase,
-  handleScroll,
   addButton,
   handleRefetch,
   isFetching,
+  disabled,
   ...props
 }) => {
   const { config } = props;
@@ -123,7 +114,8 @@ export const CustomSelect: FC<IProps> = ({
 
   const defaultClass = `dark:!bg-gray-gray95 ${
     match ? "h-[2.125rem]" : "h-[42px] text-sm"
-  } !bg-gray-gray3 rounded w-full ${props.className} `;
+  } !bg-gray-gray3 rounded w-full ${props.className} ${disabled ? "opacity-50" : "opacity-100"}`;
+
   const selectHandler = useCallback(
     (e, option) => {
       if (config) {
@@ -171,8 +163,6 @@ export const CustomSelect: FC<IProps> = ({
     return (
       <MobileSelect
         isFetching={isFetching}
-        searchPhrase={searchPhrase}
-        setSearchPhrase={setSearchPhrase}
         handleScroll={handleScroll}
         fieldValue={config && existField ? initElement : props.value}
         options={props.options}
@@ -180,7 +170,10 @@ export const CustomSelect: FC<IProps> = ({
         handleAddNew={handleAddNew}
         addButton={addButton}
         handleRefetch={handleRefetch}
+        searchPhrase={searchPhrase}
+        setSearchPhrase={setSearchPhrase}
         {...props}
+        disabled={disabled}
       />
     );
   }
@@ -189,6 +182,7 @@ export const CustomSelect: FC<IProps> = ({
       <div className="relative">
         <Select
           {...props}
+          disabled={disabled}
           ref={ref}
           defaultValue={defaultValue}
           value={initElement}
@@ -219,7 +213,7 @@ export const CustomSelect: FC<IProps> = ({
           <div
             className={`${
               isFetching ? "animate-spin" : ""
-            } top-[0.65rem] left-8 absolute cursor-pointer transition-all duration-400`}
+            } ${disabled ? "opacity-50" : "opacity-100"} top-3 left-8 absolute cursor-pointer transition-all duration-400`}
             onClick={handleRefetch}
           >
             <Reload
@@ -237,6 +231,12 @@ export const CustomSelect: FC<IProps> = ({
       <div className="relative">
         <Select
           {...props}
+          disabled={disabled}
+          showSearch
+          optionFilterProp="label"
+          filterOption={(input, option) =>
+            (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+          }
           className={defaultClass}
           placement={lang === "fa" ? "bottomRight" : "bottomLeft"}
           ref={ref}
@@ -265,7 +265,7 @@ export const CustomSelect: FC<IProps> = ({
           <div
             className={`${
               isFetching ? "animate-spin" : ""
-            } top-[0.65rem] left-8 absolute cursor-pointer transition-all duration-400`}
+            } ${disabled ? "opacity-50" : "opacity-100"} top-3 left-8 absolute cursor-pointer transition-all duration-400`}
             onClick={handleRefetch}
           >
             <Reload

@@ -55,9 +55,14 @@ export type IRule = {
 export type ColumnSchema = {
   id: string;
   title: string;
+  className: string;
   renderType: FieldType;
   selectOptions?: SelectOption[];
   editable?: boolean;
+  enableDeleteButton?: boolean;
+  enableExpandButton?: boolean;
+  enableMoveButton?: boolean;
+  enableOptionsButton?: boolean;
   hidden?: boolean;
   rules?: IRule[];
   dynamicValue?:  IRequestConfig & {dependsOn?: string[]}
@@ -65,7 +70,8 @@ export type ColumnSchema = {
   indexOptions?: (tableId: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, controller: UITableController) => ItemType[];
   onChange?: (tableId: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, controller: UITableController) => void;
   displayFormat?: (value: unknown) => unknown
-  width?: number;
+  minWidth?: number;    
+  style?: React.CSSProperties;
   popUpWidth?: number
   labelValue?:'selectDisplay'|'selectValue';
 

@@ -1,16 +1,28 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton, CustomModal } from "@components/atoms/defaultElements";
-import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
-import { ClosePageIcon } from "@components/atoms/iconComponents";
-import { useInitializePage, useNavigatePage } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { removePage, setActivePage } from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
-import type { IPage } from "@slice/pages/type";
+import {
+  CustomButton,
+  CustomModal,
+} from '@components/atoms/defaultElements';
+import { CustomDrawer } from '@components/atoms/defaultElements/drawer';
+import { ClosePageIcon } from '@components/atoms/iconComponents';
+import {
+  useInitializePage,
+  useNavigatePage,
+} from '@hooks/custom';
+import { useAppSelector } from '@redux/index';
+import {
+  removePage,
+  setActivePage,
+} from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
+import type { IPage } from '@slice/pages/type';
 
 export default function CloseButton() {
   const [page, setPage] = useState<IPage>(null);
@@ -38,7 +50,6 @@ export default function CloseButton() {
       match
         ? setConfirmCloseModalIsOpen(true)
         : setConfirmCloseDrawerIsOpen(true);
-      navigateBack();
     } else {
       handleConfirm(activePage);
     }
@@ -87,6 +98,8 @@ export default function CloseButton() {
       <CustomButton
         id="closeButton"
         type="text"
+        data-pageid={activePage?.pageId}
+        data-id={activePage?.Id}
         className="!bg-gray-gray3 dark:!bg-gray-gray11 !p-0 border-none rounded w-9 h-9"
         onClick={handleClosePage}
       >
@@ -108,10 +121,7 @@ export default function CloseButton() {
                 match ? "p-4" : ""
               } flex flex-col justify-center items-center gap-2 rounded custom-confirm-modal`}
             >
-              <span className="text-center">
-                {t("general.confirmText")}
-              </span>
-
+              <span className="text-center">{t("general.confirmText")}</span>
               <div className="flex justify-between gap-4 mt-4 w-full">
                 <CustomButton
                   type="text"
@@ -121,7 +131,8 @@ export default function CloseButton() {
                   {t("general.no")}
                 </CustomButton>
                 <CustomButton
-                  type="text"
+                  data-pageid={activePage?.pageId}
+                  data-id={activePage?.Id}
                   onClick={() => handleConfirm(page)}
                   className="bg-black-black8 hover:bg-white px-10 py-2 border hover:border-black-black8 rounded ring-0 w-full text-[12px] text-white"
                 >
@@ -166,6 +177,8 @@ export default function CloseButton() {
               </CustomButton>
               <CustomButton
                 type="text"
+                data-pageid={activePage?.pageId}
+                data-id={activePage?.Id}
                 onClick={() => handleConfirm(page)}
                 className="bg-black-black8 hover:bg-white px-10 py-2 border hover:border-black-black8 rounded ring-0 w-full text-[12px] text-white"
               >

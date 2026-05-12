@@ -1,21 +1,33 @@
-import { ReactNode, useEffect } from "react";
+import {
+  ReactNode,
+  useEffect,
+} from 'react';
 
-import { allowedEndPaths } from "constants/allowedEndPaths";
-import { usePathname, useRouter } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  usePathname,
+  useRouter,
+} from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import ConnectionLost from "@components/molecules/connectionLost";
-import ChatWidget from "@components/organisms/chat";
-import { useMediaQuery, useMessage } from "@hooks/custom";
-import FirebaseNotification from "@hooks/firebaseForeground";
-import { useAppSelector } from "@redux/index";
-import { TLang } from "@slice/config/type";
-import { setDeActiveAllPage } from "@slice/pages";
-import { checkAndRedirectIfNeeded } from "@utils/core";
+import ConnectionLost from '@components/molecules/connectionLost';
+import ChatWidget from '@components/organisms/chat';
+import {
+  useMediaQuery,
+  useMessage,
+} from '@hooks/custom';
+import FirebaseNotification from '@hooks/firebaseForeground';
+import { useAppSelector } from '@redux/index';
+import { TLang } from '@slice/config/type';
+import { setDeActiveAllPage } from '@slice/pages';
+import { checkAndRedirectIfNeeded } from '@utils/core';
 
-import { setInitMatch } from "../../slice/config";
-import DesktopLayout from "../baseLayout/desktop";
-import MobileLayout from "../baseLayout/mobile";
+import { allowedEndPaths } from '../../constants/allowedEndPaths';
+import { setInitMatch } from '../../slice/config';
+import DesktopLayout from '../baseLayout/desktop';
+import MobileLayout from '../baseLayout/mobile';
 
 export const Container = ({
   children,

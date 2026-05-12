@@ -15,7 +15,7 @@ export type TableViewState = {
   // table: Table
   activeCell: ActiveCell;
   selectedRows: Record<number, true>;
-  rows: IRow[] ;
+  rows: IRow[];
   deletedRows: Array<{
     id: string;
     cells: Record<string, unknown>;
@@ -30,7 +30,7 @@ export type TableViewState = {
     canPrev: boolean;
     canNext: boolean;
   };
-  action:TableActions
+  action: TableActions
 };
 export type TableSnapShot = {
   table: Table
@@ -48,6 +48,11 @@ export type ViewColumn = {
   id: string;
   title: string;
   hidden?: boolean;
+  enableDeleteButton?: boolean;
+  enableExpandButton?: boolean;
+  enableMoveButton?: boolean;
+  enableOptionsButton?: boolean;
+  className?: string;
   /* ==== UI Rendering Meta ==== */
   renderType: FieldType;
   editable?: boolean;
@@ -55,16 +60,17 @@ export type ViewColumn = {
   dynamicValue?: IRequestConfig;
   indexOptions?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => ItemType[]
   onChange?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => void
-  width?: number;
+  minWidth?: number;
+  style?: React.CSSProperties;
   popUpWidth?: number
-  labelValue?:'selectDisplay'|'selectValue';
+  labelValue?: 'selectDisplay' | 'selectValue';
 
 };
 export type ActiveCell = {
   rowId: number;
   columnId: string;
 } | null;
-export type ValidCell = {isValid:boolean,cellError:CellError} 
+export type ValidCell = { isValid: boolean, cellError: CellError }
 
 export type TableState = {
   table: Table;
@@ -118,11 +124,12 @@ export type ItemType = {
   extra?: React.ReactNode;
 }
 
-export type ValidationCallback = (result:ValidationCallbackResult) => void;
-export type ValidationCallbackResult={
-   valid: boolean,    
-  errors?: Map<string, CellError>, 
-  data?: any}
+export type ValidationCallback = (result: ValidationCallbackResult) => void;
+export type ValidationCallbackResult = {
+  valid: boolean,
+  errors?: Map<string, CellError>,
+  data?: any
+}
 
 
 
@@ -132,4 +139,4 @@ export interface CellError {
   rowId: number;
   caption: string;
   message: string;
- }
+}

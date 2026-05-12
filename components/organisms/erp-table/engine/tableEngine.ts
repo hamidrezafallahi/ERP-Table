@@ -12,7 +12,7 @@ import { Table } from '../domain/entities/Table';
 import {
   CellValue,
   ColumnId,
-  ColumnSchema,
+  RowId,
   RowStateEnum,
   TableActions,
 } from '../domain/value-objects';
@@ -27,8 +27,6 @@ import {
   TableState,
   TableViewState,
   TCell,
-  ValidationCallback,
-  ValidCell,
 } from './type';
 
 export class TableEngine {
@@ -539,7 +537,7 @@ export class TableEngine {
         await this.app.execute(command, this.actor);
       }
     }
-    const updated = await this.repo.getById(cmd.tableKey, cmd.tableKey);
+    const updated = await this.repo.getById(cmd.store, cmd.tableKey);
     const currentStore = this.getStore(cmd.tableKey);
     if (currentStore && updated) {
       const prev = currentStore.getState();
@@ -756,7 +754,6 @@ export class TableEngine {
     }));
   }
   private collapseAll(tableKey: string) {
-
     const store = this.getStore(tableKey);
     if (!store) {
       this.audit.log({
@@ -816,6 +813,18 @@ export class TableEngine {
           selectedRows: nextSelected,
         };
       }
+    });
+  }
+  private deleteAll( tableKey: string  ) {
+    const store = this.getStore(tableKey);
+       const { table, selectedRows } = store.getState()
+    Object.entries(selectedRows).map(([key]) => table.deleteRow(new RowId(Number(key))));
+    store.setState(prev => {
+        return {
+          ...prev,
+          selectedRows: {},
+          table
+        };
     });
   }
   private toggleSelectPageRows(cmd: { tableKey: string }) {
@@ -895,7 +904,6 @@ export class TableEngine {
       case "copy":
       case "cut":
       case null:
-        console.log("here", cmd.action)
         table.setTableAction(cmd.action)
         break;
       case "paste":
@@ -905,7 +913,6 @@ export class TableEngine {
           const bIndex = Number(b.getCells().get("index")?.getValue()?.value ?? 0);
           return bIndex - aIndex;
         }).map(row => {
-          console.log(row.getCells().get("index")?.getValue()?.value)
           table.addRow(row.id.value, cmd.action == "pasteInsert" ? activeRowId : undefined)
         })
 
@@ -976,6 +983,10 @@ export class TableEngine {
       case 'COLLAPSE_ALL_ROWS':
         this.collapseAll(command.tableKey);
         return;
+      case 'ROWS_DELETED':
+        this.deleteAll(command.tableKey);
+        return;
+
       case 'ROW_EXPAND_TOGGLED':
         this.toggleRowExpanded(command);
         return;
@@ -1049,12 +1060,12 @@ export class TableEngine {
           const aIndex = Number(a.getCells().get("index")?.getValue()?.value ?? 0);
           const bIndex = Number(b.getCells().get("index")?.getValue()?.value ?? 0);
           return aIndex - bIndex;
-        }).map((row) => {
+        })
+        .map((row) => {
           const cells: Record<string, TCell> = {};
           const columns = table.getColumns();
           for (const col of columns) {
             const cell = row.getCells().get(col.id);
-
             cells[col.id] = {
               value: cell?.getValue()?.value ?? null,
               originalValue: cell?.getOriginalValue()?.value ?? null,
@@ -1083,9 +1094,15 @@ export class TableEngine {
         indexOptions: col.indexOptions,
         onChange: col.onChange,
         dynamicValue: col.dynamicValue,
-        width: col.width,
+        width: col.minWidth,
+        style: col.style,
         popUpWidth: col.popUpWidth,
-        labelValue: col.labelValue
+        labelValue: col.labelValue,
+        className: col.className,
+         enableDeleteButton:col.enableDeleteButton,
+        enableExpandButton:col.enableExpandButton,
+        enableMoveButton:col.enableMoveButton,
+        enableOptionsButton:col.enableOptionsButton,
       })),
       pagination: {
         page: pagination.page,
@@ -1275,157 +1292,7 @@ export class TableEngine {
       }
     });
   }
-  private validateCell(value: any, schema: ColumnSchema, caption: string,rowId: number): CellError | undefined {
-    const rules = schema?.rules ?? [];
-    if (!rules.length) return undefined;
-    for (const rule of rules) {
-      const v = rule.transform ? rule.transform(value) : value;
-      // Required
-      if (rule.required) {
-        const isEmpty =
-          v === null ||
-          v === undefined ||
-          (typeof v === "string" && v.trim() === "") ||
-          (Array.isArray(v) && v.length === 0);
-        if (isEmpty) return  {caption,rowId,message:rule.message ?? `${schema.title || caption} الزامی است`} ;
-      }
 
-      // Pattern
-      if (rule.pattern) {
-        const reg = typeof rule.pattern === "string" ? new RegExp(rule.pattern) : rule.pattern;
-        if (!reg.test(String(v))) return {caption,rowId,message:rule.message ?? `${schema.title || caption} فرمت نامعتبر دارد`}  ;
-      }
-
-      // Type-based
-      switch (rule.type) {
-        case "number":
-        case "integer":
-        case "float": {
-          const n = Number(v);
-
-          if (Number.isNaN(n)) return {caption,rowId,message:rule.message ?? `${schema.title || caption} باید عددی باشد`} ;
-          if (rule.min != null && n < rule.min) return {caption,rowId,message:rule.message ?? `${schema.title || caption} باید ≥ ${rule.min} باشد`} ;
-          if (rule.max != null && n > rule.max) return {caption,rowId,message:rule.message ?? `${schema.title || caption} باید ≤ ${rule.max} باشد`}  ;
-          if (rule.type === "integer" && !Number.isInteger(n)) return {caption,rowId,message:rule.message ?? `${schema.title || caption} باید عدد صحیح باشد`};
-          break;
-        }
-        case "boolean":
-          if (typeof v !== "boolean") return {caption,rowId,message:rule.message ?? `${schema.title || caption} باید بولی باشد`} ;
-          break;
-        case "email": {
-          const reg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          if (!reg.test(String(v))) return {caption,rowId,message:rule.message ?? `${schema.title || caption} ایمیل معتبر نیست`};
-          break;
-        }
-        case "url": {
-          try {
-            new URL(v);
-          } catch {
-            return {caption,rowId,message:rule.message ?? `${schema.title || caption} باید URL معتبر باشد`};
-          }
-          break;
-        }
-        case "date": {
-          const d = new Date(v);
-          if (isNaN(d.getTime())) return {caption,rowId,message:rule.message ?? `${schema.title || caption} تاریخ معتبر نیست`};
-          break;
-        }
-        case "enum":
-          if (rule.enum && !rule.enum.includes(v))
-            return {caption,rowId,message:rule.message ??  `${schema.title || caption} مقدار نامعتبر دارد`};
-          break;
-        default:
-          break;
-      }
-      if (typeof v === "string") {
-        if (rule.len != null && v.length !== rule.len) return {caption,rowId,message:rule.message ??  `${schema.title || caption} باید ${rule.len} کاراکتر باشد`};
-        if (rule.min != null && v.length < rule.min) return {caption,rowId,message:rule.message ??`${schema.title || caption} باید حداقل ${rule.min} کاراکتر باشد`};
-        if (rule.max != null && v.length > rule.max) return {caption,rowId,message:rule.message ??`${schema.title || caption} باید حداکثر ${rule.max} کاراکتر باشد`};
-      }
-      if (rule.validator) {
-        let customError: string[] | undefined;
-        rule.validator(rule, v, (err?: string[]) => (customError = err));
-        if (customError && customError.length) return {caption,rowId,message:rule.message ?? customError[0]};
-      }
-      if (rule.asyncValidator) {
-        // async validator‌ها رو اینجا فقط ignore می‌کنیم (درصورت نیاز async handle کن)
-      }
-    }
-    return undefined;
-  }
-  validation(tableKey: string, cb: ValidationCallback): void {
-    const store = this.getStore(tableKey)
-    const table = store.getState().table;
-    try {
-      this.getAllRows(tableKey).forEach((row: IRow, rowIndex: number) => {
-        Object.entries(row.cells).forEach(([columnId, cell]: [string, TCell]) => {
-
-          const cellId = `row-${rowIndex}-${columnId}`;
-          const schema = table.getColumnSchema(new ColumnId(columnId))
-          const error = this.validateCell(cell.value as any, schema, schema.title,row.id);
-          if (error) {
-            this.errors.set(cellId, error);
-          } else {
-            this.errors.delete(cellId);
-          }
-        });
-      });
-       cb(
-        {
-          valid: this.errors.size === 0,
-          errors: this.errors,
-          data: this.getAllRows(tableKey)
-        }
-      );
-      store.setState(prev => {
-        return {
-          ...prev,
-          // activeRowId: null,
-          // activeCell: null,
-          expandedRows:{}
-        };
-      });
-    } catch (error) {
-      cb(
-        {
-          valid: false,
-          errors: new Map<string, CellError>([['system', { caption: '', rowId: NaN, message: error }]]),
-          data: null
-        }
-      );
-
-    }
-  }
-  isValidCell(
-    tableKey: string,
-    rowId: number,
-    caption: string
-  ): ValidCell {
-    try {
-      const store = this.getStore(tableKey)?.getState();
-      if (!store) return { isValid: false, cellError: { caption: "", rowId: NaN, message: "حافظه پیدا نشد" } };
-
-      const table = store.table;
-      const rowIndex = table.getRows().sort((a, b) => {
-        const aIndex = Number(a.getCells().get("index")?.getValue()?.value ?? 0);
-        const bIndex = Number(b.getCells().get("index")?.getValue()?.value ?? 0);
-        return aIndex - bIndex;
-      }).findIndex(r => r.id.value == rowId)
-      const schema = table.getColumnSchema(new ColumnId(caption));
-      const cell = table.getRow(rowId).getCell(caption)
-      if (!schema) return { isValid: false, cellError: { caption: "", rowId: NaN, message: "اسکیما پیدا نشد" } }
-      const error = this.validateCell(cell.getValue().value as any, schema, caption,rowId);
-      if (error) {
-        return { isValid: false, cellError: error }
-      } else {
-        const cellId = `row-${rowIndex}-${caption}`;
-        this.errors.delete(cellId);
-        return { isValid: true, cellError: { caption: "", rowId: NaN, message: '' } }
-      }
-    } catch (e) {
-      return { isValid: false, cellError: { caption: "", rowId: NaN, message: e } }
-    }
-  }
   isActiveCell(
     tableKey: string,
     rowId: number,
@@ -1470,12 +1337,6 @@ export class TableEngine {
       return false;
     }
   }
-  isExpandableRow(tableKey: string, rowId: number): boolean {
-    const { table } = this.getStore(tableKey).getState();
-    const row = table.getRow(rowId)
-    const expandAble = row.getMoreDetails()
-    return !!expandAble;
-  }
   subscribe(tableKey: string, cb: () => void) {
     const table = this.getStore(tableKey).subscribe(cb);
     try {
@@ -1485,3 +1346,159 @@ export class TableEngine {
     }
   }
 }
+
+
+
+
+
+// private validateCell(value: any, schema: ColumnSchema, caption: string,rowId: number): CellError | undefined {
+//   const rules = schema?.rules ?? [];
+//   if (!rules.length) return undefined;
+//   for (const rule of rules) {
+//     const v = rule.transform ? rule.transform(value) : value;
+//     // Required
+//     if (rule.required) {
+//       const isEmpty =
+//         v === null ||
+//         v === undefined ||
+//         (typeof v === "string" && v.trim() === "") ||
+//         (Array.isArray(v) && v.length === 0);
+//       if (isEmpty) return  {caption,rowId,message:rule.message ?? `${schema.title || caption} الزامی است`} ;
+//     }
+
+//     // Pattern
+//     if (rule.pattern) {
+//       const reg = typeof rule.pattern === "string" ? new RegExp(rule.pattern) : rule.pattern;
+//       if (!reg.test(String(v))) return {caption,rowId,message:rule.message ?? `${schema.title || caption} فرمت نامعتبر دارد`}  ;
+//     }
+
+//     // Type-based
+//     switch (rule.type) {
+//       case "number":
+//       case "integer":
+//       case "float": {
+//         const n = Number(v);
+
+//         if (Number.isNaN(n)) return {caption,rowId,message:rule.message ?? `${schema.title || caption} باید عددی باشد`} ;
+//         if (rule.min != null && n < rule.min) return {caption,rowId,message:rule.message ?? `${schema.title || caption} باید ≥ ${rule.min} باشد`} ;
+//         if (rule.max != null && n > rule.max) return {caption,rowId,message:rule.message ?? `${schema.title || caption} باید ≤ ${rule.max} باشد`}  ;
+//         if (rule.type === "integer" && !Number.isInteger(n)) return {caption,rowId,message:rule.message ?? `${schema.title || caption} باید عدد صحیح باشد`};
+//         break;
+//       }
+//       case "boolean":
+//         if (typeof v !== "boolean") return {caption,rowId,message:rule.message ?? `${schema.title || caption} باید بولی باشد`} ;
+//         break;
+//       case "email": {
+//         const reg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//         if (!reg.test(String(v))) return {caption,rowId,message:rule.message ?? `${schema.title || caption} ایمیل معتبر نیست`};
+//         break;
+//       }
+//       case "url": {
+//         try {
+//           new URL(v);
+//         } catch {
+//           return {caption,rowId,message:rule.message ?? `${schema.title || caption} باید URL معتبر باشد`};
+//         }
+//         break;
+//       }
+//       case "date": {
+//         const d = new Date(v);
+//         if (isNaN(d.getTime())) return {caption,rowId,message:rule.message ?? `${schema.title || caption} تاریخ معتبر نیست`};
+//         break;
+//       }
+//       case "enum":
+//         if (rule.enum && !rule.enum.includes(v))
+//           return {caption,rowId,message:rule.message ??  `${schema.title || caption} مقدار نامعتبر دارد`};
+//         break;
+//       default:
+//         break;
+//     }
+//     if (typeof v === "string") {
+//       if (rule.len != null && v.length !== rule.len) return {caption,rowId,message:rule.message ??  `${schema.title || caption} باید ${rule.len} کاراکتر باشد`};
+//       if (rule.min != null && v.length < rule.min) return {caption,rowId,message:rule.message ??`${schema.title || caption} باید حداقل ${rule.min} کاراکتر باشد`};
+//       if (rule.max != null && v.length > rule.max) return {caption,rowId,message:rule.message ??`${schema.title || caption} باید حداکثر ${rule.max} کاراکتر باشد`};
+//     }
+//     if (rule.validator) {
+//       let customError: string[] | undefined;
+//       rule.validator(rule, v, (err?: string[]) => (customError = err));
+//       if (customError && customError.length) return {caption,rowId,message:rule.message ?? customError[0]};
+//     }
+//     if (rule.asyncValidator) {
+//       // async validator‌ها رو اینجا فقط ignore می‌کنیم (درصورت نیاز async handle کن)
+//     }
+//   }
+//   return undefined;
+// }
+// validation(tableKey: string, cb: ValidationCallback): void {
+//   const store = this.getStore(tableKey)
+//   const table = store.getState().table;
+//   try {
+//     this.getAllRows(tableKey).forEach((row: IRow, rowIndex: number) => {
+//       Object.entries(row.cells).forEach(([columnId, cell]: [string, TCell]) => {
+
+//         const cellId = `row-${rowIndex}-${columnId}`;
+//         const schema = table.getColumnSchema(new ColumnId(columnId))
+//         const error = this.validateCell(cell.value as any, schema, schema.title,row.id);
+//         if (error) {
+//           this.errors.set(cellId, error);
+//         } else {
+//           this.errors.delete(cellId);
+//         }
+//       });
+//     });
+//      cb(
+//       {
+//         valid: this.errors.size === 0,
+//         errors: this.errors,
+//         data: this.getAllRows(tableKey)
+//       }
+//     );
+//     store.setState(prev => {
+//       return {
+//         ...prev,
+//         // activeRowId: null,
+//         // activeCell: null,
+//         expandedRows:{}
+//       };
+//     });
+//   } catch (error) {
+//     cb(
+//       {
+//         valid: false,
+//         errors: new Map<string, CellError>([['system', { caption: '', rowId: NaN, message: error }]]),
+//         data: null
+//       }
+//     );
+
+//   }
+// }
+// isValidCell(
+//   tableKey: string,
+//   rowId: number,
+//   caption: string
+// ): ValidCell {
+//   try {
+//     const store = this.getStore(tableKey)?.getState();
+//     if (!store) return { isValid: false, cellError: { caption: "", rowId: NaN, message: "حافظه پیدا نشد" } };
+
+//     const table = store.table;
+//     const rowIndex = table.getRows().sort((a, b) => {
+//       const aIndex = Number(a.getCells().get("index")?.getValue()?.value ?? 0);
+//       const bIndex = Number(b.getCells().get("index")?.getValue()?.value ?? 0);
+//       return aIndex - bIndex;
+//     }).findIndex(r => r.id.value == rowId)
+//     const schema = table.getColumnSchema(new ColumnId(caption));
+//     const cell = table.getRow(rowId).getCell(caption)
+//     if (!schema) return { isValid: false, cellError: { caption: "", rowId: NaN, message: "اسکیما پیدا نشد" } }
+//     const error = this.validateCell(cell.getValue().value as any, schema, caption,rowId);
+//     if (error) {
+//       return { isValid: false, cellError: error }
+//     } else {
+//       const cellId = `row-${rowIndex}-${caption}`;
+//       this.errors.delete(cellId);
+//       return { isValid: true, cellError: { caption: "", rowId: NaN, message: '' } }
+//     }
+//   } catch (e) {
+//     return { isValid: false, cellError: { caption: "", rowId: NaN, message: e } }
+//   }
+// }

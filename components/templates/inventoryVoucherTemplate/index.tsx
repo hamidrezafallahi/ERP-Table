@@ -5,7 +5,6 @@ import React, {
   useState,
 } from 'react';
 
-import { Form } from 'antd';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -41,6 +40,7 @@ import { IProps } from './type';
 
 export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
   const {
+    form,
     caption,
     captionII,
     listUrl,
@@ -52,11 +52,10 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
     addUrl,
     updateUrl,
   } = props;
-  const [pageReady, setPageReady] = React.useState(false);
+   const [pageReady, setPageReady] = React.useState(false);
   const t = useTranslations();
   const dispatch = useDispatch();
   const toggleFullScreen = useFullScreen();
-  const [form] = Form.useForm();
   const params = useSearchParams();
   const id = Number(params.get("id"));
   const [fetchDefault] = useGetConditionallyMutation();
@@ -263,9 +262,9 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
       const mappedRows = details.map((item, i) => ({
         id: item[detailFieldKey],
         values: { ...item },
-        moreDetails: {
-          data: item,
-        },
+        // moreDetails: {
+        //   data: item,
+        // },
       }));
       setRows(mappedRows);
     };
@@ -300,8 +299,7 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
           
           detail[col] = value;
         });
-        console.log(detail);
-        return detail;
+         return detail;
       });
   }
 
@@ -385,14 +383,8 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
     [activePage?.pageId, colConfigs, rows],
   );
   return (
-    <div className="relative">
-      <button
-        className="-top-14 absolute flex bg-black-black95 hover:bg-white px-3 py-[6px] border hover:border-black-black95 rounded text-white hover:text-black-black95 cursor-pointer -end-3 item-center"
-        onClick={handleSubmit}
-      >
-        {t("general.submit")}
-      </button>
-      <InventoryVoucherHeaderForm form={form} />
+    <>
+      <InventoryVoucherHeaderForm form={form} onSubmitCallback={handleSubmit}/>
       {pageReady && activePage?.pageId && StockId && rows !== null && (
         <ERPTable //<IMoreProps>
           {...prop}
@@ -402,7 +394,7 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
           }}
         />
       )}
-    </div>
+    </>
   );
 }
 // interface IMoreProps {

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 
-import { Checkbox, Form, FormProps } from "antd";
+import { Checkbox, Form, FormProps, Radio } from "antd";
 import { useTranslations } from "next-intl";
 
 import {
@@ -48,9 +48,7 @@ export const NestedListForm = <T, K>({
   const [trigger, { isLoading }] = useCUDDataMutation();
 
   const [form] = Form.useForm();
-
   const defaultValue: T = data?.Data[0];
-
   const formField = formConfig.filter((field) => field.type !== "group");
   const groupFormField = formConfig.filter((field) => field.type === "group");
 
@@ -94,7 +92,6 @@ export const NestedListForm = <T, K>({
       }
       case "number":
         return <CustomInputNumber keyboard={false} controls={false} min={0} />;
-
       case "price":
         return (
           <CustomInputNumber
@@ -110,7 +107,16 @@ export const NestedListForm = <T, K>({
         );
       case "text":
         return <InputText type={field.type} />;
-
+      case "radio":
+        return (
+          <Radio.Group className="flex justify-between">
+            {field.options?.map((opt) => (
+              <Radio key={String(opt.value)} value={opt.value}>
+                {opt.label}
+              </Radio>
+            ))}
+          </Radio.Group>
+        );
       default:
         return null;
     }
@@ -153,7 +159,7 @@ export const NestedListForm = <T, K>({
 
   return (
     <Form
-      className="p-4"
+      className="p-4 flex gap-4 flex-col"
       name="NestedListForm"
       initialValues={{ remember: true }}
       layout="vertical"
@@ -162,7 +168,7 @@ export const NestedListForm = <T, K>({
       autoComplete="off"
     >
       <div
-        className={`lg:gap-2 lg:grid lg:grid-cols-2 lg:pb-2 flex flex-col gap-2 w-full pb-2`}
+        className={`lg:gap-x-2 lg:gap-y-4 lg:grid lg:grid-cols-2 flex flex-col gap-2 w-full`}
       >
         {formField
           .sort((a, b) => a.order - b.order)
@@ -170,9 +176,7 @@ export const NestedListForm = <T, K>({
             const condition = field.renderConditionally
               ? field.renderConditionally(level)
               : true;
-
             if (!condition) return null;
-
             switch (field.type) {
               case "checkbox":
                 return (
@@ -187,7 +191,6 @@ export const NestedListForm = <T, K>({
                     <Checkbox>{field.caption}</Checkbox>
                   </Form.Item>
                 );
-
               default:
                 return (
                   <Form.Item
@@ -195,7 +198,7 @@ export const NestedListForm = <T, K>({
                     label={field.caption}
                     name={field.name}
                     rules={field.rules}
-                    className={`flex flex-col !mb-0 !pb-0 text-xs ${
+                    className={`flex flex-col !mb-0 !pb-0 text-xs w-full ${
                       formField.length % 2 !== 0 &&
                       index === formField.length - 1 &&
                       "col-span-2"
@@ -207,7 +210,6 @@ export const NestedListForm = <T, K>({
             }
           })}
       </div>
-
       {groupFormField?.length > 0 &&
         groupFormField
           .sort((a, b) => a.order - b.order)
@@ -222,7 +224,7 @@ export const NestedListForm = <T, K>({
                 {field.groupItems?.map((groupItem, i) => (
                   <>
                     <span key={i}>{groupItem.title}</span>
-                    <div className={`lg:flex lg:gap-4 flex flex-wrap gap-2`}>
+                    <div className="flex gap-2 justify-between mb-4 last:mb-0">
                       {groupItem.groupFields.map((fieldItem, idx) => {
                         const condition = fieldItem.renderConditionally
                           ? fieldItem.renderConditionally(level)
@@ -245,7 +247,7 @@ export const NestedListForm = <T, K>({
                             label={fieldItem.caption}
                             name={fieldItem.name}
                             rules={fieldItem.rules}
-                            className={`flex flex-col !mb-0 !pb-0 text-xs ${
+                            className={`flex flex-col !mb-0 !pb-0 text-xs w-full ${
                               groupItem.groupFields.length % 2 !== 0 &&
                               idx === groupItem.groupFields.length - 1 &&
                               "col-span-2"

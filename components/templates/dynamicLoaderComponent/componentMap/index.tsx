@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC } from 'react';
 
 import {
   EndYearOperationsPage,
@@ -6,25 +6,30 @@ import {
   SortingVoucherPage,
   TafsiliType,
   Voucher,
-} from "@components/organisms/accounting";
-import { InventoryVoucherForm } from "@components/organisms/inventoryVoucher/form";
-import { Patterns, ReportForm } from "@components/organisms/managementSystem";
+} from '@components/organisms/accounting';
+import {
+  InventoryVoucherForm,
+} from '@components/organisms/inventoryVoucher/form';
+import {
+  Patterns,
+  ReportForm,
+} from '@components/organisms/managementSystem';
 import {
   AdvancedBankDeposit,
   AdvancedBankWithdrawal,
-} from "@components/organisms/receiptAndPayment/bank";
+} from '@components/organisms/receiptAndPayment/bank';
 import {
   AdvancedCashDeposit,
   AdvancedCashWithdrawal,
-} from "@components/organisms/receiptAndPayment/cash";
+} from '@components/organisms/receiptAndPayment/cash';
 import {
   AdvancedCashFundDeposit,
   AdvancedCashFundWithdrawal,
-} from "@components/organisms/receiptAndPayment/cashFund";
+} from '@components/organisms/receiptAndPayment/cashFund';
 import {
   ChequeIssuance,
   ChequeReceipt,
-} from "@components/organisms/receiptAndPayment/cheque";
+} from '@components/organisms/receiptAndPayment/cheque';
 import {
   BillsSalesInvoice,
   BuyRequest,
@@ -45,10 +50,11 @@ import {
   SellWithoutCustomerSalesInvoice,
   StandardSalesInvoice,
   StockExchangeSalesInvoice,
-} from "@components/organisms/salesAndPurchase";
-import { YearPlan } from "@components/organisms/yearPlan";
-import SaleFactorCheckout from "@components/templates/saleFactorCheckout";
-import TypeOfInventoryVoucher from "@components/templates/typeOfInventoryVoucher";
+} from '@components/organisms/salesAndPurchase';
+import { YearPlan } from '@components/organisms/yearPlan';
+import { SaleFactorCheckout } from '@components/templates/saleFactorCheckout';
+import TypeOfInventoryVoucher
+  from '@components/templates/typeOfInventoryVoucher';
 
 export const componentsMap: Record<string, FC<any>> = {
   TypeOfInventoryVoucher,

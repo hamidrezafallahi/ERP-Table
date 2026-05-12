@@ -1,13 +1,10 @@
-import { useEffect, useState } from "react";
-
 import {
-  dateFilterTypeOptions,
-  numberFilterTypeOptions,
-  selectFilterTypeOptions,
-  stringFilterTypeOptions,
-} from "constants/filterType";
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+  useEffect,
+  useState,
+} from 'react';
+
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
 import {
   CustomButton,
@@ -15,17 +12,30 @@ import {
   CustomTooltip,
   DynamicSelect,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { Close } from "@components/atoms/iconComponents";
-import BookmarkFilter from "@layout/baseLayout/desktop/actionBar/panelList/bookmarkFilter";
-import SaveFilter from "@layout/baseLayout/desktop/actionBar/panelList/saveFilter";
-import TagFilters from "@layout/baseLayout/desktop/actionBar/panelList/tagFilters";
-import { useAppSelector } from "@redux/index";
+} from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
+import { Close } from '@components/atoms/iconComponents';
+import {
+  dateFilterTypeOptions,
+  numberFilterTypeOptions,
+  selectFilterTypeOptions,
+  stringFilterTypeOptions,
+} from '@constants/filterType';
+import BookmarkFilter
+  from '@layout/baseLayout/desktop/actionBar/panelList/bookmarkFilter';
+import SaveFilter
+  from '@layout/baseLayout/desktop/actionBar/panelList/saveFilter';
+import TagFilters
+  from '@layout/baseLayout/desktop/actionBar/panelList/tagFilters';
+import { useAppSelector } from '@redux/index';
 
-import ShowBookmarkFilter from "./showBookmarkFilter";
-import ShowTagFilters from "./showTagFilters";
-import type { IAdvancedFilter, IData, IProps } from "./type";
+import ShowBookmarkFilter from './showBookmarkFilter';
+import ShowTagFilters from './showTagFilters';
+import type {
+  IAdvancedFilter,
+  IData,
+  IProps,
+} from './type';
 
 export default function AdvancedFilter({
   data,
@@ -175,7 +185,7 @@ export default function AdvancedFilter({
     filter: IAdvancedFilter;
   }) => {
     if (filter.type === "ftNotNull" || filter.type === "ftIsNull") return null;
-    switch (dataType?.type) {
+     switch (dataType?.type) {
       case "string":
         return (
           <InputText
@@ -211,8 +221,8 @@ export default function AdvancedFilter({
           />
         );
       case "select":
-        if (dataType?.valueOption.Options) {
-          const options = dataType?.valueOption.Options.map((item) => {
+        if (dataType?.valueOption?.Options) {
+          const options = dataType?.valueOption?.Options.map((item) => {
             return {
               label: item.caption,
               value: item.value,
@@ -297,8 +307,7 @@ export default function AdvancedFilter({
             const dataType: IData = data?.find(
               (e) => e?.value === filter?.field,
             );
-
-            return (
+             return (
               <li key={filter.id}>
                 {!match && (
                   <div className="flex justify-end pt-2">

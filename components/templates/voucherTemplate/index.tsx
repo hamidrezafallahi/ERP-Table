@@ -5,9 +5,11 @@ import React, {
   useState,
 } from 'react';
 
-import { Form } from 'antd';
 import { useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
+import {
+  usePathname,
+  useSearchParams,
+} from 'next/navigation';
 import {
   shallowEqual,
   useDispatch,
@@ -17,23 +19,22 @@ import {
   VoucherForm,
   VoucherResult,
 } from '@components/molecules/accounting';
-import ExpandedButton from '@components/molecules/expandedButton';
 import {
   ERPTable,
   ERPTableApi,
   ERPTableProps,
 } from '@components/organisms/erp-table/ui';
-import { useInitializePage } from '@hooks/custom';
+import { useNavigatePage } from '@hooks/custom';
 import { useAppSelector } from '@redux/index';
 import { useGetConditionallyMutation } from '@services/base';
-import { addNewPage } from '@slice/pages';
+import {
+  addNewPage,
+  removePage,
+} from '@slice/pages';
 import { PageStateEnum } from '@slice/pages/enum';
 import { IPageConfig } from '@type/elementType';
 import { PageTypeEnum } from '@type/enum';
-import {
-  showErrorToast,
-  showSuccessToast,
-} from '@utils/core';
+import { showSuccessToast } from '@utils/core';
 
 import {
   columnConfig,
@@ -43,6 +44,7 @@ import { IProps } from './type';
 
 export default function VoucherTemplate<T, K>({ ...props }: IProps) {
   const {
+    form,
     caption,
     captionII,
     listUrl,
@@ -54,8 +56,8 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
     addUrl,
     updateUrl,
     tableTitle,
+    setIsFormSubmitting,
   } = props;
-
   const [pageReady, setPageReady] = React.useState(false);
   const [rows, setRows] = React.useState<any[] | null>(null);
   const [sum, setSum] = React.useState<{ bed: number; bes: number }>({
@@ -64,11 +66,10 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
   });
   const [getToolbarData] = useGetConditionallyMutation();
   const [itemMutate] = useGetConditionallyMutation();
-  const initializePage = useInitializePage();
+  const { navigateBack } = useNavigatePage();
   const [tableApi, setTableApi] = useState<ERPTableApi | null>(null);
   const t = useTranslations();
   const dispatch = useDispatch();
-  const [form] = Form.useForm();
   const params = useSearchParams();
   const id = Number(params.get("id"));
   const [fetchDefault] = useGetConditionallyMutation();
@@ -81,20 +82,14 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
     }),
     shallowEqual,
   );
-  const VoucherDate = activePage?.pageData?.find(
-    (d) => d.name == "VoucherDate",
-  )?.value;
-  const VoucherTypeId = activePage?.pageData?.find(
-    (d) => d.name == "VoucherTypeId",
-  )?.value;
 
   const recordHeight = 40;
   const deviceHeight = window.innerHeight;
-  const formHeight = 300;
+  const tableHeight = Math.floor(deviceHeight - 460);
   const mobileRecordsPerPage = 100;
   const recordsPerPage = !match
     ? mobileRecordsPerPage
-    : Math.floor((deviceHeight - formHeight) / recordHeight);
+    : Math.floor((deviceHeight - tableHeight) / recordHeight);
   const storedData = activePage?.pageData;
   const pageType = PageTypeEnum.Form;
   const {
@@ -108,6 +103,7 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
     data: initData,
     returnPageId,
   } = initPage;
+  const path = usePathname();
 
   const safeParse = (s: any) => {
     try {
@@ -183,7 +179,11 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
     const fetchData = async () => {
       const res = await getToolbarData({
         url: "/api/menu/getToolbarData",
-        body: { RepoId, SystemId, Type: pageType },
+        body: {
+          RepoId: RepoId ?? 5010,
+          SystemId: SystemId ?? 5,
+          Type: pageType,
+        },
         id: RepoId,
       }).unwrap();
       if (res.Result) {
@@ -234,7 +234,7 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
     };
 
     fetchData();
-  }, []);
+  }, [path]);
 
   const fetchDefaultDetails = async (headerId: number) => {
     const detailRes = await fetchDefault({
@@ -272,9 +272,9 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
       const mappedRows = details.map((item, i) => ({
         id: item[detailFieldKey],
         values: { ...item },
-        moreDetails: {
-          data: item,
-        },
+        // moreDetails: {
+        //   data: item,
+        // },
       }));
       setRows(mappedRows);
     };
@@ -311,53 +311,48 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
   }
 
   const handleSubmit = async () => {
-    const validationFn = tableApi?.validation();
-    validationFn(async (result) => {
-      if (!result.valid) {
-        showErrorToast("فیلد های جدول ایراد دارد");
-        return;
-      } else {
-        const formValues = Object.fromEntries(
-          Object.entries(form.getFieldsValue()).filter(
-            ([key, value]) => value !== null && value !== undefined,
-          ),
-        );
-        const ChangeFields = [];
+    setIsFormSubmitting(true);
 
-        Object.entries(formValues).forEach(([key, value]: [string, any]) => {
-          if (
-            storedData?.find((i) => i.name === key)?.value !==
-              storedData?.find((i) => i.name === key)?.originalValue &&
-            id !== 0
-          ) {
-            ChangeFields.push(key);
-          }
-        });
-        const payload = {
-          ...formValues,
-          ChangeFields: ChangeFields.length > 0 ? ChangeFields : undefined,
-          Details: mapSnapshotToDetailsDynamic(tableApi?.getSnapshot()),
-          VoucherHeaderId: id !== 0 ? id : undefined,
-        };
-        const res = await itemMutate({
-          url: !id ? addUrl : updateUrl,
-          body: payload,
-        }).unwrap();
-        if (res?.Result == "Success") {
-          showSuccessToast(t("toast.successTitle"), t(caption));
-          initializePage({
-            config: {
-              ...initData,
-              RepoId: activePage.RepoId,
-              SystemId: activePage.SystemId,
-              url: listUrl,
-              pageId: returnPageId,
-              data: initData,
-            },
-          });
+    try {
+      const formValues = Object.fromEntries(
+        Object.entries(form.getFieldsValue()).filter(
+          ([key, value]) => value !== null && value !== undefined,
+        ),
+      );
+      const ChangeFields = [];
+
+      Object.entries(formValues).forEach(([key, value]: [string, any]) => {
+        if (
+          storedData?.find((i) => i.name === key)?.value !==
+            storedData?.find((i) => i.name === key)?.originalValue &&
+          id !== 0
+        ) {
+          ChangeFields.push(key);
         }
+      });
+
+      const payload = {
+        ...formValues,
+        ChangeFields: ChangeFields.length > 0 ? ChangeFields : undefined,
+        Details: mapSnapshotToDetailsDynamic(tableApi?.getSnapshot()),
+        VoucherHeaderId: id !== 0 ? id : undefined,
+      };
+
+      const res = await itemMutate({
+        url: !id ? addUrl : updateUrl,
+        body: payload,
+      }).unwrap();
+
+      if (res?.Result == "Success") {
+        showSuccessToast(t("toast.successTitle"), t(caption));
+        dispatch(removePage(activePage.pageId));
+        navigateBack();
       }
-    });
+    } catch (error) {
+      console.error("Submit Error:", error);
+    } finally {
+      setIsFormSubmitting(false);
+    }
   };
 
   // const { data: renderUnitData } = useGetData<IPlaceConfig[], null>({
@@ -408,7 +403,7 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
       tableKey: params.get("id") ?? activePage?.pageId ?? "",
       rows,
       columns: colConfigs,
-      tableHeight: formHeight,
+      tableHeight,
       tableTitle,
       // rowAccess,
       // tableHeight:100,
@@ -416,24 +411,12 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
     }),
     [activePage?.pageId, colConfigs, rows],
   );
+  console.log(pageReady, activePage?.pageId, rows !== null);
   return (
-    <div className="relative">
-      <div className="-top-14 absolute flex gap-2 -end-3 item-center">
-        <ExpandedButton />
-        <button
-          className="bg-black-black95 hover:bg-white px-3 py-1 border hover:border-black-black95 rounded text-white hover:text-black-black95 cursor-pointer"
-          onClick={handleSubmit}
-        >
-          {t("general.submit")}
-        </button>
-      </div>
-      <VoucherForm form={form} />
-
-      {pageReady &&
-        activePage?.pageId &&
-        VoucherTypeId &&
-        VoucherDate &&
-        rows !== null && (
+    <div  className='flex flex-col gap-5 -translate-y-5'>
+      <VoucherForm form={form} onSubmitCallback={handleSubmit} />
+      {pageReady && activePage?.pageId && rows !== null && (
+        <>
           <ERPTable //<IMoreProps>
             {...prop}
             // moreDetailComponent={More}
@@ -441,14 +424,15 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
               setTableApi(api);
             }}
           />
-        )}
-      <div className="-bottom-20 absolute start-0">
-        <VoucherResult
-          balance={sum.bes - sum.bed}
-          totalCredit={sum.bes}
-          totalDebit={sum.bed}
-        />
-      </div>
+          <div className="flex justify-end w-full">
+            <VoucherResult
+              balance={sum.bes - sum.bed}
+              totalCredit={sum.bes}
+              totalDebit={sum.bed}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }

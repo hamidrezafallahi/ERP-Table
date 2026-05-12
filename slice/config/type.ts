@@ -2,6 +2,11 @@ import { UserSession } from '@services/auth/base/type';
 
 export type TLang = "fa" | "en";
 export type TTheme = "light" | "dark";
+export type IPlaceConfig ={
+    PlaceConfigValueId: number,
+    PlaceConfigId: number,
+    Value: string
+  }
 export interface IDefaultConfigs {
   CurrencyId: { id: number; desc: string };
   CashierId: { id: number; desc: string };
@@ -27,4 +32,5 @@ export interface IConfig {
     dataSourceName: string;
     data: any[];
   }[];
+   placeConfigs: IPlaceConfig[];
 }

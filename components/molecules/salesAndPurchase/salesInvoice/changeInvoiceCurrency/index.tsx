@@ -108,7 +108,16 @@ export const ChangeInvoiceCurrency = ({ handleClose, sourceKey, id }) => {
         ]}
         className="flex flex-col !mb-0 !pb-0 text-xs"
       >
-        <CustomInputNumber min={0} controls={false} />
+        <CustomInputNumber
+          min={0}
+          controls={false}
+          parser={(value) =>
+            value?.replace(/\$\s?|(,*)/g, "") as unknown as number
+          }
+          formatter={(value) =>
+            `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+          }
+        />
       </Form.Item>
 
       <Form.Item className="col-span-2 m-0 p-0 text-xs">

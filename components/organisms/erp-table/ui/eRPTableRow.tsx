@@ -42,7 +42,7 @@ function ERPTableRowComponent({
   const isActiveRow = controller.isActiveRow(row.id);
   const isSelectedRow = controller.isSelectedRow(row.id);
   const isCut = controller.isCutRow(row.id);
-   const handleRowClick = (e: React.MouseEvent) => {
+  const handleRowClick = (e: React.MouseEvent) => {
     controller.onRowClick(row.id, {
       ctrlKey: e.ctrlKey,
       shiftKey: e.shiftKey,
@@ -91,9 +91,10 @@ function ERPTableRowComponent({
 
     setDropZone(null);
   };
+  const cols = table.columns.filter((c) => !c.hidden).length;
+
   const rowClass = useMemo(() => {
-    return `
-      relative flex items-center border 
+    return `relative w-full border
       ${isActiveRow ? "border-gray-gray8" : "border-gray-gray5"}
       ${isSelectedRow ? "bg-blue-100" : ""}
       ${
@@ -110,7 +111,8 @@ function ERPTableRowComponent({
   return (
     <>
       <tr
-        className={`${rowClass} w-fit `}
+        className={`${rowClass} `}
+        // style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
         data-rowid={row.id}
         draggable
         onDragStart={(e) => handleDragStart(e, row.id)}
@@ -123,23 +125,16 @@ function ERPTableRowComponent({
           .filter((c: any) => !c.hidden)
           .map((c: any, idx: number) => {
             const meta: CellMeta = {
-              renderType: c.renderType,
-              editable: c.editable,
-              tableId: tableKey,
-              columnId: c.id,
-              options: c.options,
-              dynamicValue: c.dynamicValue,
-              indexOptions: c.indexOptions,
-              onChange: c.onChange,
-              expandable: c.expandable,
-              width: c.width,
-              popUpWidth: c.popUpWidth,
-              labelValue: c.labelValue,
+             ...c,
+              enableDeleteButton: c.enableDeleteButton??true,
+              enableExpandButton: c.enableExpandButton??true,
+              enableMoveButton: c.enableMoveButton??true,
+              enableOptionsButton: c.enableOptionsButton??true,
             };
 
             if (c.id === "index") {
               return (
-                <td key={c.id}>
+                <td className="p-0 h-full" key={c.id}>
                   <IndexCol
                     idx={index}
                     tableKey={tableKey}
@@ -152,7 +147,7 @@ function ERPTableRowComponent({
             }
 
             return (
-              <td key={c.id} className="w-36 min-w-36">
+              <td key={c.id} className="p-0 h-full">
                 <CellRenderer
                   idx={idx}
                   tableKey={tableKey}

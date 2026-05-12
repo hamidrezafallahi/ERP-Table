@@ -1,5 +1,5 @@
 import { EditIcon, TrashBin } from "@components/atoms/iconComponents";
-import { IDynamicModalConfig } from "@components/organisms/sideBarForm/type";
+import { IDynamicModalConfig } from "@components/organisms/sideBarForm/types";
 
 export const defaultDescriptionsConfig = (id: number): IDynamicModalConfig => ({
   fieldKey: "AccountDescItemId",
@@ -28,6 +28,9 @@ export const defaultDescriptionsConfig = (id: number): IDynamicModalConfig => ({
     IsDisableCommentCount: true,
     IsDisableSidebarStats: true,
     IsDisableCount: true,
+    transform: (item) => ({
+      ...item,
+    }),
   },
   formConfig: { fields: [] },
   actions: [

@@ -17,7 +17,7 @@ import { CellMeta } from './cellRenderer';
 
 interface IndexColProps {
   tableKey: string;
-  idx:number
+  idx: number;
   row: {
     id: number;
     cells: Record<string, TCell>;
@@ -36,9 +36,9 @@ export const IndexCol: React.FC<IndexColProps> = ({
   meta,
 }) => {
   const t = useTranslations();
-   const selectedRow = controller.getSelectedRows();
+
   const handleDeleteRow = () => {
-     controller.dispatch({ type: "ROW_DELETED", rowId: row.id });
+    controller.dispatch({ type: "ROW_DELETED", rowId: row.id });
   };
 
   const handleCopyRow = () => {
@@ -148,37 +148,51 @@ export const IndexCol: React.FC<IndexColProps> = ({
   };
 
   const isDeleted = row.rowState === RowStateEnum.Deleted;
- const isSelectedRow = controller.isSelectedRow(row.id);
-  const isExpandableRow = controller.isExpandableRow(row.id); 
+  const isSelectedRow = controller.isSelectedRow(row.id);
   return (
     <div
       className={` ${
         isDeleted && "cursor-not-allowed"
-      }  flex justify-around items-center gap-2 px-2 w-36 min-w-36 relative`}
+      }  flex justify-between items-center w-full gap-2 px-2 h-full relative    `}
     >
-      {!isDeleted && (
-        <CustomCheckbox
-          disabled={isDeleted}
-          checked={isSelectedRow}
-          onClick={handleSelectRow}
-        />
-      )}
-      <div className="w-[20px] text-xs text-center">{idx+1}</div>
+      <div className="flex justify-start items-center gap-2">
+        {!isDeleted && (
+          <CustomCheckbox
+            disabled={isDeleted}
+            checked={isSelectedRow}
+            onClick={handleSelectRow}
+          />
+        )}
+        <div className="w-[20px] text-xs text-center">{idx + 1}</div>
 
-      {!isDeleted && (
         <>
-          <div
-            className={`flex cursor-grab active:cursor-grabbing justify-center items-center w-[16px] h-[16px] `}
-            draggable={false}
-            onMouseDown={(e) => {
-              const tr = e.currentTarget.closest("tr");
-              tr?.setAttribute("draggable", "true");
-            }}
-          >
-            <DragIcon config={{ width: 16, height: 16 }} />
-          </div>
+          {meta.enableMoveButton && !isDeleted && (
+            <div
+              className={`flex cursor-grab active:cursor-grabbing justify-center items-center w-[16px] h-[16px] `}
+              draggable={false}
+              onMouseDown={(e) => {
+                const tr = e.currentTarget.closest("tr");
+                tr?.setAttribute("draggable", "true");
+              }}
+            >
+              <DragIcon config={{ width: 16, height: 16 }} />
+            </div>
+          )}
 
-          {isExpandableRow && (
+          {meta.enableDeleteButton && (
+            <button
+              type="button"
+              onClick={handleDeleteRow}
+              className="hover:bg-red-100"
+            >
+              {!isDeleted ? (
+                <RedTrashBin config={{ width: 18, height: 18 }} />
+              ) : (
+                <Undo config={{ width: 18, height: 18 }} />
+              )}
+            </button>
+          )}
+          {meta.enableExpandButton && (
             <button
               type="button"
               onClick={handleExpandRow}
@@ -191,21 +205,9 @@ export const IndexCol: React.FC<IndexColProps> = ({
             </button>
           )}
         </>
-      )}
+      </div>
 
-      <button
-        type="button"
-        onClick={handleDeleteRow}
-        className="hover:bg-red-100"
-      >
-        {!isDeleted ? (
-          <RedTrashBin config={{ width: 18, height: 18 }} />
-        ) : (
-          <Undo config={{ width: 18, height: 18 }} />
-        )}
-      </button>
-
-      {!isDeleted && (
+      {meta.enableOptionsButton && !isDeleted && (
         <CustomDropdownButton
           placement="bottom"
           className="flex m-0 p-0 rounded"

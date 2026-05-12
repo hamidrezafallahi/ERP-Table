@@ -122,7 +122,7 @@ export const CustomModal = ({
                 title
               ) : (
                 <div className="flex flex-col justify-between gap-1">
-                  {headerIcon || headerName && (
+                  {(headerIcon || headerName) && (
                     <div className="flex items-center gap-2">
                       {headerIcon}
                       {headerName && (

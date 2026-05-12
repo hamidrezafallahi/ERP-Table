@@ -20,7 +20,7 @@ export interface DynamicValueConfig {
     buildParams?: (row: Record<string, unknown>) => Record<string, string | number>;
 }
 
-export type FieldType = 'index' | 'text' |   'number' | 'price' | 'select' | 'selectOption' | 'date' | 'static';
+export type FieldType = 'index' | 'text' |   'number' | 'price' | 'select' | 'selectOption' | 'date' | 'static'|'description';
 
 export type RowInput = { id: number; values?: Record<string, unknown>, moreDetails: unknown };
 
@@ -59,6 +59,10 @@ export interface IDetailColumnConfig {
     order?: number;
     rules?: IRule[];
     editable?: boolean;
+    enableDeleteButton?: boolean;
+    enableExpandButton?: boolean;
+    enableMoveButton?: boolean;
+    enableOptionsButton?: boolean;
     disable?: Record<string, boolean>[];
     colAccess?: ColumnAccessControl;
     dynamicSource?: {
@@ -69,6 +73,7 @@ export interface IDetailColumnConfig {
         [key: string]: unknown;
     };
     hidden?: boolean
+    className?: string
     visibility?: ColumnVisibilityRule;
     resolveOn?: ResolveOnConfig;
     computed?: {
@@ -83,7 +88,8 @@ export interface IDetailColumnConfig {
     indexOptions?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => ItemType[]
     onChange?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => void
     displayFormat?: (value: unknown) => unknown;
-    width?: number;
+    minWidth?: number;
+    style?: React.CSSProperties;
     popUpWidth?: number
     labelValue?:'selectDisplay'|'selectValue';
 

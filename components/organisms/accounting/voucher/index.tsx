@@ -388,8 +388,8 @@ export const Voucher = ({ setMobileDrawerContent, form }) => {
       conditionKey: "AccountId",
       fieldType: "selectOption",
       dynamicValue: {
-        endpoint: "/api/acc/select/availableCurrencies4SelectOption",
-        repoViewId: null,
+        endpoint: "/api/sale/select/currencyavailable",
+        repoViewId: 130076,
       },
       order: 3,
       width: 150,

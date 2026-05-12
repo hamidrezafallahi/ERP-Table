@@ -53,6 +53,7 @@ export async function createERPTable(config: CreateERPTableConfig) {
       columns.set(col.fieldName, {
         id: col.fieldName,
         title: col.fieldCaption,
+        className: col.className,
         renderType: col.fieldType,
         editable: col.editable ?? true,
         expandable: col.fieldName === 'index' && loadedTable.getRows().some(row => row.getMoreDetails()),
@@ -61,17 +62,22 @@ export async function createERPTable(config: CreateERPTableConfig) {
         dynamicValue: col.dynamicSource,
         selectOptions: col.selectOptions,
         indexOptions: col.indexOptions,
+        enableDeleteButton:col.enableDeleteButton,
+        enableExpandButton:col.enableExpandButton,
+        enableMoveButton:col.enableMoveButton,
+        enableOptionsButton:col.enableOptionsButton,
         onChange: col.onChange,
         displayFormat: col.displayFormat,
-        width:col.width,
-        popUpWidth:col.popUpWidth,
-        labelValue:col.labelValue
+        minWidth: col.minWidth,
+        style: col.style,
+        popUpWidth: col.popUpWidth,
+        labelValue: col.labelValue
 
       });
     }
   }
   // ---------- table ----------
-  const table = loadedTable || new Table(config.tableKey, rows, columns, new Pagination(page, pageSize, pageSize),null); if (loadedTable) {
+  const table = loadedTable || new Table(config.tableKey, rows, columns, new Pagination(page, pageSize, pageSize), null); if (loadedTable) {
     table.setColumns(Array.from(columns.values()));
     table.setPagination(new Pagination(page, pageSize, pageSize)); await repo.save(config.store, table);
   } else {

@@ -1,19 +1,12 @@
-import {
-  FC,
-  useEffect,
-  useState,
-} from 'react';
+import { FC, useEffect, useState } from "react";
 
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 
-import { useGetData } from '@services/base';
-import type {
-  IOption,
-  ISelectOption,
-} from '@type/elementType';
+import { useGetData } from "@services/base";
+import type { IOption, ISelectOption } from "@type/elementType";
 
-import { CustomSelect } from '../select';
-import type { IProps } from './type';
+import { CustomSelect } from "../select";
+import type { IProps } from "./type";
 
 export const DynamicSelect: FC<IProps> = ({
   className,
@@ -27,6 +20,8 @@ export const DynamicSelect: FC<IProps> = ({
   onOptionsChange,
   labelValue = "selectDisplay",
   selectFirstDefault = false,
+  displayFormatter,
+  disabled,
   ...props
 }) => {
   const t = useTranslations();
@@ -44,7 +39,11 @@ export const DynamicSelect: FC<IProps> = ({
     dependsOn,
     ...bodyRequest
   } = dynamicValue;
- 
+
+  const getOptionLabel = (option: ISelectOption) => {
+    if (displayFormatter) return displayFormatter(option);
+    return option._SelectDisplay;
+  };
 
   const body = {
     ...bodyRequest,
@@ -95,8 +94,11 @@ export const DynamicSelect: FC<IProps> = ({
               // label: showIdInDesc
               //   ? `${option._SelectId} - ${option._SelectDisplay}`
               //   : `${option._SelectDisplay}`,
-              label: labelValue == "selectDisplay"? option._SelectDisplay:option._SelectValue,
-              title: option._SelectDisplay,
+              label:
+                labelValue == "selectValue"
+                  ? option._SelectValue
+                  : getOptionLabel(option),
+              title: getOptionLabel(option),
               option: option,
             };
           });
@@ -113,8 +115,11 @@ export const DynamicSelect: FC<IProps> = ({
             return {
               key: option._SelectId,
               value: option._SelectId,
-              label: labelValue == "selectDisplay"? option._SelectDisplay:option._SelectValue,
-              title: option._SelectDisplay,
+              label:
+                labelValue == "selectValue"
+                  ? option._SelectValue
+                  : getOptionLabel(option),
+              title: getOptionLabel(option),
               option: option,
             };
           });
@@ -131,8 +136,11 @@ export const DynamicSelect: FC<IProps> = ({
               key: option._SelectId,
               value: option._SelectId,
               // label: `${option._SelectId} - ${option._SelectDisplay}`,
-              label: labelValue == "selectDisplay"? option._SelectDisplay:option._SelectValue,
-              title: option._SelectDisplay,
+              label:
+                labelValue == "selectValue"
+                  ? option._SelectValue
+                  : getOptionLabel(option),
+              title: getOptionLabel(option),
               option: option,
             };
           });
@@ -142,8 +150,11 @@ export const DynamicSelect: FC<IProps> = ({
             return {
               key: option._SelectId,
               value: option._SelectId,
-              label: labelValue == "selectDisplay"? option._SelectDisplay:option._SelectValue,
-              title: option._SelectDisplay,
+              label:
+                labelValue == "selectValue"
+                  ? option._SelectValue
+                  : getOptionLabel(option),
+              title: getOptionLabel(option),
               option: option,
             };
           });
@@ -209,6 +220,7 @@ export const DynamicSelect: FC<IProps> = ({
         setSearchPhrase={setSearchPhrase}
         handleScroll={handleScroll}
         {...props}
+        disabled={disabled}
         className={`${className}`}
         value={value}
         onClear={() => {
@@ -229,7 +241,6 @@ export const DynamicSelect: FC<IProps> = ({
           return (
             <div className="flex justify-between items-center !h-fit">
               <span>{originNode.data.title}</span>
-    
             </div>
           );
         }}

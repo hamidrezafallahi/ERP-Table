@@ -4,26 +4,28 @@ import { useEffect, useRef, useState } from "react";
 import { Form } from "antd";
 import { useTranslations } from "next-intl";
 import { useAppSelector } from "@redux/index";
-import { useActionManager } from "../hooks/useActionManager";
 import { ContextHeader } from "./contextHeader";
 import { ContextPagination } from "./contextPagination";
 import { ContextConfirmationPortals } from "./contextConfirmationPortals";
-import { IDynamicModalConfig, RecordType } from "../type";
-import { useDataManager } from "../hooks/useDataManager";
+import {
+  CustomFormComponentProps,
+  IDynamicModalConfig,
+  RecordType,
+} from "../types";
+import { useDataManager } from "./Hooks/useDataManager";
 import { ContextList } from "./contextList";
 import { SpinIcon } from "@components/atoms/iconComponents";
+import { useActionManager } from "./Hooks/useActionManager";
 
 interface SideBarFormContextProps {
   typeId: number;
   config: IDynamicModalConfig;
   isModal?: boolean;
+  ExternalCustomForm?: React.ComponentType<CustomFormComponentProps>;
 }
 
-export default function SideBarFormContext({
-  typeId,
-  config,
-  isModal = false,
-}: SideBarFormContextProps) {
+export default function SideBarFormContext(props: SideBarFormContextProps) {
+  const { typeId, config, isModal = false, ExternalCustomForm } = props;
   const t = useTranslations();
   const [form] = Form.useForm();
   const [pageNumber, setPageNumber] = useState(1);
@@ -45,12 +47,12 @@ export default function SideBarFormContext({
   const {
     tableData,
     tableIsLoading,
-    reload,
     tableTotal,
     cardData,
-    tableDataWithDesc,
-    refetch,
     cardIsLoading,
+    refetchCard,
+    refetchTable,
+    tableDataWithDesc,
   } = useDataManager({
     config,
     pageNumber,
@@ -63,14 +65,14 @@ export default function SideBarFormContext({
     useActionManager({
       match,
       config,
-      reload,
       setPageNumber,
       setSelectedId,
       setIsConfirmDrawerOpen,
       setIsConfirmModalOpen,
       selectedId,
       t,
-      refetch,
+      refetchCard,
+      refetchTable,
       form,
       setEditingRecord,
     });
@@ -87,13 +89,13 @@ export default function SideBarFormContext({
     }
   }, [tableData?.Data]);
 
-const noModal = match
-  ? "h-full p-0"
-  : "h-[calc(100dvh-288px)] border-2 border-dashed rounded p-4";
+  const noModal = match
+    ? "h-full p-0"
+    : "h-[calc(100dvh-288px)] border-2 border-dashed rounded p-4";
 
-const hasModal = match
-  ? "h-full border-0 p-4"
-  : "h-[calc(100dvh-64px)] border-0 p-4";
+  const hasModal = match
+    ? "h-full border-0 p-4"
+    : "h-[calc(100dvh-64px)] border-0 p-4";
   return (
     <div
       className={`${isModal ? hasModal : noModal} overflow-hidden hidden-show-scrollBar relative w-full`}
@@ -108,6 +110,9 @@ const hasModal = match
           config={config}
           editingRecord={editingRecord}
           setEditingRecord={setEditingRecord}
+          ExternalCustomForm={ExternalCustomForm}
+          refetchCard={refetchCard}
+          refetchTable={refetchTable}
         />
         {cardIsLoading || tableIsLoading ? (
           <div className="flex justify-center items-center h-[calc(100dvh-23.25rem)] text-gray-400">
@@ -120,7 +125,6 @@ const hasModal = match
             cardData={cardData}
             handleActionClick={handleActionClick}
             lastItemRef={lastItemRef}
-            // tableIsLoading={tableIsLoading}
             tableDataWithDesc={tableDataWithDesc}
             locale={locale}
             isModal={isModal}

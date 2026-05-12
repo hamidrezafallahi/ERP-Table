@@ -1,27 +1,40 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Divider } from "antd";
-import { useTranslations } from "next-intl";
-import Image from "next/image";
-import DarkLogo from "public/images/ArianTechDark.png";
-import LightLogo from "public/images/ArianTechLight.png";
-import { shallowEqual } from "react-redux";
-import { toast } from "react-toastify";
+import { Divider } from 'antd';
+import { useTranslations } from 'next-intl';
+import Image from 'next/image';
+import { shallowEqual } from 'react-redux';
+import { toast } from 'react-toastify';
 
-import { CustomButton, CustomModal } from "@components/atoms/defaultElements";
-import { Close, Settings } from "@components/atoms/iconComponents";
-import DefaultCompany from "@components/molecules/defaultParameterModal/company";
-import DefaultLanguage from "@components/molecules/defaultParameterModal/language";
-import DefaultYear from "@components/molecules/defaultParameterModal/year";
-import Notification from "@components/molecules/notification";
-import { SystemSettings } from "@components/organisms/systemSetting";
-import { useAppSelector } from "@redux/index";
+import {
+  CustomButton,
+  CustomModal,
+} from '@components/atoms/defaultElements';
+import {
+  Close,
+  Settings,
+} from '@components/atoms/iconComponents';
+import DefaultCompany
+  from '@components/molecules/defaultParameterModal/company';
+import DefaultCurrency
+  from '@components/molecules/defaultParameterModal/currency';
+import DefaultLanguage
+  from '@components/molecules/defaultParameterModal/language';
+import DefaultYear from '@components/molecules/defaultParameterModal/year';
+import Notification from '@components/molecules/notification';
+import { SystemSettings } from '@components/organisms/systemSetting';
+import DarkLogo from '@public/images/ArianTechDark.png';
+import LightLogo from '@public/images/ArianTechLight.png';
+import { useAppSelector } from '@redux/index';
 
-import DefaultConfigs from "./defaultConfigs";
-import MegaMenu from "./megaFormMenu";
-import SwitchMode from "./switchMode";
-import UserAccount from "./userAccount";
-import DefaultCurrency from "@components/molecules/defaultParameterModal/currency";
+import DefaultConfigs from './defaultConfigs';
+import MegaMenu from './megaFormMenu';
+import SwitchMode from './switchMode';
+import UserAccount from './userAccount';
 
 export default function TopHead() {
   const t = useTranslations();

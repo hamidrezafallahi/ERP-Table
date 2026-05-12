@@ -3,42 +3,39 @@ import {
   TableDynamicModal,
 } from "@components/molecules/dynamicModal";
 import { IBaseQueryResponse } from "@services/base/type";
-import IVoucherTypeItem, { IDynamicModalConfig } from "../../type";
 import { IMenu } from "@type/toolbar";
 import { RefObject } from "react";
+import IResponseItem, { IDynamicModalConfig } from "../../types";
 
 interface ContextListProps {
   match: boolean;
   config: IDynamicModalConfig;
   cardData: IBaseQueryResponse<unknown[]>;
-  handleActionClick: (
-    action: IMenu,
-    id: number,
-    record: unknown,
-  ) => void;
+  handleActionClick: (action: IMenu, id: number, record: unknown) => void;
   lastItemRef: RefObject<HTMLDivElement>;
-  tableDataWithDesc: IVoucherTypeItem[];
+  tableDataWithDesc: IResponseItem[];
   locale: string;
   isModal: boolean;
 }
 
-export function ContextList({
-  match,
-  config,
-  cardData,
-  handleActionClick,
-  lastItemRef,
-  tableDataWithDesc,
-  locale,
-  isModal,
-}: ContextListProps) {
+export function ContextList(props: ContextListProps) {
+  const {
+    match,
+    config,
+    cardData,
+    handleActionClick,
+    lastItemRef,
+    tableDataWithDesc,
+    locale,
+    isModal,
+  } = props;
   return (
     <>
       {!match ? (
         <CardDynamicModal
           actions={config.actions}
           columnsList={config.listConfig}
-          data={cardData?.Data as IVoucherTypeItem[]}
+          data={cardData?.Data as IResponseItem[]}
           onActionClick={handleActionClick}
           fieldKey={config.fieldKey}
           staticKey={config.staticKey}

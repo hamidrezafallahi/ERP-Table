@@ -21,6 +21,7 @@ import { PageStateEnum } from "@slice/pages/enum";
 import { PageTypeEnum } from "@type/enum";
 import SideBarFormContext from "@components/organisms/sideBarForm/sideBarFormContext";
 import { defaultDescriptionsConfig } from "./defaultDescriptionsConfig";
+import { AccountTypeEnum, FundTypeEnum } from "@components/organisms/nestedList/enum";
 
 export default function AccountTemplate() {
   const t = useTranslations();
@@ -111,6 +112,43 @@ export default function AccountTemplate() {
       },
       {
         type: "group",
+        renderConditionally: (level) => level === 2,
+        groupItems: [
+          {
+            title: t("general.type"),
+            groupFields: [
+              {
+                name: "AccountType",
+                type: "radio",
+                options: [
+                  {
+                    label: t("general.asset"),
+                    value: AccountTypeEnum.Asset,
+                  },
+                  {
+                    label: t("general.liability"),
+                    value: AccountTypeEnum.Liability,
+                  },
+                  {
+                    label: t("general.equity"),
+                    value: AccountTypeEnum.Equity,
+                  },
+                  {
+                    label: t("general.revenue"),
+                    value: AccountTypeEnum.Revenue,
+                  },
+                  {
+                    label: t("general.expense"),
+                    value: AccountTypeEnum.Expense,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: "group",
         renderConditionally: (level) => level === 3,
         groupItems: [
           {
@@ -165,6 +203,33 @@ export default function AccountTemplate() {
                 name: "IsInsurance",
                 caption: t("general.insurance"),
                 type: "checkbox",
+              },
+            ],
+          },
+          {
+            title: t("general.type"),
+            groupFields: [
+              {
+                name: "FundType",
+                type: "radio",
+                options: [
+                  {
+                    label: t("general.cashRial"),
+                    value: FundTypeEnum.CashRial,
+                  },
+                  {
+                    label: t("general.cashCurrency"),
+                    value: FundTypeEnum.CashCurrency,
+                  },
+                  {
+                    label: t("general.bankRial"),
+                    value: FundTypeEnum.BankRial,
+                  },
+                  {
+                    label: t("general.bankCurrency"),
+                    value:FundTypeEnum.BankCurrency,
+                  },
+                ],
               },
             ],
           },
@@ -276,7 +341,7 @@ export default function AccountTemplate() {
       {isDefaultDescriptionModalOpen && (
         <CustomModal
           contentClassName={`lg:min-w-[520px] lg:h-full`}
-          headerName={t("general.defaultDescription")}
+          headerName={t("title.detailedDescription")}
           closeModal={() => setIsDefaultDescriptionModalOpen(false)}
           isModalOpen={isDefaultDescriptionModalOpen}
           content={

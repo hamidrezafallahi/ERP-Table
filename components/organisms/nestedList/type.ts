@@ -4,7 +4,7 @@ import type { IRequestConfig } from "@type/elementType";
 
 export interface IProps<T> {
   config: INestedListConfig;
-  titleKey?:string[];
+  titleKey?: string[];
   addChildCondition?: (item: T) => boolean;
   caption: string;
   customAction?: (item: T) => ReactNode | null;
@@ -49,7 +49,12 @@ export interface INestedListFormConfig {
     | "number"
     | "treeOption"
     | "price"
-    | "group";
+    | "group"
+    | "radio";
+    options?: {
+      label: string;
+      value: string | number | boolean;
+    }[];
   groupItems?: {
     title: string;
     groupFields: INestedListFormConfig[];

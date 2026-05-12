@@ -1,12 +1,7 @@
-import React, {
-  ReactNode,
-  useEffect,
-  useState,
-} from 'react';
+import React, { ReactNode } from 'react';
 
 import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
 
-import { ValidationCallbackResult } from '../engine/type';
 import { UITableController } from '../infrastructure/ui/UITableController';
 
 interface Props {
@@ -17,19 +12,19 @@ interface Props {
 
 export function ERPTableHeader({ controller, tableKey, header }: Props) {
   const table = controller.getViewState();
-  const [validationResult, setValidationResult] =
-    useState<ValidationCallbackResult>({
-      valid: true,
-      data: null,
-      errors: new Map(),
-    });
+  // const [validationResult, setValidationResult] =
+  //   useState<ValidationCallbackResult>({
+  //     valid: true,
+  //     data: null,
+  //     errors: new Map(),
+  //   });
 
-  useEffect(() => {
-    const validation = controller.validation();
-    validation((res) => {
-      setValidationResult(res);
-    });
-  }, [table?.activeCell?.columnId, table?.activeCell?.rowId]);
+  // useEffect(() => {
+  //   // const validation = controller.validation();
+  //   validation((res) => {
+  //     setValidationResult(res);
+  //   });
+  // }, [table?.activeCell?.columnId, table?.activeCell?.rowId]);
   if (!table || !table.columns) return null;
 
   const isSelectedActivePageRows = table.rows.every(
@@ -47,36 +42,40 @@ export function ERPTableHeader({ controller, tableKey, header }: Props) {
     const targetPage = Math.ceil(rowIndex / pageSize);
     controller.dispatch({ type: "CHANGE_PAGE", page: targetPage });
   };
-  const items = Array.from(validationResult.errors.entries()).map(
-    ([key, value], errorIndex) => {
-      const Index = allRows.findIndex((r) => r.id == value.rowId) + 1;
+  // const items = Array.from(validationResult.errors.entries()).map(
+  //   ([key, value], errorIndex) => {
+  //     const Index = allRows.findIndex((r) => r.id == value.rowId) + 1;
 
-      return {
-        key: errorIndex.toString(),
+  //     return {
+  //       key: errorIndex.toString(),
 
-        label: (
-          <button
-            className="flex bg-red-300 text-red-600 text-xs"
-            onClick={() => {
-              handleNavigateToError(value.rowId);
-            }}
-          >
-            {`
-            در سطر
-            ${Index}
-            در ستون
-            ${value.caption} :
-            ${value.message}`}
-          </button>
-        ),
-      };
-    },
-  );
+  //       label: (
+  //         <button
+  //           className="flex bg-red-300 text-red-600 text-xs"
+  //           onClick={() => {
+  //             handleNavigateToError(value.rowId);
+  //           }}
+  //         >
+  //           {`
+  //           در سطر
+  //           ${Index}
+  //           در ستون
+  //           ${value.caption} :
+  //           ${value.message}`}
+  //         </button>
+  //       ),
+  //     };
+  //   },
+  // );
+  const cols = table.columns.filter((c) => !c.hidden).length;
 
   return (
-    <thead className="top-0 right-0 left-0 z-20 sticky">
+    <thead className="top-0 right-0 left-0 z-20 sticky inset-0">
       {header}
-      <tr className="relative flex bg-gray-gray3 rounded-t-lg w-fit h-9">
+      <tr
+        // style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        className={`relative h-10  bg-gray-gray3 rounded-t-lg w-full `}
+      >
         {/* {!validationResult.valid && (
           <CustomDropdownButton
             placement="bottom"
@@ -88,21 +87,41 @@ export function ERPTableHeader({ controller, tableKey, header }: Props) {
         )} */}
         {table.columns
           .filter((c) => !c.hidden)
-          .map((col, index) => (
-            <th
-              key={col.id}
-              scope="col"
-              className="flex justify-start items-center px-2 w-36 min-w-36 text-xs"
-            >
-              {index === 0 && (
-                <CustomCheckbox
-                  checked={isSelectedActivePageRows}
-                  onClick={handleSelectActivePageRows}
-                />
-              )}
-              {col.title}
-            </th>
-          ))}
+          .map((col, index) => {
+            if (col.renderType === "index") {
+              return (
+                <th
+                  key={col.id}
+                  // scope="col"
+                  style={{ ...col.style, width: 120}}
+                  className={`  px-2 text-xs border  text-start whitespace-nowrap ${col.className || ""}`}
+                >
+                  <CustomCheckbox
+                    checked={isSelectedActivePageRows}
+                    onClick={handleSelectActivePageRows}
+                  />
+
+                  {col.title}
+                </th>
+              );
+            } else {
+              return (
+                <th
+                  key={col.id}
+                  style={{ ...col.style,minWidth:col.minWidth }}
+                  className={`  px-2 text-xs border  min-w-36 text-start ${col.className || ""}`}
+                >
+                  {index === 0 && (
+                    <CustomCheckbox
+                      checked={isSelectedActivePageRows}
+                      onClick={handleSelectActivePageRows}
+                    />
+                  )}
+                  {col.title}
+                </th>
+              );
+            }
+          })}
       </tr>
     </thead>
   );

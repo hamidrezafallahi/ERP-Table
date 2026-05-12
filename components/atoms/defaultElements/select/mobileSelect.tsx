@@ -14,8 +14,6 @@ import { ChevronDownIcon } from "@components/atoms/iconComponents/icons/ChevronD
 
 export interface IProps extends SelectProps {
   config?: IFormFieldConfig;
-  searchPhrase?: any;
-  setSearchPhrase?: Dispatch<any>;
   handleScroll?: (e: any) => void;
   fieldValue: any;
   addButton?: {
@@ -26,19 +24,23 @@ export interface IProps extends SelectProps {
   handleAddNew?: () => void;
   handleRefetch?: () => void;
   isFetching?: boolean;
+  searchPhrase?: any;
+  setSearchPhrase?: Dispatch<any>;
+  disabled?: boolean;
 }
 
 export const MobileSelect: FC<IProps> = ({
   options,
   config,
   handleScroll,
-  searchPhrase,
-  setSearchPhrase,
   fieldValue,
   addButton,
   handleAddNew,
   handleRefetch,
   isFetching,
+  searchPhrase,
+  setSearchPhrase,
+  disabled,
   ...props
 }) => {
   const t = useTranslations();
@@ -79,34 +81,44 @@ export const MobileSelect: FC<IProps> = ({
   const [openModal, setOpenModal] = useState(false);
   const [filteredOptions, setFilteredOptions] = useState(options ?? []);
   const [selectedTitle, setSelectedTitle] = useState("");
+  const [internalSearch, setInternalSearch] = useState("");
+
+  const phrase = searchPhrase ?? internalSearch;
+  const setPhrase = setSearchPhrase ?? setInternalSearch;
 
   useEffect(() => {
+    if (!fieldValue) {
+      setSelectedTitle("");
+      return;
+    }
     if (options && options.length > 0) {
       const correctValue = options.find((item) => item.value === fieldValue);
       if (correctValue) {
         const title = correctValue?.title ?? correctValue?.label;
-        setSelectedTitle(title.toString());
+        setSelectedTitle(title?.toString());
       }
     }
   }, [options, fieldValue]);
 
   useEffect(() => {
-    if (searchPhrase) {
-      const searchFilter = options.filter((option) =>
-        option.title.includes(searchPhrase),
-      );
+    if (phrase) {
+      const searchFilter = (options ?? []).filter((option) => {
+        const text = option.label ?? option.title ?? "";
+        return text.toString().toLowerCase().includes(phrase.toLowerCase());
+      });
 
       setFilteredOptions(searchFilter);
     } else {
       setFilteredOptions(options);
     }
-  }, [searchPhrase, options]);
+  }, [phrase, options]);
 
   return (
     <>
       <div
-        className="flex items-center justify-between !bg-gray-gray3 dark:!bg-gray-gray10 px-2 border-1 hover:border-gray-gray5 focus:border-gray-gray5 active:border-gray-gray5 !border-none rounded ring-0 focus:ring-0 w-full h-[42px] text-sm ant-input-outlined"
+        className={`${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} flex items-center justify-between !bg-gray-gray3 dark:!bg-gray-gray10 px-2 border-1 hover:border-gray-gray5 focus:border-gray-gray5 active:border-gray-gray5 !border-none rounded ring-0 focus:ring-0 w-full h-[42px] text-sm ant-input-outlined`}
         onClick={(e) => {
+          if (disabled) return;
           e.preventDefault();
           e.stopPropagation();
           setOpenModal(true);
@@ -125,14 +137,17 @@ export const MobileSelect: FC<IProps> = ({
         />
       </div>
 
-      {openModal && (
+      {openModal && !disabled && (
         <CustomModal
           headerDescription={
             config
               ? `${config.caption} را ${t("general.selectField")}`
               : t("general.selectField")
           }
-          closeModal={() => setOpenModal(false)}
+          closeModal={() => {
+            setOpenModal(false);
+            setPhrase("");
+          }}
           isModalOpen={openModal}
           content={
             <div className="flex flex-col gap-3 p-4 w-full h-[calc(100dvh-64px)]">
@@ -144,11 +159,8 @@ export const MobileSelect: FC<IProps> = ({
                       ? t("general.search")
                       : t("general.selectField")
                   }
-                  value={searchPhrase ?? selectedTitle}
-                  onChange={(e) => {
-                    const searchValue = e?.target?.value;
-                    setSearchPhrase?.(searchValue);
-                  }}
+                  value={phrase}
+                  onChange={(e) => setPhrase?.(e.target.value)}
                 />
               )}
               {handleRefetch && (
@@ -168,7 +180,7 @@ export const MobileSelect: FC<IProps> = ({
               )}
 
               <div
-                className="flex flex-col gap-2 w-full h-[calc(100dvh-167px)] mb-4 overflow-y-auto"
+                className={`${filteredOptions?.length === 0 ? "justify-center" : "justify-start"} flex flex-col gap-2 w-full h-[calc(100dvh-167px)] mb-4 overflow-y-auto`}
                 onScroll={handleScroll}
               >
                 {filteredOptions?.length === 0 ? (
@@ -180,6 +192,7 @@ export const MobileSelect: FC<IProps> = ({
                       onClick={() => {
                         selectHandler(option.value);
                         setOpenModal(false);
+                        setPhrase("");
                       }}
                       className={`${
                         fieldValue === option.value

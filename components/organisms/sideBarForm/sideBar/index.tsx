@@ -14,12 +14,12 @@ import { useAppSelector } from "@redux/index";
 import { shallowEqual } from "react-redux";
 import { DynamicSelect } from "@components/atoms/defaultElements";
 import { useFilteredList } from "../hooks/useFilteredList";
-import { IDynamicModalConfig } from "../type";
+import { IDynamicModalConfig } from "../types";
 import SideBarFormList from "./sideBarFormList";
 
 interface SideBarProps {
   typeId: number;
-  setTypeId: Dispatch<SetStateAction<number>>;
+  setTypeId: Dispatch<SetStateAction<number | undefined>>;
   config: IDynamicModalConfig;
   sideBarTitle: string;
 }

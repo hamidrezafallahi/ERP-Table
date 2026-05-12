@@ -206,7 +206,8 @@
     "tafsiliCategory": "طبفقات تفصیلی",
     "currencyDoc": "سند تسعیر ارز",
     "CurrencyDoc": "سند تسعیر ارز",
-    "currencyDockList": "لیست اسناد تسعیر ارز"
+    "currencyDockList": "لیست اسناد تسعیر ارز",
+    "comprehensiveReport": "گزارش جامع"
   },
   "homePage": {
     "title": "Hello world!",
@@ -518,6 +519,7 @@
     "voucherDate": "تاریخ سند",
     "voucherType": "نوع سند",
     "referNumber": "شماره ارجاع",
+    "referDate": "تاریخ ارجاع",
     "adjustToZeroBalance": "تنظیم تراز به صفر",
     "swapDebtorCreditor": "جابجایی بدهکار و بستانکار",
     "replicateRow": "تکرار سطر",
@@ -553,6 +555,8 @@
     "activate": "فعال سازی",
     "refuse": "لغو",
     "addNewRow": "افزودن سطر جدید",
+    "toggle": "انتخاب یا حذف همه",
+    "cut": "برش",
     "paste": "الصاق",
     "pasteAsNew": "الصاق به عنوان جدید",
     "copy": "کپی سطرهای انتخاب شده",
@@ -828,10 +832,24 @@
     "list": "لیست",
     "operationStart": "شروع عملیات",
     "documentType": "نوع سند",
-    "tafsiliCategory":"طبقات تفصیلی",
-    "selected":"انتخاب شده",
-    "deSelectedAll":"لغو همه "
-
+    "tafsiliCategory": "طبقات تفصیلی",
+    "selected": "انتخاب شده",
+    "deSelectedAll": "لغو همه ",
+    "addCategory": "اضافه کردن طبقه",
+    "vouchersCount": "تعداد اسناد",
+    "currencyConversionDesc": "با صدور سند تسعیر ارز، سند حسابداری معادل، ثبت خواهد شد.",
+    "deleteAccountingDocumentDesc": "با حذف سند حسابداری به شماره {voucherNumber}، سند حسابداری معادل، حذف خواهد شد.",
+    "issuingAnAccountingEntry": "صدور سند حسابداری",
+    "deleteAccountingDocument": "حذف سند حسابداری",
+    "asset": "دارایی",
+    "liability": "بدهی",
+    "equity": "سرمایه",
+    "revenue": "درآمد",
+    "expense": "هزینه",
+    "cashRial": "نقد ریالی",
+    "cashCurrency": "نقد ارزی",
+    "bankRial": "بانک ریالی",
+    "bankCurrency": "بانک ارزی"
   },
   "systemSetting": {
     "cheque": "چک",
@@ -922,7 +940,8 @@
     "usedParts": "قسمت های مورد استفاده :"
   },
   "modal": {
-    "tags": "برچسب ها"
+    "tags": "برچسب ها",
+    "documentMerge": "ادغام اسناد"
   },
   "formToolbar": {
     "displayList": "نمایش فرم",
