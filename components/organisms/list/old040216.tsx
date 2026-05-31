@@ -15,7 +15,8 @@
 // import ListToolbar from "@components/organisms/listToolbar";
 // import { useInitializePage } from "@customHook/useInitializePage";
 // import Uploader from "@layout/partials/panelForm/attachmentModal/uploader";
-// import { useAppSelector } from "@redux/index";
+// import { useAppSelector } from '@hooks/custom/useAppSelector';
+
 // import { useGetData, useGetInfinite } from '@services/base';
 // import { useCUDDataMutation } from "@services/base/new";
 // import { IBaseDto } from "@services/base/type";

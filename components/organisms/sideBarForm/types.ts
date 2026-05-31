@@ -36,10 +36,11 @@ export interface IDynamicModalConfig {
   idFieldKeyUpdateSide?: string;
 }
 
-interface ListColumn {
+export interface ListColumn {
   fieldName: string;
   fieldCaption: string;
   fieldType: "string" | "boolean" | "date" | "price" | "number";
+  width?: number;
 }
 
 interface IListDynamicModalConfig {
@@ -111,19 +112,7 @@ export type ReloadType = () => QueryActionCreatorResult<
 
 export type TFunction = ReturnType<typeof useTranslations>;
 
-export type RefetchType = () => QueryActionCreatorResult<
-  QueryDefinition<
-    {
-      url: string;
-      body: IBaseRequest<any>;
-      id: number | string;
-    },
-    (args: any, api: any, extraOptions: any) => Promise<any>,
-    string,
-    IBaseQueryResponse<any>,
-    "apiService"
-  >
->;
+
 
 export type RecordType = {
   Desc?: string;

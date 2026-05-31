@@ -9,7 +9,7 @@ import {
   CustomTooltip,
 } from '@components/atoms/defaultElements';
 import { Close } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import type { ITagInfo } from '@services/base/type';
 import { setViewData } from '@slice/pages';
 
@@ -17,8 +17,8 @@ export default function ShowTagFilters() {
   const dispatch = useDispatch();
   const t = useTranslations();
   const { activePage, TagIdsFilter, tags } = useAppSelector((state) => ({
-    activePage: state.withPersist.pages.find((item) => item.isActive),
-    TagIdsFilter: state.withPersist.pages.find((item) => item.isActive)
+    activePage: state.withPersist.pages?.find((item) => item.isActive),
+    TagIdsFilter: state.withPersist.pages?.find((item) => item.isActive)
       ?.viewData?.Filters?.TagIdsFilter,
     tags: state.withoutPersist.container.defaultTags,
   }));

@@ -7,8 +7,8 @@ import {
 
 import { CustomButton } from '@components/atoms/defaultElements';
 import { Close } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import OpenPages from '@layout/baseLayout/desktop/menuBar/sideHeader/openPages';
-import { useAppSelector } from '@redux/index';
 import { setMenuBar } from '@slice/config';
 import { resetData } from '@utils/core';
 

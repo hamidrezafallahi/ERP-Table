@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { IBuyRequest, IRequest } from "@services/buy/buyRequest/type";
+import { Form } from '@components/templates/form';
+import type {
+  IBuyRequest,
+  IRequest,
+} from '@services/buy/buyRequest/type';
 
 export default function OrderFormPage() {
   return (

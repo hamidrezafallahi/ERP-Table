@@ -23,7 +23,7 @@ import { DetailDataGrid } from '@components/molecules/detailDataGrid';
 import type {
   IChildHandle,
 } from '@components/molecules/detailDataGrid/mobile/type';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import type {
   IRequest,
@@ -75,7 +75,7 @@ export default function TypeOfInventoryVoucherTemplate({ form }) {
   const { activePage, fullScreen, minimizePanel, match, initPage } =
     useAppSelector(
       (state) => ({
-        activePage: state.withPersist.pages.find((item) => item.isActive),
+        activePage: state.withPersist.pages?.find((item) => item.isActive),
         fullScreen: state.withPersist.config.fullScreen,
         minimizePanel: state.withoutPersist.container.minimize,
         match: state.withPersist.config.initMatch,

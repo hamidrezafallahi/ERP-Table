@@ -1,19 +1,32 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Collapse } from "antd";
-import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Collapse } from 'antd';
+import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton, CustomModal } from "@components/atoms/defaultElements";
-import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
-import { Close, DownChevron } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { PageStateEnum } from "@slice/pages/enum";
-import { resetData } from "@utils/core";
+import {
+  CustomButton,
+  CustomModal,
+} from '@components/atoms/defaultElements';
+import { CustomDrawer } from '@components/atoms/defaultElements/drawer';
+import {
+  Close,
+  DownChevron,
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { PageStateEnum } from '@slice/pages/enum';
+import { resetData } from '@utils/core';
 
-import OpenedPages from "./openPages";
+import OpenedPages from './openPages';
 
 export default function SideHeader() {
   const router = useRouter();
@@ -35,7 +48,7 @@ export default function SideHeader() {
     useState(false);
 
   const closeAll = () => {
-    const isPageChanging = pages.find(
+    const isPageChanging = pages?.find(
       (page) => page.pageState === PageStateEnum.Changed
     );
     if (isPageChanging) {
@@ -85,7 +98,7 @@ export default function SideHeader() {
             key: "1",
             label: (
               <div className="flex justify-between items-center gap-2">
-                <span className="font-bold text-base text-black-black3 dark:!text-white">{`${t(
+                <span className="font-bold text-black-black3 dark:!text-white text-base">{`${t(
                   "sidebar.openPages"
                 )}(${pages.length > 0 ? pages.length : 0})`}</span>
 

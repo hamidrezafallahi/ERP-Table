@@ -26,7 +26,7 @@ import {
   useFormHandlers,
   useNavigatePage,
 } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { addNewPage } from '@slice/pages';
 import { PageTypeEnum } from '@type/enum';
 
@@ -56,7 +56,7 @@ export default function AccountSettingTemplate() {
   ];
 
   const { handleReset } = useFormHandlers({
-    activePage: pages.find((item) => item.isActive),
+    activePage: pages?.find((item) => item.isActive),
     pages,
   });
 

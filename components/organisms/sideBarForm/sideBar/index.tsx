@@ -1,21 +1,24 @@
 // RepoAssignSidebar.tsx
 import {
-  useEffect,
-  useState,
-  useCallback,
   Dispatch,
   SetStateAction,
-} from "react";
-import { useTranslations } from "next-intl";
-import { useGetData } from "@services/base";
-import { ISelectOption } from "@type/elementType";
-import { DebounceSearch } from "./debounceSearch";
-import { useAppSelector } from "@redux/index";
-import { shallowEqual } from "react-redux";
-import { DynamicSelect } from "@components/atoms/defaultElements";
-import { useFilteredList } from "../hooks/useFilteredList";
-import { IDynamicModalConfig } from "../types";
-import SideBarFormList from "./sideBarFormList";
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
+
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
+
+import { DynamicSelect } from '@components/atoms/defaultElements';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
+import { ISelectOption } from '@type/elementType';
+
+import { useFilteredList } from '../hooks/useFilteredList';
+import { IDynamicModalConfig } from '../types';
+import { DebounceSearch } from './debounceSearch';
+import SideBarFormList from './sideBarFormList';
 
 interface SideBarProps {
   typeId: number;

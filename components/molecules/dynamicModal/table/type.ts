@@ -1,4 +1,5 @@
 import type { IToolbarMenu } from "@type/toolbar";
+import { TableProps } from "antd";
 
 export interface IProps<T> {
   data: any;
@@ -13,10 +14,7 @@ export interface IProps<T> {
     record: T,
   ) => void;
   isLoading: boolean;
-  scroll?: {
-    x?: number;
-    y?: number;
-  };
+  scroll?: TableProps<T>["scroll"];
   activation?: {
     url: string;
     body?: any;

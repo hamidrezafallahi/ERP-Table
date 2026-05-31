@@ -21,12 +21,12 @@ import {
   ToolsIcon,
 } from '@components/atoms/iconComponents';
 import Confirmation from '@components/molecules/confirmation';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useCUDDataMutation } from '@services/base';
 import {
   showErrorToast,
   showSuccessToast,
-} from '@utils/core';
+} from '@utils/toast';
 
 import { produceModalConfig } from '../config';
 import AddOperation from './addOperation';

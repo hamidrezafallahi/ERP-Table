@@ -1,7 +1,5 @@
-import type { IDetailColumnConfig } from "@services/generalType/type";
-import type { IFormFieldConfig } from "@type/elementType";
-
-import { stateConfig } from "../../config";
+import { IDetailColumnConfig } from '@components/organisms/erp-table';
+import type { IFormFieldConfig } from '@type/elementType';
 
 export const formConfig: IFormFieldConfig[] = [
   {
@@ -175,68 +173,84 @@ export const formConfig: IFormFieldConfig[] = [
   },
 ];
 
-export const columnConfig: IDetailColumnConfig[] = [
-  {
-    fieldName: "index",
-    fieldCaption: `ردیف - عملیات`,
-    fieldType: "index",
-    order: 1,
-  },
-  {
-    fieldName: "Num",
-    fieldCaption: "شماره صیاد",
-    fieldType: "text",
-    mobileRender: true,
-    order: 2,
-  },
-  {
-    fieldName: "MaturityDate",
-    fieldCaption: "تاریخ سررسید",
-    fieldType: "date",
-    order: 3,
-  },
-  {
-    fieldName: "BankId",
-    fieldCaption: "نام بانک",
-    fieldType: "selectOption",
-    dynamicValue: {
-      addWebUrl: "api/com/select/bank4BankAccount",
-      endpoint: "api/com/select/bank4BankAccount",
-      repoViewId: 30068,
+
+export const columnConfig: IDetailColumnConfig[]=  [
+    {
+      fieldName: "index",
+      fieldCaption: " ردیف - عملیات",
+      fieldType: "index",
+      order: 1,
+      enableDeleteButton: true,
+      enableExpandButton: false,
+      enableMoveButton: true,
+      enableOptionsButton: true,
+      visibility: { kind: 'always' },
     },
-    mobileRender: true,
-    order: 4,
-  },
-  {
-    fieldName: "DocPrice",
-    fieldCaption: "مبلغ",
-    fieldType: "price",
-    mobileRender: true,
-    order: 5,
-  },
-  {
-    fieldName: "IsRegistered",
+    {
+      fieldName: "Num",
+      fieldCaption: "شماره صیاد",
+      fieldType: "text",
+      visibility: { kind: 'always' },
+      order: 2
+    },
+    {
+      fieldName: "MaturityDate",
+      fieldCaption: "تاریخ سررسید",
+      fieldType: "date",
+      visibility: {
+        kind: "always",
+      },
+      order: 3
+    }, {
+      fieldName: "BankId",
+      fieldCaption: "نام بانک",
+      fieldType: "selectOption",
+      dynamicSource: {
+        addWebUrl: "api/com/select/bank4BankAccount",
+        endpoint: "api/com/select/bank4BankAccount",
+        repoViewId: 30068,
+      },
+      visibility: {
+        kind: "always",
+
+      },
+      order: 4
+    },
+    {
+      fieldName: "DocPrice",
+      fieldCaption: "مبلغ",
+      fieldType: "price",
+      visibility: {
+        kind: "always",
+
+      },
+      order: 5
+    },
+    {
+       fieldName: "IsRegistered",
     fieldCaption: "ثبت چک صیادی",
-    fieldType: "boolean",
-    mobileRender: true,
-    order: 6,
-  },
-  {
-    fieldName: "DetailDesc",
+    fieldType: "checkbox",
+      visibility: {
+        kind: "always",
+      },
+      order: 6
+    },
+    {
+      fieldName: "DetailDesc",
     fieldCaption: "شرح",
     fieldType: "text",
-    order: 7,
-  },
-  {
-    fieldName: "StateId",
+      visibility: {
+        kind: "always",
+      },
+      order: 7
+    },
+    {
+      fieldName: "StateId",
     fieldCaption: "وضعیت چک",
     fieldType: "static",
-    staticConfig: {
-      mode: "staticOption",
-      config: stateConfig,
-      valueType: "staticOption",
-    },
-    mobileRender: true,
-    order: 8,
-  },
-];
+      visibility: {
+        kind: "always"
+      },
+      order: 8
+    }
+  ]

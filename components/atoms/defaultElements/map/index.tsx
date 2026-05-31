@@ -1,13 +1,22 @@
 "use client";
+import {
+  useEffect,
+  useState,
+} from 'react';
+
 // import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 // import "leaflet/dist/leaflet.css";
 // import "@/lib/fixLeafletIcon";
-import { Map, Marker } from "pigeon-maps";
-import { useEffect, useState } from "react";
-import { IMapProps } from "./type";
-import { useDispatch } from "react-redux";
-import { setPageData } from "@slice/pages";
-import { useAppSelector } from "@redux/index";
+import {
+  Map,
+  Marker,
+} from 'pigeon-maps';
+import { useDispatch } from 'react-redux';
+
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setPageData } from '@slice/pages';
+
+import { IMapProps } from './type';
 
 const MapComponent = ({ ...props }: IMapProps) => {
   const {

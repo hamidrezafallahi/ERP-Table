@@ -1,8 +1,8 @@
-import Form from "@components/templates/form";
+import { Form } from '@components/templates/form';
 import type {
   IRequest,
   ISalesCircular,
-} from "@services/sale/salesCircular/type";
+} from '@services/sale/salesCircular/type';
 
 export default function SalesCircularFormPage() {
   return (

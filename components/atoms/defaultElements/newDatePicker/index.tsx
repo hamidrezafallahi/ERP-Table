@@ -16,8 +16,8 @@ import {
   useDispatch,
 } from 'react-redux';
 
-import { useDarkMode } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useDarkMode } from '@hooks/custom/useDarkMode';
 import { setPageData } from '@slice/pages';
 import { IFormFieldConfig } from '@type/elementType';
 

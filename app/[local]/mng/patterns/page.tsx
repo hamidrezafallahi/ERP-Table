@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { IPattern, IRequest } from "@services/mng/pattern/type";
+import { Form } from '@components/templates/form';
+import type {
+  IPattern,
+  IRequest,
+} from '@services/mng/pattern/type';
 
 export default function PatternsFormPage() {
   return (

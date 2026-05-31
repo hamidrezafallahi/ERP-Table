@@ -1,15 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
-import { IFormFieldConfig } from "@type/elementType";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setPageData } from '@slice/pages';
+import { IFormFieldConfig } from '@type/elementType';
 
-import CustomCheckbox from "../checkbox";
-import { NewDatePicker } from "../newDatePicker";
-import { NewTimePicker } from "../newTimePicker";
+import CustomCheckbox from '../checkbox';
+import { NewDatePicker } from '../newDatePicker';
+import { NewTimePicker } from '../newTimePicker';
 
 interface StartDateTimePickerProps {
   label?: string;

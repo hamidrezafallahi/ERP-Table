@@ -1,3 +1,5 @@
+import { DefaultOptionType } from 'antd/es/select';
+
 import { IRequestConfig } from '@type/elementType';
 
 import { FieldType } from '../../bootstrap/type';
@@ -32,7 +34,7 @@ export class ColumnId {
 }
 export type SelectOption = {
   label: string;
-  value: string;
+  value: string|number;
 };
 
 export type IRule = {
@@ -73,6 +75,7 @@ export type ColumnSchema = {
   minWidth?: number;    
   style?: React.CSSProperties;
   popUpWidth?: number
+  dynamicSelectFilterOption:(inputValue: string, option?: DefaultOptionType) => boolean
   labelValue?:'selectDisplay'|'selectValue';
 
   // در ادامه: validator, lookup, formula, dynamicRules...

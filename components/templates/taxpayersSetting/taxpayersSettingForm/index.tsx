@@ -15,7 +15,7 @@ import {
 import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
 import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
 import InputText from '@components/atoms/defaultElements/inputText';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useGetConditionallyMutation,
   useGetData,
@@ -48,7 +48,7 @@ interface IDefaultRequest {
 export default function TaxPayersSettingForm({ ...props }: MessageFormProps) {
   const { form } = props;
   const { activePage, match } = useAppSelector((state) => {
-    const activePage = state.withPersist.pages.find((item) => item.isActive);
+    const activePage = state.withPersist.pages?.find((item) => item.isActive);
     const match = state.withPersist.config.initMatch;
     return { activePage, match };
   }, shallowEqual);

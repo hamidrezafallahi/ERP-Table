@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 
+import { useTranslations } from 'next-intl';
 import { shallowEqual } from 'react-redux';
 
 import {
   DownOutlined,
   UpOutlined,
 } from '@ant-design/icons';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import { TransferItem } from '../type';
-import { useTranslations } from 'next-intl';
 
 export default function TransferHistory({ data }: { data: TransferItem[] }) {
   const { match } = useAppSelector((state) => {

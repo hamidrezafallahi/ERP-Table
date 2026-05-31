@@ -1,23 +1,31 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-import { Form } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import { Form } from 'antd';
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { useAppSelector } from "@redux/index";
-import { IAccountSetting } from "@services/acc/accountSetting/type";
-import { useGetData } from "@services/base";
-import { IRequest } from "@services/mng/report/type";
+import { CustomButton } from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { IAccountSetting } from '@services/acc/accountSetting/type';
+import { useGetData } from '@services/base';
+import { IRequest } from '@services/mng/report/type';
 
-import { sampleData } from "../type";
-import ConfirmStep from "./confirmStep";
-import PhoneForm from "./phoneForm";
-import StatusStep from "./statusStep";
-import TransferHistory from "./transferHistory";
-import { AccountInfo, Props, Step } from "./type";
-import usePhoneInput from "./usePhoneInput";
+import { sampleData } from '../type';
+import ConfirmStep from './confirmStep';
+import PhoneForm from './phoneForm';
+import StatusStep from './statusStep';
+import TransferHistory from './transferHistory';
+import {
+  AccountInfo,
+  Props,
+  Step,
+} from './type';
+import usePhoneInput from './usePhoneInput';
 
 export default function AccountTransfer({ apiUrl, data = sampleData }: Props) {
   const t = useTranslations();

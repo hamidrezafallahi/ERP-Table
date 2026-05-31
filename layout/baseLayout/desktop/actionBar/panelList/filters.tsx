@@ -1,22 +1,37 @@
-import { Dispatch, SetStateAction, useMemo, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useMemo,
+  useState,
+} from 'react';
 
-import { Collapse, CollapseProps, Skeleton } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Collapse,
+  CollapseProps,
+  Skeleton,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton, CustomModal } from "@components/atoms/defaultElements";
+import {
+  CustomButton,
+  CustomModal,
+} from '@components/atoms/defaultElements';
 import {
   DownChevron,
   EditPencil,
   QuickFilterIcon,
-} from "@components/atoms/iconComponents";
-import QuickFilters from "@components/molecules/quickFilters";
-import { useAppSelector } from "@redux/index";
-import { setViewData } from "@slice/pages";
-import type { IFormField } from "@type/elementType";
-import type { IToolbarDetailConfig } from "@type/toolbar";
+} from '@components/atoms/iconComponents';
+import QuickFilters from '@components/molecules/quickFilters';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setViewData } from '@slice/pages';
+import type { IFormField } from '@type/elementType';
+import type { IToolbarDetailConfig } from '@type/toolbar';
 
-import type { IModalObject } from "./type";
+import type { IModalObject } from './type';
 
 interface IProps {
   minimize?: boolean;
@@ -30,7 +45,7 @@ export default function Filters({ ...props }: IProps) {
   const [openModal, setOpenModal] = useState(false);
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
     }),
     shallowEqual,
   );

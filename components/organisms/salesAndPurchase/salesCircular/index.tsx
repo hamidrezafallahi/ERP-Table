@@ -1,17 +1,25 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { SalesCircularForm } from "@components/molecules/salesAndPurchase/salesCircular";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
-import type { ISalesCircular } from "@services/sale/salesCircular/type";
-import type { IRequest } from "@services/trh/bankDeposit/type";
-import { setAllPageData, setPageInfo } from "@slice/pages";
+import {
+  SalesCircularForm,
+} from '@components/molecules/salesAndPurchase/salesCircular';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
+import type { ISalesCircular } from '@services/sale/salesCircular/type';
+import type { IRequest } from '@services/trh/bankDeposit/type';
+import {
+  setAllPageData,
+  setPageInfo,
+} from '@slice/pages';
 
-import { formConfig } from "./config";
+import { formConfig } from './config';
 
 export const SalesCircular = ({ form }) => {
   const params = useSearchParams();
@@ -42,7 +50,7 @@ export const SalesCircular = ({ form }) => {
 
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true
       ),
     }),

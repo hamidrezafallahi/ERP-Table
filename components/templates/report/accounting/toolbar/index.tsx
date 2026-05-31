@@ -38,7 +38,7 @@ import {
   SpinIcon,
 } from '@components/atoms/iconComponents';
 import { useInitializePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import { setParentPageId } from '@slice/config';
 import {
@@ -53,7 +53,7 @@ function ReportToolbar() {
   const [loading, setLoading] = useState(false);
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
     }),
     shallowEqual
   );
@@ -105,7 +105,7 @@ function ReportToolbar() {
       config: {
         RepoId: activePage.RepoId,
         SystemId: activePage.SystemId,
-        url: `/${activePage.listUrl}`,
+        url: `${activePage.listUrl}`,
       },
     });
   };
@@ -274,7 +274,7 @@ const ReportDropdown = ({ activePage }) => {
 const FacilitiesDropdown = () => {
   const t = useTranslations();
   const [items, setItems] = useState();
-  const [display, setDisplay] = useState(t("report.toolbar.facilities"));
+  const [display, setDisplay] = useState(t("report.toolbar.simple"));
   const { direction } = useAppSelector(
     (state) => ({
       direction: state.withPersist.config.direction,
@@ -305,12 +305,14 @@ const FacilitiesDropdown = () => {
         },
       }));
       setItems(temp as any);
+
     }
   }, [data, isFetching]);
   return (
     <Dropdown
+    
       menu={{ items }}
-      destroyPopupOnHide
+      destroyOnHidden
       placement={direction == "rtl" ? "bottomRight" : "bottomLeft"}
     >
       <div className="flex items-center gap-2 bg-gray-gray2 dark:bg-gray-gray10 m-0 p-1 border border-gray-gray5 rounded-lg h-full text-gray-gray10 dark:text-white text-xs">

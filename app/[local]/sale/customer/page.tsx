@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { ICustomer, IRequest } from "@services/sale/customer/type";
+import { Form } from '@components/templates/form';
+import type {
+  ICustomer,
+  IRequest,
+} from '@services/sale/customer/type';
 
 export default function CustomerFormPage() {
   return (

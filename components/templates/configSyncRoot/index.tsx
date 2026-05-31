@@ -1,9 +1,12 @@
-import { useEffect, useRef } from "react";
+import {
+  useEffect,
+  useRef,
+} from 'react';
 
-import { useDispatch } from "react-redux";
+import { useDispatch } from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { mergeConfig } from "@slice/config";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { mergeConfig } from '@slice/config';
 
 export const ConfigSyncRoot = () => {
   const dispatch = useDispatch();

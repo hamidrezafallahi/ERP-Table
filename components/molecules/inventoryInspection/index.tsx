@@ -27,7 +27,7 @@ import type {
   IGoodInfo,
   IRequest,
 } from '@services/inv/goodInfo/type';
-import { showSuccessToast } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 enum fieldType {
   decline = 0,

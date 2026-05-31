@@ -27,7 +27,7 @@ import type {
 import {
   BuyRequestForm,
 } from '@components/molecules/salesAndPurchase/buyRequestForm';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import type {
   IBuyRequest,

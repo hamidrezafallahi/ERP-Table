@@ -1,20 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { CustomButton, CustomModal } from "@components/atoms/defaultElements";
-import { New, PurchaseRequestIcon } from "@components/atoms/iconComponents";
-import { PurchaseRequest } from "@components/molecules/purchaseRequest";
-import ViewList from "@components/templates/viewList";
-import { useAppSelector } from "@redux/index";
+import {
+  CustomButton,
+  CustomModal,
+} from '@components/atoms/defaultElements';
+import {
+  New,
+  PurchaseRequestIcon,
+} from '@components/atoms/iconComponents';
+import { PurchaseRequest } from '@components/molecules/purchaseRequest';
+import ViewList from '@components/templates/viewList';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import type {
   IPurchaseOrder,
   IRequest,
-} from "@services/buy/purchaseOrder/type";
-import { showInfoToast } from "@utils/core";
+} from '@services/buy/purchaseOrder/type';
+import { showInfoToast } from '@utils/toast';
 
 export default function PurchaseOrderListPage() {
   const t = useTranslations();
@@ -22,7 +28,7 @@ export default function PurchaseOrderListPage() {
   const { selectedItems, activePage, match } = useAppSelector(
     (state) => ({
       selectedItems: state.withPersist.listItems,
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
       match: state.withPersist.config.initMatch,
     }),
     shallowEqual

@@ -19,11 +19,11 @@ import {
 } from '@components/molecules/salesAndPurchase/priceAnnouncementForm';
 import { ERPTableApi } from '@components/organisms/erp-table/ui';
 import { useInitializePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetConditionallyMutation } from '@services/base';
 import { IBaseRequest } from '@services/base/type';
 import { PageTypeEnum } from '@type/enum';
-import { showSuccessToast } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 import {
   columnConfig,
@@ -179,7 +179,7 @@ export default function PriceAnnouncementTemplate<T, K>({ ...props }: IProps) {
   };
 
   const computeTotalPrice = () => {
-    const snapshot = tableApiRef.current?.getSnapshot() as
+    const snapshot = tableApiRef.current?.getSnapShot() as
       | TableSnapshot
       | undefined;
     if (!snapshot?.rows) return;

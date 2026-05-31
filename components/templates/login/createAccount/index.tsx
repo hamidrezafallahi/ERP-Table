@@ -1,32 +1,40 @@
 "use client";
-import { useState } from "react";
+import { useState } from 'react';
 
-import { useAppDispatch, useAppSelector } from "@redux/index";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   nextStep,
   prevStep,
   setMobile,
   setVerifyExpireTime,
-} from "@slice/account";
+} from '@slice/account';
 
-import CompanyStep from "./companyStep";
-import CompleteProfileStep from "./completeProfileStep";
-import CurrencyStep from "./currencyStep";
-import FinalReviewStep from "./finalReviewStep";
-import FundStep from "./fundStep";
-import MobileStep from "./mobileStep";
-import SelectIndustryStep from "./selectIndustryStep";
-import SelectPackageStep from "./selectPackageStep";
-import UserStep from "./userStep";
-import VerifyStep from "./verifyStep";
-import WarehouseStep from "./warehouseStep";
+import CompanyStep from './companyStep';
+import CompleteProfileStep from './completeProfileStep';
+import CurrencyStep from './currencyStep';
+import FinalReviewStep from './finalReviewStep';
+import FundStep from './fundStep';
+import MobileStep from './mobileStep';
+import SelectIndustryStep from './selectIndustryStep';
+import SelectPackageStep from './selectPackageStep';
+import UserStep from './userStep';
+import VerifyStep from './verifyStep';
+import WarehouseStep from './warehouseStep';
 
 const CreateAccount = () => {
-  const dispatch = useAppDispatch();
-  const currentStep = useAppSelector(
-    (state) => state.withPersist.account.currentStep
-  );
-  const mobile = useAppSelector((state) => state.withPersist.account.mobile);
+  const dispatch = useDispatch();
+const { currentStep, mobile } = useAppSelector(
+  (state) => ({
+    currentStep: state.withPersist.account.currentStep,
+    mobile: state.withPersist.account.mobile,
+  }),
+  shallowEqual
+);
 
   const [verifyReset, setVerifyReset] = useState(0);
 

@@ -15,7 +15,7 @@ import Filter from '@components/molecules/filter';
 import { QuickSearch } from '@components/molecules/quickSearch';
 import { RangeFilter } from '@components/molecules/rangeFilter';
 import Sort from '@components/molecules/sort';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import type { IProps } from './type';
 import { useFiltersAndSorts } from './useFiltersAndSorts';

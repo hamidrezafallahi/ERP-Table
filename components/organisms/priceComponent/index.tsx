@@ -20,7 +20,7 @@ import {
 import { DetailDataGrid } from '@components/molecules/detailDataGrid';
 import { IChildHandle } from '@components/molecules/detailDataGrid/mobile/type';
 import { PriceForm } from '@components/molecules/price';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { IPriceDetail } from '@services/sale/priceDetails/type';
 import { setViewData } from '@slice/pages';
 

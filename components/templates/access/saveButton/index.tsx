@@ -1,10 +1,10 @@
-import { useTranslations } from "next-intl";
+import { useTranslations } from 'next-intl';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { useCUDDataMutation } from "@services/base";
-import { showSuccessToast } from "@utils/core";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { useCUDDataMutation } from '@services/base';
+import { showSuccessToast } from '@utils/toast';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export default function SaveButton({ ...props }: IProps) {
   const { saveHandler, isLoading, body, disable } = props;

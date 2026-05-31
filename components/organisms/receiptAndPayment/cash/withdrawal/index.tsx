@@ -1,29 +1,44 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { DownChevron } from "@components/atoms/iconComponents";
-import { DetailDataGrid } from "@components/molecules/detailDataGrid";
-import { IChildHandle } from "@components/molecules/detailDataGrid/mobile/type";
-import { WithdrawalTab } from "@components/molecules/receiptAndPayment";
-import { AdvancedBankWithdrawalForm } from "@components/molecules/receiptAndPayment/bank";
-import type { IActiveTab } from "@components/molecules/receiptAndPayment/type";
-import { useAppSelector } from "@redux/index";
-import type { IAccount } from "@services/acc/account/type";
-import { useGetData } from "@services/base";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { DownChevron } from '@components/atoms/iconComponents';
+import { DetailDataGrid } from '@components/molecules/detailDataGrid';
+import { IChildHandle } from '@components/molecules/detailDataGrid/mobile/type';
+import { WithdrawalTab } from '@components/molecules/receiptAndPayment';
+import {
+  AdvancedBankWithdrawalForm,
+} from '@components/molecules/receiptAndPayment/bank';
+import type { IActiveTab } from '@components/molecules/receiptAndPayment/type';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import type { IAccount } from '@services/acc/account/type';
+import { useGetData } from '@services/base';
 import type {
   IBankWithdrawal,
   IRequest,
-} from "@services/trh/bankWithdrawal/type";
-import type { IRpWay } from "@services/trh/rpWay/type";
-import { setAllPageData, setPageInfo } from "@slice/pages";
-import { findItemInNestedData } from "@utils/core";
+} from '@services/trh/bankWithdrawal/type';
+import type { IRpWay } from '@services/trh/rpWay/type';
+import {
+  setAllPageData,
+  setPageInfo,
+} from '@slice/pages';
+import { findItemInNestedData } from '@utils/core';
 
-import { columnConfig, formConfig } from "./config";
+import {
+  columnConfig,
+  formConfig,
+} from './config';
 
 export const AdvancedCashWithdrawal = ({ form }) => {
   const titleKey = "VoucherNumber";
@@ -43,7 +58,7 @@ export const AdvancedCashWithdrawal = ({ form }) => {
 
   const { activePage, fullScreen, minimizePanel, match } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true,
       ),
       fullScreen: state.withPersist.config.fullScreen,

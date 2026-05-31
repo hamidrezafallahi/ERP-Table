@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { IRequest, IYear } from "@services/com/year/type";
+import { Form } from '@components/templates/form';
+import type {
+  IRequest,
+  IYear,
+} from '@services/com/year/type';
 
 export default function YearFormPage() {
   return (

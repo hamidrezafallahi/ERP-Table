@@ -1,16 +1,26 @@
-import { FC, useEffect, useState } from "react";
+import {
+  FC,
+  useEffect,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { DownChevron, TrashBin } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
-import { setPageData } from "@slice/pages";
-import type { ISelectOption } from "@type/elementType";
+import {
+  DownChevron,
+  TrashBin,
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
+import { setPageData } from '@slice/pages';
+import type { ISelectOption } from '@type/elementType';
 
-import { CustomSelect } from "../select";
-import type { IProps } from "./type";
+import { CustomSelect } from '../select';
+import type { IProps } from './type';
 
 interface IOption {
   key: number;

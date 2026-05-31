@@ -3,7 +3,7 @@ import { shallowEqual } from 'react-redux';
 
 import { MenuArrowBack } from '@components/atoms/iconComponents';
 import { useNavigatePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 const CalendarMobileToolbar = () => {
   const { lang } = useAppSelector((state) => {

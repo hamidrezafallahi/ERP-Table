@@ -1,8 +1,10 @@
 "use client";
-import { shallowEqual } from "react-redux";
+import { shallowEqual } from 'react-redux';
 
-import { WarningCircleRed } from "@components/atoms/iconComponents/icons/WarningCircleRed";
-import { useAppSelector } from "@redux/index";
+import {
+  WarningCircleRed,
+} from '@components/atoms/iconComponents/icons/WarningCircleRed';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 export default function ToastError({ message, title }) {
   const { match, lang } = useAppSelector((state) => {

@@ -18,14 +18,17 @@ import {
   useMediaQuery,
   useMessage,
 } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import FirebaseNotification from '@hooks/firebaseForeground';
-import { useAppSelector } from '@redux/index';
 import { TLang } from '@slice/config/type';
 import { setDeActiveAllPage } from '@slice/pages';
 import { checkAndRedirectIfNeeded } from '@utils/core';
 
 import { allowedEndPaths } from '../../constants/allowedEndPaths';
-import { setInitMatch } from '../../slice/config';
+import {
+  setGlobalAndView,
+  setInitMatch,
+} from '../../slice/config';
 import DesktopLayout from '../baseLayout/desktop';
 import MobileLayout from '../baseLayout/mobile';
 
@@ -51,13 +54,13 @@ export const Container = ({
       userId: state.withPersist.config.userSession.UserInfo.UserId,
     }),
 
-    shallowEqual
+    shallowEqual,
   );
 
   useEffect(() => {
     const { isAdd } = checkAndRedirectIfNeeded(initPage, pathname);
     const endsWithAllowedPath = allowedEndPaths.some((p) =>
-      pathname.endsWith(`/${p}`)
+      pathname.endsWith(`/${p}`),
     );
 
     if (endsWithAllowedPath) {
@@ -74,6 +77,10 @@ export const Container = ({
     dispatch(setInitMatch({ match }));
   }, [match]);
 
+  useEffect(() => {
+    dispatch(setGlobalAndView({ direction, lang: local }));
+    document.getElementsByTagName("body")[0].setAttribute("dir", direction);
+  }, [direction, local]);
   return (
     <div dir={direction} lang={local}>
       <FirebaseNotification />

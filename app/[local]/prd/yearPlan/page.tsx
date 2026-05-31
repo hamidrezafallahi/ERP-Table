@@ -1,6 +1,10 @@
-import React from "react";
-import Form from "@components/templates/form";
-import { IYearPlan,IRequest } from "@services/prd/yearPlan/type";
+import React from 'react';
+
+import { Form } from '@components/templates/form';
+import {
+  IRequest,
+  IYearPlan,
+} from '@services/prd/yearPlan/type';
 
 function YearPlanPage() {
   return ( <Form<IYearPlan, IRequest>

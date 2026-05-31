@@ -23,10 +23,8 @@ import { useGetConditionallyMutation } from '@services/base';
 import type { IBaseQueryResponse } from '@services/base/type';
 import { setPageData } from '@slice/pages';
 import { IFactorItem } from '@slice/pages/factors/type';
-import {
-  formatCurrency,
-  getCookie,
-} from '@utils/core';
+import { getCookie } from '@utils/cookie';
+import { formatCurrency } from '@utils/core';
 
 const componentDestroyedErrorMsg = "VideoCapture Component Destroyed";
 
@@ -121,7 +119,7 @@ function VideoCapture() {
           const poweredby = shadowRoot.querySelector(".dce-msg-poweredby");
           const cameraSelector = shadowRoot.querySelector(".dce-sel-camera");
           const resolutionSelector = shadowRoot.querySelector(
-            ".dce-sel-resolution"
+            ".dce-sel-resolution",
           );
           if (cameraSelector) cameraSelector.remove();
           if (resolutionSelector) resolutionSelector.remove();
@@ -183,7 +181,7 @@ function VideoCapture() {
               deviceId: "2",
               label: "string2",
             },
-          ]
+          ],
         );
 
         cameraView.setVideoFit("cover");

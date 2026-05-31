@@ -27,7 +27,7 @@ import type {
 import {
   InventoryVoucherHeaderForm,
 } from '@components/molecules/inventoryVoucher';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import type { IPlaceConfig } from '@services/auth/base/type';
 import {
   useGetConditionallyMutation,

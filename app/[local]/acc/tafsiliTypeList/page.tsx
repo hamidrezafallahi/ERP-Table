@@ -7,15 +7,18 @@ export default function TafsiliTypeListPage() {
   const t = useTranslations();
   return (
     <ViewList<ITafsiliType, IRequest>
-      url="/api/acc/select/tafsiliType"
-      deleteUrl="/api/acc/delete/tafsiliType"
-      staticKey="TafsiliTypeDesc"
-      rowFieldKey="TafsiliTypeId"
-      formUrl="acc/tafsiliType"
-      addCaption={t("title.addNew")}
-      caption={"title.tafsiliType"}
-      baseRepoId={5004}
-      EditField="TafsiliTypeDesc"
+          url="/api/acc/select/tafsiliType"
+          deleteUrl="/api/acc/delete/tafsiliType"
+          staticKey="TafsiliTypeDesc"
+          rowFieldKey="TafsiliTypeId"
+          formUrl="acc/tafsiliType"
+          addCaption={t("title.addNew")}
+          caption={"title.tafsiliType"}
+          baseRepoId={5004}
+          EditField="TafsiliTypeDesc"
+          Sort={[
+              { ColName: "TafsiliTypeId", Asc: true }
+          ]}
     />
   );
 }

@@ -18,7 +18,7 @@ import {
   PendingDeleteIcon,
   PendingUpdateIcon,
 } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   ErrorStatusEnum,
   PendingStatusEnum,
@@ -55,7 +55,7 @@ export default function RenderStatus({
 
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
     }),
     shallowEqual
   );
@@ -165,7 +165,8 @@ export default function RenderStatus({
 //   Pending,
 //   PendingStatusIcon,
 // } from "@components/atoms/iconComponents";
-// import { useAppSelector } from "@redux/index";
+// import { useAppSelector } from '@hooks/custom/useAppSelector';
+
 // import { ErrorStatusEnum, PendingStatusEnum } from "@services/base/type";
 
 // interface IProps {

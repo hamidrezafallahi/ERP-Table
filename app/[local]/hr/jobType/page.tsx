@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import { IJobType, IRequest } from "@services/hr/jobType/type";
+import { Form } from '@components/templates/form';
+import {
+  IJobType,
+  IRequest,
+} from '@services/hr/jobType/type';
 
 export default function JobTypeFormPage() {
   return (

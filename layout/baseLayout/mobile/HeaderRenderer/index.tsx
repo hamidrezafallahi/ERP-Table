@@ -1,9 +1,10 @@
 "use client";
 
-import ListToolbar from "@components/organisms/listToolbar";
-import { useAppSelector } from "@redux/index";
-import { HeaderTypeEnum } from "@slice/pages/enum";
-import { shallowEqual } from "react-redux";
+import { shallowEqual } from 'react-redux';
+
+import ListToolbar from '@components/organisms/listToolbar';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { HeaderTypeEnum } from '@slice/pages/enum';
 
 export default function HeaderRenderer() {
   const { activePage } = useAppSelector((state) => {

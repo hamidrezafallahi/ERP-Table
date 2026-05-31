@@ -1,19 +1,25 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { FinalizeVoucher } from "@components/molecules/accounting";
-import { useAppSelector } from "@redux/index";
-import { setAllPageData, setPageInfo } from "@slice/pages";
+import { FinalizeVoucher } from '@components/molecules/accounting';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  setAllPageData,
+  setPageInfo,
+} from '@slice/pages';
 
-import { formConfig } from "./config";
+import { formConfig } from './config';
 
 export const FinalizeVoucherPage = ({ setMobileDrawerContent, form }) => {
   const dispatch = useDispatch();
 
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true
       ),
     }),

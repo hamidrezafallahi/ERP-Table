@@ -1,14 +1,23 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Checkbox } from "antd";
-import { useTranslations } from "next-intl";
+import { Checkbox } from 'antd';
+import { useTranslations } from 'next-intl';
 
-import InputText from "@components/atoms/defaultElements/inputText";
-import { CloseCircle, Magnifier } from "@components/atoms/iconComponents";
-import type { IAccount, IRequest } from "@services/acc/account/type";
-import { useGetData } from "@services/base";
+import InputText from '@components/atoms/defaultElements/inputText';
+import {
+  CloseCircle,
+  Magnifier,
+} from '@components/atoms/iconComponents';
+import type {
+  IAccount,
+  IRequest,
+} from '@services/acc/account/type';
+import { useGetData } from '@services/base';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export const SubtotalSelection = ({
   selectedSubtotal,
@@ -22,7 +31,7 @@ export const SubtotalSelection = ({
     url: "/api/acc/select/account4voucher",
 
     body: {
-      RepoViewId: 140051,
+      RepoViewId: 10001,
       PagingInfo: {
         PageNumber: 1,
         PageRecordCount: 1000000,
@@ -89,7 +98,6 @@ export const SubtotalSelection = ({
           )
             ? true
             : false;
-
           return (
             <div
               key={item.AccountId}

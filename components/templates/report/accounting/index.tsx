@@ -1,4 +1,7 @@
-import { useEffect } from 'react';
+import {
+  useEffect,
+  useState,
+} from 'react';
 
 import { useTranslations } from 'next-intl';
 import {
@@ -8,7 +11,8 @@ import {
 
 import { CustomTooltip } from '@components/atoms/defaultElements';
 import ExpandedButton from '@components/molecules/expandedButton';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetConfigValueById } from '@hooks/custom/useGetConfigValueById';
 import { addNewPage } from '@slice/pages';
 import type { IViewData } from '@slice/pages/type';
 import { PageTypeEnum } from '@type/enum';
@@ -20,14 +24,14 @@ import ReportSidebar from './sidebar';
 import ReportToolbar from './toolbar';
 
 const initialReport: IViewData = {
-  url: "/api/acc/select/repReviewGroh",
-  RepoViewId: 10007,
+  url: "/api/acc/select/repReviewCol",
+  RepoViewId: 10015,
   PageNumber: 1,
   FilterTypeIds: [1, 2, 3, 4, 5],
   showCurrency: true,
   steps: [],
   selectedItems: [],
-  Level: 0,
+  Level: 1,
 };
 function ReportTemplate() {
   const dispatch = useDispatch();
@@ -36,34 +40,31 @@ function ReportTemplate() {
     (state) => ({
       initPage: state.withPersist.init,
     }),
-    shallowEqual
+    shallowEqual,
   );
-  // const { data: AccessResponse } = useGetData<IPlaceConfig[], null>({
-  //   url: `/api/mng/select/placeConfigValue`,
-  //   body: {},
-  // });
-
+  const [ready, setReady] = useState(false);
+  const {Value} = useGetConfigValueById({ id: 5006 });
+  const level =  Number(Value)
   useEffect(() => {
-    // if (AccessResponse?.Result == "Success") {
-      dispatch(
-        addNewPage({
-          pageId: initPage.pageId,
-          caption: `title.accountingReport`,
-          icon: "ReportIcon",
-          pageState: initPage.pageState,
-          originalPageState: initPage.originalPageState,
-          type: PageTypeEnum.Report,
-          RepoId: initPage.RepoId,
-          SystemId: initPage.SystemId,
-          url: "/acc/report/accounting",
-          viewData: {
-            ...initialReport,
-            AccessLevel:7// AccessResponse.Data[0].AccLevel,
-          },
-          listUrl: "/acc/report/transaction",
-        })
-      );
-    // }
+    dispatch(
+      addNewPage({
+        pageId: initPage.pageId,
+        caption: `title.accountingReport`,
+        icon: "ReportIcon",
+        pageState: initPage.pageState,
+        originalPageState: initPage.originalPageState,
+        type: PageTypeEnum.Report,
+        RepoId: initPage.RepoId,
+        SystemId: initPage.SystemId,
+        url: "acc/report/accounting",
+        viewData: {
+          ...initialReport,
+          AccessLevel: level,
+        },
+        listUrl: "acc/report/transaction",
+      }),
+    );
+    setReady(true);
   }, []);
 
   return (
@@ -80,7 +81,7 @@ function ReportTemplate() {
       <div className="flex flex-col gap-1 px-3 w-full h-full">
         <Header active />
         <Navbar active />
-        <AccountingTable />
+        {ready && <AccountingTable />}
       </div>
     </div>
   );

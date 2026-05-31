@@ -1,16 +1,25 @@
-import { useTranslations } from "next-intl";
-import { useAppSelector } from "@redux/index";
-import { shallowEqual } from "react-redux";
-import { useDataManager } from "./hooks/useDataManager";
-import { TafsiliCategorySideBarMobile } from "./tafsiliCategorySideBarMobile";
-import { Dispatch, SetStateAction, useState } from "react";
-import { Form } from "antd";
-import { ISelectTafsili } from "./types";
-import { useActionManager } from "./hooks/useActionManager";
-import { TafsiliCategorySideBarWeb } from "./tafsiliCategorySideBarWeb";
-import { ActionsMobile } from "./tafsiliCategorySideBarMobile/actionsMobile";
-import { ContextConfirmationPortals } from "@components/organisms/sideBarForm/sideBarFormContext/contextConfirmationPortals";
-import { IDynamicModalConfig } from "@components/organisms/sideBarForm/types";
+import {
+  Dispatch,
+  SetStateAction,
+  useState,
+} from 'react';
+
+import { Form } from 'antd';
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
+
+import {
+  ContextConfirmationPortals,
+} from '@components/organisms/sideBarForm/sideBarFormContext/contextConfirmationPortals';
+import { IDynamicModalConfig } from '@components/organisms/sideBarForm/types';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+
+import { useActionManager } from './hooks/useActionManager';
+import { useDataManager } from './hooks/useDataManager';
+import { TafsiliCategorySideBarMobile } from './tafsiliCategorySideBarMobile';
+import { ActionsMobile } from './tafsiliCategorySideBarMobile/actionsMobile';
+import { TafsiliCategorySideBarWeb } from './tafsiliCategorySideBarWeb';
+import { ISelectTafsili } from './types';
 
 interface TafsiliCategorySideBarProps {
   typeId?: number;

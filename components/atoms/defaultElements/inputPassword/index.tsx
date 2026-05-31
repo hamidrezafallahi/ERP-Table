@@ -1,15 +1,21 @@
+import {
+  ChangeEvent,
+  useEffect,
+  useState,
+} from 'react';
 
-import { ChangeEvent, useEffect, useState } from "react";
+import Password from 'antd/es/input/Password';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import Password from "antd/es/input/Password";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Eye } from '@components/atoms/iconComponents/icons/Eye';
+import { EyeClose } from '@components/atoms/iconComponents/icons/EyeClose';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setPageData } from '@slice/pages';
 
-import { Eye } from "@components/atoms/iconComponents/icons/Eye";
-import { EyeClose } from "@components/atoms/iconComponents/icons/EyeClose";
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
-
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export const InputPassword = ({
   className,

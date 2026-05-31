@@ -1,16 +1,19 @@
-import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
-import { persistReducer, persistStore } from "redux-persist";
-import storage from "redux-persist/lib/storage";
+import {
+  persistReducer,
+  persistStore,
+} from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
 
 import {
   Action,
   configureStore,
-  Middleware,
   ThunkAction,
-} from "@reduxjs/toolkit";
-import ServiceRootReducer from "@services/index";
-import sliceRootReducer from "@slice/index";
-import { createConfigSyncMiddleware } from "@store/middleware/syncConfigMiddleware";
+} from '@reduxjs/toolkit';
+import ServiceRootReducer from '@services/index';
+import sliceRootReducer from '@slice/index';
+import {
+  createConfigSyncMiddleware,
+} from '@store/middleware/syncConfigMiddleware';
 
 const { serviceMiddleware, serviceReducer } = ServiceRootReducer();
 const persistConfig = {
@@ -29,7 +32,7 @@ const AppReduxStore = configureStore({
     withoutPersist: sliceRootReducer.withoutPersist,
     withPersist: persistorReducer,
   },
-  middleware: (getDefaultMiddleware): Middleware[] =>
+  middleware: (getDefaultMiddleware)=>
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: ["persist/PERSIST", "persist/PURGE"],
@@ -50,9 +53,7 @@ export type AppThunk<ReturnType = void> = ThunkAction<
   unknown,
   Action<string>
 >;
-export const useAppDispatch = () => useDispatch<AppDispatch>();
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
-
+ 
 AppReduxStore.subscribe(() => {
   const state = AppReduxStore.getState();
   const sliceState = { ...state.withPersist, ...state.withoutPersist };

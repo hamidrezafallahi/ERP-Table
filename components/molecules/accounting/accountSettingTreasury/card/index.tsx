@@ -1,16 +1,27 @@
-import { CSSProperties, forwardRef, ReactNode, RefAttributes } from "react";
+import {
+  CSSProperties,
+  forwardRef,
+  ReactNode,
+  RefAttributes,
+} from 'react';
 
-import { Collapse } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import { Collapse } from 'antd';
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { DownChevron, NoData } from "@components/atoms/iconComponents";
-import { useDarkMode, useProcessedData } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import type { IAccountSetting } from "@services/acc/accountSetting/type";
-import { getColoredIcon } from "@utils/core";
+import {
+  DownChevron,
+  NoData,
+} from '@components/atoms/iconComponents';
+import {
+  useDarkMode,
+  useProcessedData,
+} from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import type { IAccountSetting } from '@services/acc/accountSetting/type';
+import { getColoredIcon } from '@utils/core';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export const AccountSettingCard = forwardRef(function Card(
   {

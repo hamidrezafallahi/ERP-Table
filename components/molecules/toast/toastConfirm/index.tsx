@@ -7,7 +7,7 @@ import { CustomButton } from '@components/atoms/defaultElements';
 import {
   WarningTriangle,
 } from '@components/atoms/iconComponents/icons/WarningTriangle';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 export default function ToastConfirm({ message, title, handleConfirm }) {
   const t = useTranslations();

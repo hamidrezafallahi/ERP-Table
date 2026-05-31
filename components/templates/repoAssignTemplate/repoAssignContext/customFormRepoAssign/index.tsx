@@ -1,11 +1,19 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { SpinIcon } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import { Checkbox, Form, Spin } from "antd";
-import { useTranslations } from "next-intl";
+import {
+  Checkbox,
+  Form,
+  Spin,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+
+import { CustomButton } from '@components/atoms/defaultElements';
+import { SpinIcon } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
 
 export default function CustomFormRepoAssign({
   selectedGoodId,

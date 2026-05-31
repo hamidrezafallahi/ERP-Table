@@ -1,16 +1,16 @@
 "use client";
-import { useState } from "react";
+import { useState } from 'react';
 
-import Form from "@components/templates/form";
-import { useAppSelector } from "@redux/index";
+import { Form } from '@components/templates/form';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import type {
   IIncreasingAndDecreasingFactors,
   IRequest,
-} from "@services/sale/increasingAndDecreasingFactors/type";
+} from '@services/sale/increasingAndDecreasingFactors/type';
 
 export default function IncreasingAndDecreasingFactorsFormPage() {
   const activePageData = useAppSelector((state) =>
-    state.withPersist.pages.find((item) => item.isActive)
+    state.withPersist.pages?.find((item) => item.isActive)
   );
 
   const elementTypeValue = activePageData?.pageData?.find(

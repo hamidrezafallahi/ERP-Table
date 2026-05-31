@@ -105,3 +105,19 @@ export const sourceArray = [
   { label: "تراز حسابداری در سطح 12", value: RepReviewModeEnum.Twelve },
   { label: "تراز حسابداری در سطح 13", value: RepReviewModeEnum.Thirteen },
 ];
+
+export const levelFieldMap: Record<number, string> = {
+  1: "GrohGroupLevel",
+  2: "ColGroupLevel",
+  3: "MoeenGroupLevel",
+  4: "FourthLevelGroup",
+  5: "FifthLevelGroup",
+  6: "SixthLevelGroup",
+  7: "SeventhLevelGroup",
+  8: "EighthLevelGroup",
+  9: "NinthLevelGroup",
+  10: "TenthLevelGroup",
+  11: "EleventhLevelGroup",
+  12: "TwelfthLevelGroup",
+  13: "ThirteenthLevelGroup",
+};

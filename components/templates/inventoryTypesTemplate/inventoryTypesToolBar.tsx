@@ -12,7 +12,7 @@ import { CustomButton } from '@components/atoms/defaultElements';
 import CloseButton from '@components/molecules/closeButton';
 import ExpandedButton from '@components/molecules/expandedButton';
 import { useNavigatePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useCUDDataMutation } from '@services/base';
 import { removePage } from '@slice/pages';
 

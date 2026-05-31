@@ -1,14 +1,17 @@
-import React from "react";
+import React from 'react';
 
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { CustomButton, CustomTooltip } from "@components/atoms/defaultElements";
-import { Undo } from "@components/atoms/iconComponents";
-import CloseButton from "@components/molecules/closeButton";
-import ExpandedButton from "@components/molecules/expandedButton";
-import { useFormHandlers } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
+import {
+  CustomButton,
+  CustomTooltip,
+} from '@components/atoms/defaultElements';
+import { Undo } from '@components/atoms/iconComponents';
+import CloseButton from '@components/molecules/closeButton';
+import ExpandedButton from '@components/molecules/expandedButton';
+import { useFormHandlers } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 export default function WebHookToolbar() {
   const t = useTranslations();
@@ -22,7 +25,7 @@ export default function WebHookToolbar() {
   }, shallowEqual);
 
   const { handleReset } = useFormHandlers({
-    activePage: pages.find((item) => item.isActive),
+    activePage: pages?.find((item) => item.isActive),
     pages,
   });
 

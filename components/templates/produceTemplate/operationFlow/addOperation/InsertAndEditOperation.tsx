@@ -1,17 +1,27 @@
-import React, { useEffect } from "react";
+import React, { useEffect } from 'react';
 
-import { Checkbox, Form, Input, Select, Spin } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import {
+  Checkbox,
+  Form,
+  Input,
+  Select,
+  Spin,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { SpinIcon } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation } from "@services/base";
-import { showSuccessToast } from "@utils/core";
+import { CustomButton } from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
+import { SpinIcon } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useCUDDataMutation } from '@services/base';
+import { showSuccessToast } from '@utils/toast';
 
-import { AddNodeModalProps, IFlowItem, typeToSelect } from "../type";
+import {
+  AddNodeModalProps,
+  IFlowItem,
+  typeToSelect,
+} from '../type';
 
 export default function InsertAndEditOperation({
   onClose,

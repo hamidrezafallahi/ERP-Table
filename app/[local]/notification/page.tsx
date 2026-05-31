@@ -26,7 +26,7 @@ import {
 import {
   RenderNotification,
 } from '@components/molecules/notification/renderNotification';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useGetData,
   useGetInfinite,

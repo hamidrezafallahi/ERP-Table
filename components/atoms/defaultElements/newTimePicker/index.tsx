@@ -1,13 +1,22 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { TimePicker, type TimePickerProps } from "react-persian-range-picker";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import {
+  TimePicker,
+  type TimePickerProps,
+} from 'react-persian-range-picker';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CalenderIcon } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
-import { IFormFieldConfig } from "@type/elementType";
+import { CalenderIcon } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setPageData } from '@slice/pages';
+import { IFormFieldConfig } from '@type/elementType';
 
 interface IProps extends TimePickerProps {
   config?: IFormFieldConfig;

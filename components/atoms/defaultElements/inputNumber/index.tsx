@@ -10,7 +10,7 @@ import {
   useDispatch,
 } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setPageData } from '@slice/pages';
 
 import type { IProps } from './type';

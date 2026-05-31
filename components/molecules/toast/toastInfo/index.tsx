@@ -1,10 +1,10 @@
 "use client";
 
-import { shallowEqual } from "react-redux";
+import { shallowEqual } from 'react-redux';
 
-import { Info } from "@components/atoms/iconComponents";
-import { useDarkMode } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
+import { Info } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useDarkMode } from '@hooks/custom/useDarkMode';
 
 export default function ToastInfo({ title, message }) {
   const { mode = "light" } = useDarkMode();

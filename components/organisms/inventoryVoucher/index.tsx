@@ -7,7 +7,7 @@ import {
 } from 'react-redux';
 
 import Title from '@components/atoms/Title';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import type {
   IInventoryVoucherType,

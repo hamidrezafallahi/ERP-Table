@@ -1,10 +1,13 @@
-import { Badge } from "antd";
-import { shallowEqual } from "react-redux";
+import { Badge } from 'antd';
+import { shallowEqual } from 'react-redux';
 
-import { Close, FilterIcon } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
+import {
+  Close,
+  FilterIcon,
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export default function Filter({
   onResetFilters,

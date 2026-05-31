@@ -1,8 +1,9 @@
 import React from 'react';
 
-import { TickIcon } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
 import { shallowEqual } from 'react-redux';
+
+import { TickIcon } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 export default function StatusDot({
   active,

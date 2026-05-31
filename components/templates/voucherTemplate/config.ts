@@ -7,6 +7,13 @@ import { IFormFieldConfig } from '@type/elementType';
 export const formConfig: IFormFieldConfig[] = [
 
   {
+    name: "VoucherNumber",
+    caption: "شماره سند",
+    type: "text",
+    value: undefined,
+    originalValue: undefined
+  },
+  {
     name: "VoucherDate",
     caption: "تاریخ سند",
     type: "date",
@@ -172,7 +179,16 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       //     console.log(value)
       //   return `نمایشگر - ${value}`
       // },
-
+      dynamicSelectFilterOption: (input, option) => {
+        const label = option?.label;
+        console.log(label)
+        return (
+          typeof label === "string" &&
+          option.option._SelectDisplay
+            .toLowerCase()
+            .includes(input)
+        );
+      },
       minWidth: 144,
       popUpWidth: 400,
       labelValue: "selectValue",
@@ -182,19 +198,21 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       fieldName: "TafsiliId",
       fieldCaption: t("general.tafsili"),
       fieldType: "selectOption",
-      minWidth: 90,
+      minWidth: 160,
       dynamicSource: {
         endpoint: "/api/acc/select/tafsiliLevel4",
         repoViewId: 10017,
         dependsOn: ["AccountId"],
-        dependOn: { fieldName: "AccountId", value: null }
+        dependOn: { fieldName: "AccountId", value: null },
+        OrderInfo: [{ Asc: true, ColName: "TafsiliId" }]
+
       },
 
       visibility: {
         kind: "always",
 
       },
-            labelValue: "selectValue",
+      labelValue: "selectValue",
 
       order: 3
     }, {
@@ -212,7 +230,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "FifthId",
       },
-            labelValue: "selectValue",
+      labelValue: "selectValue",
 
       order: 4
     },
@@ -231,7 +249,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "SixthId",
       },
-            labelValue: "selectValue",
+      labelValue: "selectValue",
 
       order: 5
     },
@@ -250,7 +268,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "SeventhId",
       },
-            labelValue: "selectValue",
+      labelValue: "selectValue",
 
       order: 6
     },
@@ -269,7 +287,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "EightId",
       },
-            labelValue: "selectValue",
+      labelValue: "selectValue",
 
       order: 7
     },
@@ -288,7 +306,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "NineId",
       },
-            labelValue: "selectValue",
+      labelValue: "selectValue",
 
       order: 8
     },
@@ -307,7 +325,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "TenId",
       },
-            labelValue: "selectValue",
+      labelValue: "selectValue",
 
       order: 9
     },
@@ -326,7 +344,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "ElevenId",
       },
-            labelValue: "selectValue",
+      labelValue: "selectValue",
 
       order: 10
     },
@@ -345,7 +363,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "TwelveId",
       },
-            labelValue: "selectValue",
+      labelValue: "selectValue",
 
       order: 11
     },
@@ -364,7 +382,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         sourceFieldName: "AccountId",
         flag: "ThirteenId",
       },
-            labelValue: "selectValue",
+      labelValue: "selectValue",
 
       order: 12
     }, {
@@ -427,7 +445,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       fieldName: "CurrencyId",
       fieldCaption: t("general.currencyType"),
       fieldType: "selectOption",
-            labelValue: "selectValue",
+      labelValue: "selectValue",
 
       order: 18,
       dynamicSource: {

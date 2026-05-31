@@ -16,7 +16,7 @@ import {
   useDeviceInfo,
   useFcmToken,
 } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useLoginMutation } from '@services/auth/base';
 import { ManagementAccount } from '@services/auth/base/type';
 import { apiService } from '@services/base';
@@ -24,10 +24,8 @@ import {
   setDefaultConfig,
   setUserSession,
 } from '@slice/config';
-import {
-  createCookie,
-  resetData,
-} from '@utils/core';
+import { createCookie } from '@utils/cookie';
+import { resetData } from '@utils/core';
 
 const LoginModal = ({ ...props }: { item: ManagementAccount }) => {
   const { item } = props;

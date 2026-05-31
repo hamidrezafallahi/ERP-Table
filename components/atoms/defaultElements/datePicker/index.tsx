@@ -18,7 +18,8 @@
 
 // import { RightChevron } from "@components/atoms/iconComponents";
 // import Calendar from "react-persian-range-picker";
-// import { useAppSelector } from "@redux/index";
+// import { useAppSelector } from '@hooks/custom/useAppSelector';
+
 // import { setPageData } from "@slice/pages";
 // import { PageStateEnum } from "@slice/pages/enum";
 

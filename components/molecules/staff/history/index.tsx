@@ -1,24 +1,37 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Pagination } from "antd";
-import { shallowEqual } from "react-redux";
+import { Pagination } from 'antd';
+import { shallowEqual } from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { LeftChevron, RightChevron } from "@components/atoms/iconComponents";
+import { CustomButton } from '@components/atoms/defaultElements';
+import {
+  LeftChevron,
+  RightChevron,
+} from '@components/atoms/iconComponents';
 import {
   CardDynamicModal,
   TableDynamicModal,
-} from "@components/molecules/dynamicModal";
-import { ActionLabelsEnum } from "@components/organisms/list/enum";
-import { useAppSelector } from "@redux/index";
-import { useGetData, useGetInfinite } from "@services/base";
-import type { IToolbarMenu } from "@type/toolbar";
+} from '@components/molecules/dynamicModal';
+import { ActionLabelsEnum } from '@components/organisms/list/enum';
+import { useInitializePage } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  useGetData,
+  useGetInfinite,
+} from '@services/base';
+import {
+  IRequest,
+  IStaffHistory,
+} from '@services/prd/staffHistory/type';
+import type { IToolbarMenu } from '@type/toolbar';
+import { findingPageState } from '@utils/core';
 
-import type { IProps } from "./type";
-import { useListConfig } from "./config";
-import { useInitializePage } from "@hooks/custom";
-import { findingPageState } from "@utils/core";
-import { IStaffHistory, IRequest } from "@services/prd/staffHistory/type";
+import { useListConfig } from './config';
+import type { IProps } from './type';
 
 export const History = ({ id }: IProps) => {
   const [selectedItem, setSelectedItem] = useState<number>(null);
@@ -66,7 +79,7 @@ export const History = ({ id }: IProps) => {
     // skip: !match,
   });
   const { activePage, initPage } = useAppSelector((state) => {
-    const activePage = state.withPersist.pages.find(
+    const activePage = state.withPersist.pages?.find(
       (item) => item.isActive === true
     );
     const initPage = state.withPersist.init;

@@ -1,5 +1,5 @@
 import { useGetData, useGetInfinite } from "@services/base";
-import IResponseItem from "../types";
+import IResponseItem, { VoucherDataType } from "../types";
 import { ISelectOption } from "@type/elementType";
 
 interface useDataManagerProps<T> {
@@ -29,6 +29,12 @@ export function useDataManager<T extends IResponseItem>(
       },
     },
     skip: !match || !typeId,
+  });
+
+  const { data: voucherTypeCategoryReportData } = useGetData<VoucherDataType[], null>({
+    url: "",
+    body: {},
+    skip: false,
   });
 
   const { data: tableTotal } = useGetData<T[], null>({
@@ -65,7 +71,6 @@ export function useDataManager<T extends IResponseItem>(
     skip: match || !typeId,
   });
 
-
   const tableDataWithDesc =
     tableData?.Data?.map((item) => ({
       ...item,
@@ -81,5 +86,6 @@ export function useDataManager<T extends IResponseItem>(
     refetchCard,
     tableDataWithDesc,
     cardIsLoading,
+    voucherTypeCategoryReportData,
   };
 }

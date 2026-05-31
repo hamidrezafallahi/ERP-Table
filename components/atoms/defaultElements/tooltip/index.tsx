@@ -6,7 +6,7 @@ import {
 import { Tooltip } from 'antd';
 import { shallowEqual } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import type { IProps } from './type';
 

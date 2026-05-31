@@ -1,12 +1,28 @@
 "use client";
-import React, { FC, useState } from "react";
+import React, {
+  FC,
+  useState,
+} from 'react';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { CircleIcon, Eye, EyeClose } from "@components/atoms/iconComponents";
-import { useAppDispatch, useAppSelector } from "@redux/index";
-import { setIsEditing, setPassword, setStep } from "@slice/account";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import Backward from "../backward";
+import { CustomButton } from '@components/atoms/defaultElements';
+import {
+  CircleIcon,
+  Eye,
+  EyeClose,
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  setIsEditing,
+  setPassword,
+  setStep,
+} from '@slice/account';
+
+import Backward from '../backward';
 
 const validatePasswordRules = (password: string) => {
   return {
@@ -22,14 +38,21 @@ interface Props {
 }
 
 const CompleteProfileStep: FC<Props> = ({ onFinish, onBack }) => {
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
   const [repeatPassword, setRepeatPasswordLocal] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordRules, setShowPasswordRules] = useState(false);
 
-  const { password, isEditing } = useAppSelector(
+  const { } = useAppSelector(
     (state) => state.withPersist.account
   );
+  const {  password, isEditing } = useAppSelector(
+  (state) => ({
+    password: state.withPersist.account.password,
+    isEditing: state.withPersist.account.isEditing,
+  }),
+  shallowEqual
+);
 
   const passwordRules = validatePasswordRules(password);
 

@@ -1,23 +1,26 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import Image from "next/image";
-import { useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import Image from 'next/image';
+import { useDispatch } from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
+import { CustomButton } from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
 import {
   ArrowCircleUpLeft,
   CloseCircle,
   Monitor,
   RightArrow,
-} from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { setProgressbar } from "@slice/config";
-import { showErrorToast } from "@utils/core";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setProgressbar } from '@slice/config';
+import { showErrorToast } from '@utils/toast';
 
-import Loader from "./Loader";
-import { typeByExtension } from "./util";
+import Loader from './Loader';
+import { typeByExtension } from './util';
 
 const LinkShared = ({
   setShowLinkShared,

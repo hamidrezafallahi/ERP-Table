@@ -17,13 +17,12 @@ export class Cell {
     private value: CellValue,
     private originalValue: CellValue,
     private display: CellDisplay
-  ) {}
+  ) { }
   changeValue(newValue: CellValue): CellChanged | null {
     // if (this.value.equals(newValue)) return null;
     this.value = newValue;
     return new CellChanged(this.rowId, this.columnId, newValue);
   }
-
   changeDisplay(newValue: CellValue): DisplayChanged | null {
     if (this.display.equals(newValue)) return null;
     this.display = newValue;
@@ -49,4 +48,4 @@ export class Cell {
   clone(): Cell {
     return new Cell(this.rowId, this.columnId, this.value, this.originalValue, this.display);
   }
- }
+}

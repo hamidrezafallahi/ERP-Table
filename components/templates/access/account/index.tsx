@@ -1,27 +1,41 @@
 "use client";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import {
   CustomButton,
   CustomModal,
   CustomTooltip,
-} from "@components/atoms/defaultElements";
-import { MenuAlt, Notes } from "@components/atoms/iconComponents";
-import Title from "@components/atoms/Title";
-import { AccountConnection } from "@components/molecules/accounting";
-import NestedList from "@components/organisms/nestedList";
-import type { INestedListConfig } from "@components/organisms/nestedList/type";
-import { useAppSelector } from "@redux/index";
-import type { IAccount } from "@services/acc/account/type";
-import { addNewPage } from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
-import { PageTypeEnum } from "@type/enum";
-import SideBarFormContext from "@components/organisms/sideBarForm/sideBarFormContext";
-import { defaultDescriptionsConfig } from "./defaultDescriptionsConfig";
-import { AccountTypeEnum, FundTypeEnum } from "@components/organisms/nestedList/enum";
+} from '@components/atoms/defaultElements';
+import {
+  MenuAlt,
+  Notes,
+} from '@components/atoms/iconComponents';
+import Title from '@components/atoms/Title';
+import { AccountConnection } from '@components/molecules/accounting';
+import NestedList from '@components/organisms/nestedList';
+import {
+  AccountTypeEnum,
+  FundTypeEnum,
+} from '@components/organisms/nestedList/enum';
+import type { INestedListConfig } from '@components/organisms/nestedList/types';
+import SideBarFormContext
+  from '@components/organisms/sideBarForm/sideBarFormContext';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import type { IAccount } from '@services/acc/account/type';
+import { addNewPage } from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
+import { PageTypeEnum } from '@type/enum';
+
+import { defaultDescriptionsConfig } from './defaultDescriptionsConfig';
 
 export default function AccountTemplate() {
   const t = useTranslations();
@@ -79,6 +93,7 @@ export default function AccountTemplate() {
         ],
         order: 1,
       },
+
       {
         caption: t("general.accountType"),
         name: "AccountTypeId",
@@ -140,6 +155,10 @@ export default function AccountTemplate() {
                   {
                     label: t("general.expense"),
                     value: AccountTypeEnum.Expense,
+                  },
+                  {
+                    label: t("general.regulatoryORStatistical"),
+                    value: AccountTypeEnum.RegulatoryORStatistical,
                   },
                 ],
               },
@@ -212,7 +231,12 @@ export default function AccountTemplate() {
               {
                 name: "FundType",
                 type: "radio",
+                defaultValue: FundTypeEnum.None,
                 options: [
+                  {
+                    label: t("general.none"),
+                    value: FundTypeEnum.None,
+                  },
                   {
                     label: t("general.cashRial"),
                     value: FundTypeEnum.CashRial,
@@ -227,7 +251,7 @@ export default function AccountTemplate() {
                   },
                   {
                     label: t("general.bankCurrency"),
-                    value:FundTypeEnum.BankCurrency,
+                    value: FundTypeEnum.BankCurrency,
                   },
                 ],
               },
@@ -330,6 +354,7 @@ export default function AccountTemplate() {
           headerName={t("general.accountConnection")}
           closeModal={() => setIsConnectionModalOpen(false)}
           isModalOpen={isConnectionModalOpen}
+          width={"fit-content"}
           content={
             <AccountConnection
               id={id}

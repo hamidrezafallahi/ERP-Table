@@ -1,16 +1,30 @@
 "use client";
-import { FC, useEffect } from "react";
+import {
+  FC,
+  useEffect,
+} from 'react';
 
-import { Checkbox, Form, FormProps } from "antd";
-import { useTranslations } from "next-intl";
-import { useDispatch } from "react-redux";
+import {
+  Checkbox,
+  Form,
+  FormProps,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import { useDispatch } from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import type { IRequest } from "@services/acc/account/type";
-import { apiService, useCUDDataMutation, useGetData } from "@services/base";
-import { showSuccessToast } from "@utils/core";
+import { CustomButton } from '@components/atoms/defaultElements';
+import type { IRequest } from '@services/acc/account/type';
+import {
+  apiService,
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import { showSuccessToast } from '@utils/toast';
 
-import type { IDataConnection, IProps } from "./type";
+import type {
+  IDataConnection,
+  IProps,
+} from './type';
 
 const levelTextMapping = (level: number) => {
   const levelMap: { [key: number]: string } = {

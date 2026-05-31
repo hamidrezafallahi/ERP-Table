@@ -32,4 +32,11 @@ export interface IProps<T, K> {
     filteringAction?: (actions: IToolbarMenu[], rowData: T) => IToolbarMenu[];
     isShowChangeStatus?: boolean;
     system?: string;
+    Sort?: SortItem[];
+}
+
+interface SortItem {
+
+    ColName: string; 
+    Asc: boolean;
 }

@@ -12,7 +12,7 @@ import {
 
 import { CustomTag } from '@components/atoms/defaultElements';
 import { PlusOutline } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useCUDDataMutation,
   useGetConditionallyMutation,
@@ -35,7 +35,7 @@ export const TagManagement = ({ refIds, minimize }: IProps) => {
   const [newTagValue, setNewTagValue] = useState("");
   const [isDeleted, setIsDeleted] = useState(null);
 const { systemId, repoId, repoTags, match } = useAppSelector((state) => {
-  const activePage = state.withPersist.pages.find((item) => item.isActive);
+  const activePage = state.withPersist.pages?.find((item) => item.isActive);
   const match = state.withPersist.config.initMatch;
 
   return {

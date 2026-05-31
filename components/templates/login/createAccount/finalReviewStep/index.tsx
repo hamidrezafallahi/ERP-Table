@@ -1,31 +1,56 @@
 "use client";
 
-import React from "react";
+import React from 'react';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { LeftChevron, WonderIcon } from "@components/atoms/iconComponents";
-import { useAppDispatch, useAppSelector } from "@redux/index";
-import { setIsEditing, setStep } from "@slice/account";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import { CustomButton } from '@components/atoms/defaultElements';
+import {
+  LeftChevron,
+  WonderIcon,
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  setIsEditing,
+  setStep,
+} from '@slice/account';
 
 interface Props {
   onSave: () => void;
 }
 
 const FinalReviewStep: React.FC<Props> = ({ onSave }) => {
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
 
-  const {
-    mobile,
-    password,
-    packageType,
-    industryType,
-    warehouses,
-    funds,
-    companies,
-    currency,
-    name,
-    fullName,
-  } = useAppSelector((state) => state.withPersist.account);
+const {
+  mobile,
+  password,
+  packageType,
+  industryType,
+  warehouses,
+  funds,
+  companies,
+  currency,
+  name,
+  fullName,
+} = useAppSelector(
+  (state) => ({
+    mobile: state.withPersist.account.mobile,
+    password: state.withPersist.account.password,
+    packageType: state.withPersist.account.packageType,
+    industryType: state.withPersist.account.industryType,
+    warehouses: state.withPersist.account.warehouses,
+    funds: state.withPersist.account.funds,
+    companies: state.withPersist.account.companies,
+    currency: state.withPersist.account.currency,
+    name: state.withPersist.account.name,
+    fullName: state.withPersist.account.fullName,
+  }),
+  shallowEqual
+);
 
   const handleEdit = (step: number, editing: number) => {
     dispatch(setIsEditing(editing));

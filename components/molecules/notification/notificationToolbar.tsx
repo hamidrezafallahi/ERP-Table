@@ -12,7 +12,7 @@ import {
   Reload,
 } from '@components/atoms/iconComponents';
 import { useNavigatePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import ExpandedButton from '../expandedButton';
 

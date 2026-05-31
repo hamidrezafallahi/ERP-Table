@@ -1,4 +1,4 @@
-import "./table.css";
+import './table.css';
 
 import {
   ForwardedRef,
@@ -9,16 +9,24 @@ import {
   useImperativeHandle,
   useReducer,
   useState,
-} from "react";
+} from 'react';
 
-import { Menu, MenuProps, Spin, Table, TableColumnsType } from "antd";
-import moment from "moment-jalaali";
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Menu,
+  MenuProps,
+  Spin,
+  Table,
+  TableColumnsType,
+} from 'antd';
+import moment from 'moment-jalaali';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomModal } from "@components/atoms/defaultElements";
-import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
+import { CustomModal } from '@components/atoms/defaultElements';
+import { CustomDrawer } from '@components/atoms/defaultElements/drawer';
 import {
   Dots,
   Edit,
@@ -27,27 +35,25 @@ import {
   TrashBin,
   Undo,
   VoucherItemsIcon,
-} from "@components/atoms/iconComponents";
-import { arrayMove } from "@dnd-kit/sortable";
-import { useDarkMode } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation } from "@services/base";
+} from '@components/atoms/iconComponents';
+import { arrayMove } from '@dnd-kit/sortable';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   type IDetail,
-  type IDetailColumnConfig,
   RowStateEnum,
-} from "@services/generalType/type";
-import { setPageData } from "@slice/pages";
-import { getColoredIcon } from "@utils/core";
+} from '@services/generalType/type';
+import { setPageData } from '@slice/pages';
 
-import * as Icons from "@components/atoms/iconComponents";
-import type { IActions } from "../type";
+import type { IActions } from '../type';
 import {
   EditRowForm,
   RenderSelectField,
   RenderStaticField,
-} from "./renderField";
-import type { IChildHandle, IProps } from "./type";
+} from './renderField';
+import type {
+  IChildHandle,
+  IProps,
+} from './type';
 
 type PropsWithGeneric<T> = IProps<T>;
 
@@ -71,30 +77,25 @@ function MobileDetailDataGridInner<T extends IDetail>(
     totalCount,
     setShowForm,
   }: PropsWithGeneric<T>,
-  ref: ForwardedRef<IChildHandle>
+  ref: ForwardedRef<IChildHandle>,
 ) {
-  const { mode = "light" } = useDarkMode();
-
   const t = useTranslations();
-  const params = useSearchParams();
-  const headerId = params.get("id");
   const pageDataDispatch = useDispatch();
   const deviceHeight = window.innerHeight;
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedRowIndex, setSelectedRowIndex] = useState<number>(null);
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
-        (item) => item.isActive === true
+      activePage: state.withPersist.pages?.find(
+        (item) => item.isActive === true,
       ),
     }),
-    shallowEqual
+    shallowEqual,
   );
   const storedDetails: any = activePage?.pageData?.find(
-    (item) => item.name === detailKey
+    (item) => item.name === detailKey,
   )?.value;
 
-  const [trigger] = useCUDDataMutation();
 
   const reducer = (state: T[], action: IActions<T>): T[] => {
     switch (action.type) {
@@ -129,7 +130,7 @@ function MobileDetailDataGridInner<T extends IDetail>(
                   ...action.payload.data,
                   RowState: RowStateEnum.Add,
                 }
-            : item
+            : item,
         );
       case "DELETE_ROW":
         if (state[action.payload.index][fieldKey]) {
@@ -139,7 +140,7 @@ function MobileDetailDataGridInner<T extends IDetail>(
                   ...item,
                   RowState: RowStateEnum.Delete,
                 }
-              : item
+              : item,
           );
         } else {
           return state.filter((_, index) => index !== action.payload.index);
@@ -152,7 +153,7 @@ function MobileDetailDataGridInner<T extends IDetail>(
                   ...item,
                   RowState: RowStateEnum.Update,
                 }
-              : item
+              : item,
           );
         } else {
           return null;
@@ -163,10 +164,10 @@ function MobileDetailDataGridInner<T extends IDetail>(
       case "MOVE": {
         const { activeId, overId } = action.payload;
         const activeIndex = state.findIndex(
-          (record) => record[fieldKey] === activeId
+          (record) => record[fieldKey] === activeId,
         );
         const overIndex = state.findIndex(
-          (record) => record[fieldKey] === overId
+          (record) => record[fieldKey] === overId,
         );
         return arrayMove(state, activeIndex, overIndex);
       }
@@ -181,7 +182,7 @@ function MobileDetailDataGridInner<T extends IDetail>(
 
   const [detailData, dispatchDetailData] = useReducer(
     reducer,
-    detailInitialData
+    detailInitialData,
   );
 
   const columns: TableColumnsType<T> = columnsConfig
@@ -354,19 +355,22 @@ function MobileDetailDataGridInner<T extends IDetail>(
         (i: any) =>
           i.dataIndex !== "index" &&
           i.dataIndex !== fieldKey &&
-          i.dataIndex !== "static"
+          i.dataIndex !== "static",
       )
       .map((i) => i.key as string);
 
   const createNewRow = (rowNumber: number): T => {
-    const newRow = editableKeys.reduce((acc, key) => {
-      if (key === "RowNum") {
-        acc[key] = rowNumber;
-      } else {
-        acc[key] = undefined;
-      }
-      return acc;
-    }, {} as Record<string, any>);
+    const newRow = editableKeys.reduce(
+      (acc, key) => {
+        if (key === "RowNum") {
+          acc[key] = rowNumber;
+        } else {
+          acc[key] = undefined;
+        }
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
 
     newRow.key = Math.floor(Math.random() * 100000);
     newRow.RowState = RowStateEnum.Add;
@@ -440,10 +444,10 @@ function MobileDetailDataGridInner<T extends IDetail>(
   };
 
   const additionalActionItems = additionalActions?.map((action, i) => {
-    const Icon = Icons[action.icon];
+    // const Icon = Icons[action.icon];
     return {
       key: String(i + 7),
-      icon: Icon ? <Icon config={{ width: 18, height: 18 }} /> : undefined,
+      // icon: Icon ? <Icon config={{ width: 18, height: 18 }} /> : undefined,
       disabled:
         typeof action.disabled === "function"
           ? action.disabled()
@@ -542,7 +546,7 @@ function MobileDetailDataGridInner<T extends IDetail>(
 
     if (storedDetails) {
       const storedMap = Object?.fromEntries(
-        storedDetails?.map((item) => [item.key, item])
+        storedDetails?.map((item) => [item.key, item]),
       );
       const result = details.map((detail) => {
         if (storedMap[detail.key]) {
@@ -552,13 +556,13 @@ function MobileDetailDataGridInner<T extends IDetail>(
       });
 
       const finalResult: T[] = Object.values(
-        Object.assign({}, ...result.map((item) => ({ [item.key]: item })))
+        Object.assign({}, ...result.map((item) => ({ [item.key]: item }))),
       );
 
       const addedRows = storedDetails.filter(
         (item) =>
           // item.RowState === RowStateEnum.Add && item.addedPage === currentPage
-          item.RowState === RowStateEnum.Add
+          item.RowState === RowStateEnum.Add,
       );
 
       const finalOutput = addedRows
@@ -592,25 +596,25 @@ function MobileDetailDataGridInner<T extends IDetail>(
           name: detailKey,
           type: "array",
           value: detailData,
-        })
+        }),
       );
     } else {
       const previousDetailStoreData = detailInitialData?.map((item) => ({
         ...item,
       }));
       const cleanedData = detailData?.filter((item) =>
-        editableKeys?.some((key) => item[key] !== undefined)
+        editableKeys?.some((key) => item[key] !== undefined),
       );
       const updatedExistData = cleanedData
         ?.filter(
           (item) =>
             item.RowState === RowStateEnum.Add ||
             item.RowState === RowStateEnum.Delete ||
-            item.RowState === RowStateEnum.Update
+            item.RowState === RowStateEnum.Update,
         )
         ?.map((item) => {
           const previousItem = previousDetailStoreData.find(
-            (prev) => prev[fieldKey] === item[fieldKey]
+            (prev) => prev[fieldKey] === item[fieldKey],
           );
           const changeFields = [];
           if (previousItem) {
@@ -656,7 +660,7 @@ function MobileDetailDataGridInner<T extends IDetail>(
         const uniqueStoredData = storedDetails?.filter(
           (item) =>
             item.addedPage !== currentPage &&
-            !updatedExistData?.some((el) => el.key === item.key)
+            !updatedExistData?.some((el) => el.key === item.key),
         );
 
         pageDataDispatch(
@@ -668,7 +672,7 @@ function MobileDetailDataGridInner<T extends IDetail>(
               storedDetails && storedDetails.length > 0
                 ? [...uniqueStoredData, ...updatedExistData]
                 : updatedExistData,
-          })
+          }),
         );
       }
     }
@@ -702,8 +706,8 @@ function MobileDetailDataGridInner<T extends IDetail>(
             record.RowState === RowStateEnum.Delete
               ? "line-through text-xl text-gray-gray8"
               : record.RowState === RowStateEnum.Add
-              ? "bg-blue-blue11"
-              : ""
+                ? "bg-blue-blue11"
+                : ""
           }`,
         })}
         scroll={{
@@ -802,7 +806,7 @@ function MobileDetailDataGridInner<T extends IDetail>(
               recordIndex={selectedRowIndex}
               alternateKey={alternateKey}
               configs={columnsConfig.filter(
-                (item) => item.fieldName !== "index"
+                (item) => item.fieldName !== "index",
               )}
               handleSave={() => {
                 setIsEditModalOpen(false);
@@ -821,7 +825,7 @@ function MobileDetailDataGridInner<T extends IDetail>(
 }
 
 export const MobileDetailDataGrid = forwardRef(MobileDetailDataGridInner) as <
-  T extends IDetail
+  T extends IDetail,
 >(
-  props: IProps<T> & { ref?: Ref<IChildHandle> }
+  props: IProps<T> & { ref?: Ref<IChildHandle> },
 ) => ReactElement;

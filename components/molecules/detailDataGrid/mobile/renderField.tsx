@@ -25,7 +25,7 @@ import type {
   IDetailColumnConfig,
 } from '@services/generalType/type';
 import type { ISelectOption } from '@type/elementType';
-import { getCookie } from '@utils/core';
+import { getCookie } from '@utils/cookie';
 
 import type {
   IEditRowFormProps,

@@ -6,24 +6,33 @@ import {
   useImperativeHandle,
   useRef,
   useState,
-} from "react";
+} from 'react';
 
-import { Input } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Input } from 'antd';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CloseCircle, Magnifier } from "@components/atoms/iconComponents";
-import { useInvalidateTag } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { setViewData } from "@slice/pages";
+import {
+  CloseCircle,
+  Magnifier,
+} from '@components/atoms/iconComponents';
+import { useInvalidateTag } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setViewData } from '@slice/pages';
 
-import type { IProps, QuickFilterRef } from "./type";
+import type {
+  IProps,
+  QuickFilterRef,
+} from './type';
 
 const InputSearch = forwardRef<QuickFilterRef, IProps>(
   ({ onFocus, isActive }, ref) => {
     const { match, active } = useAppSelector((state) => {
       const match = state.withPersist.config.initMatch;
-      const active = state.withPersist.pages.find((i) => i.isActive);
+      const active = state.withPersist.pages?.find((i) => i.isActive);
       return { match, active };
     }, shallowEqual);
     const t = useTranslations();

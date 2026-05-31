@@ -15,7 +15,7 @@ import {
   LeftChevron,
   RightChevron,
 } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setLevelFromNavbar } from '@slice/pages';
 
 function Navbar({ active }) {
@@ -28,7 +28,7 @@ function Navbar({ active }) {
   const t = useTranslations();
   const { steps, fullScreen } = useAppSelector(
     (state) => ({
-      steps: state.withPersist.pages.find((item) => item.isActive)?.viewData?.[
+      steps: state.withPersist.pages?.find((item) => item.isActive)?.viewData?.[
         active ? "steps" : "lastSteps"
       ],
       fullScreen: state.withPersist.config.fullScreen,
@@ -119,7 +119,7 @@ function Navbar({ active }) {
                           ))}
                         </Menu>
                       }
-                      destroyPopupOnHide
+                      destroyOnHidden
                       placement={
                         direction == "rtl" ? "bottomRight" : "bottomLeft"
                       }

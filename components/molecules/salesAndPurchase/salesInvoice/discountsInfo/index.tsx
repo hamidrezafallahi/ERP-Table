@@ -15,7 +15,7 @@ import {
 import {
   calcDiscount,
 } from '@components/organisms/salesAndPurchase/salesInvoice/utils';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import type { IDiscount } from '@services/sale/discount/type';
 import type { IDiscountState } from '@services/sale/salesInvoiceDetails/type';
@@ -37,7 +37,7 @@ export const DiscountsInfo = ({
 
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
     }),
     shallowEqual
   );

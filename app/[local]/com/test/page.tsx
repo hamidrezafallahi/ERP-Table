@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { IProject, IRequest } from "@services/com/project/type";
+import { Form } from '@components/templates/form';
+import type {
+  IProject,
+  IRequest,
+} from '@services/com/project/type';
 
 export default function ProjectFormPage() {
   return (

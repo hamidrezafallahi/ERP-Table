@@ -1,14 +1,26 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
-import { Form, Spin } from "antd";
-import { useTranslations } from "next-intl";
+import {
+  Form,
+  Spin,
+} from 'antd';
+import { useTranslations } from 'next-intl';
 
-import { CustomButton, DynamicSelect } from "@components/atoms/defaultElements";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import { SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import type { IGood, IRequest } from "@services/com/good/type";
-import { showSuccessToast } from "@utils/core";
+import {
+  CustomButton,
+  DynamicSelect,
+} from '@components/atoms/defaultElements';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import { SpinIcon } from '@components/atoms/iconComponents';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import type {
+  IGood,
+  IRequest,
+} from '@services/com/good/type';
+import { showSuccessToast } from '@utils/toast';
 
 export const GoodPrice = ({ handleClose, sourceKey, id }) => {
   const { data: defaultValue } = useGetData<IGood[], IRequest>({

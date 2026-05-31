@@ -10,25 +10,32 @@ import {
   useReducer,
   useRef,
   useState,
-} from "react";
+} from 'react';
 
-import { Spin, Table, TableColumnsType } from "antd";
-import { CheckboxChangeEvent } from "antd/es/checkbox";
-import { ItemType } from "antd/es/menu/interface";
-import moment from "moment-jalaali";
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Spin,
+  Table,
+  TableColumnsType,
+} from 'antd';
+import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { ItemType } from 'antd/es/menu/interface';
+import moment from 'moment-jalaali';
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import {
   CustomButton,
   CustomDropdownButton,
   CustomTooltip,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import CustomCheckbox from "@components/atoms/defaultElements/checkbox";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import InputText from "@components/atoms/defaultElements/inputText";
+} from '@components/atoms/defaultElements';
+import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import InputText from '@components/atoms/defaultElements/inputText';
 import {
   ApplyIcon,
   Dots,
@@ -36,38 +43,42 @@ import {
   SpinIcon,
   TrashBin,
   Undo,
-} from "@components/atoms/iconComponents";
-import type { DragEndEvent } from "@dnd-kit/core";
-import { DndContext } from "@dnd-kit/core";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+} from '@components/atoms/iconComponents';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { DndContext } from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import {
   arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation } from "@services/base";
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useCUDDataMutation } from '@services/base';
 import {
   type IDetail,
   type IDetailColumnConfig,
   RowStateEnum,
-} from "@services/generalType/type";
-import { setPageData } from "@slice/pages";
+} from '@services/generalType/type';
+import { setPageData } from '@slice/pages';
 import {
   checkShortcutMatch,
   findNearestTrueValue,
-  showSuccessToast,
-} from "@utils/core";
+} from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
-import type { IActions } from "../type";
+import type { IActions } from '../type';
 import {
   RenderSelectField,
   RenderStaticValue,
   RenderTreeField,
-} from "./renderField";
-import type { IProps, RowContextProps, RowProps } from "./type";
+} from './renderField';
+import type {
+  IProps,
+  RowContextProps,
+  RowProps,
+} from './type';
 
 const RowContext = createContext<RowContextProps>({});
 
@@ -106,7 +117,7 @@ const Row: FC<RowProps> = (props) => {
 
   const contextValue = useMemo<RowContextProps>(
     () => ({ setActivatorNodeRef, listeners }),
-    [setActivatorNodeRef, listeners]
+    [setActivatorNodeRef, listeners],
   );
 
   return (
@@ -139,25 +150,25 @@ export function DesktopDetailDataGrid<T extends IDetail>({
   const deviceHeight = window.innerHeight;
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
-        (item) => item.isActive === true
+      activePage: state.withPersist.pages?.find(
+        (item) => item.isActive === true,
       ),
     }),
-    shallowEqual
+    shallowEqual,
   );
   const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
 
   const skipSyncRef = useRef(false);
 
   const storedDetails: any = activePage?.pageData?.find(
-    (item) => item.name === detailKey
+    (item) => item.name === detailKey,
   )?.value;
 
   const [trigger] = useCUDDataMutation();
 
   const reducer = (state: T[], action: IActions<T>): T[] => {
     const normalizeRowNumbers = (arr: T[]) =>
-      arr.map((item, idx) => ({ ...item, RowNum: idx + 1 } as T));
+      arr.map((item, idx) => ({ ...item, RowNum: idx + 1 }) as T);
 
     switch (action.type) {
       case "ADD_DATA_SOURCE": {
@@ -197,7 +208,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
                   ...action.payload.data,
                   RowState: RowStateEnum.Add,
                 }
-            : item
+            : item,
         );
       case "DELETE_ROW":
         if (state[action.payload.index]?.[fieldKey]) {
@@ -207,7 +218,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
                   ...item,
                   RowState: RowStateEnum.Delete,
                 }
-              : item
+              : item,
           );
         } else {
           return state.filter((i) => i.key !== action.payload.data.key);
@@ -220,7 +231,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
                   ...item,
                   RowState: RowStateEnum.Update,
                 }
-              : item
+              : item,
           );
         } else {
           return null;
@@ -231,10 +242,10 @@ export function DesktopDetailDataGrid<T extends IDetail>({
       case "MOVE": {
         const { activeId, overId } = action.payload;
         const activeIndex = state.findIndex(
-          (record) => record[fieldKey] === activeId
+          (record) => record[fieldKey] === activeId,
         );
         const overIndex = state.findIndex(
-          (record) => record[fieldKey] === overId
+          (record) => record[fieldKey] === overId,
         );
         const moved = arrayMove(state, activeIndex, overIndex);
         return normalizeRowNumbers(moved);
@@ -249,7 +260,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
 
   const [detailData, dispatchDetailData] = useReducer(
     reducer,
-    detailInitialData
+    detailInitialData,
   );
 
   useEffect(() => {
@@ -272,7 +283,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
   const conditionalColumns = columnsConfig?.filter((item) => item.conditionKey);
 
   const [dynamicColumns, setDynamicColumns] = useState<IDetailColumnConfig[]>(
-    []
+    [],
   );
   const [renderCondition, setRenderCondition] = useState<
     Record<string, boolean>[]
@@ -381,7 +392,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
               fieldName,
               independentValue,
               calcIndependent,
-              width
+              width,
             ),
         };
       case "number":
@@ -398,7 +409,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
               independentValue,
               calcIndependent,
               width,
-              limitation
+              limitation,
             ),
         };
       case "price":
@@ -414,7 +425,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
               fieldName,
               independentValue,
               calcIndependent,
-              width
+              width,
             ),
         };
       case "changeablePrice":
@@ -433,7 +444,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
               applyTooltip,
               independentValue,
               calcIndependent,
-              width
+              width,
             ),
         };
       case "unChangeablePrice":
@@ -458,7 +469,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
               fieldName,
               independentValue,
               calcIndependent,
-              width
+              width,
             ),
         };
       case "boolean":
@@ -474,7 +485,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
               fieldName,
               independentValue,
               calcIndependent,
-              width
+              width,
             ),
         };
       case "static":
@@ -505,13 +516,16 @@ export function DesktopDetailDataGrid<T extends IDetail>({
       (i) =>
         i.fieldType !== "index" &&
         i.fieldType !== fieldKey &&
-        i.fieldType !== "static"
+        i.fieldType !== "static",
     )
     ?.sort((a, b) => a.order - b.order)
-    ?.reduce((acc, item) => {
-      acc[item.fieldName] = item.conditionKey ? false : true;
-      return acc;
-    }, {} as Record<string, boolean>);
+    ?.reduce(
+      (acc, item) => {
+        acc[item.fieldName] = item.conditionKey ? false : true;
+        return acc;
+      },
+      {} as Record<string, boolean>,
+    );
 
   const editableKeys =
     columns &&
@@ -521,7 +535,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
           i.dataIndex !== "index" &&
           i.dataIndex !== fieldKey &&
           i.dataIndex !== "static" &&
-          i.dataIndex !== "array"
+          i.dataIndex !== "array",
       )
       .map((i) => i.key as string);
 
@@ -531,13 +545,16 @@ export function DesktopDetailDataGrid<T extends IDetail>({
   }>({ key: null, field: null });
 
   const createNewRow = (): T => {
-    const newRow = editableKeys.reduce((acc, key) => {
-      // skip RowNum — reducer will normalize it
-      if (key !== "RowNum") {
-        acc[key] = undefined;
-      }
-      return acc;
-    }, {} as Record<string, any>);
+    const newRow = editableKeys.reduce(
+      (acc, key) => {
+        // skip RowNum — reducer will normalize it
+        if (key !== "RowNum") {
+          acc[key] = undefined;
+        }
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
 
     newRow.key = Math.floor(Math.random() * 100000);
     newRow.RowState = RowStateEnum.Add;
@@ -552,7 +569,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
     field: string,
     index: number,
     independentValue: boolean,
-    calcIndependent: boolean
+    calcIndependent: boolean,
   ) => {
     const rowData = detailData[index];
     const value = e.target.value;
@@ -590,7 +607,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
     field: string,
     index: number,
     independentValue: boolean,
-    calcIndependent: boolean
+    calcIndependent: boolean,
   ) => {
     const rowData = detailData[index];
     let independentParameter = {};
@@ -625,7 +642,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
     field: string,
     index: number,
     independentValue: boolean,
-    calcIndependent: boolean
+    calcIndependent: boolean,
   ) => {
     const rowData = detailData[index];
     let independentParameter = {};
@@ -662,7 +679,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
     isApplyField: string,
     index: number,
     independentValue: boolean,
-    calcIndependent: boolean
+    calcIndependent: boolean,
   ) => {
     const rowData = detailData[index];
     let independentParameter = {};
@@ -715,7 +732,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
     field: string,
     index: number,
     independentValue: boolean,
-    calcIndependent: boolean
+    calcIndependent: boolean,
   ) => {
     const rowData = detailData[index];
     const value = e.target.checked;
@@ -726,7 +743,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
         const result = await calcIndependentValue(
           rowData,
           field,
-          value ? true : false
+          value ? true : false,
         );
         if (result) {
           independentParameter = result;
@@ -852,7 +869,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
     let newDetailsData = [...detailData];
     selectedRows.forEach((selectedRow) => {
       newDetailsData = newDetailsData.filter(
-        (row) => row.key !== selectedRow.key
+        (row) => row.key !== selectedRow.key,
       );
     });
     newDetailsData.splice(index + 1, 0, ...selectedRows);
@@ -902,7 +919,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
   const handleKeyAction = (
     event: KeyboardEvent<any>,
     record: T,
-    index: number
+    index: number,
   ) => {
     let focusedKey = editState.key !== null ? editState.key : index;
     let focusedField = editState.field || editableKeys[0];
@@ -911,7 +928,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
 
     if (targetItem) {
       const fieldKeys = Object?.keys(targetItem).filter(
-        (key) => targetItem[key]
+        (key) => targetItem[key],
       );
       const currentFieldIndex = fieldKeys.indexOf(editState.field);
 
@@ -1007,7 +1024,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
           </span>
         ),
         extra: action.shortcutKey,
-      })
+      }),
     );
 
     return (
@@ -1148,7 +1165,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
     field: string,
     independentValue: boolean,
     calcIndependent: boolean,
-    width: number
+    width: number,
   ) => {
     const rowData = detailData[index];
     const isEditing = editState.key === index && editState.field === field;
@@ -1211,7 +1228,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
     field: string,
     independentValue: boolean,
     calcIndependent: boolean,
-    width: number
+    width: number,
   ) => {
     const rowData = detailData[index];
     const isEditing = editState.key === index && editState.field === field;
@@ -1251,7 +1268,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
               field,
               index,
               independentValue,
-              calcIndependent
+              calcIndependent,
             )
           }
           value={value}
@@ -1278,7 +1295,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
     field: string,
     independentValue: boolean,
     calcIndependent: boolean,
-    width: number
+    width: number,
   ) => {
     const rowData = detailData[index];
     const isEditing = editState.key === index && editState.field === field;
@@ -1325,7 +1342,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
               field,
               index,
               independentValue,
-              calcIndependent
+              calcIndependent,
             );
           }, 500);
         }}
@@ -1364,7 +1381,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
     applyTooltip: string,
     independentValue: boolean,
     calcIndependent: boolean,
-    width: number
+    width: number,
   ) => {
     const rowData = detailData[index];
     const isEditing = editState.key === index && editState.field === field;
@@ -1434,7 +1451,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
                   isApplyField,
                   index,
                   independentValue,
-                  calcIndependent
+                  calcIndependent,
                 );
               }, 500);
             }}
@@ -1469,7 +1486,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
   const renderUnChangeablePrice = (
     index: number,
     field: string,
-    width: number
+    width: number,
   ) => {
     const rowData = detailData[index];
     const isEditing = editState.key === index && editState.field === field;
@@ -1526,7 +1543,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
     width: number,
     limitation: {
       max: number;
-    }
+    },
   ) => {
     const rowData = detailData[index];
     const isEditing = editState.key === index && editState.field === field;
@@ -1582,7 +1599,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
               field,
               index,
               independentValue,
-              calcIndependent
+              calcIndependent,
             );
           }, 500);
         }}
@@ -1606,7 +1623,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
     field: string,
     independentValue: boolean,
     calcIndependent: boolean,
-    width: number
+    width: number,
   ) => {
     const rowData = detailData[index];
     const isEditing = editState.key === index && editState.field === field;
@@ -1677,7 +1694,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
 
     if (storedDetails) {
       const storedMap = Object?.fromEntries(
-        storedDetails?.map((item) => [item.key, item])
+        storedDetails?.map((item) => [item.key, item]),
       );
       const result = details.map((detail) => {
         if (storedMap[detail.key]) {
@@ -1687,11 +1704,11 @@ export function DesktopDetailDataGrid<T extends IDetail>({
       });
 
       const finalResult: T[] = Object.values(
-        Object.assign({}, ...result.map((item) => ({ [item.key]: item })))
+        Object.assign({}, ...result.map((item) => ({ [item.key]: item }))),
       );
       const addedRows = storedDetails.filter(
         (item) =>
-          item.RowState === RowStateEnum.Add && item.addedPage === currentPage
+          item.RowState === RowStateEnum.Add && item.addedPage === currentPage,
       );
 
       const finalOutput = addedRows
@@ -1708,7 +1725,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
         }
       }
       const sortedFinalOutput = uniqueByRowNum.sort(
-        (a, b) => a.RowNum - b.RowNum
+        (a, b) => a.RowNum - b.RowNum,
       );
 
       const uniqueFinalOutput = [
@@ -1727,7 +1744,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
     }
     if (!isEdit) {
       const cleanedData = detailData?.filter((item) =>
-        editableKeys?.some((key) => item[key] !== undefined)
+        editableKeys?.some((key) => item[key] !== undefined),
       );
 
       skipSyncRef.current = true;
@@ -1737,7 +1754,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
           name: detailKey,
           type: "array",
           value: cleanedData,
-        })
+        }),
       );
 
       setTimeout(() => {
@@ -1748,7 +1765,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
         ...item,
       }));
       const cleanedData = detailData?.filter((item) =>
-        editableKeys?.some((key) => item[key] !== undefined)
+        editableKeys?.some((key) => item[key] !== undefined),
       );
 
       const updatedExistData = cleanedData
@@ -1756,11 +1773,11 @@ export function DesktopDetailDataGrid<T extends IDetail>({
           (item) =>
             item.RowState === RowStateEnum.Add ||
             item.RowState === RowStateEnum.Delete ||
-            item.RowState === RowStateEnum.Update
+            item.RowState === RowStateEnum.Update,
         )
         ?.map((item) => {
           const previousItem = previousDetailStoreData.find(
-            (prev) => prev[fieldKey] === item[fieldKey]
+            (prev) => prev[fieldKey] === item[fieldKey],
           );
           const changeFields = [];
           if (previousItem) {
@@ -1809,7 +1826,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
         const uniqueStoredData = storedDetails?.filter(
           (item) =>
             item.addedPage !== currentPage &&
-            !updatedExistData?.some((el) => el.key === item.key)
+            !updatedExistData?.some((el) => el.key === item.key),
         );
 
         skipSyncRef.current = true;
@@ -1822,7 +1839,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
               storedDetails && storedDetails.length > 0
                 ? [...uniqueStoredData, ...updatedExistData]
                 : updatedExistData,
-          })
+          }),
         );
         setTimeout(() => {
           skipSyncRef.current = false;
@@ -1865,13 +1882,13 @@ export function DesktopDetailDataGrid<T extends IDetail>({
                 const condition = conditionRenderer(
                   conditionValue,
                   fieldName,
-                  initialRenderCondition
+                  initialRenderCondition,
                 );
 
                 setRenderCondition((prevState) => [...prevState, condition]);
                 if (condition?.[fieldName]) {
                   const index = currentColumns.findIndex(
-                    (item) => item.fieldName === fieldName
+                    (item) => item.fieldName === fieldName,
                   );
                   index === -1 &&
                     currentColumns.push({
@@ -1895,7 +1912,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
                 }
               } else {
                 const index = currentColumns.findIndex(
-                  (item) => item.fieldName === fieldName
+                  (item) => item.fieldName === fieldName,
                 );
                 index === -1 &&
                   currentColumns.push({
@@ -1927,7 +1944,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
           });
         });
         const orderedCondition = currentColumns?.sort(
-          (a, b) => a?.order - b?.order
+          (a, b) => a?.order - b?.order,
         );
 
         setDynamicColumns(orderedCondition);
@@ -1953,7 +1970,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
   }, [columnsConfig]);
 
   const additionalActionWithKeyShortcut = additionalActions?.filter(
-    (action) => action?.shortcutKey
+    (action) => action?.shortcutKey,
   );
 
   return (
@@ -1977,7 +1994,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
                     if (!action.shortcutKey) continue;
                     const isMatch = checkShortcutMatch(
                       event,
-                      action.shortcutKey
+                      action.shortcutKey,
                     );
                     if (isMatch) {
                       event.preventDefault();
@@ -1999,8 +2016,8 @@ export function DesktopDetailDataGrid<T extends IDetail>({
                 record.RowState === RowStateEnum.Delete
                   ? "line-through text-xl text-gray-gray8"
                   : record.RowState === RowStateEnum.Add
-                  ? "bg-blue-blue11"
-                  : ""
+                    ? "bg-blue-blue11"
+                    : ""
               }`,
             })}
             scroll={{

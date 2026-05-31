@@ -1,9 +1,13 @@
-import { useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
+import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
 
-import { persistor } from "@redux/index";
-import { resetConfig,fullConfigReset } from "@slice/config";
-import { deleteCookie, resetData } from "@utils/core";
+import { persistor } from '@redux/index';
+import {
+  fullConfigReset,
+  resetConfig,
+} from '@slice/config';
+import { deleteCookie } from '@utils/cookie';
+import { resetData } from '@utils/core';
 
 export const useHandle = () => {
   const dispatch = useDispatch();

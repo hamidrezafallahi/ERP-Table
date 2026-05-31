@@ -14,7 +14,7 @@ import {
 import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
 import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
 import InputText from '@components/atoms/defaultElements/inputText';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setPageData } from '@slice/pages';
 
 interface IProps {
@@ -25,7 +25,7 @@ function InventoryTypesForm(props: IProps) {
   const { relatedStockIsLoading, form } = props;
   const { pageData } = useAppSelector(
     (state) => ({
-      pageData: state.withPersist.pages.find((p) => p.isActive)?.pageData,
+      pageData: state.withPersist.pages?.find((p) => p.isActive)?.pageData,
     }),
     shallowEqual
   );

@@ -13,7 +13,7 @@ import { CustomModal } from '@components/atoms/defaultElements';
 import { FilterIcon } from '@components/atoms/iconComponents';
 import AdvancedFilter from '@components/molecules/advancedFilter';
 import Filter from '@components/molecules/filter';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import { setViewData } from '@slice/pages';
 import type { IColumns } from '@slice/pages/type';
@@ -34,17 +34,18 @@ function FilterModal({ ...props }: IFilterModalProps) {
   const [filterCount, setFilterCount] = useState(null);
   const [innerFilter, setInnerFilter] = useState([]);
   const [filterFields, setFilterFields] = useState([]);
+  const [defaultFilters, setDefaultFilters] = useState([]);
   type IColumnsWithEndpoint = IColumns & {
     endpoint?: string;
   };
   const { activePage, } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
     }),
     shallowEqual
   );
   const { data: innerFilterResponse } = useGetData<IInnerFilter[], null>({
-    url: `/api/acc/select/innerFilter `,
+    url: `/api/acc/select/innerFilter`,
     body: {},
   });
   useEffect(() => {
@@ -122,6 +123,13 @@ function FilterModal({ ...props }: IFilterModalProps) {
     }
   }, [activePage?.viewData?.Columns, innerFilter]);
 
+
+ useEffect(() => {
+    if (activePage?.viewData?.Filters?.FilterInfo) {
+     setDefaultFilters(activePage?.viewData?.Filters?.FilterInfo)
+    }
+  }, [activePage?.viewData?.Filters?.FilterInfo]);
+
   return (
     <div className="flex flex-col gap-1 overflow-hidden">
       <div className="text-gray-gray10 dark:text-white text-xs">
@@ -141,9 +149,10 @@ function FilterModal({ ...props }: IFilterModalProps) {
         />
       </div>
       <CustomModal
-        contentClassName="min-w-[580px] h-full"
+        contentClassName="h-full"
         headerName={t("general.filterData")}
         headerIcon={<FilterIcon />}
+        width={600}
         closeModal={() => {
           setOpenFilterModal(false);
         }}
@@ -153,6 +162,7 @@ function FilterModal({ ...props }: IFilterModalProps) {
             onReset={handleResetFilters}
             onApplyFilters={applyFilters}
             data={filterFields}
+            defaultFilters={defaultFilters}
           />
         }
       />

@@ -9,5 +9,6 @@ export const allowedEndPaths = [
   "issuingProformaInvoice",
   "vocherTypeDescription",
   "tafsiliCategory",
-  "comprehensiveReport"
+  "comprehensiveReport",
+  "accountDashboard",
 ];

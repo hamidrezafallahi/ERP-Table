@@ -17,7 +17,7 @@ import {
 } from '@components/atoms/defaultElements';
 import { ActionIcon } from '@components/atoms/iconComponents';
 import DynamicModal from '@components/organisms/dynamicModal';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import { setPageData } from '@slice/pages';
 

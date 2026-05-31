@@ -1,15 +1,22 @@
-import React from "react";
+import React from 'react';
 
-import { MenuArrowBack } from "@components/atoms/iconComponents";
-import { useAppDispatch, useAppSelector } from "@redux/index";
-import { prevStep } from "@slice/account";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import { MenuArrowBack } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { prevStep } from '@slice/account';
 
 function Backward() {
-  const dispatch = useAppDispatch();
-
-  const currentStep = useAppSelector(
-    (state) => state.withPersist.account.currentStep
-  );
+  const dispatch = useDispatch();
+const { currentStep } = useAppSelector(
+  (state) => ({
+    currentStep: state.withPersist.account.currentStep,
+  }),
+  shallowEqual
+);
 
   const handleClick = () => {
     if (currentStep > 1) {

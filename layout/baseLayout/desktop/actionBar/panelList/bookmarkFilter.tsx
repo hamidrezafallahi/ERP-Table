@@ -8,8 +8,8 @@ import {
   BookMarkIcon,
   BookMarkIconFilled,
 } from '@components/atoms/iconComponents';
-import { useDarkMode } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useDarkMode } from '@hooks/custom/useDarkMode';
 import { setViewData } from '@slice/pages';
 
 interface IProps {
@@ -21,7 +21,7 @@ export default function BookmarkFilter({ ...props }: IProps) {
   const { mode = "light" } = useDarkMode();
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
     }),
     shallowEqual
   );
@@ -50,7 +50,7 @@ export default function BookmarkFilter({ ...props }: IProps) {
       onClick={handleShowBookmark}
       title="نشان شده ها "
     >
-      {activePage.viewData?.Filters?.ShowOnlyBookmarked ? (
+      {activePage?.viewData?.Filters?.ShowOnlyBookmarked ? (
         <BookMarkIconFilled
           config={{
             width: 20,

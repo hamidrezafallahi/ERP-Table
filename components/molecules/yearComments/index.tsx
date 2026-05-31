@@ -1,16 +1,22 @@
-import { useRef, useState } from "react";
+import {
+  useRef,
+  useState,
+} from 'react';
 
-import { Input } from "antd";
-import { useTranslations } from "next-intl";
+import { Input } from 'antd';
+import { useTranslations } from 'next-intl';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { CommentIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import type { IComment } from "@services/generalType/type";
-import { showSuccessToast } from "@utils/core";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { CommentIcon } from '@components/atoms/iconComponents';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import type { IComment } from '@services/generalType/type';
+import { showSuccessToast } from '@utils/toast';
 
-import { Comment } from "./comment";
-import type { IProps } from "./type";
+import { Comment } from './comment';
+import type { IProps } from './type';
 
 export default function YearComments({ repoId, referId }: IProps) {
   const t = useTranslations();
@@ -100,7 +106,7 @@ export default function YearComments({ repoId, referId }: IProps) {
   };
 
   return (
-    <div className="flex flex-col gap-2 ">
+    <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
         <CommentIcon />
         <span className="text-sm">{t("general.comments")}</span>
@@ -120,10 +126,10 @@ export default function YearComments({ repoId, referId }: IProps) {
           {t("general.send")}
         </CustomButton>
       </div>
-      <div className="overflow-y-auto h-[140px] hidden-show-scrollbar ">
+      <div className="hidden-show-scrollbar h-[140px] overflow-y-auto">
         {comments?.Data?.map((comment: IComment) => (
           <div
-            className="p-2 border border-1 rounded-lg mb-2 "
+            className="mb-2 p-2 border border-1 rounded-lg"
             key={comment.CommentId}
           >
             <Comment

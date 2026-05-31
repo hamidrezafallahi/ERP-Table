@@ -48,15 +48,13 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import type { IVoucherDetails } from '@services/acc/voucherDetails/type';
 import { useCUDDataMutation } from '@services/base';
 import { RowStateEnum } from '@services/generalType/type';
 import { setPageData } from '@slice/pages';
-import {
-  findNearestTrueValue,
-  showSuccessToast,
-} from '@utils/core';
+import { findNearestTrueValue } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 import { RenderSelectField } from './renderSelectField';
 import type {
@@ -128,7 +126,7 @@ export const VoucherDataGrid: FC<IProps> = ({
   const pageDataDispatch = useDispatch();
   const { activePage, lang } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true
       ),
       lang: state.withPersist.config.lang,

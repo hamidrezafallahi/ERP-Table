@@ -21,13 +21,13 @@ import {
   selectFilterTypeOptions,
   stringFilterTypeOptions,
 } from '@constants/filterType';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import BookmarkFilter
   from '@layout/baseLayout/desktop/actionBar/panelList/bookmarkFilter';
 import SaveFilter
   from '@layout/baseLayout/desktop/actionBar/panelList/saveFilter';
 import TagFilters
   from '@layout/baseLayout/desktop/actionBar/panelList/tagFilters';
-import { useAppSelector } from '@redux/index';
 
 import ShowBookmarkFilter from './showBookmarkFilter';
 import ShowTagFilters from './showTagFilters';

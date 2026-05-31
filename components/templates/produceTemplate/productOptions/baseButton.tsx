@@ -11,7 +11,7 @@ import {
   PinIcon2,
   UnPinIcon2,
 } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useCUDDataMutation } from '@services/base';
 
 function BaseButton() {

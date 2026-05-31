@@ -1,16 +1,16 @@
-import { Form } from "antd";
-import { shallowEqual } from "react-redux";
+import { Form } from 'antd';
+import { shallowEqual } from 'react-redux';
 
 import {
   DynamicMultiSelect,
   MultiSelectWithList,
-} from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
-import DynamicRadio from "@components/molecules/dynamicRadioList";
-import { useAppSelector } from "@redux/index";
-import { ReportTypeEnum } from "@services/mng/report/type";
+} from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
+import DynamicRadio from '@components/molecules/dynamicRadioList';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { ReportTypeEnum } from '@services/mng/report/type';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export const ReportFormField = ({ defOpt, form }: IProps) => {
   const { match } = useAppSelector((state) => {

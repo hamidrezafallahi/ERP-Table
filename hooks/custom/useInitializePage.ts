@@ -7,7 +7,7 @@ import {
   useDispatch,
 } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import type { IMenu } from '@services/auth/base/type';
 import { setMenuBar } from '@slice/config';
 import { setInitialPageData } from '@slice/init';
@@ -36,7 +36,7 @@ export const useInitializePage = () => {
     const newPageId = Math.floor(Math.random() * 1000).toString();
     const init: IInitialPage = {
       RepoId: config?.RepoId ?? subMenu.RepoId,
-      SystemId: config?.SystemId ?? subMenu.SystemId,
+      SystemId: config?.SystemId ?? subMenu?.SystemId,
       // MenuId:config?.MenuId ?? subMenu.MenuId,
       url: config?.url ?? subMenu?.WebLink,
       pageId: config?.pageId ?? newPageId,

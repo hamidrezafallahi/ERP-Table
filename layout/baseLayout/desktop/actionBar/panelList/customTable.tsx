@@ -1,24 +1,44 @@
-import { Key, useCallback, useEffect, useRef, useState } from "react";
+import {
+  Key,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Input, Spin, Table } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Input,
+  Spin,
+  Table,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton, CustomTooltip } from "@components/atoms/defaultElements";
+import {
+  CustomButton,
+  CustomTooltip,
+} from '@components/atoms/defaultElements';
 import {
   CheckOutlinedIcon,
   Close,
   EditPencil,
   SpinIcon,
-} from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import type { ITagInfo } from "@services/base/type";
-import { setPageState } from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
-import { getSystemNameById, showSuccessToast } from "@utils/core";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import type { ITagInfo } from '@services/base/type';
+import { setPageState } from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
+import { getSystemNameById } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
-import { DataType } from "./type";
+import { DataType } from './type';
 
 export default function CustomTable({ defaultTagsRefetch }) {
   const [data, setData] = useState<DataType[]>([]);
@@ -31,8 +51,8 @@ export default function CustomTable({ defaultTagsRefetch }) {
   const dispatch = useDispatch();
   const { RepoId, SystemId, activePage, similarPage } = useAppSelector(
     (state) => {
-      const activePage = state.withPersist.pages.find((page) => page.isActive);
-      const similarPage = state.withPersist.pages.filter(
+      const activePage = state.withPersist.pages?.find((page) => page.isActive);
+      const similarPage = state.withPersist.pages?.filter(
         (page) => page.url === activePage?.url
       );
 

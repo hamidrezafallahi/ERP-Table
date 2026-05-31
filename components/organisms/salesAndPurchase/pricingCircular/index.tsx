@@ -27,7 +27,7 @@ import type {
 import {
   PricingCircularForm,
 } from '@components/molecules/salesAndPurchase/pricingCircular';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import type {
   IPricingCircular,
@@ -76,7 +76,7 @@ export const PricingCircular = ({ form }:{ form?:FormInstance }) => {
 
   const { activePage, fullScreen, minimizePanel, match } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true
       ),
       fullScreen: state.withPersist.config.fullScreen,

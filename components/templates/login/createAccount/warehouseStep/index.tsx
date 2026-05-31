@@ -1,31 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import { CustomButton } from "@components/atoms/defaultElements";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import { CustomButton } from '@components/atoms/defaultElements';
 import {
   DeleteNodeIcon,
   MenuArrowBack,
   PlusIcon,
   WonderIcon,
-} from "@components/atoms/iconComponents";
-import { useAppDispatch, useAppSelector } from "@redux/index";
-import { setIsEditing, setStep, setWarehouses } from "@slice/account";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  setIsEditing,
+  setStep,
+  setWarehouses,
+} from '@slice/account';
 
-import Backward from "../backward";
+import Backward from '../backward';
 
 const WarehouseStep = ({ onNext }: { onNext: () => void }) => {
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
 
-  const warehouses = useAppSelector(
-    (state) => state.withPersist.account.warehouses
-  );
-  const maxWarehouses = useAppSelector(
-    (state) => state.withPersist.account.maxWarehouses
-  );
-  const isEditing = useAppSelector(
-    (state) => state.withPersist.account.isEditing
-  );
+const {
+  warehouses,
+  maxWarehouses,
+  isEditing,
+} = useAppSelector(
+  (state) => ({
+    warehouses: state.withPersist.account.warehouses,
+    maxWarehouses: state.withPersist.account.maxWarehouses,
+    isEditing: state.withPersist.account.isEditing,
+  }),
+  shallowEqual,
+);
 
   const [inputValue, setInputValue] = useState("");
 

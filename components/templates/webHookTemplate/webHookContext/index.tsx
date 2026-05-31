@@ -30,7 +30,7 @@ import {
   TableDynamicModal,
 } from '@components/molecules/dynamicModal';
 import { ActionLabelsEnum } from '@components/organisms/list/enum';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   apiService,
   useCUDDataMutation,
@@ -38,10 +38,8 @@ import {
   useGetInfinite,
 } from '@services/base';
 import type { IToolbarMenu } from '@type/toolbar';
-import {
-  getSystemNameById,
-  showSuccessToast,
-} from '@utils/core';
+import { getSystemNameById } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 import CustomFormWebHook from './customFormWebHook';
 import type { IDynamicModalConfig } from './type';

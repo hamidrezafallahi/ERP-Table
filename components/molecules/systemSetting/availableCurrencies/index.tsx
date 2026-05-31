@@ -1,20 +1,32 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Spin } from "antd";
-import { useTranslations } from "next-intl";
+import { Spin } from 'antd';
+import { useTranslations } from 'next-intl';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import CustomCheckbox from "@components/atoms/defaultElements/checkbox";
-import InputText from "@components/atoms/defaultElements/inputText";
+import { CustomButton } from '@components/atoms/defaultElements';
+import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
+import InputText from '@components/atoms/defaultElements/inputText';
 import {
   CloseCircle,
   Magnifier,
   SpinIcon,
-} from "@components/atoms/iconComponents";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import type { IAvailableCurrency, IRequest } from "@services/com/currency/type";
-import type { ISelectOption } from "@type/elementType";
-import { showErrorToast, showSuccessToast } from "@utils/core";
+} from '@components/atoms/iconComponents';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import type {
+  IAvailableCurrency,
+  IRequest,
+} from '@services/com/currency/type';
+import type { ISelectOption } from '@type/elementType';
+import {
+  showErrorToast,
+  showSuccessToast,
+} from '@utils/toast';
 
 export const AvailableCurrencies = () => {
   const t = useTranslations();

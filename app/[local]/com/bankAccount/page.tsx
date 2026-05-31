@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { IBankAccount, IRequest } from "@services/com/bankAccount/type";
+import { Form } from '@components/templates/form';
+import type {
+  IBankAccount,
+  IRequest,
+} from '@services/com/bankAccount/type';
 
 export default function BankAccountFormPage() {
   return (

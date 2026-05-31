@@ -3,7 +3,7 @@ import {
   useDispatch,
 } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetConditionallyMutation } from '@services/base';
 import { setPlaceConfigs } from '@slice/config';
 import { IDefaultConfigs } from '@slice/config/type';

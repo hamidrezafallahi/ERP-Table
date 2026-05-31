@@ -18,14 +18,14 @@ import {
   RightArrow,
   StopRecording,
 } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setProgressbar } from '@slice/config';
 import {
   dataURLtoFile,
   generateGUID,
   getFileTypeFromBase64,
-  showErrorToast,
 } from '@utils/core';
+import { showErrorToast } from '@utils/toast';
 
 import CaptureCarousel from './captureCarousel';
 

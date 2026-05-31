@@ -10,10 +10,10 @@ import {
   TrashBin,
 } from '@components/atoms/iconComponents';
 import { useInitializePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { HistoryTypeEnum } from '@slice/history/enum';
 
-import * as Icons from '../../atoms/iconComponents';
+// import * as Icons from '../../atoms/iconComponents';
 
 export default function History() {
   const t = useTranslations();
@@ -29,7 +29,7 @@ export default function History() {
   );
 
   const historyMenuItems: ItemType[] = historyItems?.map((history, index) => {
-    const IconComponent = history?.pageIcon ? Icons[history?.pageIcon] : null;
+    // const IconComponent = history?.pageIcon ? Icons[history?.pageIcon] : null;
     return {
       key: index,
       disabled: history.type === HistoryTypeEnum.Delete,
@@ -45,11 +45,11 @@ export default function History() {
             }}
           >
             <div className="flex items-center gap-2">
-              {IconComponent && (
+              {/* {IconComponent && (
                 <div>
                   <IconComponent />
                 </div>
-              )}
+              )} */}
               <span className="font-bold">{history.name}</span>
             </div>
             <div className="flex items-center gap-2 text-xs">

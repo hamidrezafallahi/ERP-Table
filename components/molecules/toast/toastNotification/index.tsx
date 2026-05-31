@@ -1,8 +1,8 @@
 "use client";
 
-import { shallowEqual } from "react-redux";
+import { shallowEqual } from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 export default function ToastNotification({ title, message }) {
   const { match, lang } = useAppSelector((state) => {

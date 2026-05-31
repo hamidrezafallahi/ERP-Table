@@ -1,22 +1,37 @@
-import React, { Dispatch, SetStateAction, useEffect } from "react";
-import { Form, Spin } from "antd";
-import { useTranslations } from "next-intl";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+} from 'react';
+
+import {
+  Form,
+  Spin,
+} from 'antd';
+import { FormInstance } from 'antd/lib';
+import { useTranslations } from 'next-intl';
+
 import {
   CustomButton,
   CustomTooltip,
   DynamicSelect,
-} from "@components/atoms/defaultElements";
-import { PlusOutline, SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation } from "@services/base";
-import { FormInstance } from "antd/lib";
-import { showSuccessToast } from "@utils/core";
-import { useFormChangeFields } from "../../sideBarForm/hooks/useFormChangeFields";
+} from '@components/atoms/defaultElements';
+import {
+  PlusOutline,
+  SpinIcon,
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useCUDDataMutation } from '@services/base';
+import { showSuccessToast } from '@utils/toast';
+
+import {
+  useFormChangeFields,
+} from '../../sideBarForm/hooks/useFormChangeFields';
 import {
   IDynamicModalConfig,
   RecordType,
   ReloadType,
-} from "../../sideBarForm/types";
-import { useAppSelector } from "@redux/index";
+} from '../../sideBarForm/types';
 
 interface CustomFormContextProps {
   form: FormInstance<any>;
@@ -124,7 +139,7 @@ export default function CustomFormContext(props: CustomFormContextProps) {
           <div className="flex justify-end items-center gap-2 pt-1 w-full">
             <CustomTooltip title={t("general.addNew")}>
               <span
-                className="px-2 py-[2.8px] bg-gray-gray3 rounded cursor-pointer"
+                className="bg-gray-gray3 px-2 py-[2.8px] rounded cursor-pointer"
                 onClick={() => {
                   reset();
                   setEditingRecord(null);

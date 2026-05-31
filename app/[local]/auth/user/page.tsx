@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { IRequest, IUser } from "@services/systemManagement/user/type";
+import { Form } from '@components/templates/form';
+import type {
+  IRequest,
+  IUser,
+} from '@services/systemManagement/user/type';
 
 export default function UserFormPage() {
   return (

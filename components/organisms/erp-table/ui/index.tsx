@@ -11,7 +11,7 @@ import {
   useFullScreen,
   useMediaQuery,
 } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import { CreateERPTableConfig } from '../bootstrap/type';
 import { ERPTableBody } from './ERPTableBody';
@@ -21,7 +21,7 @@ import ERPTablePagination from './pagination';
 import { useERPTable } from './useERPTable';
 
 export type ERPTableApi = {
-  getSnapshot: () => unknown;
+  getSnapShot: () => unknown;
   subscribeColumn: <T = unknown>(
     columnId: string,
     cb: (values: T[]) => void,
@@ -94,6 +94,12 @@ export function ERPTable<TMoreDetail = unknown>(
       }
     };
     const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+
+      if (target.closest(".ant-select") && (e.code === "ArrowUp" || e.code === "ArrowDown" || e.code === "Enter"|| e.code === "NumpadEnter")) {
+        return;
+      }
+
       const activeRow = controller.getActiveRow();
       const activeCell = controller.getActiveCell();
       controller.dispatch({
@@ -117,7 +123,7 @@ export function ERPTable<TMoreDetail = unknown>(
     if (result.ready) {
       const { controller } = result;
       onReady?.({
-        getSnapshot: () => controller.getSnapShot(),
+        getSnapShot: () => controller.getSnapShot(),
         addNewRows: () => {}, // controller.addNewRows(tableKey,[])},
         // validation: () => controller.validation(),
         subscribeColumn: (columnId, cb) =>

@@ -1,9 +1,9 @@
 "use client";
 
-import { shallowEqual } from "react-redux";
+import { shallowEqual } from 'react-redux';
 
-import { CheckAll } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
+import { CheckAll } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 export default function ToastSuccess({ message, title = null }) {
   const { match, lang } = useAppSelector((state) => {

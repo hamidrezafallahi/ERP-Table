@@ -1,17 +1,23 @@
-import { Mutex } from "async-mutex";
+import { Mutex } from 'async-mutex';
 
-import { fetchBaseQuery } from "@reduxjs/toolkit/query";
+import { fetchBaseQuery } from '@reduxjs/toolkit/query';
 import {
   createCookie,
   deleteCookie,
   getTokens,
+} from '@utils/cookie';
+import {
   showConfirmToast,
   showErrorByErrorCode,
   showErrorToast,
   showErrorToastDelete,
   showSuccessToast,
-} from "@utils/core";
-import type { IDeleteResults, ILoginResponse } from "./auth/base/type";
+} from '@utils/toast';
+
+import type {
+  IDeleteResults,
+  ILoginResponse,
+} from './auth/base/type';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 const mutex = new Mutex();
@@ -68,6 +74,13 @@ export async function baseQueryByToken(args, api, extraOptions) {
       }
 
       return result;
+    } else {
+      return {
+        error: {
+          status: 400,
+          data: "PlaceId is missing",
+        },
+      };
     }
   } else {
     const result: any = await fetchBaseQuery({
@@ -190,7 +203,10 @@ async function refreshAccessToken(ManagementAccount): Promise<string | null> {
   try {
     const accessToken = getTokens("_auth");
     const refreshToken = getTokens("_rAuth");
-    const DeviceToken = localStorage.getItem("fcm_token");
+    const DeviceToken =
+      typeof window !== "undefined"
+        ? localStorage.getItem("fcm_token")
+        : null;
 
     if (!refreshToken) return null;
 
@@ -230,11 +246,11 @@ function setDefaultsIntoRequest(args, api) {
   const CurrencyId = state?.withPersist?.config?.defaultConfigs?.CurrencyId;
 
   if (args.body instanceof FormData) {
-    args.body.append("Defaults.CurrencyId", CurrencyId.id.toString());
-    args.body.append("Defaults.CashierId", CashierId.id.toString());
-    args.body.append("Defaults.PlaceId", PlaceId.id.toString());
-    args.body.append("Defaults.YearId", YearId.id.toString());
-    args.body.append("Defaults.LangId", LanguageId.id.toString());
+    args.body.append("Defaults.CurrencyId", CurrencyId?.id?.toString() ?? "");
+    args.body.append("Defaults.CashierId", CashierId?.id?.toString()?? "");
+    args.body.append("Defaults.PlaceId", PlaceId?.id?.toString()?? "");
+    args.body.append("Defaults.YearId", YearId?.id?.toString()?? "");
+    args.body.append("Defaults.LangId", LanguageId?.id?.toString()?? "");
   } else if (args.body) {
     args.body = {
       ...args.body,

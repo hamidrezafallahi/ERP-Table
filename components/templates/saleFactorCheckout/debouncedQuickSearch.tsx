@@ -13,7 +13,7 @@ import {
 
 import InputText from '@components/atoms/defaultElements/inputText';
 import { Magnifier } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetConditionallyMutation } from '@services/base';
 import type { IBaseQueryResponse } from '@services/base/type';
 import { setPageData } from '@slice/pages';
@@ -28,7 +28,7 @@ interface IProps {
 function DebouncedQuickSearch({ ...props }: IProps) {
   const { setSearch, closeModalHandler } = props;
   const { activePageId } = useAppSelector((state) => {
-    const activePageId = state.withPersist.pages.find(
+    const activePageId = state.withPersist.pages?.find(
       (item) => item.isActive
     )?.pageId;
     return { activePageId };

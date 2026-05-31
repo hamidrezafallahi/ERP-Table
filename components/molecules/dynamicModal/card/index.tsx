@@ -4,19 +4,26 @@ import {
   forwardRef,
   ReactElement,
   ReactNode,
-} from "react";
-import { Collapse } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+} from 'react';
 
-import { DownChevron, NoData } from "@components/atoms/iconComponents";
-import { useDarkMode, useProcessedData } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { getColoredIcon } from "@utils/core";
+import { Collapse } from 'antd';
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import type { IProps } from "./type";
-import { CustomSwitch } from "@components/atoms/defaultElements";
-import { CardSimple } from "./cardSimple";
+import { CustomSwitch } from '@components/atoms/defaultElements';
+import {
+  DownChevron,
+  NoData,
+} from '@components/atoms/iconComponents';
+import {
+  useDarkMode,
+  useProcessedData,
+} from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { getColoredIcon } from '@utils/core';
+
+import { CardSimple } from './cardSimple';
+import type { IProps } from './type';
 
 type Ref = HTMLDivElement;
 

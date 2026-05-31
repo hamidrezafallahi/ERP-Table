@@ -1,31 +1,41 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { CustomButton } from "@components/atoms/defaultElements";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import { CustomButton } from '@components/atoms/defaultElements';
 import {
   DeleteNodeIcon,
   MenuArrowBack,
   PlusIcon,
   WonderIcon,
-} from "@components/atoms/iconComponents";
-import { useAppDispatch, useAppSelector } from "@redux/index";
-import { setFunds, setIsEditing, setStep } from "@slice/account";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  setFunds,
+  setIsEditing,
+  setStep,
+} from '@slice/account';
 
-import Backward from "../backward";
+import Backward from '../backward';
 
 interface Props {
   onNext: () => void;
 }
 
 const FundStep: React.FC<Props> = ({ onNext }) => {
-  const dispatch = useAppDispatch();
-  const funds = useAppSelector((state) => state.withPersist.account.funds);
-  const maxFunds = useAppSelector(
-    (state) => state.withPersist.account.maxFunds
-  );
-  const isEditing = useAppSelector(
-    (state) => state.withPersist.account.isEditing
-  );
+  const dispatch = useDispatch();
+const { funds, maxFunds, isEditing } = useAppSelector(
+  (state) => ({
+    funds: state.withPersist.account.funds,
+    maxFunds: state.withPersist.account.maxFunds,
+    isEditing: state.withPersist.account.isEditing,
+  }),
+  shallowEqual
+);
 
   const [inputValue, setInputValue] = useState("");
 

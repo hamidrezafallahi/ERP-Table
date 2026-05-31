@@ -1,5 +1,6 @@
-import { useAppSelector } from "@redux/index";
-import { shallowEqual } from "react-redux";
+import { shallowEqual } from 'react-redux';
+
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 type sourceArrayType = {
   label: string;
@@ -17,7 +18,7 @@ export const useGetAccountLevel = (props: AccountLevelProps) => {
     (state) => ({
       placeConfigValue: state.withPersist.config.placeConfigs?.find(
         (item) => item.PlaceConfigId === placeConfigId,
-      ).Value,
+      )?.Value,
     }),
     shallowEqual,
   );

@@ -1,38 +1,43 @@
 import {
-  Dispatch,
   RefObject,
-  SetStateAction,
   useEffect,
   useState,
-} from "react";
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { useDispatch } from "react-redux";
+import { Spin } from 'antd';
+import { useTranslations } from 'next-intl';
+import { useDispatch } from 'react-redux';
 
-import { CustomButton, CustomTooltip } from "@components/atoms/defaultElements";
+import {
+  CustomButton,
+  CustomTooltip,
+} from '@components/atoms/defaultElements';
 import {
   Info,
   NotExistNotificationIcon,
   SpinIcon,
   TrashBin,
-} from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation } from "@services/base";
-import {
-  type INotification,
-  MessageStatusEnum,
-} from "@services/notification/type";
-import { convertDate, showSuccessToast } from "@utils/core";
-import {
-  removeNotification,
-  updateNotificationStatus,
-} from "@slice/notification";
-import { Spin } from "antd";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   QueryActionCreatorResult,
   QueryDefinition,
-} from "@reduxjs/toolkit/query";
-import { IBaseQueryResponse, IBaseRequest } from "@services/base/type";
+} from '@reduxjs/toolkit/query';
+import { useCUDDataMutation } from '@services/base';
+import {
+  IBaseQueryResponse,
+  IBaseRequest,
+} from '@services/base/type';
+import {
+  type INotification,
+  MessageStatusEnum,
+} from '@services/notification/type';
+import {
+  removeNotification,
+  updateNotificationStatus,
+} from '@slice/notification';
+import { convertDate } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 interface RenderNotificationProps {
   lastItemRef?: RefObject<HTMLDivElement>;
@@ -142,7 +147,7 @@ export const RenderNotification = ({
             <div
               key={item.MessageId}
               ref={index === data.length - 1 ? lastItemRef : null}
-              className="flex justify-between items-center gap-2 pt-5 pb-5 border-b-[1px] first:pt-2 last:border-b-0 text-sm group"
+              className="group flex justify-between items-center gap-2 pt-5 first:pt-2 pb-5 border-b-[1px] last:border-b-0 text-sm"
             >
               <div
                 className={`${
@@ -190,7 +195,7 @@ export const RenderNotification = ({
                     </div>
                     {desktop && (
                       <CustomButton
-                        className="p-0 hover:!bg-white h-5"
+                        className="hover:!bg-white p-0 h-5"
                         type="text"
                         onClick={() => handleDelete(item)}
                       >
@@ -205,7 +210,7 @@ export const RenderNotification = ({
                     )}
                   </div>
                 </div>
-                <div className="flex items-start justify-between">
+                <div className="flex justify-between items-start">
                   <span
                     className={`${isDropdown ? "max-w-72" : ""} ${
                       isNew ? "text-main-black" : "text-gray-gray9"
@@ -215,7 +220,7 @@ export const RenderNotification = ({
                   </span>
                   {!desktop && (
                     <CustomButton
-                      className="p-0 hover:!bg-white h-5 hidden group-hover:flex"
+                      className="hidden group-hover:flex hover:!bg-white p-0 h-5"
                       type="text"
                       onClick={() => handleDelete(item)}
                     >

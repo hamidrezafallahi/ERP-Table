@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 
+import { useTranslations } from 'next-intl';
 import { shallowEqual } from 'react-redux';
 
 import {
   DownOutlined,
   UpOutlined,
 } from '@ant-design/icons';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import { sampleData } from '../type';
-import { useTranslations } from 'next-intl';
 
 export default function HistorySection({ data }: { data: typeof sampleData }) {
   const { match } = useAppSelector((state) => {

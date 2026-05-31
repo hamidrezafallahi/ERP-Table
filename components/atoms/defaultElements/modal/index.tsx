@@ -1,21 +1,34 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Divider, Modal } from "antd";
-import type { DraggableData, DraggableEvent } from "react-draggable";
-import Draggable from "react-draggable";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Divider,
+  Modal,
+} from 'antd';
+import type {
+  DraggableData,
+  DraggableEvent,
+} from 'react-draggable';
+import Draggable from 'react-draggable';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import {
   CloseModalIcon,
   Expand,
   MenuArrowBack,
   Shrink,
-} from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { setModalIsFullScreen } from "@slice/config";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setModalIsFullScreen } from '@slice/config';
 
-import { CustomButton } from "../button";
-import type { IProps } from "./type";
+import { CustomButton } from '../button';
+import type { IProps } from './type';
 
 export const CustomModal = ({
   headerIcon,
@@ -177,7 +190,7 @@ export const CustomModal = ({
       footer={null}
       destroyOnHidden
       onCancel={closeModal}
-      wrapClassName={(!match || modalIsFullScreen) && "full-screen-modal"}
+      wrapClassName={`${(!match || modalIsFullScreen) && "full-screen-modal"}`}
       classNames={{
         content: "overflow-x-hidden overflow-y-hidden",
         header: "h-auto !bg-[#FBFBFB]",

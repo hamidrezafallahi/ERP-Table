@@ -177,28 +177,19 @@ export class Table {
       (b.getCell("index")?.getValue().value as number)
     );
     if (placedRowId) {
-      console.log("اگر pasteInsert کنه")
       const placedRow = rowsArray.find(r => r.id.value === placedRowId)
       placeIndex = rowsArray.findIndex(r => r.id.value === placedRowId)
       const placeIndexValue = placedRow.getCell("index")?.getValue().value as number;
       const nextRow = placeIndex < rowsArray.length - 1 ? rowsArray[placeIndex + 1] : undefined;
       if (nextRow) {
-        console.log("اگر سطر بعدی وجود داشت")
         const nextIndexValue = nextRow.getCell("index")?.getValue().value as number;
-        console.log(targetRowId, placedRowId, nextIndexValue, rowsArray)
         x = (placeIndexValue + nextIndexValue) / 2;
       } else {
-        console.log("اگر سطر بعدی وجود نداشت")
-        console.log(targetRowId, placedRowId, rowsArray)
         x = placeIndexValue + 1
       }
     } else {
-      console.log("اگر فقط paste کرده بود یا ")
-      const lastRowIndexValue = rowsArray[ rowsArray.length-1].getCell("index").getValue().value as number
+      const lastRowIndexValue = rowsArray[rowsArray.length - 1].getCell("index").getValue().value as number
       x = lastRowIndexValue + 1
-      console.log(lastRowIndexValue)
-
-
     }
 
     const newRowId = new RowId(

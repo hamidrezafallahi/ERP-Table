@@ -25,7 +25,7 @@ import {
 } from '@components/atoms/iconComponents';
 import Confirmation from '@components/molecules/confirmation';
 import { ActionLabelsEnum } from '@components/organisms/list/enum';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   apiService,
   useCUDDataMutation,
@@ -35,14 +35,14 @@ import {
 import { IContactInfo } from '@services/com/contactInfo/type';
 import type { IRequest } from '@services/com/goodExtraInfo/type';
 import type { IToolbarMenu } from '@type/toolbar';
-import { showSuccessToast } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 import { config } from '../contactInfo/config';
-import { FormContactInfo } from './formContactInfo';
 import {
   CardDynamicModal,
   TableDynamicModal,
 } from '../dynamicModal';
+import { FormContactInfo } from './formContactInfo';
 import type { IProps } from './type';
 
 export default function ContactInfo({ id, sourceKey }: IProps) {

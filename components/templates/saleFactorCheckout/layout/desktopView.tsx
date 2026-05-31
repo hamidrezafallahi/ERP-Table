@@ -4,7 +4,7 @@ import { Divider } from 'antd';
 import { useTranslations } from 'next-intl';
 import { shallowEqual } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import Container from '../container';
 import Customer from '../Customer';

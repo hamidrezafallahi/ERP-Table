@@ -1097,6 +1097,7 @@ export class TableEngine {
         width: col.minWidth,
         style: col.style,
         popUpWidth: col.popUpWidth,
+        dynamicSelectFilterOption:col.dynamicSelectFilterOption,
         labelValue: col.labelValue,
         className: col.className,
          enableDeleteButton:col.enableDeleteButton,

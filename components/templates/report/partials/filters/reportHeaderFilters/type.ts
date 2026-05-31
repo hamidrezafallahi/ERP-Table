@@ -1,4 +1,5 @@
 import { IFilter } from '@services/base/type';
+import { IFilterData } from '@type/filterTypes';
 
 export enum ValueTypeEnum {
   Draft = 3,
@@ -8,10 +9,12 @@ export enum ValueTypeEnum {
 }
 export interface ReportHeaderFilterProps extends FilterSectionProps {
   showThirdAction?: boolean;
+  filterFields:IFilterData[]
   defaultRange?: {from:string|number,to:string|number};
   thirdActionHandler?: () => void;
  
 }
 export interface FilterSectionProps{
-    defaultFilter?:IFilter[]
+    defaultFilters?:IFilter[]
+    filterFields:IFilterData[]
 }

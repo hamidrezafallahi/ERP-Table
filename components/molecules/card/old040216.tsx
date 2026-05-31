@@ -19,7 +19,8 @@
 //     NoData,
 //     Pending,
 //   } from "@components/atoms/iconComponents";
-//   import { useAppSelector } from "@redux/index";
+//   import { useAppSelector } from '@hooks/custom/useAppSelector';
+
 //   import { ErrorStatusEnum, PendingStatusEnum } from "@services/base/enum";
 //   import { useCUDDataMutation } from "@services/base/new";
 //   import { setItems } from "@slice/items";

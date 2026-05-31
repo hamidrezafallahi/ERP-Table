@@ -1,4 +1,4 @@
-import Form from "@components/templates/form";
+import { Form } from '@components/templates/form';
 
 export default function SortingVoucherPage() {
   return (

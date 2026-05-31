@@ -1,21 +1,42 @@
-import { Form, Spin } from "antd";
-import { useTranslations } from "next-intl";
-import { useCUDDataMutation } from "@services/base";
-import { shallowEqual, useDispatch } from "react-redux";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { CustomButton, CustomTooltip } from "@components/atoms/defaultElements";
-import { PlusOutline, SpinIcon } from "@components/atoms/iconComponents";
-import { showSuccessToast } from "@utils/core";
-import { Dispatch, SetStateAction, useEffect } from "react";
-import { useAppSelector } from "@redux/index";
-import { FormInstance } from "antd/lib";
-import { ISelectTafsili } from "./types";
+import {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+} from 'react';
+
+import {
+  Form,
+  Spin,
+} from 'antd';
+import { FormInstance } from 'antd/lib';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import {
+  CustomButton,
+  CustomTooltip,
+} from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
+import {
+  PlusOutline,
+  SpinIcon,
+} from '@components/atoms/iconComponents';
+import {
+  useFormChangeFields,
+} from '@components/organisms/sideBarForm/hooks/useFormChangeFields';
 import {
   IDynamicModalConfig,
   ReloadType,
-} from "@components/organisms/sideBarForm/types";
-import { useFormChangeFields } from "@components/organisms/sideBarForm/hooks/useFormChangeFields";
-import { setPageData } from "@slice/pages";
+} from '@components/organisms/sideBarForm/types';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useCUDDataMutation } from '@services/base';
+import { setPageData } from '@slice/pages';
+import { showSuccessToast } from '@utils/toast';
+
+import { ISelectTafsili } from './types';
 
 interface AddCategoryFormProps {
   config: IDynamicModalConfig;

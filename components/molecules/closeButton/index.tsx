@@ -16,7 +16,7 @@ import {
   useInitializePage,
   useNavigatePage,
 } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   removePage,
   setActivePage,

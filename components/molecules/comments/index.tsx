@@ -1,16 +1,22 @@
-import { useRef, useState } from "react";
+import {
+  useRef,
+  useState,
+} from 'react';
 
-import { Input } from "antd";
-import { useTranslations } from "next-intl";
+import { Input } from 'antd';
+import { useTranslations } from 'next-intl';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { CommentIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import type { IComment } from "@services/generalType/type";
-import { showSuccessToast } from "@utils/core";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { CommentIcon } from '@components/atoms/iconComponents';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import type { IComment } from '@services/generalType/type';
+import { showSuccessToast } from '@utils/toast';
 
-import { Comment } from "./comment";
-import type { IProps } from "./type";
+import { Comment } from './comment';
+import type { IProps } from './type';
 
 export default function Comments({ repoId, referId }: IProps) {
   const t = useTranslations();

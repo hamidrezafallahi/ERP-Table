@@ -1,16 +1,12 @@
-import {
-  Dispatch,
-  FC,
-  SetStateAction,
-} from 'react';
+import { Dispatch, FC, SetStateAction } from "react";
 
 export interface IProps {
-  detailFieldKey?: string
-  headerFieldKey?: string
-  tableTitle?: string
-  addUrl?: string
-  updateUrl?: string
-  headerGetUrl?: string
+  detailFieldKey?: string;
+  headerFieldKey?: string;
+  tableTitle?: string;
+  addUrl?: string;
+  updateUrl?: string;
+  headerGetUrl?: string;
   caption: string;
   fieldKey: string;
   titleKey: string | string[];
@@ -20,8 +16,8 @@ export interface IProps {
   pageIcon?: string;
   conditionalActions?: {
     conditionalProperty: string;
-      conditionallyAction?: string;
-      opposite?: boolean;
+    conditionallyAction?: string;
+    opposite?: boolean;
   }[];
   isModal?: boolean;
   parentPageId?: string;
@@ -33,7 +29,14 @@ export interface IProps {
   submitCaption?: string;
   withSubmitButton?: boolean;
   hasShorthandFormToolbar?: boolean;
-  Component?: FC<any> | undefined
+  Component?: FC<any> | undefined;
   fromIndexedDb?: boolean;
-
+  saveAsDraft?: boolean;
+  hasReload?: boolean;
+}
+export interface IResponse<T = unknown> {
+  Data: T;
+}
+export interface IRequest {
+  config: string;
 }

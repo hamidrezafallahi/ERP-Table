@@ -1,23 +1,38 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Checkbox, Form, Spin } from "antd";
-import type { Rule } from "antd/es/form";
-import { useTranslations } from "next-intl";
-import { useDispatch } from "react-redux";
+import {
+  Checkbox,
+  Form,
+  Spin,
+} from 'antd';
+import type { Rule } from 'antd/es/form';
+import { useTranslations } from 'next-intl';
+import { useDispatch } from 'react-redux';
 
 import {
   CustomButton,
   CustomTooltip,
   DynamicSelect,
-} from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
-import MapComponent from "@components/atoms/defaultElements/map";
-import { PlusOutline, SpinIcon } from "@components/atoms/iconComponents";
-import { apiService, useCUDDataMutation, useGetData } from "@services/base";
-import { IContactInfo } from "@services/com/contactInfo/type";
-import type { IRequest } from "@services/com/goodExtraInfo/type";
-import type { IRequestConfig } from "@type/elementType";
-import { showSuccessToast, transformDotNotationToNested } from "@utils/core";
+} from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
+import MapComponent from '@components/atoms/defaultElements/map';
+import {
+  PlusOutline,
+  SpinIcon,
+} from '@components/atoms/iconComponents';
+import {
+  apiService,
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import { IContactInfo } from '@services/com/contactInfo/type';
+import type { IRequest } from '@services/com/goodExtraInfo/type';
+import type { IRequestConfig } from '@type/elementType';
+import { transformDotNotationToNested } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 enum fieldType {
   email = 989,
@@ -143,7 +158,7 @@ export const FormContactInfo = ({
           label={dependentLabel}
           name="ContactInfo"
           rules={getValidationRule(independentKey)}
-          className="flex flex-col w-full lg:col-span-6 !mb-0 !pb-0 text-xs"
+          className="flex flex-col lg:col-span-6 !mb-0 !pb-0 w-full text-xs"
         >
           <InputText />
         </Form.Item>
@@ -154,7 +169,7 @@ export const FormContactInfo = ({
           label={dependentLabel}
           name="ContactInfo"
           rules={getValidationRule(independentKey)}
-          className="flex flex-col w-full lg:col-span-6 !mb-0 !pb-0 text-xs"
+          className="flex flex-col lg:col-span-6 !mb-0 !pb-0 w-full text-xs"
         >
           <InputText
             autoComplete="off"
@@ -177,7 +192,7 @@ export const FormContactInfo = ({
           label={dependentLabel}
           name="ContactInfo"
           rules={getValidationRule(independentKey)}
-          className="flex flex-col w-full lg:col-span-6 !mb-0 !pb-0 text-xs"
+          className="flex flex-col lg:col-span-6 !mb-0 !pb-0 w-full text-xs"
         >
           <InputText
             autoComplete="off"
@@ -202,7 +217,7 @@ export const FormContactInfo = ({
           label={dependentLabel}
           name="ContactInfo"
           rules={getValidationRule(independentKey)}
-          className="flex flex-col w-full lg:col-span-6 !mb-0 !pb-0 text-xs"
+          className="flex flex-col lg:col-span-6 !mb-0 !pb-0 w-full text-xs"
         >
           <InputText />
         </Form.Item>
@@ -365,7 +380,7 @@ export const FormContactInfo = ({
             type: "string",
           },
         ]}
-        className="flex flex-col w-full lg:col-span-6 !mb-0 !pb-0 text-xs"
+        className="flex flex-col lg:col-span-6 !mb-0 !pb-0 w-full text-xs"
       >
         <InputText />
       </Form.Item>
@@ -379,7 +394,7 @@ export const FormContactInfo = ({
           },
         ]}
         name="ContactTypeId"
-        className="flex flex-col w-full lg:col-span-6 !mb-0 !pb-0 text-xs"
+        className="flex flex-col lg:col-span-6 !mb-0 !pb-0 w-full text-xs"
       >
         <DynamicSelect
           showSearch
@@ -410,7 +425,7 @@ export const FormContactInfo = ({
           <Form.Item
             label={t("general.province")}
             name="LocationDesc"
-            className="!mb-0 w-full lg:col-span-6 text-xs"
+            className="lg:col-span-6 !mb-0 w-full text-xs"
           >
             <DynamicSelect
               dynamicValue={extraInfoDynamicValueProvince}
@@ -438,7 +453,7 @@ export const FormContactInfo = ({
           <Form.Item
             label={t("general.city")}
             name="LocationId"
-            className="!mb-0 w-full lg:col-span-6 text-xs"
+            className="lg:col-span-6 !mb-0 w-full text-xs"
           >
             <DynamicSelect
               dynamicValue={selectedProvince}
@@ -455,7 +470,7 @@ export const FormContactInfo = ({
           <Form.Item
             label={t("general.address")}
             name="ContactInfo"
-            className="!mb-0 w-full lg:col-span-6 text-xs"
+            className="lg:col-span-6 !mb-0 w-full text-xs"
             rules={[
               {
                 required: true,
@@ -469,7 +484,7 @@ export const FormContactInfo = ({
           <Form.Item
             label={t("general.postalCode")}
             name="PostalCode"
-            className="!mb-0 w-full lg:col-span-6 text-xs"
+            className="lg:col-span-6 !mb-0 w-full text-xs"
             rules={[
               {
                 validator: (_, value) => {
@@ -504,7 +519,7 @@ export const FormContactInfo = ({
           </Form.Item>
           <Form.Item
             name="Lat"
-            className="mx-auto !mb-0 w-full col-span-12 text-xs"
+            className="col-span-12 mx-auto !mb-0 w-full text-xs"
           >
             <MapComponent
               key="map-component"
@@ -527,10 +542,10 @@ export const FormContactInfo = ({
         </div>
       )}
       <Form.Item className="col-span-12 m-0 p-0 text-xs">
-        <div className="flex justify-end w-full items-center gap-2">
+        <div className="flex justify-end items-center gap-2 w-full">
           <CustomTooltip title={t("general.addNew")}>
             <span
-              className="px-2 py-[2.8px] bg-gray-gray3 rounded cursor-pointer"
+              className="bg-gray-gray3 px-2 py-[2.8px] rounded cursor-pointer"
               onClick={() => {
                 clearId();
                 form.resetFields();

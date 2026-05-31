@@ -1,25 +1,39 @@
 "use client";
-import { useState } from "react";
+import { useState } from 'react';
 
-import { CustomButton } from "@components/atoms/defaultElements";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import { CustomButton } from '@components/atoms/defaultElements';
 import {
   DeleteNodeIcon,
   MenuArrowBack,
   PlusIcon,
   WonderIcon,
-} from "@components/atoms/iconComponents";
-import { useAppDispatch, useAppSelector } from "@redux/index";
-import { setCompanies, setIsEditing, setStep } from "@slice/account";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  setCompanies,
+  setIsEditing,
+  setStep,
+} from '@slice/account';
 
-import Backward from "../backward";
+import Backward from '../backward';
 
 const CompanyStep = ({ onNext }: { onNext: () => void }) => {
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
   const [inputValue, setInputValue] = useState("");
 
-  const { companies, maxCompanies, isEditing } = useAppSelector(
-    (state) => state.withPersist.account
-  );
+const { companies, maxCompanies, isEditing } = useAppSelector(
+  (state) => ({
+    companies: state.withPersist.account.companies,
+    maxCompanies: state.withPersist.account.maxCompanies,
+    isEditing: state.withPersist.account.isEditing,
+  }),
+  shallowEqual
+);
 
   const handleAdd = () => {
     const trimmed = inputValue.trim();

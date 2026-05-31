@@ -11,7 +11,7 @@ import { ColumnsType } from 'antd/es/table';
 
 import { CustomButton } from '@components/atoms/defaultElements';
 import { PlusIcon } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useCUDDataMutation,
   useGetData,
@@ -19,7 +19,7 @@ import {
 import {
   showErrorToast,
   showSuccessToast,
-} from '@utils/core';
+} from '@utils/toast';
 
 import {
   IRequest,

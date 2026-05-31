@@ -1,29 +1,40 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Divider, Form } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import { Form } from 'antd';
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { CustomModal } from "@components/atoms/defaultElements";
-import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
-import Confirmation from "@components/molecules/confirmation";
+import { CustomModal } from '@components/atoms/defaultElements';
+import { CustomDrawer } from '@components/atoms/defaultElements/drawer';
+import Confirmation from '@components/molecules/confirmation';
 import {
   CardDynamicModal,
   TableDynamicModal,
-} from "@components/molecules/dynamicModal";
-import { ActionLabelsEnum } from "@components/organisms/list/enum";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import type { ISelectOption } from "@type/elementType";
-import type { IToolbarMenu } from "@type/toolbar";
-import { showSuccessToast, transformDotNotationToNested } from "@utils/core";
+} from '@components/molecules/dynamicModal';
+import { ActionLabelsEnum } from '@components/organisms/list/enum';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import type { ISelectOption } from '@type/elementType';
+import type { IToolbarMenu } from '@type/toolbar';
+import { transformDotNotationToNested } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
-import { BankDeposit } from "./bankDeposit";
-import { Cash } from "./cash";
-import { Cheque } from "./cheque";
-import { defaultListConfig } from "./config";
-import { SettlementTab } from "./tab";
-import { type IProps, SettlementTypeEnum } from "./type";
+import { BankDeposit } from './bankDeposit';
+import { Cash } from './cash';
+import { Cheque } from './cheque';
+import { defaultListConfig } from './config';
+import { SettlementTab } from './tab';
+import {
+  type IProps,
+  SettlementTypeEnum,
+} from './type';
 
 export const Settlement = ({ id }: IProps) => {
   const t = useTranslations();
@@ -37,7 +48,7 @@ export const Settlement = ({ id }: IProps) => {
       cashierId: state.withPersist.config.defaultConfigs.CashierId.id,
       match: state.withPersist.config.initMatch,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const [bankAccounts, setBankAccounts] = useState<{
@@ -60,7 +71,7 @@ export const Settlement = ({ id }: IProps) => {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isConfirmDrawerOpen, setIsConfirmDrawerOpen] = useState(false);
   const [confirmMode, setConfirmMode] = useState<"Delete" | "Confirm">(
-    "Delete"
+    "Delete",
   );
 
   const [changeFields, setChangeFields] = useState([]);
@@ -95,7 +106,7 @@ export const Settlement = ({ id }: IProps) => {
         Type: active.value,
       },
       id: id,
-    }
+    },
   );
 
   const { data: defaultValue } = useGetData<any, null>({
@@ -154,7 +165,7 @@ export const Settlement = ({ id }: IProps) => {
   const handleActionClick = async (
     action: IToolbarMenu,
     id: number,
-    PendingStatusId: number | null
+    PendingStatusId: number | null,
   ) => {
     setSelectedId(id);
     try {
@@ -486,7 +497,7 @@ export const Settlement = ({ id }: IProps) => {
   return (
     <div className="flex flex-col gap-4 mx-4 my-5 h-[80dvh]">
       <div className="flex flex-col gap-4" ref={reyhanRef}>
-        <div className="flex items-center justify-end w-full gap-4">
+        <div className="flex justify-end items-center gap-4 w-full">
           <div className="flex justify-center gap-1 w-fit">
             <span>{t("systemSetting.payableAmount")}</span>
             <span className="font-bold">
@@ -508,8 +519,8 @@ export const Settlement = ({ id }: IProps) => {
           className="flex flex-col justify-between h-full"
         >
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col border-[0.063rem] px-4 py-5 border-gray-gray55 rounded-lg border-dashed ">
-              <span className="font-medium mb-3 text-gray-gray10 text-base">
+            <div className="flex flex-col px-4 py-5 border-[0.063rem] border-gray-gray55 border-dashed rounded-lg">
+              <span className="mb-3 font-medium text-gray-gray10 text-base">
                 {t("general.paymentMethod")}
               </span>
               <SettlementTab active={active} setActive={setActive} />

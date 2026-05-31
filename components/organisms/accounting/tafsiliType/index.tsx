@@ -1,17 +1,23 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { ITafsiliType } from "@services/acc/tafsiliType/type";
-import { useGetData } from "@services/base";
-import type { IRequest } from "@services/trh/cashFundDeposit/type";
-import { setAllPageData, setPageInfo } from "@slice/pages";
+import { TafsiliTypeForm } from '@components/molecules/accounting';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { ITafsiliType } from '@services/acc/tafsiliType/type';
+import { useGetData } from '@services/base';
+import type { IRequest } from '@services/trh/cashFundDeposit/type';
+import {
+  setAllPageData,
+  setPageInfo,
+} from '@slice/pages';
 
-import { TafsiliTypeForm } from "@components/molecules/accounting";
-import { formConfig } from "./config";
+import { formConfig } from './config';
 
 export const TafsiliType = ({ form }) => {
   const dispatch = useDispatch();
@@ -49,7 +55,7 @@ export const TafsiliType = ({ form }) => {
 
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true
       ),
     }),

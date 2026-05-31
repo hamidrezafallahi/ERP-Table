@@ -5,14 +5,14 @@ import {
 } from 'react-redux';
 
 import { CustomButton } from '@components/atoms/defaultElements';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setViewData } from '@slice/pages';
 import { levelUrl } from '@utils/core';
 
 function ReportSidebar() {
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
     }),
     shallowEqual
   );

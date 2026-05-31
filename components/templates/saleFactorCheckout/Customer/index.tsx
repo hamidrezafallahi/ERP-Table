@@ -12,7 +12,7 @@ import {
   PlusIcon,
   SaleListIcon,
 } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import CustomerCard from './customerCard';
 import CustomerList from './CustomerList';

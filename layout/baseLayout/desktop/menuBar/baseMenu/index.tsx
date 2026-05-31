@@ -1,21 +1,38 @@
-import { FC, JSX, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FC,
+  JSX,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
-import { Input, Menu, Skeleton } from "antd";
-import DOMPurify from "dompurify";
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import {
+  Input,
+  Menu,
+  Skeleton,
+} from 'antd';
+import DOMPurify from 'dompurify';
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { ListOrdered } from "@components/atoms/iconComponents";
-import { useDarkMode, useInitializePage } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
+import { ListOrdered } from '@components/atoms/iconComponents';
+import {
+  useDarkMode,
+  useInitializePage,
+} from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 // import { useGetMenuQuery } from '@services/auth/base';
-import type { IMenu } from "@services/auth/base/type";
-import { useGetData } from "@services/base";
-import { MenuTypeEnum } from "@services/base/type";
-import type { IMenuItem } from "@type/elementType";
-import { getColoredIcon } from "@utils/core";
+import type { IMenu } from '@services/auth/base/type';
+import { useGetData } from '@services/base';
+import { MenuTypeEnum } from '@services/base/type';
+import type { IMenuItem } from '@type/elementType';
+import { getColoredIcon } from '@utils/core';
 
-import type { FilteredResult, IProps } from "./type";
+import type {
+  FilteredResult,
+  IProps,
+} from './type';
 
 const BaseMenu: FC<IProps> = () => {
   const { mode = "light" } = useDarkMode();

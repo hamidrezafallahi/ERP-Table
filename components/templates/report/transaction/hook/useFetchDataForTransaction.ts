@@ -9,7 +9,7 @@ import {
   useDispatch,
 } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import { setViewData } from '@slice/pages';
 import { IReportResponse } from '@slice/pages/type';
@@ -19,7 +19,7 @@ const fieldsToFormat = ["Bed", "Bes", "Mandeh"];
 const useFetchDataForTransaction = () => {
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
     }),
     shallowEqual
   );
@@ -30,8 +30,8 @@ const useFetchDataForTransaction = () => {
     PageNumber = 1,
     YearIds = null,
     PlaceIds = null,
-    FromDate = moment().locale("fa").clone().startOf("jYear").valueOf(),
-    ToDate = moment().locale("fa").clone().endOf("day").valueOf(),
+    StartDate = moment().locale("fa").clone().startOf("jYear").valueOf(),
+    EndDate = moment().locale("fa").clone().endOf("day").valueOf(),
     InnerFilters = [],
     IsFirstPeriod = false,
     IsCurrencyCount = false,
@@ -51,7 +51,7 @@ const useFetchDataForTransaction = () => {
   const [data, setData] = useState<any | IReportResponse>({});
   const recordHeight = 40;
   const deviceHeight = window.innerHeight;
-  const recordsPerPage = Math.floor((deviceHeight - 400) / recordHeight);
+  const recordsPerPage = Math.floor((deviceHeight - 400) / recordHeight)-1;
   const dispatch = useDispatch();
   //TODO: add type
   const {
@@ -67,12 +67,12 @@ const useFetchDataForTransaction = () => {
       PagingInfo: {
         PageRecordCount: recordsPerPage,
         PageNumber,
-        // WithTotalCount: false,
+        WithTotalCount: true,
       },
       YearIds,
       PlaceIds,
-      FromDate: FromDate ? new Date(FromDate).toISOString() : null,
-      ToDate: ToDate ? new Date(ToDate).toISOString() : null,
+      StartDate: StartDate ? new Date(StartDate).toISOString() : null,
+      EndDate: EndDate ? new Date(EndDate).toISOString() : null,
       InnerFilters,
       IsFirstPeriod,
       IsCurrencyCount,
@@ -99,7 +99,7 @@ const useFetchDataForTransaction = () => {
         let cols = temp.map((key) => ({
           fieldType: "string",
           title: returnNameByKey(key),
-          fieldName: returnNameByKey(key),
+          fieldName:key,
           dataIndex: key,
           key: key,
           hidden:
@@ -149,7 +149,7 @@ const useFetchDataForTransaction = () => {
       let cols = temp.map((key) => ({
         fieldType: "string",
         title: returnNameByKey(key),
-        fieldName: returnNameByKey(key),
+        fieldName: key,
         dataIndex: key,
         key: key,
         hidden: key == "VoucherDetailId",
@@ -190,6 +190,7 @@ const returnNameByKey = (key: string): string => {
   const names: Record<string, any> = {
     VoucherDate: "تاریخ سند",
     VoucherNumber: "شماره سند",
+    ReferNumber: "شماره ارجاع",
     SerialNumber: "شماره سریال",
     DetailDesc: "شرح سند",
     Bed: "بدهکار",

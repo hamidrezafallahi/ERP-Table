@@ -1,18 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { CustomDropdownButton } from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { NewButton } from "@components/atoms/iconComponents";
-import { useDarkMode, useInitializePage } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
+import { CustomDropdownButton } from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
+import { NewButton } from '@components/atoms/iconComponents';
+import {
+  useDarkMode,
+  useInitializePage,
+} from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
 // import { useGetMenuQuery } from "@services/auth/base";
-import { MenuTypeEnum } from "@services/base/type";
-import type { IRequest } from "@services/mng/report/type";
-import { getColoredIcon } from "@utils/core";
+import { MenuTypeEnum } from '@services/base/type';
+import type { IRequest } from '@services/mng/report/type';
+import { getColoredIcon } from '@utils/core';
 
 interface IMegaMenu {
   name: string;

@@ -1,12 +1,12 @@
-import { useReducer } from "react";
+import { useReducer } from 'react';
 
-import { useDispatch } from "react-redux";
+import { useDispatch } from 'react-redux';
 
-import type { IData } from "@components/molecules/advancedFilter/type";
-import { useAppSelector } from "@redux/index";
-import { StateTypeEnum } from "@services/trh/receivedCheque/type";
-import { setPageState } from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
+import type { IData } from '@components/molecules/advancedFilter/type';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { StateTypeEnum } from '@services/trh/receivedCheque/type';
+import { setPageState } from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
 
 interface IState {
   isSortModalOpen: boolean;
@@ -31,7 +31,7 @@ export const useFiltersAndSorts = ({
   };
 
   const activePage = useAppSelector((state) =>
-    state.withPersist.pages.find((page) => page.isActive),
+    state.withPersist.pages?.find((page) => page.isActive),
   );
 
   function reducer(state: IState, action: Action): IState {

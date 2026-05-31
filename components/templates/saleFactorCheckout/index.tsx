@@ -6,7 +6,7 @@ import {
   useDispatch,
 } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { addNewPage } from '@slice/pages';
 import { PageTypeEnum } from '@type/enum';
 

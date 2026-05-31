@@ -19,7 +19,7 @@ import {
   SpinIcon,
 } from '@components/atoms/iconComponents';
 import { useMediaQuery } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   setSelectedRows,
   setViewData,
@@ -42,7 +42,7 @@ export default function MainTable({ ...rest }: IProps) {
   const dispatch = useDispatch();
   const { activePage, fullScreen } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
       fullScreen: state.withPersist.config.fullScreen,
     }),
     shallowEqual
@@ -88,7 +88,6 @@ export default function MainTable({ ...rest }: IProps) {
   antTableWrapper?.addEventListener("scroll", handleScroll);
   const selectedRows: IStep[] = activePage?.viewData?.selectedItems;
   const limitDesktop = minDesktop && !maxDesktop
-
   return (
     <div className="flex flex-col gap-4 w-full">
       <div
@@ -107,17 +106,16 @@ export default function MainTable({ ...rest }: IProps) {
             size="large"
             rowSelection={{
               renderCell: (_value, _record, _index, originNode) => {
-                return (
-                  <div className="flex justify-start items-center gap-2 ps-1 w-[42px] h-10">
+                 return (
+                  <div className={`flex justify-start items-center ps-1 gap-2 min-w-14 h-10 ${_index % 2 === 0 ? "!bg-main-white " : "!bg-gray-gray3 "}`}>
                     {originNode}
                     {!activePage?.viewData?.TreeView && (
                       <CustomButton
                         type="text"
-                        ghost
-                        onClick={() => {
+                         onClick={() => {
                           handleRowClick(_record);
                         }}
-                        className="m-0 p-0"
+                        className={`m-0 p-0  `}
                       >
                         <DownChevron />
                       </CustomButton>

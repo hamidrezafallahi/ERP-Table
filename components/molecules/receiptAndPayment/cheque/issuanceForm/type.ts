@@ -1,4 +1,9 @@
-import type { IPage } from "@slice/pages/type";
+import { FormInstance } from 'antd';
+
+export interface IProps {
+  onSubmitCallback: (values:unknown)=>void;
+  form: FormInstance;
+} 
 
 export interface ICondition {
   HasTafsili: boolean;
@@ -12,7 +17,4 @@ export interface ICondition {
   HasTwelve: boolean;
   HasThirteen: boolean;
 }
-export interface IProps {
-  activePage: IPage;
-  form: any;
-}
+ 

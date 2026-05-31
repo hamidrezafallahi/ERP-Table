@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { ICostCenter, IRequest } from "@services/com/costCenter/type";
+import { Form } from '@components/templates/form';
+import type {
+  ICostCenter,
+  IRequest,
+} from '@services/com/costCenter/type';
 
 export default function CostCenterFormPage() {
   return (

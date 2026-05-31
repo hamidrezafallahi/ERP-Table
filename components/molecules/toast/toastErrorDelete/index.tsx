@@ -1,10 +1,11 @@
 "use client";
 
-import { WarningCircleRed } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import type { IDeleteData } from "@services/auth/base/type";
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
+
+import { WarningCircleRed } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import type { IDeleteData } from '@services/auth/base/type';
 
 export default function ToastErrorDelete({
   message,

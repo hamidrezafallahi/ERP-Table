@@ -1,8 +1,15 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Form } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Form } from 'antd';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+import { v4 as uuid } from 'uuid';
 
 import {
   CustomSelect,
@@ -10,20 +17,25 @@ import {
   DynamicSelect,
   DynamicTreeWithList,
   MultiSelectWithList,
-} from "@components/atoms/defaultElements";
-import CustomCheckbox from "@components/atoms/defaultElements/checkbox";
-import { DynamicTree } from "@components/atoms/defaultElements/dynamicTree";
-import EndDateTimePicker from "@components/atoms/defaultElements/endDateTimePicker";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import InputText from "@components/atoms/defaultElements/inputText";
-import StartDateTimePicker from "@components/atoms/defaultElements/startDateTimePicker";
-import { PlusIcon } from "@components/atoms/iconComponents";
-import DynamicRadio from "@components/molecules/dynamicRadioList";
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
-import { SystemEnum } from "@type/enum";
-import { v4 as uuid } from "uuid";
-import type { ConditionRow, IProps } from "./type";
+} from '@components/atoms/defaultElements';
+import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
+import { DynamicTree } from '@components/atoms/defaultElements/dynamicTree';
+import EndDateTimePicker
+  from '@components/atoms/defaultElements/endDateTimePicker';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import InputText from '@components/atoms/defaultElements/inputText';
+import StartDateTimePicker
+  from '@components/atoms/defaultElements/startDateTimePicker';
+import { PlusIcon } from '@components/atoms/iconComponents';
+import DynamicRadio from '@components/molecules/dynamicRadioList';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setPageData } from '@slice/pages';
+import { SystemEnum } from '@type/enum';
+
+import type {
+  ConditionRow,
+  IProps,
+} from './type';
 
 export const DiscountForm = ({ defOpt, form, id }: IProps) => {
   const t = useTranslations();
@@ -31,7 +43,7 @@ export const DiscountForm = ({ defOpt, form, id }: IProps) => {
   const dispatch = useDispatch();
   const { match, activePage } = useAppSelector((state) => {
     const match = state.withPersist.config.initMatch;
-    const activePage = state.withPersist.pages.find((item) => item.isActive);
+    const activePage = state.withPersist.pages?.find((item) => item.isActive);
     return { match, activePage };
   }, shallowEqual);
 
@@ -733,7 +745,7 @@ export const DiscountForm = ({ defOpt, form, id }: IProps) => {
             >
               {/* condition */}
               <div className="flex flex-col gap-2 col-span-12 lg:col-span-3">
-                <span className="text-xs text-gray-gray10">
+                <span className="text-gray-gray10 text-xs">
                   {t("discount.condition")}
                 </span>
                 <DynamicSelect
@@ -764,7 +776,7 @@ export const DiscountForm = ({ defOpt, form, id }: IProps) => {
 
               {/* operator */}
               <div className="flex flex-col gap-2 col-span-12 lg:col-span-3">
-                <span className="text-xs text-gray-gray10">
+                <span className="text-gray-gray10 text-xs">
                   {t("discount.operator")}
                 </span>
                 <CustomSelect
@@ -786,7 +798,7 @@ export const DiscountForm = ({ defOpt, form, id }: IProps) => {
 
               {/* value */}
               <div className="flex flex-col gap-2 col-span-12 lg:col-span-3">
-                <span className="text-xs text-gray-gray10">
+                <span className="text-gray-gray10 text-xs">
                   {t("discount.value")}
                 </span>
                 <CustomInputNumber

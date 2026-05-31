@@ -1,19 +1,28 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import moment from "moment-jalaali";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import moment from 'moment-jalaali';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import {
   CustomRadio,
   CustomSelect,
   CustomSpin,
-} from "@components/atoms/defaultElements";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
-import { setPageData } from "@slice/pages";
+} from '@components/atoms/defaultElements';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
+import { setPageData } from '@slice/pages';
 
-import { IProps, ISelectHeaderReturnInvoice } from "./type";
+import {
+  IProps,
+  ISelectHeaderReturnInvoice,
+} from './type';
 
 export const SelectHeader = ({ config }: IProps) => {
   const t = useTranslations();

@@ -1,21 +1,28 @@
-import { FC, useEffect, useState } from "react";
+import { FC } from 'react';
 
-import { Form } from "antd";
-import { useTranslations } from "next-intl";
+import { Form } from 'antd';
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 
 import {
   CustomDropdownButton,
   CustomTooltip,
   DynamicSelect,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { Dots, SavePlus } from "@components/atoms/iconComponents";
-import { useVoucherDescription } from "./useVoucherDescription";
+} from '@components/atoms/defaultElements';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import InputText from '@components/atoms/defaultElements/inputText';
+import {
+  Dots,
+  SavePlus,
+} from '@components/atoms/iconComponents';
 
-export const VoucherForm: FC<any> = ({ form,onSubmitCallback }) => {
+import { useVoucherDescription } from './useVoucherDescription';
+
+export const VoucherForm: FC<any> = ({ form, onSubmitCallback }) => {
   const t = useTranslations();
+  const params = useSearchParams();
+  const id = Number(params.get("id"));
   const voucherTypeId = Form.useWatch("VoucherTypeId", form);
 
   const { inputKey, items, isDisabled, lang, handleSaveDescription } =
@@ -23,7 +30,6 @@ export const VoucherForm: FC<any> = ({ form,onSubmitCallback }) => {
       form,
       voucherTypeId,
     });
-
   return (
     <Form
       form={form}
@@ -31,13 +37,29 @@ export const VoucherForm: FC<any> = ({ form,onSubmitCallback }) => {
       layout="vertical"
       className={`lg:grid lg:grid-cols-12 lg:gap-x-5 lg:gap-y-5 flex flex-col w-full gap-3`}
     >
+      {id>0 && (
+        <Form.Item
+          label={t("general.voucherNumber")}
+          name="voucherNumber"
+          className={`flex flex-col ${id>0 ? "lg:col-span-3" : "lg:col-span-4"} !mb-0 !pb-0 w-full text-xs`}
+        >
+          <InputText
+            readOnly
+            config={{
+              caption: t("general.voucherDescription"),
+              name: "VoucherNumber",
+              type: "text",
+            }}
+          />
+        </Form.Item>
+      )}
       <Form.Item
         label={t("general.voucherDate")}
         name="VoucherDate"
         rules={[
           { required: true, message: "این فیلد الزامی است.", type: "date" },
         ]}
-        className="flex flex-col w-full lg:col-span-4 !mb-0 !pb-0 text-xs"
+          className={`flex flex-col ${id>0? "lg:col-span-3" : "lg:col-span-4"} !mb-0 !pb-0 w-full text-xs`}
       >
         <NewDatePicker
           config={{
@@ -54,7 +76,7 @@ export const VoucherForm: FC<any> = ({ form,onSubmitCallback }) => {
         rules={[
           { required: true, message: "این فیلد الزامی است.", type: "number" },
         ]}
-        className="flex flex-col w-full lg:col-span-4 !mb-0 !pb-0 text-xs"
+          className={`flex flex-col ${id>0 ? "lg:col-span-3" : "lg:col-span-4"} !mb-0 !pb-0 w-full text-xs`}
       >
         <DynamicSelect
           showSearch
@@ -83,7 +105,7 @@ export const VoucherForm: FC<any> = ({ form,onSubmitCallback }) => {
       <Form.Item
         label={t("general.referNumber")}
         name="ReferNumber"
-        className="flex flex-col w-full lg:col-span-4 !mb-0 !pb-0 text-xs"
+          className={`flex flex-col ${id>0 ? "lg:col-span-3" : "lg:col-span-4"} !mb-0 !pb-0 w-full text-xs`}
       >
         <CustomInputNumber
           config={{
@@ -97,7 +119,7 @@ export const VoucherForm: FC<any> = ({ form,onSubmitCallback }) => {
           controls={false}
         />
       </Form.Item>
-      <div className="flex gap-2 w-full lg:items-end lg:col-span-12">
+      <div className="flex lg:items-end gap-2 lg:col-span-12 w-full">
         <Form.Item
           label={t("general.voucherDescription")}
           name="VoucherDesc"
@@ -108,7 +130,7 @@ export const VoucherForm: FC<any> = ({ form,onSubmitCallback }) => {
               type: "string",
             },
           ]}
-          className="flex flex-col w-full !mb-0 !pb-0 text-xs"
+          className="flex flex-col !mb-0 !pb-0 w-full text-xs"
         >
           <InputText
             key={inputKey}

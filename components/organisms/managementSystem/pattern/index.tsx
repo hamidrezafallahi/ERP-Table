@@ -1,29 +1,44 @@
 import {
+  useEffect,
+  useState,
+} from 'react';
+
+import { Form } from 'antd';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import { CustomModal } from '@components/atoms/defaultElements';
+import { CustomDrawer } from '@components/atoms/defaultElements/drawer';
+import Confirmation from '@components/molecules/confirmation';
+import {
   FieldSelector,
   PatternForm,
   PatternItems,
-} from "@components/molecules/managementSystem/pattern";
-import { ActionLabelsEnum } from "@components/organisms/list/enum";
-import { useAppSelector } from "@redux/index";
-import { apiService, useCUDDataMutation, useGetData } from "@services/base";
+} from '@components/molecules/managementSystem/pattern';
+import { ActionLabelsEnum } from '@components/organisms/list/enum';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  apiService,
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
 import type {
   IPattern,
   IPatternItem,
   IRequest,
-} from "@services/mng/pattern/type";
-import type { IToolbarMenu } from "@type/toolbar";
-import { Form } from "antd";
-import { useEffect, useState } from "react";
+} from '@services/mng/pattern/type';
+import {
+  setAllPageData,
+  setPageData,
+  setPageInfo,
+} from '@slice/pages';
+import type { IToolbarMenu } from '@type/toolbar';
+import { showSuccessToast } from '@utils/toast';
 
-import { formConfig } from "./config";
-
-import { CustomModal } from "@components/atoms/defaultElements";
-import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
-import Confirmation from "@components/molecules/confirmation";
-import { setAllPageData, setPageData, setPageInfo } from "@slice/pages";
-import { showSuccessToast } from "@utils/core";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { formConfig } from './config';
 
 export const Patterns = () => {
   const t = useTranslations();
@@ -31,7 +46,7 @@ export const Patterns = () => {
   const { locale, activePage, match } = useAppSelector(
     (state) => ({
       locale: state.withPersist.config.lang,
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true,
       ),
       match: state.withPersist.config.initMatch,

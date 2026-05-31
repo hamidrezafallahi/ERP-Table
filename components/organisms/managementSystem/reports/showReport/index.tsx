@@ -1,12 +1,15 @@
-import { shallowEqual } from "react-redux";
+import { shallowEqual } from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
-import type { IReportFile, IRequest } from "@services/reportFile/type";
-import { FilterData } from "@components/molecules/managementSystem/reports";
+import { FilterData } from '@components/molecules/managementSystem/reports';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
+import type {
+  IReportFile,
+  IRequest,
+} from '@services/reportFile/type';
 
-import { ReportView } from "../view";
-import type { IProps } from "./type";
+import { ReportView } from '../view';
+import type { IProps } from './type';
 
 export const ShowReport = ({ reportId }: IProps) => {
   const { modalIsFullScreen, reportData } = useAppSelector(

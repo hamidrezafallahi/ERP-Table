@@ -1,6 +1,6 @@
 import CloseButton from '@components/molecules/closeButton';
 import ExpandedButton from '@components/molecules/expandedButton';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import FormulaMaker from './formulaMaker';
 

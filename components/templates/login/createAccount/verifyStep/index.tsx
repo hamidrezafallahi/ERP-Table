@@ -1,13 +1,23 @@
 "use client";
-import React, { FC, useEffect, useRef, useState } from "react";
+import React, {
+  FC,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { ResendCodeIcon } from "@components/atoms/iconComponents";
-import { useAppDispatch, useAppSelector } from "@redux/index";
-import { setCode, setVerifyExpireTime } from "@slice/account";
+import { useDispatch } from 'react-redux';
 
-import Backward from "../backward";
-import StopWatch from "../stopWatch";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { ResendCodeIcon } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  setCode,
+  setVerifyExpireTime,
+} from '@slice/account';
+
+import Backward from '../backward';
+import StopWatch from '../stopWatch';
 
 interface Props {
   mobile: string;
@@ -17,7 +27,7 @@ interface Props {
 }
 
 const VerifyStep: FC<Props> = ({ mobile, onBack, onNext, reset }) => {
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
   const code = useAppSelector((state) => state.withPersist.account.code);
   const [canResend, setCanResend] = useState(false);
 

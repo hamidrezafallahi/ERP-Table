@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { IRequest, IStock } from "@services/inv/stock/type";
+import { Form } from '@components/templates/form';
+import type {
+  IRequest,
+  IStock,
+} from '@services/inv/stock/type';
 
 export default function StockFormPage() {
   return (

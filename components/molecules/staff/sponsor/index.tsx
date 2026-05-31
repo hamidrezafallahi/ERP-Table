@@ -25,7 +25,7 @@ import {
   TableDynamicModal,
 } from '@components/molecules/dynamicModal';
 import { ActionLabelsEnum } from '@components/organisms/list/enum';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useCUDDataMutation,
   useGetData,
@@ -36,7 +36,7 @@ import type {
   IStaffSponsor,
 } from '@services/hr/staffSponsor/type';
 import type { IToolbarMenu } from '@type/toolbar';
-import { showSuccessToast } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 import { config } from './config';
 import { SponsorForm } from './form';

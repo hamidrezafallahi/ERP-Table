@@ -28,10 +28,8 @@ import type {
   IRequest,
   IStockWarehouse,
 } from '@services/inv/stockWarehouse/type';
-import {
-  showSuccessToast,
-  transformDotNotationToNested,
-} from '@utils/core';
+import { transformDotNotationToNested } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 enum fieldType {
   manual = 1,
@@ -243,7 +241,7 @@ export const FormStockWarehouse = ({
           <div className="flex justify-end items-center gap-2">
             <CustomTooltip title={t("general.addNew")}>
               <span
-                className="px-2 py-[2.8px] bg-gray-gray3 rounded cursor-pointer"
+                className="bg-gray-gray3 px-2 py-[2.8px] rounded cursor-pointer"
                 onClick={() => {
                   clearId();
                   form.resetFields();

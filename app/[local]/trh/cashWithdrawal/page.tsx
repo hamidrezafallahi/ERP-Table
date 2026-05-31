@@ -1,8 +1,8 @@
-import Form from "@components/templates/form";
+import { Form } from '@components/templates/form';
 import type {
   ICashWithdrawal,
   IRequest,
-} from "@services/trh/cashWithdrawal/type";
+} from '@services/trh/cashWithdrawal/type';
 
 export default function CashWithdrawalFormPage() {
   return (

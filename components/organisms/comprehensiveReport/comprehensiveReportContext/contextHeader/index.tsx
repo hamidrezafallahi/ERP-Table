@@ -1,4 +1,7 @@
-import React from 'react';
+import React, {
+  Dispatch,
+  SetStateAction,
+} from 'react';
 
 import {
   Divider,
@@ -7,29 +10,48 @@ import {
 
 import ReportHeaderFilters
   from '@components/templates/report/partials/filters/reportHeaderFilters';
+import { filterTypeNumberEnum } from '@services/base/type';
+import { IViewData } from '@slice/pages/type';
 
-import { ReloadType } from '../../types';
 import CustomForm from './customForm';
+import { filterFields } from './filterConfig';
 
 interface ContextHeaderProps {
-  typeId: number;
-  refetchCard: ReloadType;
-  refetchTable: ReloadType;
+  setMutateIsLoading: Dispatch<SetStateAction<boolean>>;
   sidebarForm: FormInstance<any>;
+  setReportState: Dispatch<
+    SetStateAction<{
+      viewDataFilter: Partial<IViewData>;
+      tableData: any[];
+      cardData: any;
+    }>
+  >;
 }
 
 export function ContextHeader(props: ContextHeaderProps) {
-  const { typeId, refetchCard, refetchTable , sidebarForm} = props;
+  const { sidebarForm, setReportState, setMutateIsLoading } = props;
   return (
     <>
-  <ReportHeaderFilters
-  thirdActionHandler={()=>{console.log("thirdActionHandler")}}
-  />
-       <CustomForm
-        typeId={typeId}
-        refetchCard={refetchCard}
-        refetchTable={refetchTable}
+      <div className="flex justify-end gap-4 w-full">
+        <ReportHeaderFilters
+          filterFields={filterFields}
+          defaultRange={{
+            from: "2026-03-21T00:00:00.000+03:30",
+            to: "2027-03-20T23:59:59.999+03:30",
+          }}
+          defaultFilters={[
+            {
+              ColName: "VoucherTypeIds",
+              FilterType: filterTypeNumberEnum.Equal,
+              Value: [5, 4, 3, 2, 1],
+            },
+          ]}
+        />
+      </div>
+      <CustomForm
+        setMutateIsLoading={setMutateIsLoading}
         sidebarForm={sidebarForm}
+        setReportState={setReportState}
       />
       <Divider className="my-2" />
     </>

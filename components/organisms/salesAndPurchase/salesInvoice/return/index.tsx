@@ -26,7 +26,7 @@ import type {
 import {
   ReturnSalesInvoiceForm,
 } from '@components/molecules/salesAndPurchase/salesInvoice';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import type {
   IRequest,
@@ -75,7 +75,7 @@ export const ReturnSalesInvoice = ({ form }) => {
 
   const { activePage, fullScreen, minimizePanel, match } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
       fullScreen: state.withPersist.config.fullScreen,
       minimizePanel: state.withoutPersist.container.minimize,
       match: state.withPersist.config.initMatch,

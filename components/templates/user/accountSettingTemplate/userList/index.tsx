@@ -5,7 +5,7 @@ import React, {
 
 import { Skeleton } from 'antd';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useCUDDataMutation,
   useGetData,

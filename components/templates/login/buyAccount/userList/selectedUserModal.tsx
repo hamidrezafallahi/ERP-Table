@@ -8,7 +8,7 @@ import {
   CustomModal,
 } from '@components/atoms/defaultElements';
 import { CloseSm } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import { User } from './userRow';
 

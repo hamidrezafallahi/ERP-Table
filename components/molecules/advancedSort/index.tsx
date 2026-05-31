@@ -1,17 +1,23 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
 import {
   CustomButton,
   CustomSelect,
   CustomTooltip,
-} from "@components/atoms/defaultElements";
-import { Close, SortAscending } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
+} from '@components/atoms/defaultElements';
+import {
+  Close,
+  SortAscending,
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export default function AdvancedSort({
   data,

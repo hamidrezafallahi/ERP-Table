@@ -3,7 +3,7 @@
 import { CustomBreadcrumb } from '@components/atoms/defaultElements/breadcrumb';
 import PageTitle from '@components/atoms/pageTitle';
 import History from '@components/molecules/history';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { renderPageState } from '@utils/core';
 
 import TopHeadSearchbar from '../topHead/topHeadSearchbar';

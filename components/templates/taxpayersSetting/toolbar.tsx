@@ -1,10 +1,10 @@
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import BackNavigateButton from "@components/molecules/backNavigateButton";
-import ExpandedButton from "@components/molecules/expandedButton";
-import { useAppSelector } from "@redux/index";
+import { CustomButton } from '@components/atoms/defaultElements';
+import BackNavigateButton from '@components/molecules/backNavigateButton';
+import ExpandedButton from '@components/molecules/expandedButton';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 interface SubmitProps {
   submit: () => void;

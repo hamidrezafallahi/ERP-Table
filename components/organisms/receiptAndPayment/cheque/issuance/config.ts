@@ -1,4 +1,5 @@
-import type { IFormFieldConfig } from "@type/elementType";
+import { IDetailColumnConfig } from '@components/organisms/erp-table';
+import type { IFormFieldConfig } from '@type/elementType';
 
 export const formConfig: IFormFieldConfig[] = [
   {
@@ -166,53 +167,58 @@ export const formConfig: IFormFieldConfig[] = [
     originalValue: [],
   },
 ];
+export const columnConfig = (bankAccountId: number): IDetailColumnConfig[] => {
+  return [
+    {
+      fieldName: "index",
+      fieldCaption: " ردیف - عملیات",
+      fieldType: "index",
+      order: 1,
+      visibility: { kind: 'always' },
+      
+    },
+      
+      {
+        fieldName: "CheckPlaceMentDetailId",
+        fieldCaption: "چک",
+        fieldType: "selectOption",
+        dynamicSource: {
+          addWebUrl: "api/trh/select/CheckPlacementDetail/Check/Issuance",
+          endpoint: "api/trh/select/CheckPlacementDetail/Check/Issuance",
+          repoViewId: 140029,
+          BankAccountId: bankAccountId,
+          dependOn: {
+            value: bankAccountId,
+            fieldName: "BankAccountId",
+          },
+        },
+        order: 2,
+      },
+      {
+        fieldName: "MaturityDate",
+        fieldCaption: "تاریخ سررسید",
+        fieldType: "date",
+        order: 3,
+      },
+      {
+        fieldName: "DocPrice",
+        fieldCaption: "مبلغ",
+        fieldType: "price",
+        order: 4,
+      },
+      {
+        fieldName: "IsForToday",
+        fieldCaption: "چک روز",
+        fieldType: "checkbox",
+        order: 5,
+      },
+      {
+        fieldName: "DetailDesc",
+        fieldCaption: "شرح",
+        fieldType: "text",
+        order: 6,
+      },
 
-// export const columnConfig: IDetailColumnConfig[] = [
-//   {
-//     fieldName: "index",
-//     fieldCaption: `ردیف - عملیات`,
-//     fieldType: "index",
-//   },
-
-//   // {
-//   //   fieldName: "CheckNumber",
-//   //   fieldCaption: "شماره چک",
-//   //   fieldType: "number",
-//   // },
-//   // {
-//   //   fieldName: "SayadNumber",
-//   //   fieldCaption: "شماره صیاد",
-//   //   fieldType: "number",
-//   // },
-//   {
-//     fieldName: "CheckPlaceMentDetailId",
-//     fieldCaption: "چک",
-//     fieldType: "selectOption",
-//     dynamicValue: {
-//       addWebUrl: "api/trh/select/CheckPlacementDetail/Check/Issuance",
-//       endpoint: "api/trh/select/CheckPlacementDetail/Check/Issuance",
-//       repoViewId: 140029,
-//       BankAccountId: 10000249,
-//     },
-//   },
-//   {
-//     fieldName: "MaturityDate",
-//     fieldCaption: "تاریخ سررسید",
-//     fieldType: "date",
-//   },
-//   {
-//     fieldName: "DocPrice",
-//     fieldCaption: "مبلغ",
-//     fieldType: "price",
-//   },
-//   {
-//     fieldName: "IsForToday",
-//     fieldCaption: "چک روز",
-//     fieldType: "boolean",
-//   },
-//   {
-//     fieldName: "DetailDesc",
-//     fieldCaption: "شرح",
-//     fieldType: "text",
-//   },
-// ];
+  ]
+};
+ 

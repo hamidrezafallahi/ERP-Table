@@ -8,7 +8,7 @@ import {
   useDispatch,
 } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import { addNewPage } from '@slice/pages';
 import { PageStateEnum } from '@slice/pages/enum';

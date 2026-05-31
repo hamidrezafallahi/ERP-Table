@@ -1,31 +1,47 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Divider, Pagination } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import {
+  Divider,
+  Pagination,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { CustomButton, CustomModal } from "@components/atoms/defaultElements";
-import { LeftChevron, RightChevron } from "@components/atoms/iconComponents";
-
-import Confirmation from "@components/molecules/confirmation";
-import { ActionLabelsEnum } from "@components/organisms/list/enum";
-import { useAppSelector } from "@redux/index";
-import type {
-  IAccountSetting,
-  IRequest,
-} from "@services/acc/accountSetting/type";
-import { useCUDDataMutation, useGetData, useGetInfinite } from "@services/base";
-import type { IToolbarMenu } from "@type/toolbar";
-import { showSuccessToast } from "@utils/core";
-
-import { listConfig } from "./listConfig";
-import type { IProps } from "./type";
+import {
+  CustomButton,
+  CustomModal,
+} from '@components/atoms/defaultElements';
+import {
+  LeftChevron,
+  RightChevron,
+} from '@components/atoms/iconComponents';
 import {
   AccountSettingCard,
   AccountSettingForm,
   AccountSettingTable,
   AccountSettingTreasuryQuickSearch,
-} from "@components/molecules/accounting";
+} from '@components/molecules/accounting';
+import Confirmation from '@components/molecules/confirmation';
+import { ActionLabelsEnum } from '@components/organisms/list/enum';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import type {
+  IAccountSetting,
+  IRequest,
+} from '@services/acc/accountSetting/type';
+import {
+  useCUDDataMutation,
+  useGetData,
+  useGetInfinite,
+} from '@services/base';
+import type { IToolbarMenu } from '@type/toolbar';
+import { showSuccessToast } from '@utils/toast';
+
+import { listConfig } from './listConfig';
+import type { IProps } from './type';
 
 export const AccountSettingTreasury = ({ selectedSubtotal }: IProps) => {
   const { locale, match } = useAppSelector(

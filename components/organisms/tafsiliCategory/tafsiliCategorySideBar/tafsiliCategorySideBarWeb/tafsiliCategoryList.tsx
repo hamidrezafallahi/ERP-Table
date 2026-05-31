@@ -1,9 +1,18 @@
-import { shallowEqual, useDispatch } from "react-redux";
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
-import { ISelectTafsili } from "../types";
-import { Dispatch, SetStateAction } from "react";
-import { ActionsWeb } from "./actionsWeb";
+import {
+  Dispatch,
+  SetStateAction,
+} from 'react';
+
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setPageData } from '@slice/pages';
+
+import { ISelectTafsili } from '../types';
+import { ActionsWeb } from './actionsWeb';
 
 interface TafsiliCategoryListProps {
   handleSidebarDelete: (id?: number) => void;

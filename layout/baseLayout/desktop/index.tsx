@@ -1,32 +1,31 @@
 "use client";
-import { createElement, memo, ReactNode } from "react";
+import {
+  memo,
+  ReactNode,
+} from 'react';
 
-import { shallowEqual } from "react-redux";
+import { shallowEqual } from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { PageTypeEnum } from "@type/enum";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { PageTypeEnum } from '@type/enum';
 
-import ActionBar from "./actionBar";
-import BaseMenu from "./menuBar/baseMenu";
-import SideHeader from "./menuBar/sideHeader";
-import Navbar from "./nav";
-import TopHead from "./topHead";
-
-const MemoizedTopHead = memo(TopHead);
-const MemoizedNavbar = memo(Navbar);
+import ActionBar from './actionBar';
+import BaseMenu from './menuBar/baseMenu';
+import SideHeader from './menuBar/sideHeader';
+import Navbar from './nav';
+import TopHead from './topHead';
 
 function DesktopLayout({ children }: { children: ReactNode }) {
-  const { direction, pages, fullScreen } = useAppSelector(
+  const {  pages, fullScreen } = useAppSelector(
     (state) => ({
       lang: state.withPersist.config.lang,
-      direction: state.withPersist.config.direction,
       pages: state.withPersist.pages,
       fullScreen: state.withPersist.config.fullScreen,
     }),
     shallowEqual
   );
   const activePage = pages?.find((item) => item.isActive === true);
-  const height = Math.min(pages.length * 70, 180);
+  const height = Math.min(pages?.length * 70, 180);
   return (
     <div className="px-3 h-[100dvh]">
       <div
@@ -34,7 +33,7 @@ function DesktopLayout({ children }: { children: ReactNode }) {
           fullScreen ? "!h-0" : "h-[65px]"
         }  overflow-hidden  transition-all duration-500`}
       >
-        {createElement(MemoizedTopHead)}
+        <TopHead/>
       </div>
       <div
         className={`w-full  ${
@@ -43,8 +42,8 @@ function DesktopLayout({ children }: { children: ReactNode }) {
       >
         {/* right sidebar */}
         <div
-          className={`flex flex-col gap-2 overflow-x-clip  pb-4 transition-all duration-500 ${
-            fullScreen ? " w-0 px-0 " : " w-72 xxl:w-96 px-2 overflow-hidden"
+          className={`flex flex-col shrink-0 gap-2 overflow-x-clip  pb-4 transition-all duration-500 ${
+                      fullScreen ? " w-0 px-0 " : " min-w-[200px] w-[200px]  xxl:w-64 xxl:min-w-64 px-2 overflow-hidden"
           } `}
         >
           {pages && pages.length !== 0 && (
@@ -70,12 +69,13 @@ function DesktopLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
         {/* main content */}
-        <div className={`h-full transition-all duration-500 w-full`}>
+        <div className={`h-full transition-all duration-500 w-full min-w-0 `}>
           <div className="justify-center items-center h-16">
-            {createElement(MemoizedNavbar)}
+            <Navbar/>
           </div>
           <div
-            className={`border rounded-2xl p-4 ${
+            className={`border rounded-2xl p-4  min-w-0
+ ${
               fullScreen ? " h-[calc(100dvh-76px)]" : "h-[calc(100dvh-140px)]"
             }`}
           >

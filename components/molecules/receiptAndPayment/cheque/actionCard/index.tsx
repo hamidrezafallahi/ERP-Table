@@ -5,11 +5,15 @@ import {
   RefAttributes,
   useEffect,
   useState,
-} from "react";
+} from 'react';
 
-import { Checkbox, Collapse } from "antd";
-import { useTranslations } from "next-intl";
+import {
+  Checkbox,
+  Collapse,
+} from 'antd';
+import { useTranslations } from 'next-intl';
 
+import { CustomSpin } from '@components/atoms/defaultElements';
 import {
   Close,
   DownChevron,
@@ -20,14 +24,18 @@ import {
   RightChevron,
   RightChevronDouble,
   Undo,
-} from "@components/atoms/iconComponents";
-import { ActionLabelsEnum } from "@components/organisms/receiptAndPayment/cheque/action/enum";
-import { useDarkMode, useProcessedData } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { getColoredIcon } from "@utils/core";
+} from '@components/atoms/iconComponents';
+import {
+  ActionLabelsEnum,
+} from '@components/organisms/receiptAndPayment/cheque/action/enum';
+import {
+  useDarkMode,
+  useProcessedData,
+} from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { getColoredIcon } from '@utils/core';
 
-import { CustomSpin } from "@components/atoms/defaultElements";
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 const ActionCard = forwardRef(function Card(
   {

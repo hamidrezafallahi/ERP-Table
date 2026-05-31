@@ -1,4 +1,4 @@
-import "./table.css";
+import './table.css';
 
 import {
   forwardRef,
@@ -6,15 +6,24 @@ import {
   useImperativeHandle,
   useReducer,
   useState,
-} from "react";
+} from 'react';
 
-import { Menu, MenuProps, Spin, Table, TableColumnsType } from "antd";
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Menu,
+  MenuProps,
+  Spin,
+  Table,
+  TableColumnsType,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomModal } from "@components/atoms/defaultElements";
-import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
+import { CustomModal } from '@components/atoms/defaultElements';
+import { CustomDrawer } from '@components/atoms/defaultElements/drawer';
 import {
   Dots,
   Edit,
@@ -25,16 +34,20 @@ import {
   TrashBin,
   Undo,
   VoucherItemsIcon,
-} from "@components/atoms/iconComponents";
-import { arrayMove } from "@dnd-kit/sortable";
-import { useAppSelector } from "@redux/index";
-import type { IVoucherDetails } from "@services/acc/voucherDetails/type";
-import { useCUDDataMutation } from "@services/base";
-import { RowStateEnum } from "@services/generalType/type";
-import { setPageData } from "@slice/pages";
+} from '@components/atoms/iconComponents';
+import { arrayMove } from '@dnd-kit/sortable';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import type { IVoucherDetails } from '@services/acc/voucherDetails/type';
+import { useCUDDataMutation } from '@services/base';
+import { RowStateEnum } from '@services/generalType/type';
+import { setPageData } from '@slice/pages';
 
-import { EditRowForm } from "./editRowForm";
-import type { IActions, IChildHandle, IProps } from "./type";
+import { EditRowForm } from './editRowForm';
+import type {
+  IActions,
+  IChildHandle,
+  IProps,
+} from './type';
 
 export const VoucherMobileGrid = forwardRef<IChildHandle, IProps>(
   (
@@ -59,7 +72,7 @@ export const VoucherMobileGrid = forwardRef<IChildHandle, IProps>(
     const [selectedRowIndex, setSelectedRowIndex] = useState<number>(null);
     const { activePage } = useAppSelector(
       (state) => ({
-        activePage: state.withPersist.pages.find(
+        activePage: state.withPersist.pages?.find(
           (item) => item.isActive === true
         ),
       }),

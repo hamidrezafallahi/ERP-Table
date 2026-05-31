@@ -10,28 +10,28 @@ import moment from 'moment-jalaali';
 import { shallowEqual } from 'react-redux';
 
 import { useMediaQuery } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import type { IReportResponse } from '@slice/pages/type';
 
 function Summary({ active }) {
   const { cols, activePage, fullScreen } = useAppSelector(
     (state) => ({
-      cols: state.withPersist.pages.find((item) => item.isActive)?.viewData
+      cols: state.withPersist.pages?.find((item) => item.isActive)?.viewData
         ?.Columns,
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
       fullScreen: state.withPersist.config.fullScreen,
     }),
     shallowEqual
   );
   const {
-    url = "/api/acc/select/repReviewGroh",
-    RepoViewId = 10007,
+    url = "/api/acc/select/repReviewCol",
+    RepoViewId = 10015,
     PageNumber = 1,
     YearIds = null,
     PlaceIds = null,
-    FromDate = moment().locale("fa").clone().startOf("jYear").valueOf(),
-    ToDate = moment().locale("fa").clone().endOf("day").valueOf(),
+    StartDate = moment().locale("fa").clone().startOf("jYear").valueOf(),
+    EndDate = moment().locale("fa").clone().endOf("day").valueOf(),
     InnerFilters = [],
     IsFirstPeriod = false,
     IsCurrencyCount = false,
@@ -66,12 +66,12 @@ function Summary({ active }) {
       PagingInfo: {
         PageRecordCount: recordsPerPage,
         PageNumber,
-        // WithTotalCount: false,
+        // WithTotalCount: true,
       },
       YearIds,
       PlaceIds,
-      FromDate: FromDate ? new Date(FromDate).toISOString() : null,
-      ToDate: ToDate ? new Date(ToDate).toISOString() : null,
+      StartDate: StartDate ? new Date(StartDate).toISOString() : null,
+      EndDate: EndDate ? new Date(EndDate).toISOString() : null,
       InnerFilters,
       IsFirstPeriod,
       IsCurrencyCount,

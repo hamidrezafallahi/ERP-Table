@@ -127,3 +127,25 @@ export interface IMenuItem {
   className: string;
   children?: IMenuItem[] | null;
 }
+ 
+
+ 
+
+export interface GridContainedPageProps {
+  form:FormInstance<any>;
+  setIsFormSubmitting:(boolean)=>void
+  caption: string;
+  captionII?: string;
+  listUrl: string;
+  headerFieldKey: string;
+  detailFieldKey: string;
+  headerGetUrl: string;
+  detailGetUrl: string;
+  addUrl: string;
+  updateUrl: string;
+  tableTitle: string;
+  titleKey: string;
+  fieldKey: string;
+  pageIcon?: string;
+ 
+}

@@ -1,8 +1,8 @@
-import Form from "@components/templates/form";
+import { Form } from '@components/templates/form';
 import type {
   IRequest,
   ITrainingCourse,
-} from "@services/hr/trainingCourse/type";
+} from '@services/hr/trainingCourse/type';
 
 export default function TrainingCourseFormPage() {
   return (

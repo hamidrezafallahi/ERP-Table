@@ -56,6 +56,7 @@ export interface IFilters {
     FilterInfo?: IFilter[];
     ShowOnlyBookmarked?: boolean;
     TagIdsFilter?: number[];
+   
 }
 export interface IBaseRequest<T> {
     RepoId?: number;
@@ -101,8 +102,12 @@ export interface IBaseRequest<T> {
     PlaceId?: number; // add me
     VoucherTypeId?: number;
     VoucherNumber?: number;
+    StartDate?: string | Date;
+    EndDate?: string | Date;
+     From?: string | Date;
     FromDate?: string | Date;
     ToDate?: string | Date;
+    To?: string | Date;
     VoucherDate?: string;
     VoucherDesc?: string;
     InnerFilters?: IInnerFilter[];
@@ -158,13 +163,14 @@ export interface IFilter {
     ColName?: string;
     InnerFilterId?: number;
     FilterType?: filterTypeStringEnum | filterTypeDateEnum | filterTypeNumberEnum;
-    Value?: string;
+    Value?: any;
 }
 
 export interface IPagingInfo {
     PageRecordCount?: number;
     PageNumber?: number;
     OnlyTotalCount?: boolean;
+    WithTotalCount?: boolean;
 }
 
 export enum filterTypeStringEnum {

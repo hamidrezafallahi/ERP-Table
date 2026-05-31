@@ -21,7 +21,7 @@ import {
   useInitializePage,
   useNavigatePage,
 } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useCUDDataMutation } from '@services/base';
 
 import {
@@ -39,7 +39,7 @@ export default function CalendarToolbar({ form }: { form: FormInstance }) {
   const { navigateBack } = useNavigatePage();
 
   const { activePage, locale } = useAppSelector((state) => {
-    const activePage = state.withPersist.pages.find((p) => p.isActive);
+    const activePage = state.withPersist.pages?.find((p) => p.isActive);
     const locale = state.withPersist.config.lang;
     return { activePage, locale };
   }, shallowEqual);

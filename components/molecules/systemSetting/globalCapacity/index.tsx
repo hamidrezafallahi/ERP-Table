@@ -1,13 +1,22 @@
-import { useEffect, useRef } from "react";
+import {
+  useEffect,
+  useRef,
+} from 'react';
 
-import { Form, Spin } from "antd";
-import { useTranslations } from "next-intl";
+import {
+  Form,
+  Spin,
+} from 'antd';
+import { useTranslations } from 'next-intl';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import { SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import { showSuccessToast } from "@utils/core";
+import { CustomButton } from '@components/atoms/defaultElements';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import { SpinIcon } from '@components/atoms/iconComponents';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import { showSuccessToast } from '@utils/toast';
 
 export const GlobalCapacity = () => {
   const t = useTranslations();

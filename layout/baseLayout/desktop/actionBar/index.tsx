@@ -1,19 +1,26 @@
-import { memo, useEffect, useState } from "react";
+import {
+  memo,
+  useEffect,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { MinimizeIcon } from "@components/atoms/iconComponents";
-import { PinIcon } from "@components/atoms/iconComponents/icons/PinIcon";
-import { UnPinIcon } from "@components/atoms/iconComponents/icons/UnPinIcon";
-import { useMediaQuery } from "@hooks/custom";
-import PanelForm from "@layout/baseLayout/desktop/actionBar/panelForm";
-import { useAppSelector } from "@redux/index";
-import { setMinimize as setMinimizeAction } from "@slice/container/index";
-import { PageTypeEnum } from "@type/enum";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { MinimizeIcon } from '@components/atoms/iconComponents';
+import { PinIcon } from '@components/atoms/iconComponents/icons/PinIcon';
+import { UnPinIcon } from '@components/atoms/iconComponents/icons/UnPinIcon';
+import { useMediaQuery } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import PanelForm from '@layout/baseLayout/desktop/actionBar/panelForm';
+import { setMinimize as setMinimizeAction } from '@slice/container/index';
+import { PageTypeEnum } from '@type/enum';
 
-import PanelList from "./panelList";
+import PanelList from './panelList';
 
 function ActionBar() {
   const [float, setFloat] = useState(false);
@@ -22,10 +29,10 @@ function ActionBar() {
 
   const t = useTranslations();
   const { type, fullScreen, minimize, ShowTags } = useAppSelector((state) => {
-    const type = state.withPersist.pages.find((item) => item.isActive)?.type;
+    const type = state.withPersist.pages?.find((item) => item.isActive)?.type;
     const fullScreen = state.withPersist.config.fullScreen;
     const minimize = state.withoutPersist.container.minimize;
-    const ShowTags = state.withPersist.pages.find((item) => item.isActive)
+    const ShowTags = state.withPersist.pages?.find((item) => item.isActive)
       ?.viewData?.ShowTags;
     return { type, fullScreen, minimize, ShowTags };
   }, shallowEqual);
@@ -66,7 +73,7 @@ function ActionBar() {
 
   return (
     <div
-      className={` ${
+      className={` shrink-0 ${
         fullScreen ? "h-full" : "h-[calc(100dvh-65px)]"
       } transition-all duration-200 overflow-hidden ${
         minimize

@@ -1,12 +1,12 @@
 "use client";
-import "react-toastify/dist/ReactToastify.css";
+import 'react-toastify/dist/ReactToastify.css';
 
-import { NextIntlClientProvider } from "next-intl";
+import { NextIntlClientProvider } from 'next-intl';
 
-import { ConfigSyncRoot } from "@components/templates/configSyncRoot";
-import Providers from "@layout/providers";
+import { ConfigSyncRoot } from '@components/templates/configSyncRoot';
+import Providers from '@layout/providers';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export default function BaseLayout({ children, local, messages }: IProps) {
   return (

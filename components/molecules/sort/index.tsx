@@ -1,19 +1,25 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Badge } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Badge } from 'antd';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomDropdownButton } from "@components/atoms/defaultElements";
+import { CustomDropdownButton } from '@components/atoms/defaultElements';
 import {
   AdvancedSortIcon,
   Close,
   SortAscending,
-} from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { setViewData } from "@slice/pages";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setViewData } from '@slice/pages';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export default function Sort({
   openSortModal,

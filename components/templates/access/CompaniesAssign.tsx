@@ -16,7 +16,7 @@ import {
   Close,
   DownChevron,
 } from '@components/atoms/iconComponents';
-import { useDarkMode } from '@hooks/custom';
+import { useDarkMode } from '@hooks/custom/useDarkMode';
 import { useGetData } from '@services/base';
 import type {
   IRequest,
@@ -49,7 +49,7 @@ const systemIds: ISystemId[] = [
 function CompaniesAssign({ ...props }) {
   const { mode = "light" } = useDarkMode();
 
-  const { id } = props;
+  const { id,setBody } = props;
   const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [exceptList, setExceptList] = useState([]);
@@ -67,7 +67,7 @@ function CompaniesAssign({ ...props }) {
         data?.Data?.[0]?.PlaceAccesses.map((item) => ({
           label: item.PlaceDesc,
           hasAccess: item.HasAccess,
-          id: item.PlaceDesc,
+          id: item.PlaceId,
         }))
       );
     }
@@ -79,7 +79,8 @@ function CompaniesAssign({ ...props }) {
       if (itemExists) {
         return prevState.filter((item) => item.id !== e.id);
       } else {
-        return [...prevState, e];
+        const temp = {PlaceId:e.id ,Mode:e.checked?1:2}
+        return [...prevState, temp];
       }
     });
   };
@@ -96,9 +97,9 @@ function CompaniesAssign({ ...props }) {
     ),
   }));
   const submitHandler = () => {
-    console.log(changeExcept);
-    // setOpen(false);
-    // handleSubmit(exceptList)
+    setBody((prev)=>({...prev,Places :changeExcept}))
+    setChangeExcept([])
+     setOpen(false);
   };
 
   const items: MenuProps["items"] = [
@@ -130,7 +131,7 @@ function CompaniesAssign({ ...props }) {
       trigger={["click"]}
       open={open}
       placement="bottomRight"
-      className={`text-xs bg-gray-gray1 dark:bg-gray-gray95 flex ${
+      className={`text-xs bg-gray-gray1 dark:bg-gray-gray95 flex h-9 ${
         false ? "" : "px-3 border border-main-black"
       }  gap-[4px] !items-center !w-fit  rounded text-main-black dark:text-white`}
       menu={{ items }}
@@ -168,7 +169,6 @@ const Header = ({ setOpen }) => {
       <div className="">
         <CustomButton
           type="text"
-          ghost
           className="hover:!bg-transparent m-0 p-0 cursor-pointer"
           onClick={() => setOpen(false)}
         >
@@ -183,7 +183,7 @@ const Footer = ({ submitHandler }) => {
     <div className="flex justify-end px-2 py-3 border-t">
       <CustomButton
         type="text"
-        ghost
+ 
         onClick={() => {
           submitHandler();
         }}

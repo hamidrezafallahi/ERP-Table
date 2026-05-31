@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { IRequest, IStaff } from "@services/hr/staff/type";
+import { Form } from '@components/templates/form';
+import type {
+  IRequest,
+  IStaff,
+} from '@services/hr/staff/type';
 
 export default function StaffFormPage() {
   return (

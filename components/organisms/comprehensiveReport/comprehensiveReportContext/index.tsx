@@ -1,62 +1,57 @@
+import React, {
+  Dispatch,
+  SetStateAction,
+  useRef,
+  useState,
+} from 'react';
+
+import { FormInstance } from 'antd';
+import { shallowEqual } from 'react-redux';
+
+import { SpinIcon } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { IViewData } from '@slice/pages/type';
+import { IDynamicModalConfig } from '@type/dynamicModalConfig';
+
+import { ContextHeader } from './contextHeader';
+import { ContextList } from './contextList';
+
 "useClient";
-import { SpinIcon } from "@components/atoms/iconComponents";
-import { ContextPagination } from "@components/molecules/contextPagination";
-import React, { useEffect, useRef, useState } from "react";
-import { useDataManager } from "../hooks/useDataManager";
-import { useAppSelector } from "@redux/index";
-import { ContextHeader } from "./contextHeader";
-import { ContextList } from "./contextList";
-import { IDynamicModalConfig } from "@type/dynamicModalConfig";
-import { FormInstance } from "antd";
 
 interface ComprehensiveReportContextProps {
-  typeId: number;
   isModal?: boolean;
   config: IDynamicModalConfig;
-  sidebarForm:FormInstance<any>;
+  sidebarForm: FormInstance<any>;
+  setReportState: Dispatch<
+    SetStateAction<{
+      viewDataFilter: Partial<IViewData>;
+      tableData: any[];
+      cardData: any;
+    }>
+  >;
+  reportState: {
+    viewDataFilter: Partial<IViewData>;
+    tableData: any[];
+    cardData: any;
+  };
 }
 
 const ComprehensiveReportContext = (props: ComprehensiveReportContextProps) => {
-  const { typeId, isModal = false, config,sidebarForm } = props;
-  const [pageNumber, setPageNumber] = useState(1);
+  const {
+    isModal = false,
+    config,
+    sidebarForm,
+    setReportState,
+    reportState,
+  } = props;
   const containerRef = useRef<HTMLDivElement | null>(null);
-
+  const [mutateIsLoading, setMutateIsLoading] = useState(false);
   const { match, locale } = useAppSelector((state) => {
     const match = state.withPersist.config.initMatch;
     const locale = state.withPersist.config.lang;
     return { match, locale };
-  });
-
-  const perPageCount = isModal ? 3 : 7;
+  },shallowEqual);
   const lastItemRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!typeId) {
-      setPageNumber(1);
-    }
-  }, [typeId]);
-
-  const {
-    tableData,
-    tableIsLoading,
-    tableTotal,
-    cardData,
-    cardIsLoading,
-    refetchCard,
-    refetchTable,
-    tableDataWithDesc,
-  } = useDataManager({
-    pageNumber,
-    perPageCount,
-    match,
-    typeId,
-  });
-
-  //   useEffect(() => {
-  //     if (pageNumber > 1 && tableData?.Data?.length === 0) {
-  //       setPageNumber((prevState) => prevState - 1);
-  //     }
-  //   }, [tableData?.Data]);
 
   const noModal = match
     ? "h-full p-0"
@@ -74,12 +69,11 @@ const ComprehensiveReportContext = (props: ComprehensiveReportContextProps) => {
         ref={containerRef}
       >
         <ContextHeader
-          typeId={typeId}
-          refetchCard={refetchCard}
-          refetchTable={refetchTable}
           sidebarForm={sidebarForm}
+          setReportState={setReportState}
+          setMutateIsLoading={setMutateIsLoading}
         />
-        {cardIsLoading || tableIsLoading ? (
+        {mutateIsLoading ? (
           <div className="flex justify-center items-center h-[calc(100dvh-23.25rem)] text-gray-400">
             <SpinIcon config={{ width: 24, height: 24 }} />
           </div>
@@ -87,21 +81,11 @@ const ComprehensiveReportContext = (props: ComprehensiveReportContextProps) => {
           <ContextList
             match={match}
             config={config}
-            cardData={cardData}
             handleActionClick={() => {}}
             lastItemRef={lastItemRef}
-            tableDataWithDesc={tableDataWithDesc}
             locale={locale}
             isModal={isModal}
-          />
-        )}
-        {match && (
-          <ContextPagination
-            perPageCount={perPageCount}
-            tableTotal={tableTotal}
-            tableData={tableData}
-            pageNumber={pageNumber}
-            setPageNumber={setPageNumber}
+            reportState={reportState}
           />
         )}
       </div>

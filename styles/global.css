@@ -159,11 +159,11 @@ td.ant-table-cell {
   border-radius: 12px !important;
 }
 
-.ant-table-cell-fix-left {
+/*.ant-table-cell-fix-left {
   background-color: transparent !important;
-}
+}*/
 
-.ant-table-row-selected .ant-table-cell {
+/*.ant-table-row-selected .ant-table-cell {
   background-color: unset !important;
 }
 .custom-row-focused {
@@ -215,7 +215,7 @@ td.ant-table-cell {
   .ant-table-cell-fix-left-last:hover,
 .dark .ant-table-cell .ant-table-cell-fix-right:hover {
   background-color: transparent !important;
-}
+}*/
 
 .dark .custom-row-focused {
   background-color: #25374a !important;
@@ -474,7 +474,7 @@ td.ant-table-cell {
 .ant-modal {
   width: fit-content !important;
   /* min-width: 520px !important; */
-  /* max-width: 768px !important; */
+  max-width: 768px !important;
 }
 
 @media (max-width: 320px) {
@@ -683,10 +683,10 @@ td.ant-table-cell {
   max-height: 500px; /* اختیاری: سقف ارتفاع */
 }
 
-.ant-table-wrapper .ant-table-tbody .ant-table-row > .ant-table-cell-row-hover {
+/*.ant-table-wrapper .ant-table-tbody .ant-table-row > .ant-table-cell-row-hover {
   background-color: transparent !important;
 }
-
+*/
 .ant-table-cell-fix-left,
 .ant-table-cell-fix-right {
   position: sticky;

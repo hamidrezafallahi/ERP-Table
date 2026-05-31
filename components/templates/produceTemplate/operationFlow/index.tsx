@@ -1,23 +1,34 @@
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import { useDispatch } from 'react-redux';
 
-import { CustomSpin } from "@components/atoms/defaultElements";
-import { useAppSelector } from "@redux/index";
+import { CustomSpin } from '@components/atoms/defaultElements';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useCUDDataMutation,
   useGetConditionallyMutation,
   useGetData,
-} from "@services/base";
-import { setPageData } from "@slice/pages";
-import { showErrorToast, showSuccessToast } from "@utils/core";
+} from '@services/base';
+import { setPageData } from '@slice/pages';
+import {
+  showErrorToast,
+  showSuccessToast,
+} from '@utils/toast';
 
-import AddOperation from "./addOperation";
-import FlowNode from "./flowNode";
-import OtherModal from "./otherModal";
-import type { IFlowItem, IFlowItemExtended, TCases } from "./type";
+import AddOperation from './addOperation';
+import FlowNode from './flowNode';
+import OtherModal from './otherModal';
+import type {
+  IFlowItem,
+  IFlowItemExtended,
+  TCases,
+} from './type';
 
 export default function OperationFlow() {
   const t = useTranslations();

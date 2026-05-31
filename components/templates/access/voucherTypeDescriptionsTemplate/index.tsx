@@ -1,14 +1,23 @@
 "use client";
 
-import Title from "@components/atoms/Title";
-import { shallowEqual, useDispatch } from "react-redux";
-import { useAppSelector } from "@redux/index";
-import { useEffect, useState } from "react";
-import { addNewPage } from "@slice/pages";
-import { PageTypeEnum } from "@type/enum";
-import { HeaderTypeEnum } from "@slice/pages/enum";
-import SideBarForm from "@components/organisms/sideBarForm";
-import { voucherTypeConfig } from "./voucherTypeConfig";
+import {
+  useEffect,
+  useState,
+} from 'react';
+
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import Title from '@components/atoms/Title';
+import SideBarForm from '@components/organisms/sideBarForm';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { addNewPage } from '@slice/pages';
+import { HeaderTypeEnum } from '@slice/pages/enum';
+import { PageTypeEnum } from '@type/enum';
+
+import { voucherTypeConfig } from './voucherTypeConfig';
 
 export default function VoucherTypeDescriptionTemplate() {
   const [voucherTypeId, setVoucherTypeId] = useState<number>(undefined);

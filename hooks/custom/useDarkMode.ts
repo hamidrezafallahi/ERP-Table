@@ -9,7 +9,7 @@ import {
   useDispatch,
 } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setTheme } from '@slice/config';
 import { TTheme } from '@slice/config/type';
 

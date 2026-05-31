@@ -1,17 +1,35 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Checkbox, Divider, Form, Spin } from "antd";
-import { useTranslations } from "next-intl";
+import {
+  Checkbox,
+  Divider,
+  Form,
+  Spin,
+} from 'antd';
+import { useTranslations } from 'next-intl';
 
-import { CustomButton, CustomSelect } from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import type { IGood, IRequest } from "@services/com/good/type";
-import { showSuccessToast } from "@utils/core";
+import {
+  CustomButton,
+  CustomSelect,
+} from '@components/atoms/defaultElements';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import InputText from '@components/atoms/defaultElements/inputText';
+import { SpinIcon } from '@components/atoms/iconComponents';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import type {
+  IGood,
+  IRequest,
+} from '@services/com/good/type';
+import { showSuccessToast } from '@utils/toast';
 
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import ModalForGoodQc from "./ModalForGoodQc";
+import ModalForGoodQc from './ModalForGoodQc';
 
 export const GoodSettings = ({ handleClose, sourceKey, id }) => {
   const { data: defaultValue } = useGetData<IGood[], IRequest>({

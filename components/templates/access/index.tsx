@@ -24,7 +24,7 @@ import {
 import ExpandedButton from '@components/molecules/expandedButton';
 import SaveButton from '@components/templates/access/saveButton';
 import { IBody } from '@components/templates/access/saveButton/type';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import { addNewPage } from '@slice/pages';
 
@@ -75,6 +75,7 @@ function AccessTemplate() {
     ReturnInsertedRow: false,
     RoleId: Id,
     RoleActions: [],
+    Places :[]
   };
   const [body, setBody] = useState<IBody>(initBody);
   const [systemId, setSystemId] = useState<number>(null);
@@ -154,12 +155,13 @@ function AccessTemplate() {
         <CustomTooltip title={t("general.fullScreenMode")}>
           <ExpandedButton />
         </CustomTooltip>
-        <CompaniesAssign id={Id} />
+        <CompaniesAssign id={Id} setBody={setBody} />
 
         <SaveButton
-          disable={body.RoleActions.length == 0}
+          disable={body.RoleActions.length == 0 && body.Places.length == 0}
           saveHandler={reBuildHandler}
           body={body}
+
         />
         <div />
       </div>

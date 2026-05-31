@@ -1,13 +1,14 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryByToken } from "@services/customBaseQuery";
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQueryByToken } from '@services/customBaseQuery';
 
-import { endpoints } from "./endpoints";
+import { endpoints } from './endpoints';
 import type {
   IBaseQueryResponse,
   IBaseRequest,
   ICommandResponse,
   IService,
-} from "./type";
+} from './type';
+
 export const apiService = createApi({
   reducerPath: "apiService",
   baseQuery: baseQueryByToken,
@@ -111,13 +112,14 @@ export const apiService = createApi({
 
     getConditionally: builder.mutation<
       IBaseQueryResponse<any>,
-      { url: string; body: IBaseRequest<any>; id?: number | string }
+      { url: string; body: IBaseRequest<any>; id?: number | string, skip?: boolean }
     >({
-      query: ({ url, body, id }) => ({
+      query: ({ url, body, id, skip = false }) => ({
         url,
         method: "POST",
         body,
         id: id ? id : "All",
+        skip
       }),
     }),
 
@@ -175,13 +177,16 @@ export const apiService = createApi({
     }),
     CUDFormData: builder.mutation<
       ICommandResponse,
-      { url: string; body: any; id?: number | string }
+      {
+        url: string; body: any; id?: number | string
+      }
     >({
       query: ({ url, body, id }) => ({
         url,
         method: "POST",
         body,
         id: id ? id : "All",
+
       }),
 
       invalidatesTags: (result, error, { url, id }) => {

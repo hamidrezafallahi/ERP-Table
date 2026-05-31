@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { ILanguage, IRequest } from "@services/management/language/type";
+import { Form } from '@components/templates/form';
+import type {
+  ILanguage,
+  IRequest,
+} from '@services/management/language/type';
 
 export default function LanguageFormPage() {
   return (

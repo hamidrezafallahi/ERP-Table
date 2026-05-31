@@ -1,8 +1,8 @@
-import Form from "@components/templates/form";
+import { Form } from '@components/templates/form';
 import type {
   IRequest,
   IReturnSalesInvoice,
-} from "@services/sale/returnSalesInvoice/type";
+} from '@services/sale/returnSalesInvoice/type';
 
 export default function ReturnSalesInvoiceFormPage() {
   return (

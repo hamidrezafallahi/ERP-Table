@@ -1,19 +1,27 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { AdvancedCashFundDepositForm } from "@components/molecules/receiptAndPayment/cashFund";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
+import {
+  AdvancedCashFundDepositForm,
+} from '@components/molecules/receiptAndPayment/cashFund';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
 import type {
   ICashFundDeposit,
   IRequest,
-} from "@services/trh/cashFundDeposit/type";
-import { setAllPageData, setPageInfo } from "@slice/pages";
+} from '@services/trh/cashFundDeposit/type';
+import {
+  setAllPageData,
+  setPageInfo,
+} from '@slice/pages';
 
-import { formConfig } from "./config";
+import { formConfig } from './config';
 
 export const AdvancedCashFundDeposit = ({ form }) => {
   const dispatch = useDispatch();
@@ -51,7 +59,7 @@ export const AdvancedCashFundDeposit = ({ form }) => {
 
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true
       ),
     }),

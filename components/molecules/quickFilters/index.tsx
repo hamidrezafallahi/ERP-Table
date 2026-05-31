@@ -1,20 +1,20 @@
-import moment from "moment-jalaali";
-import { shallowEqual } from "react-redux";
+import moment from 'moment-jalaali';
+import { shallowEqual } from 'react-redux';
 
 import {
   CustomSelect,
   DynamicSelect,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { CloseCircle } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import type { IFormField } from "@type/elementType";
+} from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
+import { CloseCircle } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import type { IFormField } from '@type/elementType';
 
 export default function QuickFilters({ handleRemove, handleChange, fields }) {
   const { activePage, locale } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
       locale: state.withPersist.config.lang,
     }),
     shallowEqual,

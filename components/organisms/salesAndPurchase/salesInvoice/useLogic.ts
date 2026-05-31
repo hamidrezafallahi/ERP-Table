@@ -2,48 +2,61 @@ import {
   Dispatch,
   RefObject,
   SetStateAction,
+  useEffect,
+  useMemo,
   useRef,
   useState,
-  useMemo,
-  useEffect,
-} from "react";
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import { useDispatch } from 'react-redux';
 
-import type { IChildHandle } from "@components/molecules/detailDataGrid/mobile/type";
+import type {
+  IChildHandle,
+} from '@components/molecules/detailDataGrid/mobile/type';
 import type {
   IActions,
   IAdditionalAction,
-} from "@components/molecules/detailDataGrid/type";
-import type { IPlaceConfig } from "@services/auth/base/type";
+} from '@components/molecules/detailDataGrid/type';
+import type { IPlaceConfig } from '@services/auth/base/type';
 import {
   useCUDDataMutation,
   useGetConditionallyMutation,
   useGetData,
-} from "@services/base";
-import type { IBaseQueryResponse } from "@services/base/type";
+} from '@services/base';
+import type { IBaseQueryResponse } from '@services/base/type';
 import {
   type IDetailColumnConfig,
   RowStateEnum,
-} from "@services/generalType/type";
-import type { ISalesInvoiceDetails } from "@services/sale/salesInvoiceDetails/type";
+} from '@services/generalType/type';
+import type {
+  ISalesInvoiceDetails,
+} from '@services/sale/salesInvoiceDetails/type';
 import type {
   IRequest,
   IStandardSalesInvoice,
-} from "@services/sale/standardSalesInvoice/type";
-import { setPageState, setSavePageData } from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
-import type { IPage } from "@slice/pages/type";
-import { IFormFieldConfig } from "@type/elementType";
+} from '@services/sale/standardSalesInvoice/type';
+import {
+  setPageState,
+  setSavePageData,
+} from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
+import type { IPage } from '@slice/pages/type';
+import { IFormFieldConfig } from '@type/elementType';
 import {
   findingPageState,
+  transformDotNotationToNested,
+} from '@utils/core';
+import {
   showInfoToast,
   showSuccessToast,
-  transformDotNotationToNested,
-} from "@utils/core";
+} from '@utils/toast';
 
-import { calcDiscount, calcFactor, calcTax } from "./utils";
+import {
+  calcDiscount,
+  calcFactor,
+  calcTax,
+} from './utils';
 
 export interface IUseLogicProps {
   activePage: IPage;

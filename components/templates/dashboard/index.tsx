@@ -6,14 +6,14 @@ import { EditPencil } from "@components/atoms/iconComponents";
 import Title from "@components/atoms/Title";
 
 import DashboardChart from "./dashboardChart";
-import DateBox from "./dateBox";
 import DocumentCard from "./documentCard";
 import InvoiceCard from "./invoiceCard";
 import Notifications from "./notifications";
 import QuickAccess from "./quickAccess";
-import RangeTime from "./rangeTime";
 import Reminders from "./reminder";
 import Reports from "./reports";
+import RangeTime from "@components/molecules/rangeTime";
+import DateBox from "@components/molecules/dateBox";
 
 function Dashboard() {
   return (

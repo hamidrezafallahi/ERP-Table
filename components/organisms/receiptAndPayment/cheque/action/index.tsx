@@ -1,11 +1,15 @@
 "use client";
-import { useReducer, useRef, useState } from "react";
+import {
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { CustomModal } from "@components/atoms/defaultElements";
-import Confirmation from "@components/molecules/confirmation";
+import { CustomModal } from '@components/atoms/defaultElements';
+import Confirmation from '@components/molecules/confirmation';
 import {
   ActionGrid,
   ActionGridToolbar,
@@ -14,26 +18,43 @@ import {
   ChequeCirculationModal,
   ChequeDynamicForm,
   ChequeInfoModal,
-} from "@components/molecules/receiptAndPayment/cheque";
-import ActionCard from "@components/molecules/receiptAndPayment/cheque/actionCard";
-import { chequeDynamicConfig } from "@components/molecules/receiptAndPayment/cheque/chequeDynamicForm/config";
-import { useDarkMode, useInitializePage } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import type { IChequeDetails } from "@services/trh/chequeDetails/type";
-import { SystemEnum } from "@type/enum";
-import type { IToolbarMenu } from "@type/toolbar";
+} from '@components/molecules/receiptAndPayment/cheque';
+import ActionCard
+  from '@components/molecules/receiptAndPayment/cheque/actionCard';
+import {
+  chequeDynamicConfig,
+} from '@components/molecules/receiptAndPayment/cheque/chequeDynamicForm/config';
+import {
+  useDarkMode,
+  useInitializePage,
+} from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import type { IChequeDetails } from '@services/trh/chequeDetails/type';
+import { SystemEnum } from '@type/enum';
+import type { IToolbarMenu } from '@type/toolbar';
 import {
   findingPageState,
   getColoredIcon,
+} from '@utils/core';
+import {
   showInfoToast,
   showSuccessToast,
-} from "@utils/core";
+} from '@utils/toast';
 
-import { stateConfig } from "../../config";
-import { actions, columnsConfig } from "./config";
-import { ActionLabelsEnum } from "./enum";
-import type { Action, IState } from "./type";
+import { stateConfig } from '../../config';
+import {
+  actions,
+  columnsConfig,
+} from './config';
+import { ActionLabelsEnum } from './enum';
+import type {
+  Action,
+  IState,
+} from './type';
 
 export const ChequeAction = () => {
   const t = useTranslations();
@@ -60,7 +81,7 @@ export const ChequeAction = () => {
 
   const { match, activePage } = useAppSelector((state) => {
     const match = state.withPersist.config.initMatch;
-    const activePage = state.withPersist.pages.find((page) => page.isActive);
+    const activePage = state.withPersist.pages?.find((page) => page.isActive);
     return { match, activePage };
   }, shallowEqual);
 
@@ -376,7 +397,7 @@ export const ChequeAction = () => {
 
         {state.isChequeDynamicActionOpen && (
           <CustomModal
-            contentClassName={`${match ? "w-[700px] h-[470px]" : ""}`}
+            contentClassName={`${match ? "w-[700px]" : ""}`}
             headerName={state.actionConfig.MenuDesc}
             headerIcon={
               match && (

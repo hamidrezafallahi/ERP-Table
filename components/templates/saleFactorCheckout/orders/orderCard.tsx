@@ -22,7 +22,7 @@ import {
   RedTrashBin,
   TaxIcon,
 } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useCUDDataMutation,
   useGetData,
@@ -34,10 +34,8 @@ import {
 } from '@services/sale/discount/type';
 import { setPageData } from '@slice/pages';
 import { IFactorItem } from '@slice/pages/factors/type';
-import {
-  formatCurrency,
-  getCookie,
-} from '@utils/core';
+import { getCookie } from '@utils/cookie';
+import { formatCurrency } from '@utils/core';
 
 import DiscountItem from '../Additions/discountItem';
 import TaxItem from '../Additions/taxItem';
@@ -56,7 +54,7 @@ export default function OrderCard({ ...props }: IProps) {
   const [additionalItems, { isLoading }] = useCUDDataMutation();
   const dispatch = useDispatch();
   const { activePageId, match } = useAppSelector((state) => {
-    const activePageId = state.withPersist.pages.find(
+    const activePageId = state.withPersist.pages?.find(
       (item) => item.isActive
     )?.pageId;
     const match = state.withPersist.config.initMatch;

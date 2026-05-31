@@ -21,7 +21,8 @@ import Comments from "@components/molecules/comments";
 import FormToolbar from "@components/organisms/formToolbar";
 import DynamicLoaderComponent from "@components/templates/dynamicLoaderComponent";
 import { useFormHandlers, useFullScreen } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+
 import { useGetData } from "@services/base";
 import { addNewPage, setAllPageData, setTagsInfo } from "@slice/pages";
 import { PageStateEnum } from "@slice/pages/enum";
@@ -633,7 +634,8 @@ import Comments from "@components/molecules/comments";
 import FormToolbar from "@components/organisms/formToolbar";
 import DynamicLoaderComponent from "@components/templates/dynamicLoaderComponent";
 import { useFormHandlers, useFullScreen } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+
 import { useGetConditionallyMutation, useGetData } from "@services/base";
 import { addNewPage } from "@slice/pages";
 import { PageStateEnum } from "@slice/pages/enum";

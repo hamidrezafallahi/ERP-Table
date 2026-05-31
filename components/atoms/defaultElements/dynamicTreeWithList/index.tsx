@@ -1,22 +1,30 @@
-import { FC, useEffect, useMemo, useState } from "react";
+import {
+  FC,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { TrashBin } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
-import type { IBaseRequest } from "@services/base/type";
-import { setPageData } from "@slice/pages";
+import { TrashBin } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
+import type { IBaseRequest } from '@services/base/type';
+import { setPageData } from '@slice/pages';
 import type {
   IOption,
   ISelectOption,
   ITreeSelectOption,
-} from "@type/elementType";
-import { findItemInNestedData } from "@utils/core";
+} from '@type/elementType';
+import { findItemInNestedData } from '@utils/core';
 
-import { CustomTreeSelect } from "../treeSelect";
-import type { IProps } from "./type";
+import { CustomTreeSelect } from '../treeSelect';
+import type { IProps } from './type';
 
 interface IData {
   key: number;
@@ -277,7 +285,7 @@ export const DynamicTreeWithList: FC<IProps> = ({
       />
 
       <div
-        className="flex flex-col gap-2 p-2 border border-gray-gray5 rounded  overflow-auto"
+        className="flex flex-col gap-2 p-2 border border-gray-gray5 rounded overflow-auto"
         style={{ height: listHeight }}
       >
         {selectedItems?.map((item: number, idx: number) => {

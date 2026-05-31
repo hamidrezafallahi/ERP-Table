@@ -1,25 +1,36 @@
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { CheckboxChangeEvent } from "antd/es/checkbox";
-import { useTranslations } from "next-intl";
+import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { useTranslations } from 'next-intl';
 
 import {
   CustomButton,
   CustomTooltip,
   DynamicSelect,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import CustomCheckbox from "@components/atoms/defaultElements/checkbox";
-import { DynamicTree } from "@components/atoms/defaultElements/dynamicTree";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { ApplyIcon } from "@components/atoms/iconComponents";
-import { useGetData } from "@services/base";
-import type { IDetail, IDetailColumnConfig } from "@services/generalType/type";
-import type { ISelectOption } from "@type/elementType";
-import { getCookie } from "@utils/core";
+} from '@components/atoms/defaultElements';
+import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
+import { DynamicTree } from '@components/atoms/defaultElements/dynamicTree';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import InputText from '@components/atoms/defaultElements/inputText';
+import { ApplyIcon } from '@components/atoms/iconComponents';
+import { useGetData } from '@services/base';
+import type {
+  IDetail,
+  IDetailColumnConfig,
+} from '@services/generalType/type';
+import type { ISelectOption } from '@type/elementType';
+import { getCookie } from '@utils/cookie';
 
-import type { IEditRowFormProps, IRenderFieldProps } from "./type";
+import type {
+  IEditRowFormProps,
+  IRenderFieldProps,
+} from './type';
 
 export const RenderSelectField = ({
   config,

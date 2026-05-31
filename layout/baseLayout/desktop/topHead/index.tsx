@@ -27,9 +27,9 @@ import DefaultLanguage
 import DefaultYear from '@components/molecules/defaultParameterModal/year';
 import Notification from '@components/molecules/notification';
 import { SystemSettings } from '@components/organisms/systemSetting';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import DarkLogo from '@public/images/ArianTechDark.png';
 import LightLogo from '@public/images/ArianTechLight.png';
-import { useAppSelector } from '@redux/index';
 
 import DefaultConfigs from './defaultConfigs';
 import MegaMenu from './megaFormMenu';
@@ -102,7 +102,7 @@ export default function TopHead() {
     <>
       <div className={` w-full h-full flex justify-between items-center`}>
         <div className="flex justify-center items-center w-[150px] h-full">
-          <Image src={logo} alt="header logo" className="object-cover" />
+          <Image src={logo} alt="header logo" className="object-cover" priority={false}/>
         </div>
         <div className="flex justify-center items-center gap-x-3 me-2">
           <MegaMenu />
@@ -181,6 +181,7 @@ export default function TopHead() {
       {openSystemSettingModal && (
         <CustomModal
           contentClassName={`lg:w-[800px] lg:h-[500px]`}
+          width={800}
           headerName={t("title.systemSetting")}
           closeModal={() => setOpenSystemSettingModal(false)}
           isModalOpen={openSystemSettingModal}

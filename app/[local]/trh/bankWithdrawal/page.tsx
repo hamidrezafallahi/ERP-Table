@@ -1,8 +1,8 @@
-import Form from "@components/templates/form";
+import { Form } from '@components/templates/form';
 import type {
   IBankWithdrawal,
   IRequest,
-} from "@services/trh/bankWithdrawal/type";
+} from '@services/trh/bankWithdrawal/type';
 
 export default function BankWithdrawalFormPage() {
   return (

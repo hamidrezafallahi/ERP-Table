@@ -1,35 +1,32 @@
-import "./table.css";
+import './table.css';
 
 import {
   ForwardedRef,
   forwardRef,
   ReactElement,
   Ref,
-  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
   useReducer,
-  useRef,
   useState,
-} from "react";
+} from 'react';
 
-import { Menu, MenuProps, Spin, Table, TableColumnsType } from "antd";
 import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  getFilteredRowModel,
-  flexRender,
-  ColumnDef,
-} from "@tanstack/react-table";
-import moment from "moment-jalaali";
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+  Menu,
+  MenuProps,
+  Spin,
+} from 'antd';
+import moment from 'moment-jalaali';
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomModal } from "@components/atoms/defaultElements";
-import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
+import { CustomModal } from '@components/atoms/defaultElements';
+import { CustomDrawer } from '@components/atoms/defaultElements/drawer';
 import {
   Dots,
   Edit,
@@ -38,26 +35,35 @@ import {
   TrashBin,
   Undo,
   VoucherItemsIcon,
-} from "@components/atoms/iconComponents";
-import { arrayMove } from "@dnd-kit/sortable";
-import { useDarkMode } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation } from "@services/base";
+} from '@components/atoms/iconComponents';
+import { arrayMove } from '@dnd-kit/sortable';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useDarkMode } from '@hooks/custom/useDarkMode';
+import { useCUDDataMutation } from '@services/base';
 import {
   type IDetail,
-  type IDetailColumnConfig,
   RowStateEnum,
-} from "@services/generalType/type";
-import { setPageData } from "@slice/pages";
-import { getColoredIcon } from "@utils/core";
+} from '@services/generalType/type';
+import { setPageData } from '@slice/pages';
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 
-import type { IActions } from "../type";
+import type { IActions } from '../type';
 import {
   EditRowForm,
   RenderSelectField,
   RenderStaticField,
-} from "./renderField";
-import type { IChildHandle, IProps } from "./type";
+} from './renderField';
+import type {
+  IChildHandle,
+  IProps,
+} from './type';
 
 type PropsWithGeneric<T> = IProps<T>;
 
@@ -94,7 +100,7 @@ function MobileTanstackDetailDataGridInner<T extends IDetail>(
   const [selectedRowIndex, setSelectedRowIndex] = useState<number>(null);
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true
       ),
     }),

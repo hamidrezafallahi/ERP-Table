@@ -20,9 +20,9 @@ import DefaultCurrency
 import DefaultLanguage
   from '@components/molecules/defaultParameterModal/language';
 import DefaultYear from '@components/molecules/defaultParameterModal/year';
-import { useDarkMode } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useDarkMode } from '@hooks/custom/useDarkMode';
 import { useGetPlaceConfigs } from '@hooks/custom/useGetPlaceConfigs';
-import { useAppSelector } from '@redux/index';
 import { IDefaultConfigs } from '@slice/config/type';
 
 import HelperDelay from './helperDelay';

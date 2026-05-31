@@ -1,17 +1,24 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Empty } from "antd";
-import { useTranslations } from "next-intl";
-import Image from "next/image";
+import { Empty } from 'antd';
+import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { Magnifier, RightArrow } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
+import { CustomButton } from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
+import {
+  Magnifier,
+  RightArrow,
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
 
-import { IconByFileExtension } from "./IconByFileExtension";
-import { getFileType } from "./util";
+import { IconByFileExtension } from './IconByFileExtension';
+import { getFileType } from './util';
 
 const Library = ({
   setShowLibrary,
@@ -21,7 +28,7 @@ const Library = ({
 }) => {
   const containerRef = useRef(null);
   const activePage = useAppSelector((state) => {
-    return state.withPersist.pages.find((page) => page.isActive);
+    return state.withPersist.pages?.find((page) => page.isActive);
   });
   const t = useTranslations();
   const [searchCommand, setSearchCommand] = useState("");
@@ -38,7 +45,7 @@ const Library = ({
     isSuccess: isSuccessLibrary,
     isLoading: isLoadingLibrary,
   } = useGetData<any, any>({
-    url: `/api/file/select/file`,
+    url: `/api/file/select/file`, 
     body: {
       RepoId: activePage.RepoId,
       PagingInfo: { PageRecordCount: 6, PageNumber: pageNumber },

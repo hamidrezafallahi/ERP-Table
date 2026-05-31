@@ -14,7 +14,7 @@ import {
   RightArrow,
 } from '@components/atoms/iconComponents';
 import { useNavigatePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import Container from '../container';
 import Customer from '../Customer';
@@ -26,7 +26,7 @@ import Summary from '../summary';
 
 export default function MobileView() {
   const { customer } = useAppSelector((state) => {
-    const customer = state.withPersist.pages.find(
+    const customer = state.withPersist.pages?.find(
       (item) => item.isActive
     )?.pageData?.find(i=>i.name ==="customer")?.value;
   

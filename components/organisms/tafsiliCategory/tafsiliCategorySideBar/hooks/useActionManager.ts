@@ -1,16 +1,28 @@
-import { FormInstance } from "antd";
-import { ISelectTafsili } from "../types";
-import { Dispatch, SetStateAction } from "react";
-import { apiService, useCUDDataMutation } from "@services/base";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Dispatch,
+  SetStateAction,
+} from 'react';
+
+import { FormInstance } from 'antd';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
 import {
   IDynamicModalConfig,
   ReloadType,
   TFunction,
-} from "@components/organisms/sideBarForm/types";
-import { showSuccessToast } from "@utils/core";
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
+} from '@components/organisms/sideBarForm/types';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  apiService,
+  useCUDDataMutation,
+} from '@services/base';
+import { setPageData } from '@slice/pages';
+import { showSuccessToast } from '@utils/toast';
+
+import { ISelectTafsili } from '../types';
 
 interface UseActionManagerProps {
   typeId: number;

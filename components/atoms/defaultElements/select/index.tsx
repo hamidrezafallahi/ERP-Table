@@ -1,16 +1,26 @@
-import { FC, useCallback, useEffect } from "react";
+import {
+  FC,
+  useCallback,
+  useEffect,
+} from 'react';
 
-import { Select } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Select } from 'antd';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { PlusOutline, Reload } from "@components/atoms/iconComponents";
-import { useInitializePage } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
+import {
+  PlusOutline,
+  Reload,
+} from '@components/atoms/iconComponents';
+import { useInitializePage } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setPageData } from '@slice/pages';
 
-import { MobileSelect } from "./mobileSelect";
-import type { IProps } from "./type";
+import { MobileSelect } from './mobileSelect';
+import type { IProps } from './type';
 
 export const CustomSelect: FC<IProps> = ({
   ref,
@@ -21,6 +31,7 @@ export const CustomSelect: FC<IProps> = ({
   handleRefetch,
   isFetching,
   disabled,
+  filterOption,
   ...props
 }) => {
   const { config } = props;
@@ -31,12 +42,12 @@ export const CustomSelect: FC<IProps> = ({
   const { match, lang, pageId, existField, initElement, defaultElement } =
     useAppSelector((state) => {
       const match = state.withPersist.config.initMatch;
-      const pageId = state.withPersist.pages.find(
+      const pageId = state.withPersist.pages?.find(
         (item) => item.isActive,
       )?.pageId;
       const lang = state.withPersist.config.lang;
       const existField = state.withPersist.pages
-        .find((item) => item.isActive)
+        ?.find((item) => item.isActive)
         ?.pageData?.find((field) => field.name === config?.name)
         ? true
         : false;
@@ -188,6 +199,16 @@ export const CustomSelect: FC<IProps> = ({
           value={initElement}
           placement={lang === "fa" ? "bottomRight" : "bottomLeft"}
           className={defaultClass}
+          optionFilterProp="label"
+          filterOption={(input, option) => {
+            if (typeof filterOption === "function") {
+              return filterOption(input, option);
+            }
+
+            return (option?.label ?? "")
+              .toLowerCase()
+              .includes(input.toLowerCase());
+          }}
           onChange={selectHandler}
           allowClear={props.allowClear ? props.allowClear : match}
           popupRender={
@@ -234,9 +255,15 @@ export const CustomSelect: FC<IProps> = ({
           disabled={disabled}
           showSearch
           optionFilterProp="label"
-          filterOption={(input, option) =>
-            (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
-          }
+          filterOption={(input, option) => {
+            if (typeof filterOption === "function") {
+              return filterOption(input, option);
+            }
+
+            return (option?.label ?? "")
+              .toLowerCase()
+              .includes(input.toLowerCase());
+          }}
           className={defaultClass}
           placement={lang === "fa" ? "bottomRight" : "bottomLeft"}
           ref={ref}

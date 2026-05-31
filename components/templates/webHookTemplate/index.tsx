@@ -1,15 +1,22 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import Title from "@components/atoms/Title";
-import { useAppSelector } from "@redux/index";
-import { addNewPage } from "@slice/pages";
-import { PageTypeEnum } from "@type/enum";
-import WebHookContext from "./webHookContext";
-import WebHookToolbar from "./webHookToolbar";
-import GoodListSideBar from "@components/organisms/goodListSideBar";
+import Title from '@components/atoms/Title';
+import GoodListSideBar from '@components/organisms/goodListSideBar';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { addNewPage } from '@slice/pages';
+import { PageTypeEnum } from '@type/enum';
+
+import WebHookContext from './webHookContext';
+import WebHookToolbar from './webHookToolbar';
 
 export default function WebHookTemplate() {
   const dispatch = useDispatch();
@@ -44,7 +51,7 @@ export default function WebHookTemplate() {
   return (
     <div className="relative">
       <Title caption={"title.webHook"} />
-      <div className="relative flex lg:flex-row items-center flex-col gap-4 h-full">
+      <div className="relative flex lg:flex-row flex-col items-center gap-4 h-full">
         <WebHookToolbar />
         <GoodListSideBar systemId={systemId} setSystemId={setSystemId} />
         {systemId && selectedGoodId ? (

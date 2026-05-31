@@ -12,12 +12,12 @@ import {
 } from '@components/atoms/defaultElements';
 import InputText from '@components/atoms/defaultElements/inputText';
 import Title from '@components/atoms/Title';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import type { IRequestConfig } from '@type/elementType';
 
 interface IProps {
   form: FormInstance;
-  onSubmitCallback?:()=>void
+  onSubmitCallback?: () => void;
 }
 export const InventoryVoucherHeaderForm = ({ ...props }: IProps) => {
   const {
@@ -29,21 +29,21 @@ export const InventoryVoucherHeaderForm = ({ ...props }: IProps) => {
     tafsiliTypeId,
   } = useAppSelector(
     (state) => ({
-      NeedReference: state.withPersist.pages.find((p) => p.isActive)?.data
+      NeedReference: state.withPersist.pages?.find((p) => p.isActive)?.data
         ?.NeedReference,
-      VoucherReference: state.withPersist.pages.find((p) => p.isActive)?.data
+      VoucherReference: state.withPersist.pages?.find((p) => p.isActive)?.data
         ?.VoucherReference,
-      isInventoryTransfer: state.withPersist.pages.find((p) => p.isActive)?.data
-        ?.isInventoryTransfer,
-      label: state.withPersist.pages.find((p) => p.isActive)?.data?.label,
-      hasThirdParty: state.withPersist.pages.find((p) => p.isActive)?.data
+      isInventoryTransfer: state.withPersist.pages?.find((p) => p.isActive)
+        ?.data?.isInventoryTransfer,
+      label: state.withPersist.pages?.find((p) => p.isActive)?.data?.label,
+      hasThirdParty: state.withPersist.pages?.find((p) => p.isActive)?.data
         ?.hasThirdParty,
-      tafsiliTypeId: state.withPersist.pages.find((p) => p.isActive)?.data
+      tafsiliTypeId: state.withPersist.pages?.find((p) => p.isActive)?.data
         ?.tafsiliTypeId,
     }),
     shallowEqual,
   );
-  const { form,onSubmitCallback } = props;
+  const { form, onSubmitCallback } = props;
   const t = useTranslations();
 
   const sourceConfig: IRequestConfig = {
@@ -62,16 +62,19 @@ export const InventoryVoucherHeaderForm = ({ ...props }: IProps) => {
     repoViewId: 70004,
     TafsiliTypeId: Number(tafsiliTypeId),
   };
+ 
+
   return (
     <>
       <Title captionII={label} />
       <Form
         form={form}
-        onFinish={()=>{onSubmitCallback?.()}}
+        onFinish={() => {
+          onSubmitCallback?.();
+        }}
         name="inventoryVoucherHeaderForm"
         layout="vertical"
-        className={`flex flex-col gap-2 lg:grid lg:grid-cols-4 lg:gap-3 max-h-[calc(100dvh-160px)] h-auto overflow-y-auto hidden-show-scrollBar`}
-
+        className={`grid gap-2 col-span-12  lg:col-span-3 lg:gap-3`}
       >
         <Form.Item
           label="تاریخ سند"

@@ -1,6 +1,9 @@
-import { ActionLabelsEnum } from "@components/organisms/list/enum";
-import Form from "@components/templates/form";
-import type { IRequest, ICurrencyDoc } from "@services/acc/currencyDoc/type";
+import { ActionLabelsEnum } from '@components/organisms/list/enum';
+import { Form } from '@components/templates/form';
+import type {
+  ICurrencyDoc,
+  IRequest,
+} from '@services/acc/currencyDoc/type';
 
 export default function CurrencyDocFormPage() {
   return (

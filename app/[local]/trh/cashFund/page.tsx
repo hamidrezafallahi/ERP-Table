@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { ICashFund, IRequest } from "@services/trh/cashFund/type";
+import { Form } from '@components/templates/form';
+import type {
+  ICashFund,
+  IRequest,
+} from '@services/trh/cashFund/type';
 
 export default function CashFundFormPage() {
   return (

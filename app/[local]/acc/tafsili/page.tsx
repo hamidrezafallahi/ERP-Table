@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { IRequest, ITafsili } from "@services/acc/tafsili/type";
+import { Form } from '@components/templates/form';
+import type {
+  IRequest,
+  ITafsili,
+} from '@services/acc/tafsili/type';
 
 export default function TafsiliFormPage() {
   return (

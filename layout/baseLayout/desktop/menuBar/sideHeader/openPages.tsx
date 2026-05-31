@@ -22,7 +22,7 @@ import {
   New,
 } from '@components/atoms/iconComponents';
 import { useInitializePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { resetItemsByPage } from '@slice/items';
 import {
   removePage,
@@ -43,7 +43,7 @@ export default function OpenPages() {
     (state) => ({
       pages: state.withPersist.pages,
       local: state.withPersist.config.lang,
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
       match: state.withPersist.config.initMatch,
     }),
     shallowEqual,
@@ -249,7 +249,7 @@ export default function OpenPages() {
 
       {confirmCloseModalIsOpen && (
         <CustomModal
-          width={300}
+          width={activePage?.pageId !== page?.pageId?400:300}
           centered
           disableTitle
           closeModal={() => {

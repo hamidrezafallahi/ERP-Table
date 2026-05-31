@@ -1,17 +1,23 @@
-import { ReactElement, useEffect } from "react";
+import {
+  ReactElement,
+  useEffect,
+} from 'react';
 
-import dynamic from "next/dynamic";
-import { shallowEqual, useDispatch } from "react-redux";
+import dynamic from 'next/dynamic';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { MenuArrowBack } from "@components/atoms/iconComponents";
-import BaseMenu from "@layout/baseLayout/desktop/menuBar/baseMenu";
-import UserAccount from "@layout/baseLayout/desktop/topHead/userAccount";
-import { useAppSelector } from "@redux/index";
-import { setMenuBar } from "@slice/config";
-import { IDefaultConfigs } from "@slice/config/type";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { MenuArrowBack } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import BaseMenu from '@layout/baseLayout/desktop/menuBar/baseMenu';
+import UserAccount from '@layout/baseLayout/desktop/topHead/userAccount';
+import { setMenuBar } from '@slice/config';
+import { IDefaultConfigs } from '@slice/config/type';
 
-import SideMenuModal from "./SideMenuModal";
+import SideMenuModal from './SideMenuModal';
 
 const New = dynamic(() => import("./new"));
 const OpenPages = dynamic(() => import("./OpenForms"));
@@ -82,7 +88,7 @@ export const SideMenu = () => {
           <div className={`${lang !== "fa" ? "rotate-180" : ""}`}>
             <MenuArrowBack config={{ width: 14, height: 9 }} />
           </div>
-          <span className="flex items-center max-h-[22px] text-base dark:text-gray-gray05">
+          <span className="flex items-center max-h-[22px] dark:text-gray-gray05 text-base">
             {menuBar.label}
           </span>
         </CustomButton>

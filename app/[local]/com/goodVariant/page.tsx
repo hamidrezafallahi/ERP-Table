@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { IRequest, IVariant } from "@services/com/variant/type";
+import { Form } from '@components/templates/form';
+import type {
+  IRequest,
+  IVariant,
+} from '@services/com/variant/type';
 
 export default function GoodVariantsFormPage() {
   return (

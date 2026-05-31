@@ -1,8 +1,3 @@
-import {
-  Dispatch,
-  SetStateAction,
-} from 'react';
-
 import { FormInstance } from 'antd';
 
 export interface IProps {
@@ -18,17 +13,7 @@ export interface IProps {
   updateUrl: string;
   titleKey: string;
   pageIcon?: string;
-  conditionalActions?: {
-    conditionalProperty: string;
-    conditionallyAction?: string;
-  }[];
-  isModal?: boolean;
-  parentPageId?: string;
-  mutationSystemId?: number;
-  conditionalFields?: any[] | boolean;
-  setConditionalFields?: Dispatch<SetStateAction<any[]>>;
-  extraFunction?: (x: any) => void;
-  withImage?: boolean;
+  setIsFormSubmitting: (boolean) => void
 }
 
 export interface IRequestMeta {

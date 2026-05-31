@@ -8,7 +8,7 @@ import { shallowEqual } from 'react-redux';
 import { CustomButton } from '@components/atoms/defaultElements';
 import { MenuDrawerIcon } from '@components/atoms/iconComponents';
 import { useInitializePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useCUDDataMutation } from '@services/base';
 import { PageStateEnum } from '@slice/pages/enum';
 import { SystemEnum } from '@type/enum';
@@ -17,7 +17,7 @@ import { formatCurrency } from '@utils/core';
 export default function Summary() {
   const { activePageId, totalPrice, sum, tax, factor,match } = useAppSelector(
     (state) => {
-      const activePageId = state.withPersist.pages.find(
+      const activePageId = state.withPersist.pages?.find(
         (item) => item.isActive
       )?.pageId;
       const sum = 20//state.withPersist.pages.find(

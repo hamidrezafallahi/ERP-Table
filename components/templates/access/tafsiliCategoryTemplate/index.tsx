@@ -1,15 +1,27 @@
 "use client";
-import Title from "@components/atoms/Title";
-import { shallowEqual, useDispatch } from "react-redux";
-import { useAppSelector } from "@redux/index";
-import { useEffect, useState } from "react";
-import { addNewPage } from "@slice/pages";
-import { PageTypeEnum } from "@type/enum";
-import SideBarForm from "@components/organisms/sideBarForm";
-import { tafsiliCategoryConfig } from "./tafsiliCategoryConfig";
-import { HeaderTypeEnum } from "@slice/pages/enum";
-import CustomFormContext from "@components/organisms/tafsiliCategory/tafsiliCategoryContext";
-import { TafsiliCategorySideBar } from "@components/organisms/tafsiliCategory/tafsiliCategorySideBar";
+import {
+  useEffect,
+  useState,
+} from 'react';
+
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import Title from '@components/atoms/Title';
+import SideBarForm from '@components/organisms/sideBarForm';
+import CustomFormContext
+  from '@components/organisms/tafsiliCategory/tafsiliCategoryContext';
+import {
+  TafsiliCategorySideBar,
+} from '@components/organisms/tafsiliCategory/tafsiliCategorySideBar';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { addNewPage } from '@slice/pages';
+import { HeaderTypeEnum } from '@slice/pages/enum';
+import { PageTypeEnum } from '@type/enum';
+
+import { tafsiliCategoryConfig } from './tafsiliCategoryConfig';
 
 export default function TafsiliCategoryTemplate() {
   const [tafsiliCategoryId, setTafsiliCategoryId] = useState<number>(undefined);

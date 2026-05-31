@@ -1,3 +1,5 @@
+import { DefaultOptionType } from 'antd/es/select';
+
 import { AuditLogger } from '../application/ports/AuditLogger';
 import { RemoteApi } from '../application/ports/RemoteApi';
 import { TableRepository } from '../application/ports/TableRepository';
@@ -20,7 +22,7 @@ export interface DynamicValueConfig {
     buildParams?: (row: Record<string, unknown>) => Record<string, string | number>;
 }
 
-export type FieldType = 'index' | 'text' |   'number' | 'price' | 'select' | 'selectOption' | 'date' | 'static'|'description';
+export type FieldType = 'index' | 'text' | 'number' | 'price' | 'select' | 'selectOption' | 'date' | 'static' | 'description' | 'checkbox';
 
 export type RowInput = { id: number; values?: Record<string, unknown>, moreDetails: unknown };
 
@@ -68,7 +70,7 @@ export interface IDetailColumnConfig {
     dynamicSource?: {
         endpoint: string;
         dependsOn?: string[];
-        dependOn?: { fieldName: string, value: undefined }
+        dependOn?: { fieldName: string, value: unknown }
         params?: Record<string, string>;
         [key: string]: unknown;
     };
@@ -84,14 +86,15 @@ export interface IDetailColumnConfig {
         ) => Promise<unknown>;
         children?: [] | undefined;
     };
-    selectOptions?: { label: string, value: string }[]
+    selectOptions?: { label: string, value: string | number }[]
     indexOptions?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => ItemType[]
     onChange?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => void
     displayFormat?: (value: unknown) => unknown;
     minWidth?: number;
     style?: React.CSSProperties;
     popUpWidth?: number
-    labelValue?:'selectDisplay'|'selectValue';
+    dynamicSelectFilterOption?: (inputValue: string, option?: DefaultOptionType) => boolean
+    labelValue?: 'selectDisplay' | 'selectValue';
 
 }
 export type CreateERPTableConfig<TMoreDetail = unknown> = {

@@ -1,6 +1,8 @@
-import Form from "@components/templates/form";
-import { IFinalizeVoucher ,IRequest } from "@services/acc/FinalizeVoucher/type";
-
+import { Form } from '@components/templates/form';
+import {
+  IFinalizeVoucher,
+  IRequest,
+} from '@services/acc/FinalizeVoucher/type';
 
 export default function FinalizeVoucherPage() {
   return (
@@ -8,10 +10,11 @@ export default function FinalizeVoucherPage() {
       titleKey=""
       fieldKey=""
       caption={"title.finalizeVoucher"}
-      url={null}
+      url="/api/acc/select/finished/lastDate"
       listUrl={null}
       submitCaption="قطعی کردن اسناد"
       hasShorthandFormToolbar={false}
+      hasReload={true}
     />
   );
 }

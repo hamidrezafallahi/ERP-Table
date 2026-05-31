@@ -7,24 +7,21 @@ import {
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { shallowEqual } from 'react-redux';
-// ✅ Import Dashboard Designer instead of Report Designer
-import {
-  Stimulsoft,
-} from 'stimulsoft-dashboards-js/Scripts/stimulsoft.designer';
 
+// ✅ Import Dashboard Designer instead of Report Designer
 import {
   CustomButton,
   CustomTooltip,
 } from '@components/atoms/defaultElements';
 import ExpandedButton from '@components/molecules/expandedButton';
 import { useInitializePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useCUDFormDataMutation } from '@services/base';
 import { SystemEnum } from '@type/enum';
 import {
   showErrorToast,
   showSuccessToast,
-} from '@utils/core';
+} from '@utils/toast';
 
 export const DashboardDesigner = ({ dashboardTemplate }) => {
   const StiLicKey =
@@ -50,7 +47,7 @@ export const DashboardDesigner = ({ dashboardTemplate }) => {
   const { fullScreen, dashboardListPageId } = useAppSelector((state) => {
     const fullScreen = state.withPersist.config.fullScreen;
 
-    const dashboardListPageId = state.withPersist.pages.find(
+    const dashboardListPageId = state.withPersist.pages?.find(
       (page) => page.url === dashboardListConfig.url
     )?.pageId;
 
@@ -78,6 +75,8 @@ export const DashboardDesigner = ({ dashboardTemplate }) => {
   useEffect(() => {
     const loadDesigner = async () => {
       try {
+         const { Stimulsoft } =
+          await import("stimulsoft-reports-js/Scripts/stimulsoft.designer");
         //Activation with using license code
         Stimulsoft.Base.StiLicense.Key = StiLicKey;
 

@@ -1,20 +1,20 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-import { shallowEqual } from "react-redux";
+import { shallowEqual } from 'react-redux';
 
-import { CustomTooltip } from "@components/atoms/defaultElements";
-import { Info } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
+import { CustomTooltip } from '@components/atoms/defaultElements';
+import { Info } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
 import {
   IChequeHistory,
   PassedTypeEnum,
   StateTypeEnum,
-} from "@services/trh/receivedCheque/type";
-import { convertDate } from "@utils/core";
+} from '@services/trh/receivedCheque/type';
+import { convertDate } from '@utils/core';
 
-import { ChequeInfoModal } from "../chequeInfoModal";
-import type { IProps } from "./type";
+import { ChequeInfoModal } from '../chequeInfoModal';
+import type { IProps } from './type';
 
 export const ChequeCirculationModal = ({ id }: IProps) => {
   const { locale } = useAppSelector((state) => {

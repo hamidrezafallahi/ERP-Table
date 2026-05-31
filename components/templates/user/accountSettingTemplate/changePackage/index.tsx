@@ -15,7 +15,7 @@ import {
   CloseModalIcon,
   MenuDrawerIcon,
 } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import {
   durations,

@@ -1,12 +1,19 @@
-import { ChangeEvent, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  useEffect,
+  useState,
+} from 'react';
 
-import { Input } from "antd";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Input } from 'antd';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setPageData } from '@slice/pages';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export const CustomTextArea = ({
   onChange,

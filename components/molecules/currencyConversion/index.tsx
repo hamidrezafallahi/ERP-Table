@@ -1,9 +1,10 @@
-import { CustomButton } from "@components/atoms/defaultElements";
-import { SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation } from "@services/base";
-import { showSuccessToast } from "@utils/core";
-import { Spin } from "antd";
-import { useTranslations } from "next-intl";
+import { Spin } from 'antd';
+import { useTranslations } from 'next-intl';
+
+import { CustomButton } from '@components/atoms/defaultElements';
+import { SpinIcon } from '@components/atoms/iconComponents';
+import { useCUDDataMutation } from '@services/base';
+import { showSuccessToast } from '@utils/toast';
 
 interface CurrencyConversionProps {
   id?: number;
@@ -11,20 +12,15 @@ interface CurrencyConversionProps {
   rowId: number;
   closeModal?: () => void;
   mode?: "insert" | "delete";
-  handleClose?: () => void;
-  voucherNumber?: number;
+  voucherNumber?: string;
 }
 
 export default function CurrencyConversion(props: CurrencyConversionProps) {
-  const {
-    rowId,
-    closeModal,
-    mode = "insert",
-    voucherNumber,
-    handleClose,
-  } = props;
+  const { rowId, closeModal, mode = "insert", voucherNumber } = props;
   const t = useTranslations();
   const [mutateItem, { isLoading: mutateIsLoading }] = useCUDDataMutation();
+
+  console.log({ voucherNumber });
 
   const handleSubmit = async () => {
     if (!rowId) return;
@@ -41,19 +37,16 @@ export default function CurrencyConversion(props: CurrencyConversionProps) {
 
     if (res?.Result == "Success") {
       showSuccessToast(t("toast.successTitle"));
-      if (mode === "delete") {
-        handleClose();
-      }
       closeModal();
     }
   };
 
   return (
-    <div className="flex flex-col p-4 gap-5">
-      <span className="font-medium mb-3 text-gray-gray10 text-base">
+    <div className="flex flex-col gap-5 p-4">
+      <span className="mb-3 font-medium text-gray-gray10 text-base">
         {mode === "insert"
           ? t("general.currencyConversionDesc")
-          : t("deleteAccountingDocumentDesc", {
+          : t("general.deleteAccountingDocumentDesc", {
               voucherNumber: voucherNumber ?? "",
             })}
       </span>

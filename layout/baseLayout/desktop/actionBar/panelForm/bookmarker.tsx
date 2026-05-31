@@ -13,7 +13,7 @@ import {
   BookMarkIconFilled,
   SpinIcon,
 } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useCUDDataMutation } from '@services/base';
 import { setPageState } from '@slice/pages';
 import { PageStateEnum } from '@slice/pages/enum';
@@ -28,11 +28,11 @@ export default function Bookmarker({ ...props }: IProps) {
   const t = useTranslations();
   const { activePage, ListPage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
-      ListPage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
+      ListPage: state.withPersist.pages?.find(
         (item) =>
           item.url ==
-          state.withPersist.pages.find((item) => item.isActive).listUrl
+          state.withPersist.pages?.find((item) => item.isActive).listUrl
       ),
     }),
     shallowEqual

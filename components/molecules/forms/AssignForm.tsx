@@ -1,34 +1,49 @@
-import { Key, ReactNode, useEffect, useState } from "react";
+import {
+  Key,
+  ReactNode,
+  useEffect,
+  useState,
+} from 'react';
 
-import type { FormProps, TableColumnsType } from "antd";
-import { Divider, Form, Pagination, Radio, Table } from "antd";
-import dayjs from "dayjs";
-import jalali from "moment-jalaali";
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { shallowEqual } from "react-redux";
+import type {
+  FormProps,
+  TableColumnsType,
+} from 'antd';
+import {
+  Divider,
+  Form,
+  Pagination,
+  Radio,
+  Table,
+} from 'antd';
+import dayjs from 'dayjs';
+import jalali from 'moment-jalaali';
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import { shallowEqual } from 'react-redux';
 
 import {
   CustomButton,
   DynamicSelect,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import CustomCheckbox from "@components/atoms/defaultElements/checkbox";
+} from '@components/atoms/defaultElements';
+import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
 import {
   EditPencil,
   LeftChevron,
   New,
   RightChevron,
   TrashBin,
-} from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useCUDDataMutation,
   useGetConditionallyMutation,
   useGetData,
-} from "@services/base";
-import type { IBaseQueryResponse } from "@services/base/type";
-import { getSystemNameById, showSuccessToast } from "@utils/core";
+} from '@services/base';
+import type { IBaseQueryResponse } from '@services/base/type';
+import { getSystemNameById } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 type FieldType = {
   RoleId: number[];
@@ -63,8 +78,8 @@ function AssignForm() {
   const t = useTranslations();
   const { SystemId, RepoId } = useAppSelector(
     (state) => ({
-      SystemId: state.withPersist.pages.find((item) => item.isActive).SystemId,
-      RepoId: state.withPersist.pages.find((item) => item.isActive).RepoId,
+      SystemId: state.withPersist.pages?.find((item) => item.isActive).SystemId,
+      RepoId: state.withPersist.pages?.find((item) => item.isActive).RepoId,
     }),
     shallowEqual,
   );

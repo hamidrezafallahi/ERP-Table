@@ -1,5 +1,7 @@
 import type * as React from 'react';
 
+import { DefaultOptionType } from 'antd/es/select';
+
 import { IRequestConfig } from '@type/elementType';
 
 import { FieldType } from '../bootstrap/type';
@@ -56,13 +58,14 @@ export type ViewColumn = {
   /* ==== UI Rendering Meta ==== */
   renderType: FieldType;
   editable?: boolean;
-  options?: { label: string; value: string }[];
+  options?: { label: string; value: string|number }[];
   dynamicValue?: IRequestConfig;
   indexOptions?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => ItemType[]
   onChange?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => void
   minWidth?: number;
   style?: React.CSSProperties;
   popUpWidth?: number
+  dynamicSelectFilterOption?:(inputValue: string, option?: DefaultOptionType) => boolean
   labelValue?: 'selectDisplay' | 'selectValue';
 
 };

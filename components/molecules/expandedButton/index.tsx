@@ -1,7 +1,10 @@
-import { CustomButton } from "@components/atoms/defaultElements";
-import { Expand, Shrink } from "@components/atoms/iconComponents";
-import { useFullScreen } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
+import { CustomButton } from '@components/atoms/defaultElements';
+import {
+  Expand,
+  Shrink,
+} from '@components/atoms/iconComponents';
+import { useFullScreen } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 export default function ExpandedButton() {
   const fullScreen = useAppSelector(

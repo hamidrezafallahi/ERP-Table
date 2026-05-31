@@ -19,7 +19,7 @@ import type {
   IAvailableCurrency,
   IRequest,
 } from '@services/com/currency/type';
-import { showSuccessToast } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 export const BaseCurrency = () => {
   const t = useTranslations();

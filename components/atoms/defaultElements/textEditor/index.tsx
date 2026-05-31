@@ -1,5 +1,4 @@
 import React, {
-  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -12,13 +11,13 @@ const TextEditor = ({ value, setValue }: { value: any; setValue: any }) => {
   const { CKEditor,Editor }: any = editorRef.current || {};
 
   // For Import Without SSR
-  useEffect(() => {
-    editorRef.current = {
-      CKEditor: require('@ckeditor/ckeditor5-react').CKEditor, // v3+
-      Editor: require('ckeditor5-custom-build'), // v3+
-    } as any;
-    setEditorLoaded(true);
-  }, []);
+  // useEffect(() => {
+  //   editorRef.current = {
+  //     CKEditor: require('@ckeditor/ckeditor5-react').CKEditor, // v3+
+  //     Editor: require('ckeditor5-custom-build'), // v3+
+  //   } as any;
+  //   setEditorLoaded(true);
+  // }, []);
 
   const editorConfiguration = {
     toolbar: [
@@ -33,13 +32,16 @@ const TextEditor = ({ value, setValue }: { value: any; setValue: any }) => {
     ]
   };
   return editorLoaded ? (
-    <CKEditor
-      editor={Editor}
-      data={value}
-      onChange={(_, editor) => setValue(editor.getData())}
-      config={editorConfiguration}
-
+    <input
+    onChange={setValue}
     />
+    // <CKEditor
+    //   editor={Editor}
+    //   data={value}
+    //   onChange={(_, editor) => setValue(editor.getData())}
+    //   config={editorConfiguration}
+
+    // />
   ) : null;
 };
 

@@ -63,6 +63,7 @@ export interface IColumnConfig {
   badgeType?: BadgeTypeEnum;
   renderFunction?: (record: any) => any;
   order?: number;
+  width?: number;
 }
 export interface IDetailColumnConfig {
   sticky?: "leftCustom" | "rightCustom";

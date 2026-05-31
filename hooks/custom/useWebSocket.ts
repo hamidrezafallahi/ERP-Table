@@ -1,25 +1,34 @@
 /* eslint-disable no-console */
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   finishEndYearOperation,
   setActiveEndYearStep,
   setEndYearStepStatus,
-} from "@slice/endYearOperations";
+} from '@slice/endYearOperations';
 import {
   EndYearStepStatusEnum,
   StepProcessTypeEnum,
-} from "@slice/endYearOperations/type";
+} from '@slice/endYearOperations/type';
 import {
   deletePageByRepo,
   setPageStateByRepo,
   setStatusItemsList,
   setUndoDeleteItemsList,
-} from "@slice/pages";
-import { findingPageState, getCookie } from "@utils/core";
+} from '@slice/pages';
+import { getCookie } from '@utils/cookie';
+import { findingPageState } from '@utils/core';
 
 import type {
   ConnectionStatus,
@@ -28,12 +37,12 @@ import type {
   ServerWebSocketResponse,
   WebSocketMessage,
   WebSocketOptions,
-} from "./types/websocket.types";
+} from './types/websocket.types';
 
 export type {
   ConnectionStatus,
   WebSocketMessage,
-} from "./types/websocket.types";
+} from './types/websocket.types';
 
 export interface UseWebSocketOptions extends WebSocketOptions {}
 

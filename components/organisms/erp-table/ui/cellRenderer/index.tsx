@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 
+import { DefaultOptionType } from 'antd/es/select';
 import moment from 'moment-jalaali';
 import {
   useLocale,
@@ -7,10 +8,11 @@ import {
 } from 'next-intl';
 
 import {
-  CustomTooltip,
+  CustomSelect,
   DynamicSelect,
   NewDatePicker,
 } from '@components/atoms/defaultElements';
+import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
 import { IRequestConfig } from '@type/elementType';
 
 import { FieldType } from '../../bootstrap/type';
@@ -38,9 +40,14 @@ export type CellMeta = {
   enableExpandButton?: boolean;
   enableMoveButton?: boolean;
   enableOptionsButton?: boolean;
+
   expandable?: boolean;
-  options?: { label: string; value: string }[];
+  options?: { label: string; value: string | number }[];
   dynamicValue?: IRequestConfig;
+  dynamicSelectFilterOption?: (
+    inputValue: string,
+    option?: DefaultOptionType,
+  ) => boolean;
   // store: string;
   // tableKey: string;
   className: string;
@@ -134,7 +141,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     e.preventDefault();
     e.stopPropagation();
   };
-  const valueParser = (val, type) => {
+  const valueParser = (val, type: FieldType) => {
     if (val == null || val == undefined) {
       if (type == "selectOption") {
         return t("general.selectField");
@@ -149,6 +156,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
       case "selectOption":
       case "static":
         return val;
+      case "checkbox":
+        return val ? "✔" : "✘";
       case "price":
         return `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       case "date":
@@ -179,7 +188,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     if (meta.renderType === "selectOption") {
       return (
         <span key={idx} className={`text-xs text-start  ${meta.className} `}>
-          {value ? String(value) : t("general.choose")}
+          {value ? String(value) : "--"}
         </span>
       );
     } else {
@@ -191,8 +200,9 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     }
   } else if (!isActive || isDeleted) {
     /* ===== view mode ===== */
+
     return (
-      <CustomTooltip title={valueParser(display ?? value, meta.renderType)}>
+      <>
         <button
           key={idx}
           tabIndex={tabIndex}
@@ -200,16 +210,19 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           className={`  px-2 w-full 
              text-start h-9  ${meta.className}
           ${isDeleted ? "cursor-not-allowed " : "cursor-text"}
-          
-          
           `}
           onClick={() => {
             activeCell();
           }}
         >
-          <span className="inline-block w-full min-w-36 max-w-72 overflow-hidden text-xs text-start text-ellipsis whitespace-nowrap">
-            {valueParser(display ?? value, meta.renderType)}
-          </span>
+          <div
+            className={`flex items-center w-full min-w-36 max-w-72 h-full overflow-hidden text-xs text-ellipsis whitespace-nowrap 
+    ${meta.renderType === "checkbox" ? "justify-center" : "justify-start"}`}
+          >
+            <div className="truncate">
+              {valueParser(display ?? value, meta.renderType)}
+            </div>
+          </div>
           {/* {!validation.isValid && (
           <Tooltip title={validation.cellError.message}>
           <span>
@@ -218,10 +231,9 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           </Tooltip>
         )} */}
         </button>
-      </CustomTooltip>
+      </>
     );
   }
-
   /* ===== edit mode ===== */
   switch (type) {
     case "number":
@@ -281,7 +293,6 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           }}
         />
       );
-
     case "date":
       return (
         <NewDatePicker
@@ -294,26 +305,50 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           }}
         />
       );
-
-    case "select":
+    case "checkbox":
       return (
-        <select
+        <CustomCheckbox
+          className={`${meta.className} w-full  flex justify-center items-center`}
           key={idx}
           disabled={isDeleted || !editable}
-          className={`  h-9 ${isDeleted && "cursor-not-allowed"} ${meta.className}`}
-          value={String(value ?? "")}
-          onClick={() => activeCell()}
+          // value={value === true as boolean}
+          checked={value === (true as boolean)}
           onChange={(e) => {
-            dispatchChangeValue(e.target.value);
+            dispatchChangeValue(e.target.checked);
           }}
-        >
-          <option value="" />
-          {(meta?.options ?? []).map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        />
+      );
+    case "select":
+      return (
+        <CustomSelect
+          key={idx}
+          options={(meta?.options ?? []).map((opt) => ({
+            value: opt.value,
+            label: opt.label,
+          }))}
+          disabled={isDeleted || !editable}
+          className={`  h-9 ${isDeleted && "cursor-not-allowed"} ${meta.className}`}
+          value={value}
+          onClick={() => activeCell()}
+          onChange={(v, o) => {
+            dispatchChangeValue(v);
+            if (!Array.isArray(o)) {
+              if (o?.label) {
+                dispatchChangeDisplay(o.label as string);
+              } else {
+                dispatchChangeDisplay(null);
+              }
+            }
+            if (v) {
+              controller.dispatch({
+                type: "UI_MOVE_ACTIVE_CELL",
+                rowId: row.id,
+                columnId,
+                direction: "next",
+              });
+            }
+          }}
+        />
       );
     case "selectOption":
       return (
@@ -321,6 +356,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           labelValue={meta.labelValue}
           key={idx}
           showSearch
+          infinite
           onSearchPhrase={(v, o) => {
             dispatchChangeValue(v);
             if (!Array.isArray(o)) {
@@ -337,8 +373,18 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           disabled={isDeleted || !editable}
           value={{ value: String(value ?? ""), label: display }}
           dynamicValue={meta?.dynamicValue}
+          filterOption={(input, option) => {
+            if (meta?.dynamicSelectFilterOption) {
+              return meta.dynamicSelectFilterOption(input, option);
+            } else {
+              const label = option?.label;
+              return (
+                typeof label === "string" &&
+                option.option._SelectDisplay.toLowerCase().includes(input)
+              );
+            }
+          }}
           className={`bg-white !border-[0.4px] !border-gray-gray7 h-9 ${meta.className} ${isDeleted && "cursor-not-allowed"}  relative`}
-          infinite
           onClick={() => activeCell()}
           onChange={(v, o) => {
             dispatchChangeValue(v);
@@ -349,7 +395,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
                 dispatchChangeDisplay(null);
               }
             }
-            if(v){
+            if (v) {
               controller.dispatch({
                 type: "UI_MOVE_ACTIVE_CELL",
                 rowId: row.id,

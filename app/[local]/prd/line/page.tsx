@@ -1,10 +1,10 @@
-import Form from '@components/templates/form';
+import { Form } from '@components/templates/form';
 import {
   ILine,
   IRequest,
 } from '@services/prd/line/type';
 
-export default function LineFormPage({ isModal = false, parentPageId = null }) {
+export default function LineFormPage( ) {
   return (
     <Form<ILine, IRequest>
       caption={"title.line"}
@@ -12,8 +12,7 @@ export default function LineFormPage({ isModal = false, parentPageId = null }) {
       url="/api/prd/select/line"
       listUrl="prd/lineList"
       titleKey="LineDesc"
-      isModal={isModal}
-      parentPageId={parentPageId}
+      
     />
   );
 }

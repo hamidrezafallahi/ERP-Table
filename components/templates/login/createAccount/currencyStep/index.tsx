@@ -1,31 +1,44 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { CustomButton } from "@components/atoms/defaultElements";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import { CustomButton } from '@components/atoms/defaultElements';
 import {
   DeleteNodeIcon,
   MenuArrowBack,
   PlusIcon,
   WonderIcon,
-} from "@components/atoms/iconComponents";
-import { useAppDispatch, useAppSelector } from "@redux/index";
-import { setCurrency, setIsEditing, setStep } from "@slice/account";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  setCurrency,
+  setIsEditing,
+  setStep,
+} from '@slice/account';
 
-import Backward from "../backward";
+import Backward from '../backward';
 
 interface Props {
   onNext: () => void;
 }
 
 const CurrencyStep: React.FC<Props> = ({ onNext }) => {
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
   const [inputValue, setInputValue] = useState("");
 
-  const {
-    currency: currencies,
-    maxCurrencies,
-    isEditing,
-  } = useAppSelector((state) => state.withPersist.account);
+ 
+  const { currencies, maxCurrencies, isEditing } = useAppSelector(
+  (state) => ({
+    currencies: state.withPersist.account.currency,
+    maxCurrencies: state.withPersist.account.maxCurrencies,
+    isEditing: state.withPersist.account.isEditing,
+  }),
+  shallowEqual
+);
 
   const handleAdd = () => {
     const trimmed = inputValue.trim();

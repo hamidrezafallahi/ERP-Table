@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-import { Switch } from "antd";
-import { useTranslations } from "next-intl";
+import { Switch } from 'antd';
+import { useTranslations } from 'next-intl';
 
-import { useCUDDataMutation } from "@services/base";
-import { showSuccessToast } from "@utils/core";
+import { useCUDDataMutation } from '@services/base';
+import { showSuccessToast } from '@utils/toast';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export const CustomSwitch = ({
   className,

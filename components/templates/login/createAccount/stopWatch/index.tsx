@@ -1,15 +1,20 @@
 "use client";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { useAppDispatch, useAppSelector } from "@redux/index";
-import { setVerifyExpireTime } from "@slice/account";
+import { useDispatch } from 'react-redux';
+
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setVerifyExpireTime } from '@slice/account';
 
 interface StopWatchProps {
   onFinish: () => void;
 }
 
 const StopWatch = ({ onFinish }: StopWatchProps) => {
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
   const verifyExpireTime = useAppSelector(
     (state) => state.withPersist.account.verifyExpireTime
   );

@@ -1,24 +1,39 @@
-import { useRef, useState } from "react";
+import {
+  useRef,
+  useState,
+} from 'react';
 
-import { Skeleton } from "antd";
-import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Skeleton } from 'antd';
+import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
+import { CustomButton } from '@components/atoms/defaultElements';
 import {
   LanguageIcon,
   ListCheck,
   TickIcon,
-} from "@components/atoms/iconComponents";
-import { useDarkMode } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { apiService, useGetData } from "@services/base";
-import type { ILanguage, IRequest } from "@services/management/language/type";
-import { setDefaultConfig, setLanguage } from "@slice/config";
-import { createCookie } from "@utils/core";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useDarkMode } from '@hooks/custom/useDarkMode';
+import {
+  apiService,
+  useGetData,
+} from '@services/base';
+import type {
+  ILanguage,
+  IRequest,
+} from '@services/management/language/type';
+import {
+  setDefaultConfig,
+  setLanguage,
+} from '@slice/config';
+import { createCookie } from '@utils/cookie';
 
-import type { IDefaultConfigProps } from "../type";
+import type { IDefaultConfigProps } from '../type';
 
 const DefaultLanguage = ({ ...props }: IDefaultConfigProps) => {
   const { mode = "light" } = useDarkMode();

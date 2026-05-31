@@ -1,15 +1,15 @@
 "use client";
-import { ReactNode } from "react";
+import { ReactNode } from 'react';
 
-import { usePathname } from "next/navigation";
-import { shallowEqual } from "react-redux";
+import { usePathname } from 'next/navigation';
+import { shallowEqual } from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { PageTypeEnum } from "@type/enum";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { PageTypeEnum } from '@type/enum';
 
-import Menubar from "./menubar";
-import { SideMenu } from "./sideMenu";
-import HeaderRenderer from "./HeaderRenderer";
+import HeaderRenderer from './HeaderRenderer';
+import Menubar from './menubar';
+import { SideMenu } from './sideMenu';
 
 export default function MobileLayout(props: { children: ReactNode }) {
   const { children } = props;

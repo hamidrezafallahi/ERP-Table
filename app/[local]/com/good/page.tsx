@@ -1,6 +1,9 @@
-import { ActionLabelsEnum } from "@components/organisms/list/enum";
-import Form from "@components/templates/form";
-import type { IGood, IRequest } from "@services/com/good/type";
+import { ActionLabelsEnum } from '@components/organisms/list/enum';
+import { Form } from '@components/templates/form';
+import type {
+  IGood,
+  IRequest,
+} from '@services/com/good/type';
 
 export default function GoodsFormPage() {
   return (

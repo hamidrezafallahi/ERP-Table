@@ -1,7 +1,7 @@
-import { Progress } from "antd";
+import { Progress } from 'antd';
 
-import { UploadSuccessfully } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
+import { UploadSuccessfully } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 const Loader = ({ id }) => {
   const { percent } = useAppSelector((state) => ({

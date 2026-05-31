@@ -1,23 +1,37 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Avatar, Image } from "antd";
-import { shallowEqual } from "react-redux";
+import {
+  Avatar,
+  Image,
+} from 'antd';
+import { shallowEqual } from 'react-redux';
 
 import {
   CircleConnectionIcon,
   CircleEditIcon,
   CloseCircle,
   ProfileIcon,
-} from "@components/atoms/iconComponents";
-import { useDarkMode } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation, useGetData } from "@services/base";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useDarkMode } from '@hooks/custom/useDarkMode';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
 
-import { IOrganization, IProps, IRequest } from "../type";
-import AddChild from "./AddChild";
-import DeleteChildren from "./deleteChildren";
-import ImagesChildren from "./imagesChildren";
-import UpdateChildren from "./updateChildren";
+import {
+  IOrganization,
+  IProps,
+  IRequest,
+} from '../type';
+import AddChild from './AddChild';
+import DeleteChildren from './deleteChildren';
+import ImagesChildren from './imagesChildren';
+import UpdateChildren from './updateChildren';
 
 interface IImageLoader {
   item: string;

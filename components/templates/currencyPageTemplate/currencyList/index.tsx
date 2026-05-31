@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { shallowEqual } from 'react-redux';
 
 import { CustomButton } from '@components/atoms/defaultElements';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useCUDDataMutation,
   useGetData,

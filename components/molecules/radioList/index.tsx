@@ -1,15 +1,18 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Radio } from "antd";
-import { RadioButtonProps } from "antd/es/radio/radioButton";
-import { RadioChangeEvent } from "antd/lib";
-import { useDispatch } from "react-redux";
+import { Radio } from 'antd';
+import { RadioButtonProps } from 'antd/es/radio/radioButton';
+import { RadioChangeEvent } from 'antd/lib';
+import { useDispatch } from 'react-redux';
 
-import { CustomRadio } from "@components/atoms/defaultElements";
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
+import { CustomRadio } from '@components/atoms/defaultElements';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setPageData } from '@slice/pages';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 function RadioList({ ...props }: IProps) {
   const { className, onChange, options, config, value } = props;

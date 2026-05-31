@@ -32,7 +32,7 @@ import {
   useFormHandlers,
   useFullScreen,
 } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useGetConditionallyMutation,
   useGetData,
@@ -48,7 +48,11 @@ import {
 } from '@utils/core';
 
 import FormToolbar from '../formToolbar';
-import type { IProps } from './type';
+import type {
+  IProps,
+  IRequest,
+  IResponse,
+} from './type';
 
 const safeParse = (s: any) => {
   try {
@@ -57,28 +61,30 @@ const safeParse = (s: any) => {
     return null;
   }
 };
-export default function FormGenerator<T, K>({...props}: IProps) {
+export default function FormGenerator<T, K>({ ...props }: IProps) {
   const {
-  caption,
-  fieldKey,
-  titleKey,
-  listUrl,
-  url,
-  pageIcon,
-  conditionalActions,
-  isModal = false,
-  parentPageId,
-  mutationSystemId,
-  extraFunction,
-  conditionalFields,
-  setConditionalFields,
-  withImage,
-  submitCaption,
-  withSubmitButton = true,
-  hasShorthandFormToolbar,
-  Component = undefined,
-  fromIndexedDb = false,
-} = props
+    caption,
+    fieldKey,
+    titleKey,
+    listUrl,
+    url,
+    pageIcon,
+    conditionalActions,
+    isModal = false,
+    parentPageId,
+    mutationSystemId,
+    extraFunction,
+    conditionalFields,
+    setConditionalFields,
+    withImage,
+    submitCaption,
+    withSubmitButton = true,
+    hasShorthandFormToolbar,
+    Component = undefined,
+    fromIndexedDb = false,
+    saveAsDraft = false,
+    hasReload,
+  } = props;
   const t = useTranslations();
   const dispatch = useDispatch();
   const toggleFullScreen = useFullScreen();
@@ -86,7 +92,7 @@ export default function FormGenerator<T, K>({...props}: IProps) {
   const id = Number(params.get("id"));
   const [mobileDrawerContent, setMobileDrawerContent] = useState(null);
   const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
-  const [isFormSubmitting, setIsFormSubmitting] = useState(false); 
+  const [isFormSubmitting, setIsFormSubmitting] = useState(false);
   const [mobileDrawerHeight, setMobileDrawerHeight] = useState(160);
   const [fields, setFields] = useState([]);
 
@@ -127,7 +133,7 @@ export default function FormGenerator<T, K>({...props}: IProps) {
   });
   useEffect(() => {
     if (dataToolbar?.Result) {
-        setToolbar(dataToolbar.Data);
+      setToolbar(dataToolbar.Data);
     }
   }, [dataToolbar]);
   const Config: IPageConfig = useMemo(() => {
@@ -357,6 +363,17 @@ export default function FormGenerator<T, K>({...props}: IProps) {
     };
   }, [handleOutsideClick]);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const { refetch } = useGetData<IResponse, IRequest>({
+    url,
+    body: {},
+    skip: !hasReload || !url,
+  });
+
+  const handleRefreshData = () => {
+    if (hasReload && url) refetch();
+  };
+
   return (
     <>
       <Title caption={caption} />
@@ -371,7 +388,7 @@ export default function FormGenerator<T, K>({...props}: IProps) {
             match ? `absolute -top-[60px] rtl:-left-[10px] -right-[10px]` : ""
           }
         >
-           <FormToolbar
+          <FormToolbar
             form={form}
             selectedView={selectedView ?? activePage?.selectedView ?? 0}
             listUrl={listUrl}
@@ -385,17 +402,19 @@ export default function FormGenerator<T, K>({...props}: IProps) {
             statusHandler={(routing) => {
               routingValue.current = routing;
             }}
+            handleRefreshData={handleRefreshData}
             mutationSystemId={mutationSystemId}
             submitCaption={submitCaption}
             withSubmitButton={withSubmitButton}
             hasShorthandFormToolbar={hasShorthandFormToolbar}
             fromIndexedDb={fromIndexedDb}
             loadingFromOutsideComponents={isFormSubmitting}
-          />  
+            saveAsDraft={saveAsDraft}
+            hasReload={hasReload}
+          />
         </div>
         <div className="hidden-show-scrollBar flex flex-col gap-10 mt-4 lg:mt-0 h-full max-h-[calc(100dvh-160px)] overflow-auto">
-          {
-          Component ? (
+          {Component ? (
             <Component
               setMobileDrawerContent={setMobileDrawerContent}
               setMobileDrawerHeight={setMobileDrawerHeight}
@@ -403,62 +422,63 @@ export default function FormGenerator<T, K>({...props}: IProps) {
               form={form}
               {...props}
             />
-          ) : 
-          Config?.data ? 
-           <DynamicLoaderComponent
-               componentName={Config?.data}
-               props={{ setMobileDrawerContent, setMobileDrawerHeight, form }}
-             />
-            : 
-          <Form
-            onValuesChange={handleValuesChange}
-            className="gap-5 s:gap-y-16 xs:gap-8 grid grid-cols-4"
-            form={form}
-          >
-            {Config?.fields &&
-              fields
-                ?.filter((item) => item.type !== "info")
-                .sort((a, b) => a.order - b.order)
-                .map((item, index) => {
-                  const colSpan = `lg:col-span-${item?.colSpan}`;
-                  return (
-                    <Form.Item
-                      key={index}
-                      label={item.type !== "checkBox" ? item.caption : ""}
-                      tooltip={
-                        item.help
-                          ? { title: item.help, color: "#585858" }
-                          : null
-                      }
-                      rules={formRulesReturner(item.rules)}
-                      validateTrigger="onBlur"
-                      name={item.name}
-                      layout="vertical"
-                      valuePropName={`${
-                        item.type == "checkBox" ? "checked" : "value"
-                      }`}
-                      getValueFromEvent={(e) =>
-                        item.type == "checkBox"
-                          ? e.target.checked
-                          : item.type === "number" ||
-                              item.type === "price" ||
-                              item.type === "selectOption" ||
-                              item.type === "date"
-                            ? e
-                            : e?.target?.value
-                      }
-                      className={`m-0 p-0 col-span-4
+          ) : Config?.data ? (
+            <DynamicLoaderComponent
+              componentName={Config?.data}
+              props={{ setMobileDrawerContent, setMobileDrawerHeight, form }}
+            />
+          ) : (
+            <Form
+              onValuesChange={handleValuesChange}
+              className="gap-5 s:gap-y-16 xs:gap-8 grid grid-cols-4"
+              form={form}
+            >
+              {Config?.fields &&
+                fields
+                  ?.filter(
+                    (item) => item.type !== "info" && item.type !== "hidden",
+                  )
+                  .sort((a, b) => a.order - b.order)
+                  .map((item, index) => {
+                    const colSpan = `lg:col-span-${item?.colSpan}`;
+                    return (
+                      <Form.Item
+                        key={index}
+                        label={item.type !== "checkBox" ? item.caption : ""}
+                        tooltip={
+                          item.help
+                            ? { title: item.help, color: "#585858" }
+                            : null
+                        }
+                        rules={formRulesReturner(item.rules)}
+                        validateTrigger="onBlur"
+                        name={item.name}
+                        layout="vertical"
+                        valuePropName={`${
+                          item.type == "checkBox" ? "checked" : "value"
+                        }`}
+                        getValueFromEvent={(e) =>
+                          item.type == "checkBox"
+                            ? e.target.checked
+                            : item.type === "number" ||
+                                item.type === "price" ||
+                                item.type === "selectOption" ||
+                                item.type === "date"
+                              ? e
+                              : e?.target?.value
+                        }
+                        className={`m-0 p-0 col-span-4
                       ${item.type === "checkBox" ? "content-end" : ""}
                       ${item.type == "noShow" ? "hidden lg:block" : ""}
                       ${item.colSpan ? `${colSpan}` : `lg:col-span-2`}
                        `}
-                    >
-                      {renderFormField(item, form, !!id, index === 0)}
-                    </Form.Item>
-                  );
-                })}
-          </Form>
-           } 
+                      >
+                        {renderFormField(item, form, !!id, index === 0)}
+                      </Form.Item>
+                    );
+                  })}
+            </Form>
+          )}
           {!!id && activePage?.RepoId && (
             <Comments referId={Number(id)} repoId={activePage.RepoId} />
           )}

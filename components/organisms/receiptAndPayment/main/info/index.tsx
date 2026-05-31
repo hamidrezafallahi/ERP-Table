@@ -1,13 +1,14 @@
-import { shallowEqual } from "react-redux";
-import { useAppSelector } from "@redux/index";
+import { shallowEqual } from 'react-redux';
+
+import { MainInfoCard } from '@components/molecules/mainInfoCard';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import {
   bankInfoConfig,
   cashFundInfoConfig,
   cashInfoConfig,
   documentInfoConfig,
-} from "../../config";
-import { MainInfoCard } from "@components/molecules/mainInfoCard";
+} from '../../config';
 
 export const MainInfoSection = () => {
   const { match } = useAppSelector((state) => {

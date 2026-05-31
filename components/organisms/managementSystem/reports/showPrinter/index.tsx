@@ -1,11 +1,14 @@
-import { shallowEqual } from "react-redux";
+import { shallowEqual } from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
-import type { IReportFile, IRequest } from "@services/reportFile/type";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
+import type {
+  IReportFile,
+  IRequest,
+} from '@services/reportFile/type';
 
-import { ReportView } from "../view";
-import type { IProps } from "./type";
+import { ReportView } from '../view';
+import type { IProps } from './type';
 
 export const ShowPrinter = ({ printId, ids }: IProps) => {
   const { modalIsFullScreen } = useAppSelector(

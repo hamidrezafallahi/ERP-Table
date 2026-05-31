@@ -1,30 +1,30 @@
 "use client";
 import {
-    useEffect,
-    useState,
+  useEffect,
+  useState,
 } from 'react';
 
 import { Spin } from 'antd';
 import {
-    shallowEqual,
-    useDispatch,
+  shallowEqual,
+  useDispatch,
 } from 'react-redux';
 
 import Title from '@components/atoms/Title';
 import List from '@components/organisms/list';
 import NestedList from '@components/organisms/nestedList';
 import { useInvalidateTag } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import {
-    filterTypeStringEnum,
-    type IBaseDto,
+  filterTypeStringEnum,
+  type IBaseDto,
 } from '@services/base/type';
 import type { IRequest } from '@services/mng/report/type';
 import {
-    addNewPage,
-    setPageState,
-    setViewData,
+  addNewPage,
+  setPageState,
+  setViewData,
 } from '@slice/pages';
 import { PageStateEnum } from '@slice/pages/enum';
 import type { IPageConfig } from '@type/elementType';
@@ -59,7 +59,8 @@ export default function ViewList<T extends IBaseDto, K>({
     filteringAction,
     titleKey,
     isShowChangeStatus = false,
-    system
+    system,
+    Sort
 }: IProps<T, K>) {
     const dispatch = useDispatch();
     const { invalidate } = useInvalidateTag();
@@ -120,7 +121,7 @@ export default function ViewList<T extends IBaseDto, K>({
             activePage?.pageId === initPage?.pageId &&
             activePage?.pageState === PageStateEnum.NeedReload
         ) {
-            const pageUrl = pages.find((page) => page.pageId === initPage.pageId)
+            const pageUrl = pages?.find((page) => page.pageId === initPage.pageId)
                 ?.viewData?.url;
 
             const timeoutId = setTimeout(() => {
@@ -210,8 +211,9 @@ export default function ViewList<T extends IBaseDto, K>({
                                     : [],
                                 ShowOnlyBookmarked: false,
                                 TagIdsFilter: null,
+                               
                             },
-                            OrderInfo: [],
+                            OrderInfo: Sort ,
                             FullSearchPhrase: "",
                             ShowTags: false,
                             // data: initPage.data,
@@ -259,7 +261,7 @@ export default function ViewList<T extends IBaseDto, K>({
                             renderCustomActions={renderCustomActions}
                             filteringAction={filteringAction}
                             isShowChangeStatus={isShowChangeStatus}
-                            system={system }
+                            system={system}
                         />
                     ) : activePage?.type === PageTypeEnum.NestedList &&
                         nestedListConfig ? (

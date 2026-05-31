@@ -1,29 +1,46 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Divider, Pagination } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import {
+  Divider,
+  Pagination,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { CustomButton, CustomModal } from "@components/atoms/defaultElements";
-import { LeftChevron, RightChevron } from "@components/atoms/iconComponents";
-import Confirmation from "@components/molecules/confirmation";
+import {
+  CustomButton,
+  CustomModal,
+} from '@components/atoms/defaultElements';
+import {
+  LeftChevron,
+  RightChevron,
+} from '@components/atoms/iconComponents';
+import Confirmation from '@components/molecules/confirmation';
 import {
   CardDynamicModal,
   TableDynamicModal,
-} from "@components/molecules/dynamicModal";
-import { ActionLabelsEnum } from "@components/organisms/list/enum";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation, useGetData, useGetInfinite } from "@services/base";
+} from '@components/molecules/dynamicModal';
+import { ActionLabelsEnum } from '@components/organisms/list/enum';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  useCUDDataMutation,
+  useGetData,
+  useGetInfinite,
+} from '@services/base';
 import type {
   IGoodExtraInfo,
   IRequest,
-} from "@services/com/goodExtraInfo/type";
-import type { IToolbarMenu } from "@type/toolbar";
-import { showSuccessToast } from "@utils/core";
+} from '@services/com/goodExtraInfo/type';
+import type { IToolbarMenu } from '@type/toolbar';
+import { showSuccessToast } from '@utils/toast';
 
-import { config } from "./config";
-import { FormUserReport } from "./form";
-import type { IProps } from "./type";
+import { config } from './config';
+import { FormUserReport } from './form';
+import type { IProps } from './type';
 
 export const UserReport = ({ id, sourceKey }: IProps) => {
   const { match } = useAppSelector((state) => {

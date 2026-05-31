@@ -1,8 +1,10 @@
 "use client";
-import { DetailDataGrid } from "@components/molecules/detailDataGrid";
-import { PaymentRequestForm } from "@components/molecules/salesAndPurchase/paymentRequestForm";
-import { useAppSelector } from "@redux/index";
-import { shallowEqual } from "react-redux";
+import { shallowEqual } from 'react-redux';
+
+import {
+  PaymentRequestForm,
+} from '@components/molecules/salesAndPurchase/paymentRequestForm';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 export const PaymentRequest = ({ form }) => {
   const { activePage, fullScreen, minimizePanel, match, init, locale } =

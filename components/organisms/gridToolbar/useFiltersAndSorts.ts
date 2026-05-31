@@ -1,13 +1,19 @@
-import { useMemo, useReducer } from "react";
+import {
+  useMemo,
+  useReducer,
+} from 'react';
 
-import { useDispatch } from "react-redux";
+import { useDispatch } from 'react-redux';
 
-import { useInvalidateTag } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { setPageState, setViewData } from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
-import type { IViewData } from "@slice/pages/type";
-import type { IToolbarDetailConfig } from "@type/toolbar";
+import { useInvalidateTag } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  setPageState,
+  setViewData,
+} from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
+import type { IViewData } from '@slice/pages/type';
+import type { IToolbarDetailConfig } from '@type/toolbar';
 
 interface IProps {
   viewData: IViewData;
@@ -31,7 +37,7 @@ export const useFiltersAndSorts = ({ viewData, config }: IProps) => {
     isFilterModalOpen: false,
   };
   const activePage = useAppSelector((state) =>
-    state.withPersist.pages.find((page) => page.isActive),
+    state.withPersist.pages?.find((page) => page.isActive),
   );
 
   function reducer(state: IState, action: Action): IState {

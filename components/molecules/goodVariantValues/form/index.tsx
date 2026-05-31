@@ -18,7 +18,7 @@ import {
   PlusOutline,
   SpinIcon,
 } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import type { IAppliedVariant } from '../type';
 import type { IProps } from './type';

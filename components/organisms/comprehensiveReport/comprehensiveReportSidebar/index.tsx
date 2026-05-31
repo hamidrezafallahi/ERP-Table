@@ -1,11 +1,27 @@
-import React from "react";
-import { CustomSelect } from "@components/atoms/defaultElements";
-import { useAppSelector } from "@redux/index";
-import { Form, FormInstance, Radio } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
-import { selectOptionCol, selectsConfig, sourceArray } from "./content";
-import { useGetAccountLevel } from "@hooks/custom/useGetAccountLevel";
+import React, { useEffect } from 'react';
+
+import {
+  Form,
+  Radio,
+} from 'antd';
+import { FormInstance } from 'antd/lib';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import { CustomSelect } from '@components/atoms/defaultElements';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetAccountLevel } from '@hooks/custom/useGetAccountLevel';
+import { setPageFilters } from '@slice/pages';
+
+import {
+  levelFieldMap,
+  selectOptionCol,
+  selectsConfig,
+  sourceArray,
+} from './content';
 
 interface ComprehensiveReportSidebarProps {
   sidebarForm: FormInstance<any>;
@@ -14,21 +30,32 @@ interface ComprehensiveReportSidebarProps {
 const ComprehensiveReportSidebar = (props: ComprehensiveReportSidebarProps) => {
   const { sidebarForm } = props;
   const t = useTranslations();
+  const dispatch = useDispatch();
   const formValues = Form.useWatch([], sidebarForm);
-  const reportType = Form.useWatch("reportType", sidebarForm);
-  const { match } = useAppSelector(
+  const reportType = Form.useWatch("ReportType", sidebarForm);
+  const { match, viewData } = useAppSelector(
     (state) => ({
       match: state.withPersist.config.initMatch,
+      viewData: state.withPersist.pages?.find((item) => item.isActive)?.viewData,
     }),
     shallowEqual,
   );
 
-  console.log({ formValues });
-
   const filteredSourceArray = sourceArray?.filter((item) => item.value !== 1);
+
   const { selectOption } = useGetAccountLevel({
     sourceArray: filteredSourceArray,
   });
+
+  useEffect(() => {
+    const fieldsToSet: Record<string, any> = {
+      ...viewData,
+    };
+    if (!fieldsToSet.ReportType) {
+      fieldsToSet.ReportType = "Simple";
+    }
+    sidebarForm.setFieldsValue(fieldsToSet);
+  }, [viewData]);
 
   return (
     <div
@@ -39,26 +66,50 @@ const ComprehensiveReportSidebar = (props: ComprehensiveReportSidebarProps) => {
         name="sidebarForm"
         layout="vertical"
         className="flex flex-col gap-4 w-full"
-        onValuesChange={(changedValues) => {
-          if (changedValues.reportType === "Simple") {
-            const analyticalFields = selectsConfig.map((s) => s.name);
-            sidebarForm.resetFields(analyticalFields);
+        onValuesChange={(changedValues, allValues) => {
+          let nextFilters = { ...allValues };
+          if ("ReportType" in changedValues) {
+            if (changedValues.ReportType === "Simple") {
+              const analyticalFields = selectsConfig.map((s) => s.name);
+              sidebarForm.resetFields(analyticalFields);
+
+              analyticalFields.forEach((name) => {
+                nextFilters[name] = undefined;
+              });
+            }
+            if (changedValues.ReportType === "Analytical") {
+              sidebarForm.resetFields(["ReportMode"]);
+              nextFilters.ReportMode = undefined;
+            }
           }
-          if (changedValues.reportType === "Analytical") {
-            sidebarForm.resetFields(["ReportMode"]);
+          if (nextFilters.ReportType === "Analytical") {
+            const selectedLevels = selectsConfig
+              .map((item) => nextFilters?.[item.name])
+              .filter(Boolean);
+
+            const levelState = Object.entries(levelFieldMap).reduce(
+              (acc, [value, fieldName]) => {
+                acc[fieldName] = selectedLevels.includes(Number(value));
+                return acc;
+              },
+              {} as Record<string, boolean>,
+            );
+
+            nextFilters = { ...nextFilters, ...levelState };
           }
+          dispatch(setPageFilters(nextFilters));
         }}
       >
         <Form.Item
           label="تعداد ستون"
-          name="AccGlobalReportCol"
-          className="w-full !mb-0 text-xs"
+          name="ColsType"
+          className="!mb-0 w-full text-xs"
           rules={[{ required: true, message: t("form.required") }]}
         >
           <CustomSelect
             showSearch
             allowClear
-            onClear={() => sidebarForm.resetFields(["ColumnCount"])}
+            onClear={() => sidebarForm.resetFields(["ColsType"])}
             optionFilterProp={"label"}
             className="!h-10 text-xs"
             placeholder={t("general.selectField")}
@@ -67,11 +118,11 @@ const ComprehensiveReportSidebar = (props: ComprehensiveReportSidebarProps) => {
           />
         </Form.Item>
         <Form.Item
-          name="reportType"
+          name="ReportType"
           label="نوع گزارش"
           className="!mb-0"
           rules={[{ required: true, message: t("form.required") }]}
-          initialValue={"Simple"}
+          initialValue={viewData?.ReportType ?? "Simple"}
         >
           <Radio.Group className="flex flex-col gap-4">
             <Radio value="Simple">ساده</Radio>

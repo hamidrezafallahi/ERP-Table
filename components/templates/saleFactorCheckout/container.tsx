@@ -11,7 +11,7 @@ import {
 
 import { CustomButton } from '@components/atoms/defaultElements';
 import { ScrollDownIcon } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetConditionallyMutation } from '@services/base';
 import { setPageData } from '@slice/pages';
 

@@ -1,8 +1,8 @@
-import Form from "@components/templates/form";
+import { Form } from '@components/templates/form';
 import type {
   IPaymentMethod,
   IRequest,
-} from "@services/sale/paymentMethod/type";
+} from '@services/sale/paymentMethod/type';
 
 export default function PaymentMethodFormPage() {
   return (

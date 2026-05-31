@@ -1,28 +1,40 @@
-import { useMemo, useState } from "react";
+import {
+  useMemo,
+  useState,
+} from 'react';
 
-import { Collapse, Spin } from "antd";
-import moment from "moment-jalaali";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Collapse,
+  Spin,
+} from 'antd';
+import moment from 'moment-jalaali';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import {
   CustomButton,
   CustomSelect,
   DynamicSelect,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import InputText from "@components/atoms/defaultElements/inputText";
+} from '@components/atoms/defaultElements';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import InputText from '@components/atoms/defaultElements/inputText';
 import {
   CloseCircle,
   DownChevron,
   SpinIcon,
-} from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { useGetConditionallyMutation } from "@services/base";
-import { IBaseQueryResponse, IFilter } from "@services/base/type";
-import { setReportData } from "@slice/config";
-import type { IFormField } from "@type/elementType";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetConditionallyMutation } from '@services/base';
+import {
+  IBaseQueryResponse,
+  IFilter,
+} from '@services/base/type';
+import { setReportData } from '@slice/config';
+import type { IFormField } from '@type/elementType';
 
 export const FilterData = ({ dataSources }) => {
   const t = useTranslations();

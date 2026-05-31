@@ -3,13 +3,16 @@ import type {
   IOrderInfo,
   IPagingInfo,
   ITagInfo,
-} from "@services/base/type";
-import { IInnerFilter } from "@services/base/type";
-import type { IFormFieldConfig } from "@type/elementType";
-import { PageTypeEnum } from "@type/enum";
-import type { IToolbar } from "@type/toolbar";
+} from '@services/base/type';
+import { IInnerFilter } from '@services/base/type';
+import type { IFormFieldConfig } from '@type/elementType';
+import { PageTypeEnum } from '@type/enum';
+import type { IToolbar } from '@type/toolbar';
 
-import { HeaderTypeEnum, PageStateEnum } from "./enum";
+import {
+  HeaderTypeEnum,
+  PageStateEnum,
+} from './enum';
 
 export interface IPageElement {
   fieldName: string;
@@ -83,8 +86,10 @@ export interface IViewData {
   PageNumber?: number;
   YearIds?: null | number[];
   PlaceIds?: null | number[];
-  FromDate?: number;
-  ToDate?: number;
+  FromDate?: string | Date;
+  ToDate?: string | Date;
+  StartDate?: string | Date;
+  EndDate?: string | Date;
   InnerFilters?: IInnerFilter[];
   IsFirstPeriod?: boolean;
   IsCurrencyCount?: boolean;
@@ -104,6 +109,29 @@ export interface IViewData {
   child?: INested | null;
   TreeView?: boolean;
   Columns?: IColumns[];
+  reportType?: number;
+  isShowMoeen?: boolean;
+  ShowInadept?: boolean;
+  ShowCreditor?: boolean;
+  ShowHasRemain?: boolean;
+  ShowHasNotRemain?: boolean;
+  ReportMode?: number;
+  ColsType?: number;
+  CurrencyReportType?: number;
+  GrohGroupLevel?: boolean;
+  ColGroupLevel?: boolean;
+  MoeenGroupLevel?: boolean;
+  FourthLevelGroup?: boolean;
+  FifthLevelGroup?: boolean;
+  SixthLevelGroup?: boolean;
+  SeventhLevelGroup?: boolean;
+  EightLevelGroup?: boolean;
+  NinthLevelGroup?: boolean;
+  TenthLevelGroup?: boolean;
+  EleventhLevelGroup?: boolean;
+  TwelfthLevelGroup?: boolean;
+  ThirteenthLevelGroup?: boolean;
+  ReportType?: number;
 }
 
 export interface IPageInfo {

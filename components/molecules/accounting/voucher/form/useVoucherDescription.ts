@@ -1,11 +1,26 @@
-import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
-import { useDispatch, shallowEqual } from "react-redux";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import { setPageData } from "@slice/pages";
-import { showSuccessToast } from "@utils/core";
-import { VoucherTypeApiResponse, voucherTypeReq } from "./type";
+import {
+  useMemo,
+  useState,
+} from 'react';
+
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import { setPageData } from '@slice/pages';
+import { showSuccessToast } from '@utils/toast';
+
+import {
+  VoucherTypeApiResponse,
+  voucherTypeReq,
+} from './type';
 
 type UseVoucherDescriptionProps = {
   form: any;
@@ -19,7 +34,7 @@ export const useVoucherDescription = (props: UseVoucherDescriptionProps) => {
   const [inputKey, setInputKey] = useState(0);
 
   const { voucherDescConfig, lang } = useAppSelector((state) => {
-    const activePage = state.withPersist.pages.find((p) => p.isActive);
+    const activePage = state.withPersist.pages?.find((p) => p.isActive);
     const lang = state.withPersist.config.lang;
     const voucherDescConfig = activePage?.pageData?.find(
       (pro) => pro.name === "VoucherDesc",

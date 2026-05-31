@@ -1,17 +1,23 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { DiscountForm } from "@components/molecules/salesAndPurchase/discount";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
-import type { IDiscount } from "@services/sale/discount/type";
-import type { IRequest } from "@services/trh/bankDeposit/type";
-import { setAllPageData, setPageInfo } from "@slice/pages";
+import { DiscountForm } from '@components/molecules/salesAndPurchase/discount';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
+import type { IDiscount } from '@services/sale/discount/type';
+import type { IRequest } from '@services/trh/bankDeposit/type';
+import {
+  setAllPageData,
+  setPageInfo,
+} from '@slice/pages';
 
-import { formConfig } from "./config";
+import { formConfig } from './config';
 
 export const Discount = ({ form }) => {
   const params = useSearchParams();
@@ -43,7 +49,7 @@ export const Discount = ({ form }) => {
 
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true
       ),
     }),

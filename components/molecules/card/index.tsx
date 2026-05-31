@@ -1,38 +1,46 @@
 import {
-    CSSProperties,
-    forwardRef,
-    ReactNode,
-    Ref,
-    RefAttributes,
-    useEffect,
-    useState,
-} from "react";
+  CSSProperties,
+  forwardRef,
+  ReactNode,
+  Ref,
+  RefAttributes,
+  useState,
+} from 'react';
 
-import { Checkbox, Collapse } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
-
-import { CustomSpin } from "@components/atoms/defaultElements";
 import {
-    Close,
-    DownChevron,
-    LeftChevron,
-    LeftChevronDouble,
-    NoData,
-    RightChevron,
-    RightChevronDouble,
-} from "@components/atoms/iconComponents";
-import { useProcessedData } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation } from "@services/base";
-import { resetItemsByPage, setItems } from "@slice/items";
-import { setViewData } from "@slice/pages";
-import { getSystemNameById } from "@utils/core";
+  Checkbox,
+  Collapse,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import type { IChangesField } from "../dataGrid/type";
-import RenderStatus from "../renderStatus";
-import { Details } from "./details";
-import type { IProps } from "./type";
+import { CustomSpin } from '@components/atoms/defaultElements';
+import {
+  Close,
+  DownChevron,
+  LeftChevron,
+  LeftChevronDouble,
+  NoData,
+  RightChevron,
+  RightChevronDouble,
+} from '@components/atoms/iconComponents';
+import { useProcessedData } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useCUDDataMutation } from '@services/base';
+import {
+  resetItemsByPage,
+  setItems,
+} from '@slice/items';
+import { setViewData } from '@slice/pages';
+import { getSystemNameById } from '@utils/core';
+
+import type { IChangesField } from '../dataGrid/type';
+import RenderStatus from '../renderStatus';
+import { Details } from './details';
+import type { IProps } from './type';
 
 const Card = forwardRef(function Card<T>(
     {
@@ -67,7 +75,7 @@ const Card = forwardRef(function Card<T>(
         selectedItems,
         tagsInfo,
     } = useAppSelector((state) => {
-        const activePage = state.withPersist.pages.find((item) => item.isActive);
+        const activePage = state.withPersist.pages?.find((item) => item.isActive);
         return {
             lang: state.withPersist.config.lang,
             activePage,

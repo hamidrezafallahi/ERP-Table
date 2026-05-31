@@ -1,13 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { useRouter } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useRouter } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { setMenuBar } from "@slice/config";
-import { setInitialPageData } from "@slice/init";
-import { removeNavigateListLastItem } from "@slice/navigateList";
-import { PageStateEnum } from "@slice/pages/enum";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setMenuBar } from '@slice/config';
+import { setInitialPageData } from '@slice/init';
+import { removeNavigateListLastItem } from '@slice/navigateList';
+import { PageStateEnum } from '@slice/pages/enum';
 
 export const useBrowserNavigate = () => {
   const dispatch = useDispatch();

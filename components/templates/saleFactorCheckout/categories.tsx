@@ -10,7 +10,7 @@ import {
 
 import { CustomButton } from '@components/atoms/defaultElements';
 import { NoData } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetConditionallyMutation } from '@services/base';
 import type { IBaseQueryResponse } from '@services/base/type';
 import { IGood } from '@services/com/good/type';

@@ -1,16 +1,15 @@
 import { FormInstance } from 'antd';
 import moment from 'moment-jalaali';
 
-import { AppDispatch } from '@redux/index';
 import {
   addNewPage,
   resetPageData,
 } from '@slice/pages';
 import { PageStateEnum } from '@slice/pages/enum';
-import { showSuccessToast } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 export const createHandleAdd =
-  (activePage: any, dispatch: AppDispatch, initializePage: any) => () => {
+  (activePage: any, dispatch:  any, initializePage: any) => () => {
     const u = activePage.url.split("?id=");
 
     if (u[1]?.length > 0) {
@@ -98,7 +97,7 @@ export const createHandleSave =
   };
 
 export const createHandleReset =
-  (form: FormInstance, dispatch: AppDispatch) => () => {
+  (form: FormInstance, dispatch: any) => () => {
     form.resetFields();
     dispatch(resetPageData({}));
   };

@@ -5,11 +5,7 @@ import {
   FinalizeVoucherPage,
   SortingVoucherPage,
   TafsiliType,
-  Voucher,
 } from '@components/organisms/accounting';
-import {
-  InventoryVoucherForm,
-} from '@components/organisms/inventoryVoucher/form';
 import {
   Patterns,
   ReportForm,
@@ -26,10 +22,6 @@ import {
   AdvancedCashFundDeposit,
   AdvancedCashFundWithdrawal,
 } from '@components/organisms/receiptAndPayment/cashFund';
-import {
-  ChequeIssuance,
-  ChequeReceipt,
-} from '@components/organisms/receiptAndPayment/cheque';
 import {
   BillsSalesInvoice,
   BuyRequest,
@@ -58,19 +50,15 @@ import TypeOfInventoryVoucher
 
 export const componentsMap: Record<string, FC<any>> = {
   TypeOfInventoryVoucher,
-  Voucher,
   AdvancedBankDeposit,
   AdvancedBankWithdrawal,
   AdvancedCashDeposit,
   AdvancedCashWithdrawal,
   AdvancedCashFundDeposit,
   AdvancedCashFundWithdrawal,
-  TafsiliType,
-  ChequeReceipt,
-  ChequeIssuance,
+  TafsiliType, 
   SaleFactorCheckout,
   ReturnSalesInvoice,
-  InventoryVoucherForm,
   Discount,
   PricingCircular,
   SalesCircular,

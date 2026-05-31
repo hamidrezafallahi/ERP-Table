@@ -1,33 +1,48 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Pagination } from "antd";
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Pagination } from 'antd';
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { LeftChevron, RightChevron } from "@components/atoms/iconComponents";
-import { DetailDataGrid } from "@components/molecules/detailDataGridCustom";
+import { CustomButton } from '@components/atoms/defaultElements';
+import {
+  LeftChevron,
+  RightChevron,
+} from '@components/atoms/iconComponents';
+import type {
+  IChildHandle,
+} from '@components/molecules/accounting/voucher/mobileGrid/type';
+import { DetailDataGrid } from '@components/molecules/detailDataGridCustom';
+import { YearPlanResult } from '@components/molecules/yearPlan';
+import { YearPlanForm } from '@components/molecules/yearPlan/form';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import type { IRequest } from '@services/acc/voucher/type';
+import type { IYearPlanDetails } from '@services/acc/yearPlanDetails/type';
+import { useGetData } from '@services/base';
+import { IYearPlan } from '@services/prd/yearPlan/type';
+import {
+  setAllPageData,
+  setPageData,
+  setPageInfo,
+} from '@slice/pages';
+import { hasStoredValue } from '@utils/core';
 
-import { YearPlanResult } from "@components/molecules/yearPlan";
-import { YearPlanForm } from "@components/molecules/yearPlan/form";
-import { useAppSelector } from "@redux/index";
-import type { IRequest } from "@services/acc/voucher/type";
-import type { IYearPlanDetails } from "@services/acc/yearPlanDetails/type";
-import { useGetData } from "@services/base";
-import { IYearPlan } from "@services/prd/yearPlan/type";
-import { setAllPageData, setPageData, setPageInfo } from "@slice/pages";
-import { hasStoredValue } from "@utils/core";
-
-import { useFormConfig } from "./config";
-import type { ITotal } from "./type";
-import type { IChildHandle } from "@components/molecules/accounting/voucher/mobileGrid/type";
+import { useFormConfig } from './config';
+import type { ITotal } from './type';
 
 export const YearPlan = ({ form }) => {
   const { activePage, fullScreen, minimizePanel, match } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true
       ),
 

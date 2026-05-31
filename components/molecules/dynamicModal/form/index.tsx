@@ -1,8 +1,15 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Checkbox, Form, Spin } from "antd";
-import { useTranslations } from "next-intl";
-import { useDispatch } from "react-redux";
+import {
+  Checkbox,
+  Form,
+  Spin,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import { useDispatch } from 'react-redux';
 
 import {
   CustomButton,
@@ -10,15 +17,23 @@ import {
   DynamicMultiSelect,
   DynamicSelect,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import { DynamicTree } from "@components/atoms/defaultElements/dynamicTree";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { NewTimePicker } from "@components/atoms/defaultElements/newTimePicker";
-import { PlusOutline, SpinIcon } from "@components/atoms/iconComponents";
-import { apiService, useCUDDataMutation, useGetData } from "@services/base";
-import type { IRequestConfig } from "@type/elementType";
-import { showSuccessToast, transformDotNotationToNested } from "@utils/core";
+} from '@components/atoms/defaultElements';
+import { DynamicTree } from '@components/atoms/defaultElements/dynamicTree';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import InputText from '@components/atoms/defaultElements/inputText';
+import { NewTimePicker } from '@components/atoms/defaultElements/newTimePicker';
+import {
+  PlusOutline,
+  SpinIcon,
+} from '@components/atoms/iconComponents';
+import {
+  apiService,
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import type { IRequestConfig } from '@type/elementType';
+import { transformDotNotationToNested } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 function combineValues(defaultValue, dateFields) {
   const finalObject = { ...defaultValue };
@@ -129,8 +144,8 @@ export const FormDynamicModal = ({
             (draft) => {
               if (draft?.Data) draft.Data = [];
             },
-            false
-          )
+            false,
+          ),
         );
 
         setPageNumber(1);
@@ -339,7 +354,7 @@ export const FormDynamicModal = ({
             >
               {renderField(item)}
             </Form.Item>
-          )
+          ),
         )}
 
       <Form.Item className="col-span-2 m-0 p-0 text-xs">

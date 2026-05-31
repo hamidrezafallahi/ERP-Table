@@ -1,16 +1,28 @@
 ﻿"use client";
-import { useEffect, useRef } from "react";
+import {
+  useEffect,
+  useRef,
+} from 'react';
 
-import { getMessaging, onMessage } from "firebase/messaging";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  getMessaging,
+  onMessage,
+} from 'firebase/messaging';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { showNotificationToast } from "@utils/core";
-import firebaseApp from "@utils/firebase";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import firebaseApp from '@utils/firebase';
+import { showNotificationToast } from '@utils/toast';
 
-import { setListStateByRepo } from "../slice/pages";
-import { PageStateEnum } from "../slice/pages/enum";
-import { useFcmToken, useHandle } from "./custom";
+import { setListStateByRepo } from '../slice/pages';
+import { PageStateEnum } from '../slice/pages/enum';
+import {
+  useFcmToken,
+  useHandle,
+} from './custom';
 
 export default function FirebaseNotification() {
   const { notificationPermissionStatus, fcmToken } = useFcmToken();

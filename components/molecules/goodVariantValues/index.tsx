@@ -1,20 +1,37 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-import { Divider, Form, FormProps } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Divider,
+  Form,
+  FormProps,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { useAppSelector } from "@redux/index";
-import { apiService, useCUDDataMutation, useGetData } from "@services/base";
-import type { IRequest, IVariant } from "@services/com/variant/type";
-import { setPageState } from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
-import { showSuccessToast } from "@utils/core";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  apiService,
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import type {
+  IRequest,
+  IVariant,
+} from '@services/com/variant/type';
+import { setPageState } from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
+import { showSuccessToast } from '@utils/toast';
 
-import { BaseFormGoodVariantValues } from "./form";
-import { SubFormGoodVariantValues } from "./subForm";
-import type { IAppliedVariant, IProps } from "./type";
+import { BaseFormGoodVariantValues } from './form';
+import { SubFormGoodVariantValues } from './subForm';
+import type {
+  IAppliedVariant,
+  IProps,
+} from './type';
 
 export default function GoodVariantValues({ id, sourceKey, listUrl }: IProps) {
   const t = useTranslations();

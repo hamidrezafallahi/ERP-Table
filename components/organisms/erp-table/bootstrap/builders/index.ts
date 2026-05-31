@@ -89,6 +89,7 @@ export function buildColumns(
       minWidth: col.minWidth,
       style: col.style,
       popUpWidth: col.popUpWidth,
+      dynamicSelectFilterOption:col.dynamicSelectFilterOption,
       labelValue: col.labelValue,
       enableDeleteButton: col.enableDeleteButton,
       enableExpandButton: col.enableExpandButton,

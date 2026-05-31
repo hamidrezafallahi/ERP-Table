@@ -4,7 +4,7 @@ import {
 } from 'antd';
 import { useTranslations } from 'next-intl';
 
-import { showErrorToast } from '@utils/core';
+import { showErrorToast } from '@utils/toast';
 
 import type { IProps } from './type';
 

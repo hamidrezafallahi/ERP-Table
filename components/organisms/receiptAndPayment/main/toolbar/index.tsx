@@ -1,25 +1,28 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { CustomModal, CustomTooltip } from "@components/atoms/defaultElements";
+import {
+  CustomModal,
+  CustomTooltip,
+} from '@components/atoms/defaultElements';
 import {
   MenuArrowBack,
   MenuSquareIcon,
-} from "@components/atoms/iconComponents";
-import ExpandedButton from "@components/molecules/expandedButton";
-import { useNavigatePage } from "@hooks/custom";
-import PanelList from "@layout/baseLayout/desktop/actionBar/panelList";
-import { useAppSelector } from "@redux/index";
-import CloseButton from "@components/molecules/closeButton";
+} from '@components/atoms/iconComponents';
+import CloseButton from '@components/molecules/closeButton';
+import ExpandedButton from '@components/molecules/expandedButton';
+import { useNavigatePage } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import PanelList from '@layout/baseLayout/desktop/actionBar/panelList';
 
 export const ReceiptAndPaymentToolbar = () => {
   const t = useTranslations();
   const { activePage, lang, match } = useAppSelector(
     (state) => ({
       lang: state.withPersist.config.lang,
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true
       ),
       match: state.withPersist.config.initMatch,

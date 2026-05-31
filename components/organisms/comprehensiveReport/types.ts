@@ -1,9 +1,4 @@
-import {
-  QueryActionCreatorResult,
-  QueryDefinition,
-} from "@reduxjs/toolkit/query";
-import { IBaseQueryResponse, IBaseRequest } from "@services/base/type";
-
+import { ReloadType } from "@services/types";
 import { FormInstance } from "antd";
 import { useTranslations } from "next-intl";
 import { Dispatch, SetStateAction } from "react";
@@ -17,35 +12,13 @@ export interface IProps {
 
 export default interface IResponseItem {}
 
-export type ReloadType = () => QueryActionCreatorResult<
-  QueryDefinition<
-    {
-      url: string;
-      body: IBaseRequest<any>;
-      id: number | string;
-    },
-    (args: any, api: any, extra: any) => Promise<any>,
-    string,
-    IBaseQueryResponse<any>,
-    "apiService"
-  >
->;
+export type VoucherDataType = {
+  _SelectId: number;
+  _SelectValue: number[];
+  _SelectDisplay: string;
+};
 
 export type TFunction = ReturnType<typeof useTranslations>;
-
-export type RefetchType = () => QueryActionCreatorResult<
-  QueryDefinition<
-    {
-      url: string;
-      body: IBaseRequest<any>;
-      id: number | string;
-    },
-    (args: any, api: any, extraOptions: any) => Promise<any>,
-    string,
-    IBaseQueryResponse<any>,
-    "apiService"
-  >
->;
 
 export type RecordType = {
   Desc?: string;

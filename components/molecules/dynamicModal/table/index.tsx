@@ -129,6 +129,7 @@ export const TableDynamicModal = <T,>({
         dataIndex: item.fieldName,
         key: item.fieldName,
         align: typeof item.fieldName === "string" ? "right" : "left",
+        width: item.width,
         render: (text: any, record: any) => {
           return <div className="my-2">{record?.[item.fieldName]}</div>;
         },
@@ -203,14 +204,7 @@ export const TableDynamicModal = <T,>({
         spinning: isLoading,
         indicator: <Spin size="large" indicator={<SpinIcon />} />,
       }}
-      scroll={
-        scroll
-          ? {
-              x: scroll.x,
-              y: scroll.y,
-            }
-          : undefined
-      }
+      scroll={scroll}
       tableLayout="auto"
       locale={{
         emptyText: (

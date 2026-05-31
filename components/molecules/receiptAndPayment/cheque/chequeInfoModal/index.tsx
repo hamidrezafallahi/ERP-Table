@@ -1,12 +1,12 @@
-import { shallowEqual } from "react-redux";
+import { shallowEqual } from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
-import type { IChequeInfo } from "@services/trh/receivedCheque/type";
-import { convertDate } from "@utils/core";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
+import type { IChequeInfo } from '@services/trh/receivedCheque/type';
+import { convertDate } from '@utils/core';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export const ChequeInfoModal = ({
   handlePrevStep,

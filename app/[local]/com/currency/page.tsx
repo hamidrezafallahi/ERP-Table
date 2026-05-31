@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { ICurrency, IRequest } from "@services/com/currency/type";
+import { Form } from '@components/templates/form';
+import type {
+  ICurrency,
+  IRequest,
+} from '@services/com/currency/type';
 
 export default function CurrencyFormPage() {
   return (

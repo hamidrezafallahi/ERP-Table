@@ -1,8 +1,8 @@
-import Form from "@components/templates/form";
+import { Form } from '@components/templates/form';
 import type {
   IRequest,
   ISalesAssociate,
-} from "@services/sale/salesAssociate/type";
+} from '@services/sale/salesAssociate/type';
 
 export default function SalesPartnerFormPage() {
   return (

@@ -1,7 +1,11 @@
 "use client";
 
-import { useAppDispatch } from "@redux/index";
-import { setPackageId, setPackageType } from "@slice/account";
+import { useDispatch } from 'react-redux';
+
+import {
+  setPackageId,
+  setPackageType,
+} from '@slice/account';
 
 interface IProps {
   Active: boolean;
@@ -10,7 +14,7 @@ interface IProps {
 }
 function RegisterCheckbox({ ...props }: IProps) {
   const { Active, itemId, itemTitle } = props;
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
 
   const handleSelectLicense = (packageId: number | null) => {
     dispatch(setPackageId(packageId));

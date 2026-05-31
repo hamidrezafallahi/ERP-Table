@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import {
+  useEffect,
+  useRef,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
-import { Stimulsoft } from "stimulsoft-dashboards-js/Scripts/stimulsoft.viewer";
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { showErrorToast } from "@utils/core";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { showErrorToast } from '@utils/toast';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export const DashboardView = ({ template, data, dataSources }: IProps) => {
   const t = useTranslations();
@@ -17,15 +19,12 @@ export const DashboardView = ({ template, data, dataSources }: IProps) => {
     (state) => ({
       modalIsFullScreen: state.withPersist.config.modalIsFullscreen,
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   const viewerRef = useRef<HTMLDivElement | null>(null);
-  const options = new Stimulsoft.Viewer.StiViewerOptions();
-  const viewer = useRef(
-    new Stimulsoft.Viewer.StiViewer(options, "StiViewer", false)
-  );
-  const report = useRef(new Stimulsoft.Report.StiReport());
+  const viewer = useRef<any>(null);
+  const report = useRef<any>(null);
 
   const StiLicKey =
     "6vJhGtLLLz2GNviWmUTrhSqnOItdDwjBylQzQcAOiHkO46nMQvol4ASeg91in+mGJLnn2KMIpg3eSXQSgaFOm15+0l" +
@@ -40,15 +39,16 @@ export const DashboardView = ({ template, data, dataSources }: IProps) => {
     const bindData = (
       reportInstance: any,
       sources: any[],
-      data: IProps["data"]
+      data: IProps["data"],
+      Stimulsoft: any,
     ) => {
       sources?.forEach(({ DataSourceName }) => {
         const name = Array.isArray(DataSourceName)
           ? DataSourceName[0]
-          : DataSourceName ?? "DataSource";
+          : (DataSourceName ?? "DataSource");
 
         const correctData = data?.find(
-          (item) => item.dataSourceName === DataSourceName
+          (item) => item.dataSourceName === DataSourceName,
         )?.data;
         const wrapped = {
           [name]: Array.isArray(correctData) ? correctData : [correctData],
@@ -62,15 +62,26 @@ export const DashboardView = ({ template, data, dataSources }: IProps) => {
 
     const loadReport = async () => {
       try {
+        const { Stimulsoft } =
+          await import("stimulsoft-reports-js/Scripts/stimulsoft.designer");
         Stimulsoft.Base.StiLicense.Key = StiLicKey;
 
         if (!template || !data) {
           showErrorToast(t("general.notFoundData"));
           return;
         }
+        const options = new Stimulsoft.Viewer.StiViewerOptions();
+
+        viewer.current = new Stimulsoft.Viewer.StiViewer(
+          options,
+          "StiViewer",
+          false,
+        );
+
+        report.current = new Stimulsoft.Report.StiReport();
 
         report.current.loadFile(template);
-        bindData(report.current, dataSources, data);
+        bindData(report.current, dataSources, data, Stimulsoft);
 
         report.current.renderAsync(() => {
           viewer.current.report = report.current;

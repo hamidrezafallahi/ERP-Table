@@ -28,7 +28,7 @@ import {
 } from '@components/atoms/iconComponents';
 import Title from '@components/atoms/Title';
 import { useNavigatePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useCUDDataMutation,
   useGetData,

@@ -12,9 +12,9 @@ import {
   PlayVideo,
 } from '@components/atoms/iconComponents';
 import { PauseVideo } from '@components/atoms/iconComponents/icons/PauseVideo';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import shadow from '@public/images/gradientShadow.png';
 import filmBorderUrl from '@public/images/vertical film border.png';
-import { useAppSelector } from '@redux/index';
 
 export default function CaptureCarousel({
   capturedFile,

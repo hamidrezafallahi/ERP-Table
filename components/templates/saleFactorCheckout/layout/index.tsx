@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { shallowEqual } from 'react-redux';
 
 import Title from '@components/atoms/Title';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   IIncreasingAndDecreasingFactors,
 } from '@services/sale/increasingAndDecreasingFactors/type';

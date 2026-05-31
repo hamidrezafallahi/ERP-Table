@@ -13,7 +13,7 @@ import {
 import CloseButton from '@components/molecules/closeButton';
 import ExpandedButton from '@components/molecules/expandedButton';
 import { useFormHandlers } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import CustomDropdownButton from '../customDropdownButton';
 
@@ -31,7 +31,7 @@ const UserWalletToolbar = () => {
   );
   const t = useTranslations();
   const { handleReset } = useFormHandlers({
-    activePage: pages.find((item) => item.isActive),
+    activePage: pages?.find((item) => item.isActive),
     pages: pages,
     form: form,
   });

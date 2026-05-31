@@ -1,15 +1,15 @@
 import { useTranslations } from 'next-intl';
 import { shallowEqual } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { formatCurrency } from '@utils/core';
 
 export default function Report() {
   const t = useTranslations();
      const {totalPrice, discountSum, items} = useAppSelector((state) => {
-    const totalPrice=state.withPersist.pages.find(item=>item.isActive)?.pageData?.find(i=>i.name === "totalPrice")?.value;
-    const discountSum=state.withPersist.pages.find(item=>item.isActive)?.pageData?.find(i=>i.name === "discountSum")?.value;
-    const items=state.withPersist.pages.find(item=>item.isActive)?.pageData?.find(i=>i.name === "items")?.value;
+    const totalPrice=state.withPersist.pages?.find(item=>item.isActive)?.pageData?.find(i=>i.name === "totalPrice")?.value;
+    const discountSum=state.withPersist.pages?.find(item=>item.isActive)?.pageData?.find(i=>i.name === "discountSum")?.value;
+    const items=state.withPersist.pages?.find(item=>item.isActive)?.pageData?.find(i=>i.name === "items")?.value;
     return {totalPrice, discountSum, items};
   }, shallowEqual);
   const newTotalPrice = () => {

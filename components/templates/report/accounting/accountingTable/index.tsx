@@ -3,7 +3,7 @@ import {
   useDispatch,
 } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setLevelFromTable } from '@slice/pages';
 
 import MainTable from '../../partials/Table';
@@ -15,9 +15,7 @@ function AccountingTable() {
     const { activePage } = useAppSelector((state) => ({activePage: state?.withPersist?.pages?.find((item) => item.isActive === true),}),shallowEqual);
     const dispatch = useDispatch();
     const handleRowClick = (record:any) => {
-
-      dispatch(setLevelFromTable({ Level: activePage?.viewData?.Level+1, item: record }));
-
+      dispatch(setLevelFromTable({ Level: activePage?.viewData?.Level, item: record }));
     };
 
   return (

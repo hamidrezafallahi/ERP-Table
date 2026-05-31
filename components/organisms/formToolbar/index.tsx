@@ -1,18 +1,32 @@
-import { lazy, ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  lazy,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-import { Drawer, Menu, Spin } from "antd";
-import { MenuProps } from "antd/lib";
-import DOMPurify from "dompurify";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Drawer,
+  Menu,
+  Spin,
+} from 'antd';
+import { MenuProps } from 'antd/lib';
+import DOMPurify from 'dompurify';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import {
   CustomButton,
   CustomDropdownButton,
   CustomModal,
   CustomTooltip,
-} from "@components/atoms/defaultElements";
+} from '@components/atoms/defaultElements';
 import {
+  AddCircle,
   Dots,
   DownChevron,
   FormIcon,
@@ -20,32 +34,36 @@ import {
   MenuSquareIcon,
   PlusOutline,
   Printer,
+  Reload,
   RemindMeIcon,
   ReportIcon,
   SavePlus,
   SpinIcon,
   Undo,
-} from "@components/atoms/iconComponents";
-import CloseButton from "@components/molecules/closeButton";
-import ContactInfo from "@components/molecules/contactInfo";
-import { CustomerCredit } from "@components/molecules/customerCredit";
-import { CustomerGroupCredit } from "@components/molecules/customerGroupCredit";
-import ExpandedButton from "@components/molecules/expandedButton";
-import { ExpireDateAccountList } from "@components/molecules/expireDateAccountList";
-import GoodExtraInfo from "@components/molecules/goodExtraInfo";
-import { GoodPrice } from "@components/molecules/goodPrice";
-import { GoodQc } from "@components/molecules/goodQc";
-import { GoodSettings } from "@components/molecules/goodSettings";
-import GoodVariantValues from "@components/molecules/goodVariantValues";
-import { InventoryControl } from "@components/molecules/inventoryControl";
-import { UserReport } from "@components/molecules/managementSystem/reports";
-import Navigate from "@components/molecules/navigate";
-import RemindMe from "@components/molecules/remindMe";
+} from '@components/atoms/iconComponents';
+import CloseButton from '@components/molecules/closeButton';
+import ContactInfo from '@components/molecules/contactInfo';
+import CurrencyConversion from '@components/molecules/currencyConversion';
+import { CustomerCredit } from '@components/molecules/customerCredit';
+import { CustomerGroupCredit } from '@components/molecules/customerGroupCredit';
+import ExpandedButton from '@components/molecules/expandedButton';
+import {
+  ExpireDateAccountList,
+} from '@components/molecules/expireDateAccountList';
+import GoodExtraInfo from '@components/molecules/goodExtraInfo';
+import { GoodPrice } from '@components/molecules/goodPrice';
+import { GoodQc } from '@components/molecules/goodQc';
+import { GoodSettings } from '@components/molecules/goodSettings';
+import GoodVariantValues from '@components/molecules/goodVariantValues';
+import { InventoryControl } from '@components/molecules/inventoryControl';
+import { UserReport } from '@components/molecules/managementSystem/reports';
+import Navigate from '@components/molecules/navigate';
+import RemindMe from '@components/molecules/remindMe';
 import {
   ChangeInvoiceCurrency,
   ChangeInvoiceCurrencyRate,
   Settlement,
-} from "@components/molecules/salesAndPurchase/salesInvoice";
+} from '@components/molecules/salesAndPurchase/salesInvoice';
 import {
   Education,
   PhysicalCharacteristicsModal,
@@ -53,42 +71,50 @@ import {
   Sponsor,
   TrainingCourse,
   WorkHistory,
-} from "@components/molecules/staff";
-import { FormulaParameter } from "@components/molecules/staff/formulaParameter";
-import { StockWarehouse } from "@components/molecules/stockWarehouse";
-import { TaxSettings } from "@components/molecules/taxSettings";
+} from '@components/molecules/staff';
+import { FormulaParameter } from '@components/molecules/staff/formulaParameter';
+import { StockWarehouse } from '@components/molecules/stockWarehouse';
+import { TaxSettings } from '@components/molecules/taxSettings';
 import {
   useDarkMode,
   useFormHandlers,
   useNavigatePage,
   useNavigateRecordsForm,
-} from "@hooks/custom";
-import Uploader from "@layout/baseLayout/desktop/actionBar/panelForm/uploader";
-import { useAppSelector } from "@redux/index";
-import { ReportTypeEnum } from "@services/mng/report/type";
-import { clearReportData } from "@slice/config";
-import { setAllPageData, setSelectedViewIndex } from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
-import { PageTypeEnum } from "@type/enum";
+} from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import Uploader from '@layout/baseLayout/desktop/actionBar/panelForm/uploader';
+import { ReportTypeEnum } from '@services/mng/report/type';
+import { clearReportData } from '@slice/config';
+import {
+  setAllPageData,
+  setPageData,
+  setSelectedViewIndex,
+} from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
+import { PageTypeEnum } from '@type/enum';
 import type {
   IReportPosition,
   IToolbarList,
   IToolbarMenu,
-} from "@type/toolbar";
+} from '@type/toolbar';
 import {
   createCookie,
-  getColoredIcon,
   getCookie,
+} from '@utils/cookie';
+import {
+  getColoredIcon,
   renderPageState,
-} from "@utils/core";
+} from '@utils/core';
 
-import ChatWidget from "../chat";
-import DynamicModal from "../dynamicModal";
-import { ActionLabelsEnum } from "../list/enum";
-import { ShowPrinter, ShowReport } from "../managementSystem";
-import ShorthandFormToolbar from "./shorthandFormToolbar";
-import type { IProps } from "./type";
-import CurrencyConversion from "@components/molecules/currencyConversion";
+import ChatWidget from '../chat';
+import DynamicModal from '../dynamicModal';
+import { ActionLabelsEnum } from '../list/enum';
+import {
+  ShowPrinter,
+  ShowReport,
+} from '../managementSystem';
+import ShorthandFormToolbar from './shorthandFormToolbar';
+import type { IProps } from './type';
 
 const PanelForm = lazy(
   () => import("@layout/baseLayout/desktop/actionBar/panelForm"),
@@ -109,7 +135,10 @@ export default function FormToolbar({
   withSubmitButton = true,
   hasShorthandFormToolbar,
   fromIndexedDb = false,
+  hasReload=false,
   loadingFromOutsideComponents,
+  saveAsDraft = false,
+  handleRefreshData
 }: IProps) {
   const t = useTranslations();
   const dispatch = useDispatch();
@@ -376,7 +405,7 @@ export default function FormToolbar({
               sourceKey={fieldKey}
               rowId={id}
               mode="delete"
-              handleClose={() => setIsModalOpen(false)}
+              closeModal={() => setIsModalOpen(false)}
             />,
           );
           break;
@@ -387,7 +416,7 @@ export default function FormToolbar({
               id={id}
               sourceKey={fieldKey}
               rowId={id}
-              handleClose={() => setIsModalOpen(false)}
+              closeModal={() => setIsModalOpen(false)}
             />,
           );
           break;
@@ -707,6 +736,7 @@ export default function FormToolbar({
     }
   }, [toolbarData, selectedView, selectedViewIndex]);
 
+
   return (
     <>
       {!match && (
@@ -730,6 +760,25 @@ export default function FormToolbar({
               >
                 <ExpandedButton />
               </CustomTooltip>
+              {hasReload && (
+                <CustomTooltip
+                  className="flex bg-gray-gray3 dark:!bg-gray-gray11 rounded h-full"
+                  title={t("general.reload")}
+                >
+                  <div
+                    className="flex bg-gray-gray3 dark:!bg-gray-gray11 p-[6px] rounded h-full cursor-pointer"
+                    onClick={handleRefreshData}
+                    id="reload"
+                  >
+                    <Reload
+                      config={{
+                        width: 24,
+                        height: 24,
+                      }}
+                    />
+                  </div>
+                </CustomTooltip>
+              )}
               {moreItems.length > 0 && (
                 <CustomDropdownButton
                   placement={lang === "fa" ? "bottomRight" : "bottomLeft"}
@@ -840,11 +889,30 @@ export default function FormToolbar({
                   rootClassName="hidden xxl:flex"
                 />
               )}
-              <CustomButton className="hidden xxl:flex bg-gray-gray3 dark:bg-gray-gray11 dark:hover:!bg-gray-gray12 p-[6px] !border-none rounded h-full">
-                <span>
-                  <Printer />
-                </span>
-              </CustomButton>
+              {saveAsDraft && (
+                <div>
+                  <CustomTooltip title={t("general.saveDraft")}>
+                    <CustomButton
+                      loading={isLoading || loadingFromOutsideComponents}
+                      type="text"
+                      className="flex justify-center items-center bg-gray-gray3 !hover:bg-white hover:bg-gray-gray8 dark:bg-gray-gray11 px-[10px] border rounded h-9 text-gray dark:text-white"
+                      onClick={() => {
+                        dispatch(
+                          setPageData({
+                            name: "DocStatusId",
+                            value: 3,
+                            type: "number",
+                          }),
+                        );
+
+                        fromIndexedDb ? form?.submit() : handleSubmitAndClose();
+                      }}
+                    >
+                      <AddCircle />
+                    </CustomButton>
+                  </CustomTooltip>
+                </div>
+              )}
             </div>
           ) : (
             <div className="z-10 flex justify-between items-center mt-2 w-full">
@@ -950,6 +1018,7 @@ export default function FormToolbar({
                     <PlusOutline />
                   </CustomButton>
                 </CustomTooltip>
+
                 <CustomTooltip
                   title={t("formToolbar.saveAndNew")}
                   className="hidden xxl:block"
@@ -999,20 +1068,22 @@ export default function FormToolbar({
                 </div>
               </>
             ) : (
-              <CustomButton
-                loading={isLoading || loadingFromOutsideComponents}
-                type="text"
-                className={`flex flex-1 lg:flex-none justify-center items-center bg-black-black8 !hover:bg-white px-3  border hover:border-black-black8 rounded h-9 text-white dark:bg-gray-gray11 dark:text-white !text-sm`}
-                onClick={
-                  fromIndexedDb
-                    ? () => {
-                        form?.submit();
-                      }
-                    : handleSubmitAndClose
-                }
-              >
-                {submitCaption}
-              </CustomButton>
+              <div>
+                <CustomButton
+                  loading={isLoading || loadingFromOutsideComponents}
+                  type="text"
+                  className={`flex flex-1 lg:flex-none justify-center items-center bg-black-black8 !hover:bg-white px-3  border hover:border-black-black8 rounded h-9 text-white dark:bg-gray-gray11 dark:text-white !text-sm`}
+                  onClick={
+                    fromIndexedDb
+                      ? () => {
+                          form?.submit();
+                        }
+                      : handleSubmitAndClose
+                  }
+                >
+                  {submitCaption}
+                </CustomButton>
+              </div>
             )}
           </>
         )}
@@ -1020,13 +1091,13 @@ export default function FormToolbar({
       {isDynamicModalOpen && (
         <CustomModal
           contentClassName={`${match ? "w-[520px] h-[470px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
+          headerName={dynamicAction?.MenuDesc}
           headerIcon={
             <>
-              {typeof dynamicAction.Icon === "string" && (
+              {typeof dynamicAction?.Icon === "string" && (
                 <div
                   dangerouslySetInnerHTML={{
-                    __html: getColoredIcon(dynamicAction.Icon, mode),
+                    __html: getColoredIcon(dynamicAction?.Icon, mode),
                   }}
                   style={{ width: "18px", height: "17px" }}
                 />
@@ -1053,14 +1124,14 @@ export default function FormToolbar({
         <CustomModal
           contentClassName={`${match ? "!min-w-max h-full" : ""}`}
           // headerName={attachmentTitle}
-          headerName={dynamicAction.MenuDesc}
+          headerName={dynamicAction?.MenuDesc}
           headerIcon={
             match && (
               <>
-                {typeof dynamicAction.Icon === "string" && (
+                {typeof dynamicAction?.Icon === "string" && (
                   <div
                     dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                      __html: getColoredIcon(dynamicAction?.Icon, mode),
                     }}
                     style={{ width: "18px", height: "17px" }}
                   />
@@ -1092,14 +1163,14 @@ export default function FormToolbar({
       {isStockWarehouseModalOpen && (
         <CustomModal
           contentClassName={`${match ? "!w-[720px] h-[520px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
+          headerName={dynamicAction?.MenuDesc}
           headerIcon={
             match && (
               <>
-                {typeof dynamicAction.Icon === "string" && (
+                {typeof dynamicAction?.Icon === "string" && (
                   <div
                     dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                      __html: getColoredIcon(dynamicAction?.Icon, mode),
                     }}
                     style={{ width: "18px", height: "17px" }}
                   />
@@ -1115,14 +1186,14 @@ export default function FormToolbar({
       {isChangeInvoiceCurrencyRateModalOpen && (
         <CustomModal
           contentClassName={`${match ? "w-[520px] h-[470px]" : ""}`}
-          headerName={dynamicAction.MenuDesc}
+          headerName={dynamicAction?.MenuDesc}
           headerIcon={
             match && (
               <>
-                {typeof dynamicAction.Icon === "string" && (
+                {typeof dynamicAction?.Icon === "string" && (
                   <div
                     dangerouslySetInnerHTML={{
-                      __html: getColoredIcon(dynamicAction.Icon, mode),
+                      __html: getColoredIcon(dynamicAction?.Icon, mode),
                     }}
                     style={{ width: "18px", height: "17px" }}
                   />

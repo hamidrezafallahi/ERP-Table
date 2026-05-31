@@ -1,11 +1,21 @@
 "use client";
-import React, { FC } from "react";
+import React, { FC } from 'react';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { useAppDispatch, useAppSelector } from "@redux/index";
-import { setFullName, setIsEditing, setName, setStep } from "@slice/account";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import Backward from "../backward";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  setFullName,
+  setIsEditing,
+  setName,
+  setStep,
+} from '@slice/account';
+
+import Backward from '../backward';
 
 interface Props {
   onFinish: () => void;
@@ -13,14 +23,15 @@ interface Props {
 }
 
 const UserStep: FC<Props> = ({ onFinish, onBack }) => {
-  const dispatch = useAppDispatch();
-  const name = useAppSelector((state) => state.withPersist.account.name);
-  const fullName = useAppSelector(
-    (state) => state.withPersist.account.fullName
-  );
-  const isEditing = useAppSelector(
-    (state) => state.withPersist.account.isEditing
-  );
+  const dispatch = useDispatch();
+const { name, fullName, isEditing } = useAppSelector(
+  (state) => ({
+    name: state.withPersist.account.name,
+    fullName: state.withPersist.account.fullName,
+    isEditing: state.withPersist.account.isEditing,
+  }),
+  shallowEqual
+);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

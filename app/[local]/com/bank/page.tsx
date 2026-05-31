@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { IBank, IRequest } from "@services/com/bank/type";
+import { Form } from '@components/templates/form';
+import type {
+  IBank,
+  IRequest,
+} from '@services/com/bank/type';
 
 export default function BankFormPage({ isModal = false, parentPageId = null }) {
   return (

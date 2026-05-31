@@ -1,16 +1,26 @@
-import { FC, useCallback, useEffect } from "react";
+import {
+  FC,
+  useCallback,
+  useEffect,
+} from 'react';
 
-import { TreeSelect } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { TreeSelect } from 'antd';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { PlusOutline, Reload } from "@components/atoms/iconComponents";
-import { useInitializePage } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
+import {
+  PlusOutline,
+  Reload,
+} from '@components/atoms/iconComponents';
+import { useInitializePage } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setPageData } from '@slice/pages';
 
-import { MobileTreeSelect } from "./mobileTreeSelect";
-import type { IProps } from "./type";
+import { MobileTreeSelect } from './mobileTreeSelect';
+import type { IProps } from './type';
 
 export const CustomTreeSelect: FC<IProps> = ({
   ref,
@@ -27,7 +37,7 @@ export const CustomTreeSelect: FC<IProps> = ({
   const { match, pageId, lang, initElement } = useAppSelector((state) => {
     const match = state.withPersist.config.initMatch;
     const lang = state.withPersist.config.lang;
-    const pageId = state.withPersist.pages.find(
+    const pageId = state.withPersist.pages?.find(
       (item) => item.isActive
     )?.pageId;
     if (!config) return { match, pageId, lang, initElement: null };

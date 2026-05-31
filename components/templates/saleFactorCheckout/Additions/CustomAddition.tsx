@@ -7,7 +7,7 @@ import { EditPencil } from '@components/atoms/iconComponents';
 import {
   IState,
 } from '@components/molecules/salesAndPurchase/salesInvoice/type';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import { CustomAdditionProps } from './type';
 
@@ -15,7 +15,7 @@ function CustomAddition({ ...props }: CustomAdditionProps) {
   const { onChange, setIsOpen, content } = props;
   const { theme, elements } = useAppSelector((state) => {
     const theme = state.withPersist.config.theme;
-    const activePageId = state.withPersist.pages.find(x=>x.isActive)?.pageId
+    const activePageId = state.withPersist.pages?.find(x=>x.isActive)?.pageId
     const elements:any = []//state.withPersist.factors[activePageId]?.invoice?.factor?.[content.fieldKey]
     return { theme, elements };
   }, shallowEqual);

@@ -1,19 +1,22 @@
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { Info, RowInfoIcon } from "@components/atoms/iconComponents";
+import {
+  Info,
+  RowInfoIcon,
+} from '@components/atoms/iconComponents';
 import {
   isRegisteredConfig,
   stateConfig,
-} from "@components/organisms/receiptAndPayment/config";
-import { useProcessedData } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
-import type { IColumnConfig } from "@services/generalType/type";
+} from '@components/organisms/receiptAndPayment/config';
+import { useProcessedData } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
+import type { IColumnConfig } from '@services/generalType/type';
 import type {
   IReceivedCheque,
   IRequest,
-} from "@services/trh/receivedCheque/type";
+} from '@services/trh/receivedCheque/type';
 
 export const HeaderAction = ({
   id,

@@ -1,22 +1,34 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
-import { Checkbox, Form, FormProps, Radio } from "antd";
-import { useTranslations } from "next-intl";
+import {
+  Checkbox,
+  Form,
+  FormProps,
+  Radio,
+} from 'antd';
+import { useTranslations } from 'next-intl';
 
 import {
   CustomButton,
   DynamicSelect,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import { DynamicTree } from "@components/atoms/defaultElements/dynamicTree";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import InputText from "@components/atoms/defaultElements/inputText";
-import type { INestedListFormConfig } from "@components/organisms/nestedList/type";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import { getChangedFields, showSuccessToast } from "@utils/core";
+} from '@components/atoms/defaultElements';
+import { DynamicTree } from '@components/atoms/defaultElements/dynamicTree';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import InputText from '@components/atoms/defaultElements/inputText';
+import { SpinIcon } from '@components/atoms/iconComponents';
+import type {
+  INestedListFormConfig,
+} from '@components/organisms/nestedList/types';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import { getChangedFields } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export const NestedListForm = <T, K>({
   id,
@@ -25,6 +37,7 @@ export const NestedListForm = <T, K>({
   onClose,
   config,
   onGetDefault,
+  getIsLoading,
 }: IProps<T>) => {
   const t = useTranslations();
   const {
@@ -158,126 +171,136 @@ export const NestedListForm = <T, K>({
   }, [fatherId, id, config?.staticCondition]);
 
   return (
-    <Form
-      className="p-4 flex gap-4 flex-col"
-      name="NestedListForm"
-      initialValues={{ remember: true }}
-      layout="vertical"
-      onFinish={onSubmit}
-      form={form}
-      autoComplete="off"
-    >
-      <div
-        className={`lg:gap-x-2 lg:gap-y-4 lg:grid lg:grid-cols-2 flex flex-col gap-2 w-full`}
-      >
-        {formField
-          .sort((a, b) => a.order - b.order)
-          .map((field, index) => {
-            const condition = field.renderConditionally
-              ? field.renderConditionally(level)
-              : true;
-            if (!condition) return null;
-            switch (field.type) {
-              case "checkbox":
-                return (
-                  <Form.Item
-                    key={index}
-                    name={field.name}
-                    rules={field.rules}
-                    className="flex flex-col justify-end !mb-0 !pb-0 text-xs"
-                    valuePropName="checked"
-                    initialValue={false}
-                  >
-                    <Checkbox>{field.caption}</Checkbox>
-                  </Form.Item>
-                );
-              default:
-                return (
-                  <Form.Item
-                    key={index}
-                    label={field.caption}
-                    name={field.name}
-                    rules={field.rules}
-                    className={`flex flex-col !mb-0 !pb-0 text-xs w-full ${
-                      formField.length % 2 !== 0 &&
-                      index === formField.length - 1 &&
-                      "col-span-2"
-                    }`}
-                  >
-                    {renderField(field, level)}
-                  </Form.Item>
-                );
-            }
-          })}
-      </div>
-      {groupFormField?.length > 0 &&
-        groupFormField
-          .sort((a, b) => a.order - b.order)
-          .map((field, index) => {
-            const condition = field.renderConditionally
-              ? field.renderConditionally(level)
-              : true;
-
-            if (!condition) return null;
-            return (
-              <div key={index} className="flex flex-col gap-2 text-sm">
-                {field.groupItems?.map((groupItem, i) => (
-                  <>
-                    <span key={i}>{groupItem.title}</span>
-                    <div className="flex gap-2 justify-between mb-4 last:mb-0">
-                      {groupItem.groupFields.map((fieldItem, idx) => {
-                        const condition = fieldItem.renderConditionally
-                          ? fieldItem.renderConditionally(level)
-                          : true;
-                        if (!condition) return null;
-                        return fieldItem.type === "checkbox" ? (
-                          <Form.Item
-                            key={fieldItem.name}
-                            name={fieldItem.name}
-                            rules={fieldItem.rules}
-                            className="flex flex-col justify-end !mb-0 !pb-0 text-xs"
-                            valuePropName="checked"
-                            initialValue={false}
-                          >
-                            <Checkbox>{fieldItem.caption}</Checkbox>
-                          </Form.Item>
-                        ) : (
-                          <Form.Item
-                            key={fieldItem.name}
-                            label={fieldItem.caption}
-                            name={fieldItem.name}
-                            rules={fieldItem.rules}
-                            className={`flex flex-col !mb-0 !pb-0 text-xs w-full ${
-                              groupItem.groupFields.length % 2 !== 0 &&
-                              idx === groupItem.groupFields.length - 1 &&
-                              "col-span-2"
-                            }`}
-                          >
-                            {renderField(fieldItem, level)}
-                          </Form.Item>
-                        );
-                      })}
-                    </div>
-                  </>
-                ))}
-              </div>
-            );
-          })}
-
-      <Form.Item className="m-0 p-0 pt-2 text-xs">
-        <div
-          className={`lg:flex lg:justify-end lg:items-center lg:gap-2 grid grid-cols-1  w-full text-xs`}
-        >
-          <CustomButton
-            htmlType="submit"
-            type="text"
-            loading={isLoading}
-            className="flex gap-2 bg-black-black8 hover:bg-white px-3 py-1 border hover:border-black-black8 rounded min-w-[76px] text-white hover:text-black-black8 text-xs"
-          >
-            {t("general.submit")}
-          </CustomButton>
+    <>
+      {getIsLoading ? (
+        <div className="flex justify-center items-center h-[30dvh] text-gray-400">
+          <SpinIcon config={{ width: 24, height: 24 }} />
         </div>
-      </Form.Item>
-    </Form>
+      ) : (
+        <Form
+          className="flex flex-col gap-4 p-4"
+          name="NestedListForm"
+          initialValues={{ remember: true }}
+          layout="vertical"
+          onFinish={onSubmit}
+          form={form}
+          autoComplete="off"
+        >
+          <div
+            className={`lg:gap-x-2 lg:gap-y-4 lg:grid lg:grid-cols-2 flex flex-col gap-2 w-full`}
+          >
+            {formField
+              .sort((a, b) => a.order - b.order)
+              .map((field, index) => {
+                const condition = field.renderConditionally
+                  ? field.renderConditionally(level)
+                  : true;
+                if (!condition) return null;
+                switch (field.type) {
+                  case "checkbox":
+                    return (
+                      <Form.Item
+                        key={index}
+                        name={field.name}
+                        rules={field.rules}
+                        className="flex flex-col justify-end !mb-0 !pb-0 text-xs"
+                        valuePropName="checked"
+                        initialValue={false}
+                      >
+                        <Checkbox>{field.caption}</Checkbox>
+                      </Form.Item>
+                    );
+                  default:
+                    return (
+                      <Form.Item
+                        key={index}
+                        label={field.caption}
+                        name={field.name}
+                        rules={field.rules}
+                        initialValue={field.defaultValue}
+                        className={`flex flex-col !mb-0 !pb-0 text-xs w-full ${
+                          formField.length % 2 !== 0 &&
+                          index === formField.length - 1 &&
+                          "col-span-2"
+                        }`}
+                      >
+                        {renderField(field, level)}
+                      </Form.Item>
+                    );
+                }
+              })}
+          </div>
+          {groupFormField?.length > 0 &&
+            groupFormField
+              .sort((a, b) => a.order - b.order)
+              .map((field, index) => {
+                const condition = field.renderConditionally
+                  ? field.renderConditionally(level)
+                  : true;
+
+                if (!condition) return null;
+                return (
+                  <div key={index} className="flex flex-col gap-2 text-sm">
+                    {field.groupItems?.map((groupItem, i) => (
+                      <>
+                        <span key={i}>{groupItem.title}</span>
+                        <div className="flex justify-between gap-2 mb-4 last:mb-0">
+                          {groupItem.groupFields.map((fieldItem, idx) => {
+                            const condition = fieldItem.renderConditionally
+                              ? fieldItem.renderConditionally(level)
+                              : true;
+                            if (!condition) return null;
+                            return fieldItem.type === "checkbox" ? (
+                              <Form.Item
+                                key={fieldItem.name}
+                                name={fieldItem.name}
+                                rules={fieldItem.rules}
+                                className="flex flex-col justify-end !mb-0 !pb-0 text-xs"
+                                valuePropName="checked"
+                                initialValue={false}
+                              >
+                                <Checkbox>{fieldItem.caption}</Checkbox>
+                              </Form.Item>
+                            ) : (
+                              <Form.Item
+                                key={fieldItem.name}
+                                label={fieldItem.caption}
+                                name={fieldItem.name}
+                                rules={fieldItem.rules}
+                                initialValue={fieldItem.defaultValue}
+                                className={`flex flex-col !mb-0 !pb-0 text-xs w-full ${
+                                  groupItem.groupFields.length % 2 !== 0 &&
+                                  idx === groupItem.groupFields.length - 1 &&
+                                  "col-span-2"
+                                }`}
+                              >
+                                {renderField(fieldItem, level)}
+                              </Form.Item>
+                            );
+                          })}
+                        </div>
+                      </>
+                    ))}
+                  </div>
+                );
+              })}
+
+          <Form.Item className="m-0 p-0 pt-2 text-xs">
+            <div
+              className={`lg:flex lg:justify-end lg:items-center lg:gap-2 grid grid-cols-1  w-full text-xs`}
+            >
+              <CustomButton
+                htmlType="submit"
+                type="text"
+                loading={isLoading}
+                className="flex gap-2 bg-black-black8 hover:bg-white px-3 py-1 border hover:border-black-black8 rounded min-w-[76px] text-white hover:text-black-black8 text-xs"
+              >
+                {t("general.submit")}
+              </CustomButton>
+            </div>
+          </Form.Item>
+        </Form>
+      )}
+    </>
   );
 };

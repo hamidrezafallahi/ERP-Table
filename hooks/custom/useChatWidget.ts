@@ -1,15 +1,22 @@
 // hooks/useChatWidget.ts
-import { useCallback, useRef, useState } from "react";
+import {
+  useCallback,
+  useRef,
+  useState,
+} from 'react';
 
-import { shallowEqual } from "react-redux";
+import { shallowEqual } from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation } from "@services/base";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useCUDDataMutation } from '@services/base';
 
-import type { ChatMessage, ChatWidgetOptions } from "./types/websocket.types";
-import { useWebSocket } from "./useWebSocket";
+import type {
+  ChatMessage,
+  ChatWidgetOptions,
+} from './types/websocket.types';
+import { useWebSocket } from './useWebSocket';
 
-export type { ChatMessage } from "./types/websocket.types";
+export type { ChatMessage } from './types/websocket.types';
 
 export interface UseChatWidgetOptions extends ChatWidgetOptions {}
 

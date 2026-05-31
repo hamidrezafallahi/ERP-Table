@@ -1,17 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import {
   Checkbox,
   Drawer,
 } from 'antd';
-import { DrawerProps } from 'antd/lib';
+import { useTranslations } from 'next-intl';
 import { shallowEqual } from 'react-redux';
 
 import { CustomButton } from '@components/atoms/defaultElements';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import { AccountInfo } from './type';
-import { useTranslations } from 'next-intl';
 
 export default function ConfirmStep({
   account,

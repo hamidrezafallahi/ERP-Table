@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 
 import Chart from '@components/templates/chart';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { addNewPage } from '@slice/pages';
 import { PageStateEnum } from '@slice/pages/enum';
 import { PageTypeEnum } from '@type/enum';

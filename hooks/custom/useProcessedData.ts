@@ -1,9 +1,12 @@
-import { useMemo } from "react";
+import { useMemo } from 'react';
 
-import { TableProps } from "antd";
+import { TableProps } from 'antd';
 
-import { IColumnConfig } from "@services/generalType/type";
-import { convertDate, renderBadge } from "@utils/core";
+import { IColumnConfig } from '@services/generalType/type';
+import {
+  convertDate,
+  renderBadge,
+} from '@utils/core';
 
 interface IProps {
     data: any;

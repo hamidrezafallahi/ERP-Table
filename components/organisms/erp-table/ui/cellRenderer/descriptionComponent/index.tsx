@@ -1,6 +1,14 @@
-import React, { forwardRef } from 'react';
+import React, {
+  forwardRef,
+  useEffect,
+  useState,
+} from 'react';
 
-import { useTranslations } from 'next-intl';
+import { ItemType } from 'antd/es/menu/interface';
+import {
+  useLocale,
+  useTranslations,
+} from 'next-intl';
 
 import {
   CustomDropdownButton,
@@ -11,6 +19,7 @@ import {
   Dots,
   SavePlus,
 } from '@components/atoms/iconComponents';
+import { useGetData } from '@services/base';
 
 import { CellMeta } from '../';
 
@@ -20,23 +29,53 @@ export interface DescriptionComponentProps extends React.HTMLAttributes<HTMLDivE
   onChange?: (e: unknown) => void;
   meta: CellMeta;
 }
+export interface IDesc {
+  AccountDescItemId: number;
+  AccountDescId: number;
+  Desc: string;
+}
 
 export const DescriptionComponent = forwardRef<
   HTMLDivElement,
   DescriptionComponentProps
 >((props, ref) => {
   const t = useTranslations();
-
+  const [items, setItems] = useState<ItemType[]>([]);
+  const locale = useLocale();
   //    const { inputKey, items, isDisabled, lang, handleSaveDescription } = useVoucherDescription({});
   const { meta } = props;
+  const dynamicValue = meta.dynamicValue;
+  const { endpoint, ...res } = dynamicValue;
+  const { data, isLoading } = useGetData<any, IDesc>({
+    url: endpoint,
+    body: { ...res },
+  });
+  useEffect(() => {
+    if (data?.Result == "Success") {
+      const temp: ItemType[] = data.Data.map((item, idx) => ({
+        key: idx,
+        label: (
+          <span
+            className="flex text-sm"
+            // onClick={() => handleAdjustToZeroBalance(index)}
+          >
+            {item.Desc}
+          </span>
+        ),
+ 
+      }));
+      setItems(temp)
+    }
+  }, [data]);
   return (
-    <div className="flex lg:items-end gap-2 lg:col-span-12 w-full">
+    <div className="flex justify-between items-center w-full">
       <InputText />
 
       <CustomDropdownButton
-        //   placement={lang !== "fa" ? "bottomRight" : "bottomLeft"}
+        placement={locale !== "fa" ? "bottomRight" : "bottomLeft"}
+        loading={isLoading}
         //   className={`${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} flex bg-gray-gray3 dark:!bg-gray-gray11 p-[6px] rounded h-[2.125rem]`}
-        //   items={items}
+        items={items}
         dropdownClassName="max-h-[20rem] max-w-[40vw]"
       >
         <span className="cursor-pointer" id="descriptionsList">

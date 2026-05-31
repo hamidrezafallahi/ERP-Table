@@ -1,17 +1,27 @@
-import "./customStyle.css";
+import './customStyle.css';
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Dropdown, Skeleton, Table } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Dropdown,
+  Skeleton,
+  Table,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { DownChevron } from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
-import { setViewData } from "@slice/pages";
-import type { ISelectOption } from "@type/elementType";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { DownChevron } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
+import { setViewData } from '@slice/pages';
+import type { ISelectOption } from '@type/elementType';
 
 function DocType() {
   const { direction } = useAppSelector(
@@ -22,7 +32,7 @@ function DocType() {
   );
   const { FilterTypeIds } = useAppSelector(
     (state) => ({
-      FilterTypeIds: state.withPersist.pages.find((item) => item.isActive)
+      FilterTypeIds: state.withPersist.pages?.find((item) => item.isActive)
         ?.viewData?.FilterTypeIds,
     }),
     shallowEqual,
@@ -68,7 +78,7 @@ function DocType() {
         <Dropdown
           menu={{ items }}
           trigger={["click"]}
-          destroyPopupOnHide
+          destroyOnHidden
           open={open}
           placement={direction == "rtl" ? "bottomRight" : "bottomLeft"}
           overlayClassName="[&>ul>li]:!p-1 [&>ul>li]:hover:!bg-main-white"
@@ -110,7 +120,7 @@ export default DocType;
 function CustomTable({ setOpen, selectedRowKeys, setSelectedRowKeys, data }) {
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
     }),
     shallowEqual,
   );

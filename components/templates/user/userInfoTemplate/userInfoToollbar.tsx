@@ -11,7 +11,7 @@ import {
 } from '@components/atoms/iconComponents';
 import CloseButton from '@components/molecules/closeButton';
 import ExpandedButton from '@components/molecules/expandedButton';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import CustomDropdownButton from '../customDropdownButton';
 

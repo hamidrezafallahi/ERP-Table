@@ -1,6 +1,5 @@
 import {
   useEffect,
-  useRef,
   useState,
 } from 'react';
 
@@ -20,7 +19,7 @@ import {
   useCUDDataMutation,
   useGetData,
 } from '@services/base';
-import { showSuccessToast } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 import type { IProps } from './type';
 
@@ -41,7 +40,7 @@ export default function RemindMe({
   const t = useTranslations();
   const [form] = Form.useForm();
 
-  // const isSubmittingRef = useRef(false);   ///check kon ......  
+  // const isSubmittingRef = useRef(false);   ///check kon ......
   const [shouldFetch, setShouldFetch] = useState(false);
   const [formInitialized, setFormInitialized] = useState(false);
 
@@ -50,7 +49,7 @@ export default function RemindMe({
       url: "/api/job/select/scheduleTask",
       body: { RepoId: repoId, RefId: refId },
       skip: !shouldFetch,
-    }
+    },
   );
 
   const [remindToMe] = useCUDDataMutation();
@@ -72,7 +71,7 @@ export default function RemindMe({
 
     if (defaultValue) {
       const recurrencePatterns = JSON.parse(
-        defaultValue.RecurrencePatterns || "{}"
+        defaultValue.RecurrencePatterns || "{}",
       );
       const dateValue = dayjs(recurrencePatterns?.At);
 
@@ -95,7 +94,6 @@ export default function RemindMe({
   }, [defaultValueSuccess, defaultValue, form, formInitialized]);
 
   const onSubmit = async () => {
-
     const values = form.getFieldsValue();
     if (!values.atDate || !values.atTime || !values.Caption) return;
 
@@ -149,7 +147,7 @@ export default function RemindMe({
       }
     } catch (e) {
       console.error("❌ error while saving:", e);
-    } 
+    }
     // finally {
     //   isSubmittingRef.current = false;
     // }

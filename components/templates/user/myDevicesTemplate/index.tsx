@@ -1,17 +1,24 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-import { Spin } from "antd";
-import moment from "moment-jalaali";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Spin } from 'antd';
+import moment from 'moment-jalaali';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import {
   CustomButton,
   CustomModal,
   CustomTooltip,
-} from "@components/atoms/defaultElements";
+} from '@components/atoms/defaultElements';
 import {
   CloseModalIcon,
   DetailIcon,
@@ -25,20 +32,33 @@ import {
   SpinIcon,
   TabletIcon,
   Undo,
-} from "@components/atoms/iconComponents";
-import Title from "@components/atoms/Title";
-import CloseButton from "@components/molecules/closeButton";
-import ExpandedButton from "@components/molecules/expandedButton";
-import { useFormHandlers, useNavigatePage } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import type { IRequest } from "@services/mng/report/type";
-import { addNewPage } from "@slice/pages";
-import { PageTypeEnum } from "@type/enum";
-import { getTokens, showErrorToast, showSuccessToast } from "@utils/core";
+} from '@components/atoms/iconComponents';
+import Title from '@components/atoms/Title';
+import CloseButton from '@components/molecules/closeButton';
+import ExpandedButton from '@components/molecules/expandedButton';
+import {
+  useFormHandlers,
+  useNavigatePage,
+} from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import type { IRequest } from '@services/mng/report/type';
+import { addNewPage } from '@slice/pages';
+import { PageTypeEnum } from '@type/enum';
+import { getTokens } from '@utils/cookie';
+import {
+  showErrorToast,
+  showSuccessToast,
+} from '@utils/toast';
 
-import CustomDropdownButton from "../customDropdownButton";
-import type { IUserAgentDevice, IUserAgentResponse } from "./type";
+import CustomDropdownButton from '../customDropdownButton';
+import type {
+  IUserAgentDevice,
+  IUserAgentResponse,
+} from './type';
 
 export default function MyDevicesTemplate() {
   const dispatch = useDispatch();
@@ -53,7 +73,7 @@ export default function MyDevicesTemplate() {
 
   const [devices, setDevices] = useState<IUserAgentDevice[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<IUserAgentDevice | null>(
-    null
+    null,
   );
   const [currentDevice, setCurrentDevice] = useState<any>(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -124,7 +144,7 @@ export default function MyDevicesTemplate() {
   };
   const inactiveDevices = useMemo(
     () => devices.filter((d) => !d.IsActiveToken),
-    [devices]
+    [devices],
   );
 
   useEffect(() => {
@@ -138,12 +158,12 @@ export default function MyDevicesTemplate() {
         type: PageTypeEnum.Custom,
         RepoId: initPage.RepoId,
         SystemId: initPage.SystemId,
-      })
+      }),
     );
   }, []);
 
   const { handleReset } = useFormHandlers({
-    activePage: pages.find((item) => item.isActive),
+    activePage: pages?.find((item) => item.isActive),
     pages,
   });
 
@@ -170,10 +190,10 @@ export default function MyDevicesTemplate() {
   };
   const times = devices.map((i) => i.LastLoginDate);
   const utc = times.map((i) =>
-    moment(1761978900000).utc().format("HH:mm:ss.SSSZ")
+    moment(1761978900000).utc().format("HH:mm:ss.SSSZ"),
   );
   const tehran = times.map((i) =>
-    moment(1761978900000).locale("fa").format("HH:mm:ss.SSSZ")
+    moment(1761978900000).locale("fa").format("HH:mm:ss.SSSZ"),
   );
 
   console.log(tehran);
@@ -250,13 +270,13 @@ export default function MyDevicesTemplate() {
       >
         <Title caption="title.myDevices" />
 
-        <h5 className="flex items-center gap-2 font-bold text-gray-gray135 dark:text-gray-gray1  text-sm">
+        <h5 className="flex items-center gap-2 font-bold text-gray-gray135 dark:text-gray-gray1 text-sm">
           <Play />
           {t("general.listOfDevices")}
         </h5>
 
         <div className="flex flex-col justify-start gap-1 px-2 pt-2 pb-5">
-          <p className="text-gray-gray9 dark:text-gray-gray1  text-xs leading-5">
+          <p className="text-gray-gray9 dark:text-gray-gray1 text-xs leading-5">
             {t("myDevices.text1")}
           </p>
           <div className="flex justify-start items-start gap-2 pr-3">
@@ -267,23 +287,23 @@ export default function MyDevicesTemplate() {
           </div>
         </div>
 
-        <h5 className="mb-2 font-medium text-main-black dark:text-gray-gray1  lg:text-md text-xs">
+        <h5 className="mb-2 font-medium text-main-black lg:text-md dark:text-gray-gray1 text-xs">
           {t("general.currentDevice")}
         </h5>
         {currentDevice ? (
           <div className="items-center grid lg:grid-cols-[300px_150px_1fr] bg-gray-gray1 my-2 px-4 border-[3px] border-gray-gray6 rounded-2xl h-[77px] lg:h-20">
-            <span className="flex items-center gap-2 font-medium text-main-black dark:text-gray-gray1  lg:text-[22px] text-sm text-right">
+            <span className="flex items-center gap-2 font-medium text-main-black lg:text-[22px] dark:text-gray-gray1 text-sm text-right">
               {renderDeviceIcon()}
               <p>
                 {`${currentDevice.OS} (${currentDevice.OSVersion}) — ${currentDevice.Browser}`}
 
                 <br />
-                <span className="font-medium text-main-black dark:text-gray-gray1  text-xs">
+                <span className="font-medium text-main-black dark:text-gray-gray1 text-xs">
                   {currentDevice.Ip}
                 </span>
               </p>
             </span>
-            <span className="inline font-medium text-gray-gray10 dark:text-gray-gray1  lg:text-md text-sm lg:text-center text-right">
+            <span className="inline font-medium text-gray-gray10 lg:text-md dark:text-gray-gray1 text-sm lg:text-center text-right">
               <p>{`${currentDevice.BrowserVersion}`}</p>
             </span>
           </div>
@@ -296,7 +316,7 @@ export default function MyDevicesTemplate() {
         {inactiveDevices.length === 0 ? (
           <div className="flex flex-col justify-center items-center rounded-lg w-full h-[calc(100dvh-450px)]">
             <EmptyDeviceListIcon />
-            <p className="mt-3 font-medium text-gray-gray8 dark:text-gray-gray1  text-sm">
+            <p className="mt-3 font-medium text-gray-gray8 dark:text-gray-gray1 text-sm">
               {t("myDevices.thereAreCurrentlyNoActiveDevices")}
             </p>
           </div>
@@ -311,7 +331,7 @@ export default function MyDevicesTemplate() {
                 {inactiveDevices?.map((device) => {
                   return (
                     <div
-                      key={device.CacheKey}  
+                      key={device.CacheKey}
                       className="items-center gap-3 sm:gap-[] grid lg:grid-cols-[300px_150px_150px_1fr] bg-gray-gray1 dark:bg-gray-gray11 my-2 p-3 px-4 border-[3px] border-gray-gray6 rounded-2xl lg:h-20"
                     >
                       <div className="flex justify-between items-center">
@@ -320,7 +340,7 @@ export default function MyDevicesTemplate() {
                           <p className="font-medium text-main-black dark:text-gray-gray1 text-sm lg:text-xl text-right !leading-5">
                             {`${device.OS} (${device.OSVersion}) — ${device.Browser}`}{" "}
                             <br />
-                            <span className="text-main-black text-xs dark:text-gray-gray1 ">
+                            <span className="text-main-black dark:text-gray-gray1 text-xs">
                               {device.Ip}
                             </span>
                           </p>
@@ -337,11 +357,11 @@ export default function MyDevicesTemplate() {
                         </button>
                       </div>
 
-                      <span className="inline font-medium text-gray-gray10 dark:text-gray-gray1  lg:text-md text-sm lg:text-center text-right">
+                      <span className="inline font-medium text-gray-gray10 lg:text-md dark:text-gray-gray1 text-sm lg:text-center text-right">
                         <p>{`${currentDevice?.BrowserVersion}`}</p>
                       </span>
 
-                      <span className="inline font-medium text-gray-gray10 dark:text-gray-gray1  lg:text-md text-sm lg:text-center text-right">
+                      <span className="inline font-medium text-gray-gray10 lg:text-md dark:text-gray-gray1 text-sm lg:text-center text-right">
                         {moment(device.LastLoginDate)
                           .locale("fa")
                           .format("jYYYY/jMM/jDD - HH:mm:ss")}
@@ -349,7 +369,7 @@ export default function MyDevicesTemplate() {
 
                       <div className="flex justify-center sm:justify-end">
                         <CustomButton
-                          className="hidden lg:flex justify-center items-center p-3 border dark:text-gray-gray1  border-gray-gray10 hover:!border-gray-gray10 h-10 text-gray-gray10 hover:!text-gray-gray10 text-sm"
+                          className="hidden lg:flex justify-center items-center p-3 border border-gray-gray10 hover:!border-gray-gray10 h-10 text-gray-gray10 hover:!text-gray-gray10 dark:text-gray-gray1 text-sm"
                           onClick={() => {
                             setSelectedDevice(device);
                             setShowConfirm(true);
@@ -463,7 +483,7 @@ export default function MyDevicesTemplate() {
                   {t("general.exceptForTheCurrentDevice")}
                 </span>
                 {t(
-                  "general.youWillBeLoggedOutOfYourAccountAndWillNeedToAuthenticateToLogBackIn"
+                  "general.youWillBeLoggedOutOfYourAccountAndWillNeedToAuthenticateToLogBackIn",
                 )}
               </p>
 

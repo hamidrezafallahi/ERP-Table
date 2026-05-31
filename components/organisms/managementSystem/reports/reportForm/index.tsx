@@ -1,16 +1,27 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { ReportFormField } from "@components/molecules/managementSystem/reports";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
-import type { IReport, IRequest } from "@services/mng/report/type";
-import { setAllPageData, setPageInfo } from "@slice/pages";
+import {
+  ReportFormField,
+} from '@components/molecules/managementSystem/reports';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
+import type {
+  IReport,
+  IRequest,
+} from '@services/mng/report/type';
+import {
+  setAllPageData,
+  setPageInfo,
+} from '@slice/pages';
 
-import { formConfig } from "./config";
+import { formConfig } from './config';
 
 export const ReportForm = ({ form }) => {
   const params = useSearchParams();
@@ -42,7 +53,7 @@ export const ReportForm = ({ form }) => {
 
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true
       ),
     }),

@@ -1,20 +1,20 @@
 "use client";
-import { useState } from "react";
+import { useState } from 'react';
 
-import Form from "@components/templates/form";
-import { useAppSelector } from "@redux/index";
+import { Form } from '@components/templates/form';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   type IPerson,
   type IRequest,
   PersonTypeEnum,
-} from "@services/com/person/type";
+} from '@services/com/person/type';
 
 export default function PersonFormPage({
   isModal = false,
   parentPageId = null,
 }) {
   const activePageData = useAppSelector((state) =>
-    state.withPersist.pages.find((item) => item.isActive)
+    state.withPersist.pages?.find((item) => item.isActive)
   );
 
   const [conditionalFields, setConditionalFields] = useState<any[] | boolean>(

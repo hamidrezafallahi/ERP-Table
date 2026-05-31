@@ -1,18 +1,21 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import Title from "@components/atoms/Title";
-import { useAppSelector } from "@redux/index";
-import { addNewPage } from "@slice/pages";
-import { PageTypeEnum } from "@type/enum";
+import Title from '@components/atoms/Title';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { addNewPage } from '@slice/pages';
+import { PageTypeEnum } from '@type/enum';
 
 import {
   MainHeaderSection,
   MainInfoSection,
   ReceiptAndPaymentToolbar,
-} from "./main";
+} from './main';
 
 export default function ReceiptAndPayment() {
   const dispatch = useDispatch();

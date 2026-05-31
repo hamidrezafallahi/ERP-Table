@@ -5,8 +5,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import Login from '@components/templates/login';
-import { useAppSelector } from '@redux/index';
-import { getCookie } from '@utils/core';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { getCookie } from '@utils/cookie';
 
 export default function Home() {
   const local = useAppSelector((state) => state.withPersist.config.lang);

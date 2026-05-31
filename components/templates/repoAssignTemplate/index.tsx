@@ -1,15 +1,22 @@
 "use client";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import Title from "@components/atoms/Title";
-import { useAppSelector } from "@redux/index";
-import { addNewPage } from "@slice/pages";
-import { PageTypeEnum } from "@type/enum";
-import RepoAssignToolbar from "./repoAssignToolbar";
-import RepoAssignContext from "./repoAssignContext";
-import GoodListSideBar from "@components/organisms/goodListSideBar";
+import Title from '@components/atoms/Title';
+import GoodListSideBar from '@components/organisms/goodListSideBar';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { addNewPage } from '@slice/pages';
+import { PageTypeEnum } from '@type/enum';
+
+import RepoAssignContext from './repoAssignContext';
+import RepoAssignToolbar from './repoAssignToolbar';
 
 export default function RepoAssignTemplate() {
   const dispatch = useDispatch();
@@ -44,7 +51,7 @@ export default function RepoAssignTemplate() {
   return (
     <div className="relative">
       <Title caption={"title.repoAssign"} />
-      <div className="relative flex lg:flex-row items-center flex-col gap-4 h-full">
+      <div className="relative flex lg:flex-row flex-col items-center gap-4 h-full">
         <RepoAssignToolbar />
         <GoodListSideBar systemId={systemId} setSystemId={setSystemId} />
         {systemId && selectedGoodId ? (

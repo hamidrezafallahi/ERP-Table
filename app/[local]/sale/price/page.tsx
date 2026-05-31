@@ -14,7 +14,7 @@ import {
 import Title from '@components/atoms/Title';
 import FormToolbar from '@components/organisms/formToolbar';
 import PriceComponent from '@components/organisms/priceComponent';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import type {
   IPrice,

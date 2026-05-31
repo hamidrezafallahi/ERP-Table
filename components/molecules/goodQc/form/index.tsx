@@ -1,16 +1,36 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Form, Radio, Spin } from "antd";
-import { useTranslations } from "next-intl";
+import {
+  Form,
+  Radio,
+  Spin,
+} from 'antd';
+import { useTranslations } from 'next-intl';
 
-import { CustomButton, CustomTooltip } from "@components/atoms/defaultElements";
-import { DynamicTree } from "@components/atoms/defaultElements/dynamicTree";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { PlusOutline, SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import type { IGoodQc, IRequest } from "@services/com/goodQc/type";
-import { showSuccessToast, transformDotNotationToNested } from "@utils/core";
+import {
+  CustomButton,
+  CustomTooltip,
+} from '@components/atoms/defaultElements';
+import { DynamicTree } from '@components/atoms/defaultElements/dynamicTree';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import InputText from '@components/atoms/defaultElements/inputText';
+import {
+  PlusOutline,
+  SpinIcon,
+} from '@components/atoms/iconComponents';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import type {
+  IGoodQc,
+  IRequest,
+} from '@services/com/goodQc/type';
+import { transformDotNotationToNested } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 enum fieldType {
   numeric = 1,
@@ -208,7 +228,7 @@ export const FormGoodQc = ({
         <div className="flex justify-end items-center gap-2 pt-2">
           <CustomTooltip title={t("general.addNew")}>
             <span
-              className="px-2 py-[2.8px] bg-gray-gray3 rounded cursor-pointer"
+              className="bg-gray-gray3 px-2 py-[2.8px] rounded cursor-pointer"
               onClick={() => {
                 clearId();
                 form.resetFields();

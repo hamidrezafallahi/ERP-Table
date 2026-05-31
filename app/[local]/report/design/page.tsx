@@ -1,24 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton, CustomSpin } from "@components/atoms/defaultElements";
-
-import { useInitializePage } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
-import { ReportTypeEnum } from "@services/mng/report/type";
-import type { IReportFile, IRequest } from "@services/reportFile/type";
-import { setPageType } from "@slice/pages";
-import { PageTypeEnum } from "@type/enum";
+import {
+  CustomButton,
+  CustomSpin,
+} from '@components/atoms/defaultElements';
 import {
   DashboardDesigner,
   ReportDesigner,
-} from "@components/organisms/managementSystem";
+} from '@components/organisms/managementSystem';
+import { useInitializePage } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
+import { ReportTypeEnum } from '@services/mng/report/type';
+import type {
+  IReportFile,
+  IRequest,
+} from '@services/reportFile/type';
+import { setPageType } from '@slice/pages';
+import { PageTypeEnum } from '@type/enum';
 
 export default function DesignerPage() {
   const dispatch = useDispatch();

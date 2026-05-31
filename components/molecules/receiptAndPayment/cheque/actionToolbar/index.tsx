@@ -1,15 +1,21 @@
-import { useMemo, useReducer } from "react";
+import {
+  useMemo,
+  useReducer,
+} from 'react';
 
-import { MenuProps } from "antd";
-import DOMPurify from "dompurify";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { MenuProps } from 'antd';
+import DOMPurify from 'dompurify';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import {
   CustomDropdownButton,
   CustomModal,
   CustomTooltip,
-} from "@components/atoms/defaultElements";
+} from '@components/atoms/defaultElements';
 import {
   BoxMinimalistic,
   Dots,
@@ -19,21 +25,31 @@ import {
   MenuSquareIcon,
   Reload,
   RemindMeIcon,
-} from "@components/atoms/iconComponents";
-import ExpandedButton from "@components/molecules/expandedButton";
-import RemindMe from "@components/molecules/remindMe";
-import { ActionLabelsEnum } from "@components/organisms/receiptAndPayment/cheque/action/enum";
-import { useDarkMode, useInvalidateTag, useNavigatePage } from "@hooks/custom";
-import PanelList from "@layout/baseLayout/desktop/actionBar/panelList";
-import { useAppSelector } from "@redux/index";
-import type { IToolbarMenu } from "@type/toolbar";
-import { getColoredIcon, showInfoToast } from "@utils/core";
+} from '@components/atoms/iconComponents';
+import CloseButton from '@components/molecules/closeButton';
+import ExpandedButton from '@components/molecules/expandedButton';
+import RemindMe from '@components/molecules/remindMe';
+import {
+  ActionLabelsEnum,
+} from '@components/organisms/receiptAndPayment/cheque/action/enum';
+import {
+  useDarkMode,
+  useInvalidateTag,
+  useNavigatePage,
+} from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import PanelList from '@layout/baseLayout/desktop/actionBar/panelList';
+import type { IToolbarMenu } from '@type/toolbar';
+import { getColoredIcon } from '@utils/core';
+import { showInfoToast } from '@utils/toast';
 
-import CloseButton from "@components/molecules/closeButton";
-import { ChequeActionModal } from "../chequeActionModal";
-import { ChequeDynamicForm } from "../chequeDynamicForm";
-import { chequeDynamicConfig } from "../chequeDynamicForm/config";
-import type { Action, IState } from "./type";
+import { ChequeActionModal } from '../chequeActionModal';
+import { ChequeDynamicForm } from '../chequeDynamicForm';
+import { chequeDynamicConfig } from '../chequeDynamicForm/config';
+import type {
+  Action,
+  IState,
+} from './type';
 
 export const ActionToolbar = ({
   repoId,
@@ -56,7 +72,7 @@ export const ActionToolbar = ({
     (state) => ({
       lang: state.withPersist.config.lang,
       match: state.withPersist.config.initMatch,
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true,
       ),
     }),
@@ -475,7 +491,7 @@ export const ActionToolbar = ({
 
       {state.isChequeDynamicActionOpen && selectedItems?.length > 0 && (
         <CustomModal
-          contentClassName={`${match ? "w-[700px] h-[470px]" : ""}`}
+          contentClassName={`${match ? "w-[700px]" : ""}`}
           headerName={state.actionConfig.MenuDesc}
           headerIcon={
             match && (

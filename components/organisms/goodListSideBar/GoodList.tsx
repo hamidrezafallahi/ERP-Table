@@ -1,12 +1,15 @@
+import { Skeleton } from 'antd';
 // InfiniteScrollGoodList.tsimport { Skeleton } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
-import { IRepoEntityData } from "@type/elementType";
-import { Skeleton } from "antd";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setPageData } from '@slice/pages';
+import { IRepoEntityData } from '@type/elementType';
 
 interface IProps {
   goodList: IRepoEntityData[];
@@ -68,7 +71,7 @@ export default function GoodList({ goodList, isFetching }: IProps) {
                   size="small"
                   style={{ width: "100px" }}
                 />
-                <span className="text-xs text-gray-500 mr-2">
+                <span className="mr-2 text-gray-500 text-xs">
                   در حال بارگذاری...
                 </span>
               </div>

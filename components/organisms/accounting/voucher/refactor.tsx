@@ -1,36 +1,56 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Pagination } from "antd";
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Pagination } from 'antd';
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton } from "@components/atoms/defaultElements";
+import { CustomButton } from '@components/atoms/defaultElements';
 import {
   DownChevron,
   LeftChevron,
   RightChevron,
-} from "@components/atoms/iconComponents";
-import { DetailDataGrid } from "@components/molecules/detailDataGrid";
-import type { IAdditionalAction } from "@components/molecules/detailDataGrid/type";
-
-import type { IChildHandle } from "@components/molecules/accounting/voucher/mobileGrid/type";
-import { useAppSelector } from "@redux/index";
-import type { IAccount } from "@services/acc/account/type";
-import type { IRequest, IVoucher } from "@services/acc/voucher/type";
-import type { IVoucherDetails } from "@services/acc/voucherDetails/type";
-import { useGetData } from "@services/base";
-import { IDetailColumnConfig, RowStateEnum } from "@services/generalType/type";
-import { setAllPageData, setPageData, setPageInfo } from "@slice/pages";
-
-import { formConfig } from "./config";
-import type { IVoucherTotal } from "./type";
+} from '@components/atoms/iconComponents';
 import {
   MobileResult,
   VoucherForm,
   VoucherResult,
-} from "@components/molecules/accounting";
+} from '@components/molecules/accounting';
+import type {
+  IChildHandle,
+} from '@components/molecules/accounting/voucher/mobileGrid/type';
+import { DetailDataGrid } from '@components/molecules/detailDataGrid';
+import type {
+  IAdditionalAction,
+} from '@components/molecules/detailDataGrid/type';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import type { IAccount } from '@services/acc/account/type';
+import type {
+  IRequest,
+  IVoucher,
+} from '@services/acc/voucher/type';
+import type { IVoucherDetails } from '@services/acc/voucherDetails/type';
+import { useGetData } from '@services/base';
+import {
+  IDetailColumnConfig,
+  RowStateEnum,
+} from '@services/generalType/type';
+import {
+  setAllPageData,
+  setPageData,
+  setPageInfo,
+} from '@slice/pages';
+
+import { formConfig } from './config';
+import type { IVoucherTotal } from './type';
 
 function findStandaloneAccounts(accounts: IAccount[]): IAccount[] {
   const standaloneAccounts: IAccount[] = [];
@@ -49,7 +69,7 @@ function findStandaloneAccounts(accounts: IAccount[]): IAccount[] {
 export const Voucher = ({ setMobileDrawerContent }) => {
   const { activePage, fullScreen, minimizePanel, match } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true
       ),
 

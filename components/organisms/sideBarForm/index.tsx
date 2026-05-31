@@ -1,10 +1,21 @@
-import { useAppSelector } from "@redux/index";
-import { shallowEqual } from "react-redux";
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
-import SideBarFormToolbar from "./sideBarFormToolbar";
-import SideBar from "./sideBar";
-import { CustomFormComponentProps, IDynamicModalConfig } from "./types";
-import SideBarFormContext from "./sideBarFormContext";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useState,
+} from 'react';
+
+import { shallowEqual } from 'react-redux';
+
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+
+import SideBar from './sideBar';
+import SideBarFormContext from './sideBarFormContext';
+import SideBarFormToolbar from './sideBarFormToolbar';
+import {
+  CustomFormComponentProps,
+  IDynamicModalConfig,
+} from './types';
 
 interface SideBarBaseProps {
   config: IDynamicModalConfig;

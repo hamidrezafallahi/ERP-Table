@@ -11,7 +11,7 @@ import {
 
 import Title from '@components/atoms/Title';
 import FormToolbar from '@components/organisms/formToolbar';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import { addNewPage } from '@slice/pages';
 import { PageStateEnum } from '@slice/pages/enum';

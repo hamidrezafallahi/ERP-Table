@@ -1,27 +1,43 @@
-import { ReactNode, useEffect, useState } from "react";
+import {
+  ReactNode,
+  useEffect,
+  useState,
+} from 'react';
 
-import { Skeleton, TourProps } from "antd";
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Skeleton,
+  TourProps,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import {
   CustomButton,
   CustomModal,
   CustomTooltip,
-} from "@components/atoms/defaultElements";
-import { InfoIcon, Link, UserCheck } from "@components/atoms/iconComponents";
-import AssignForm from "@components/molecules/forms/AssignForm";
-import GuidanceButton from "@components/molecules/guidanceButton";
-import { FormImage } from "@layout/baseLayout/desktop/actionBar/panelForm/formImage";
-import { useAppSelector } from "@redux/index";
-import { useGetData } from "@services/base";
-import { setMinimize as setMinimizeAction } from "@slice/container/index";
+} from '@components/atoms/defaultElements';
+import {
+  InfoIcon,
+  Link,
+  UserCheck,
+} from '@components/atoms/iconComponents';
+import AssignForm from '@components/molecules/forms/AssignForm';
+import GuidanceButton from '@components/molecules/guidanceButton';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  FormImage,
+} from '@layout/baseLayout/desktop/actionBar/panelForm/formImage';
+import { useGetData } from '@services/base';
+import { setMinimize as setMinimizeAction } from '@slice/container/index';
 
-import Bookmarker from "./bookmarker";
-import ShortcutsCollapse from "./shortcutCollapse";
-import TagCollapse from "./tagCollapse";
-import Uploader from "./uploader";
+import Bookmarker from './bookmarker';
+import ShortcutsCollapse from './shortcutCollapse';
+import TagCollapse from './tagCollapse';
+import Uploader from './uploader';
 
 interface Content {
   title: ReactNode;

@@ -2,33 +2,33 @@ import {
   CardDynamicModal,
   TableDynamicModal,
 } from "@components/molecules/dynamicModal";
-import { IBaseQueryResponse } from "@services/base/type";
 import { IMenu } from "@type/toolbar";
 import { RefObject } from "react";
 import IResponseItem from "../../types";
-import { IDynamicModalConfig } from "@type/dynamicModalConfig";
+import { IDynamicModalConfig } from "@components/organisms/sideBarForm/types";
 
 interface ContextListProps {
   match: boolean;
   config: IDynamicModalConfig;
-  cardData: IBaseQueryResponse<unknown[]>;
   handleActionClick: (action: IMenu, id: number, record: unknown) => void;
   lastItemRef: RefObject<HTMLDivElement>;
-  tableDataWithDesc: IResponseItem[];
   locale: string;
   isModal: boolean;
+  reportState: {
+    tableData: any[];
+    cardData: any;
+  };
 }
 
 export function ContextList(props: ContextListProps) {
   const {
     match,
     config,
-    cardData,
     handleActionClick,
     lastItemRef,
-    tableDataWithDesc,
     locale,
     isModal,
+    reportState,
   } = props;
   return (
     <>
@@ -36,7 +36,7 @@ export function ContextList(props: ContextListProps) {
         <CardDynamicModal
           actions={config.actions}
           columnsList={config.listConfig}
-          data={cardData?.Data as IResponseItem[]}
+          data={reportState.cardData as IResponseItem[]}
           onActionClick={handleActionClick}
           fieldKey={config.fieldKey}
           staticKey={config.staticKey}
@@ -47,15 +47,20 @@ export function ContextList(props: ContextListProps) {
           }
         />
       ) : (
-        <TableDynamicModal
-          isLoading={false}
-          actions={config.actions}
-          columnsList={config.listConfig}
-          data={tableDataWithDesc}
-          handleAction={handleActionClick}
-          locale={locale}
-          fieldKey={config.fieldKey}
-        />
+        <div className="w-[calc(100dvw-515px)] h-[calc(100dvh-411px)]">
+          <TableDynamicModal
+            isLoading={false}
+            actions={config.actions}
+            columnsList={config.listConfig}
+            data={reportState.tableData}
+            handleAction={handleActionClick}
+            locale={locale}
+            fieldKey={config.fieldKey}
+            {...(reportState.tableData?.length && {
+              scroll: { x: "max-content", y: 600 },
+            })}
+          />
+        </div>
       )}
     </>
   );

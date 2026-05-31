@@ -1,4 +1,10 @@
-﻿import { forwardRef, KeyboardEvent, Ref, useCallback, useState } from "react";
+﻿import {
+  forwardRef,
+  KeyboardEvent,
+  Ref,
+  useCallback,
+  useState,
+} from 'react';
 
 import {
   Form,
@@ -8,11 +14,13 @@ import {
   Spin,
   Table,
   TableColumnsType,
-} from "antd";
-import DOMPurify from "dompurify";
-import { useTranslations } from "next-intl";
-import { usePathname } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import {
   CustomButton,
@@ -20,45 +28,54 @@ import {
   CustomSelect,
   CustomSwitch,
   CustomTooltip,
-} from "@components/atoms/defaultElements";
+} from '@components/atoms/defaultElements';
 import {
   BookMarkIcon,
   BookMarkIconFilled,
   Dots,
-  EditIcon,
-  Info,
   LeftChevron,
   MoreVertical,
   New,
   NoData,
   RightChevron,
   SpinIcon,
-} from "@components/atoms/iconComponents";
-import { ActionLabelsEnum } from "@components/organisms/list/enum";
+} from '@components/atoms/iconComponents';
+import { ActionLabelsEnum } from '@components/organisms/list/enum';
 import {
   useDarkMode,
   useFullScreen,
   useInitializePage,
   useProcessedData,
-} from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation } from "@services/base";
-import { IBaseDto, PendingStatusEnum } from "@services/base/type";
-import type { IColumnConfig } from "@services/generalType/type";
-import { resetItemsByPage, setItems } from "@slice/items";
-import { setViewData } from "@slice/pages";
+} from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useCUDDataMutation } from '@services/base';
+import {
+  IBaseDto,
+  PendingStatusEnum,
+} from '@services/base/type';
+import type { IColumnConfig } from '@services/generalType/type';
+import {
+  resetItemsByPage,
+  setItems,
+} from '@slice/items';
+import { setViewData } from '@slice/pages';
 import {
   findingPageState,
   getColoredIcon,
   getSystemNameById,
   renderBadge,
+} from '@utils/core';
+import {
   showInfoToast,
   showSuccessToast,
-} from "@utils/core";
+} from '@utils/toast';
 
-import RenderStatus from "../renderStatus";
-import { TagsRenderer } from "../tag";
-import type { IChangesField, IProps } from "./type";
+import RenderStatus from '../renderStatus';
+import { TagsRenderer } from '../tag';
+import type {
+  IChangesField,
+  IProps,
+} from './type';
 
 function DataGridInner<T extends IBaseDto>(
   {
@@ -98,7 +115,7 @@ function DataGridInner<T extends IBaseDto>(
       const direction = state.withPersist.config.direction;
       const locale = state.withPersist.config.lang;
       const selectedItems = state.withPersist.listItems;
-      const activePage = state.withPersist.pages.find((item) => item.isActive);
+      const activePage = state.withPersist.pages?.find((item) => item.isActive);
       const isFullScreen = state.withPersist.config.fullScreen;
       const minimize = state.withoutPersist.container.minimize;
 
@@ -453,7 +470,7 @@ function DataGridInner<T extends IBaseDto>(
           render: (text: any, record: any) => {
             if (item.renderFunction) return item.renderFunction(record);
             return (
-              <div className="my-2 flex gap-2">
+              <div className="flex gap-2 my-2">
                 {record?.[item.fieldName]}
                 {/* onClick={() => handelDocStatus(Number(record["DocId"])}*/}
                 <div key={record[rowFieldKey]}>
@@ -584,8 +601,14 @@ function DataGridInner<T extends IBaseDto>(
       title: t("general.action"),
       key: "action",
       fixed: direction === "rtl" ? "left" : "right",
-      width: "16rem",
-      align: "center",
+      onCell: (_, index) => ({
+        style: {
+          backgroundColor: index % 2 === 0 ? "#ffffff" : "#f4f4f4",
+        },
+      }),
+      minWidth: 120,
+      align: direction === "rtl" ? "right" : "left",
+
       render: (_, record) => {
         const filteredRestActions = filteringAction
           ? filteringAction(restActions, record)
@@ -754,7 +777,7 @@ function DataGridInner<T extends IBaseDto>(
       className={`${
         isFullScreen
           ? "h-[calc(100dvh-130px)]"
-          : "max-h-[calc(100dvh-200px)] h-[calc(100dvh-290px)]"
+          : "max-h-[calc(100dvh-200px)] h-[calc(100dvh-200px)]"
       } flex flex-col justify-between w-full `}
     >
       <div

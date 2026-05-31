@@ -1,5 +1,5 @@
-import { Middleware } from "@reduxjs/toolkit";
-import { mergeConfig } from "@slice/config";
+import { Middleware } from '@reduxjs/toolkit';
+import { mergeConfig } from '@slice/config';
 
 const DEBOUNCE_MS = 50;
 
@@ -41,7 +41,18 @@ export const createConfigSyncMiddleware = (): Middleware => {
     return (next) => (action) => {
       const result = next(action);
 
-      if (!action.type.startsWith("pageConfig/")) return result;
+      
+  if (
+    typeof action !== "object" ||
+    action === null ||
+    !("type" in action)
+  ) {
+    return result;
+  }
+
+  if (!String(action.type).startsWith("pageConfig/")) {
+    return result;
+  }
       if (isSyncing) return result;
 
       const state = storeAPI.getState();

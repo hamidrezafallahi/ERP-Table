@@ -12,7 +12,7 @@ import {
   Edit,
   Info,
 } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setPageData } from '@slice/pages';
 import { IRequestConfig } from '@type/elementType';
 import { SystemEnum } from '@type/enum';

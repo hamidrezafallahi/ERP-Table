@@ -15,7 +15,7 @@ import {
 import {
   calcTax,
 } from '@components/organisms/salesAndPurchase/salesInvoice/utils';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import type { ITax } from '@services/com/tax/type';
 import type { IElk } from '@services/sale/standardSalesInvoice/type';
@@ -38,7 +38,7 @@ export const TaxesInfo = ({
 
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
     }),
     shallowEqual
   );

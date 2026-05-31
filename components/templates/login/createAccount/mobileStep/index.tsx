@@ -1,19 +1,32 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { Captcha } from "@components/atoms/defaultElements/captcha";
-import { useAppDispatch, useAppSelector } from "@redux/index";
-import { setMobile, setVerifyExpireTime } from "@slice/account";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import { CustomButton } from '@components/atoms/defaultElements';
+import { Captcha } from '@components/atoms/defaultElements/captcha';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  setMobile,
+  setVerifyExpireTime,
+} from '@slice/account';
 
 interface Props {
   onNext: (mobile: string) => void;
 }
 
 const MobileStep: React.FC<Props> = ({ onNext }) => {
-  const dispatch = useAppDispatch();
-  const mobile = useAppSelector((state) => state.withPersist.account.mobile);
+  const dispatch = useDispatch();
+const { mobile } = useAppSelector(
+  (state) => ({
+    mobile: state.withPersist.account.mobile,
 
+  }),
+  shallowEqual
+);
   const [captchaValid, setCaptchaValid] = useState(false);
   const [captchaTouched, setCaptchaTouched] = useState(false);
 

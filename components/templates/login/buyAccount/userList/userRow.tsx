@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import { shallowEqual } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 export interface User {
   UserId: number;

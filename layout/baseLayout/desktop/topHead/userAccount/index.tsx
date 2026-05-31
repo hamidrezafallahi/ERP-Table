@@ -34,7 +34,7 @@ import {
   useHandle,
   useInitializePage,
 } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { ManagementAccount } from '@services/auth/base/type';
 import { apiService } from '@services/base';
 import {

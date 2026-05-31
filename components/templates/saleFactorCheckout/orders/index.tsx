@@ -7,7 +7,7 @@ import {
 import { shallowEqual } from 'react-redux';
 
 import { CustomModal } from '@components/atoms/defaultElements';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import OrderCard from './orderCard';
 
@@ -18,7 +18,7 @@ export default function Orders() {
   const ref = useRef(null);
 
   const { items } = useAppSelector((state) => {
-    const items = state.withPersist.pages.find(
+    const items = state.withPersist.pages?.find(
       (item) => item.isActive === true
     )?.pageData?.find(i=>i.name === "items")?.value;
     return { items };

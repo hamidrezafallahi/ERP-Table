@@ -13,13 +13,13 @@ import {
 } from 'react-redux';
 
 import { CustomButton } from '@components/atoms/defaultElements';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useCUDFormDataMutation,
   useGetData,
 } from '@services/base';
 import { setProgressbar } from '@slice/config';
-import { showSuccessToast } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 import RenderAttachmentsRow from './RenderAttachmentsRow';
 

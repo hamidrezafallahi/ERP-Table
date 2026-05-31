@@ -29,7 +29,7 @@ import {
   EditPencil,
   TagIcon,
 } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 import type { ITagInfo } from '@services/base/type';
 import { addDefaultTags } from '@slice/container';
@@ -58,8 +58,8 @@ export default function TagFilters({ ...props }: IProps) {
   
   const { activePage, init ,match ,SystemId} = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
-      SystemId:state.withPersist.pages.find((item) => item.isActive)?.SystemId,
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
+      SystemId:state.withPersist.pages?.find((item) => item.isActive)?.SystemId,
       init: state.withPersist.init,
      match : state.withPersist.config.initMatch
     }),
@@ -240,7 +240,7 @@ return getSystemNameById(SystemId)
             } !m-0 !p-1 [&>.ant-select-selector]:!p-0 rounded w-full h-fit`}
             options={processedOption}
             optionFilterProp={"label"}
-            value={activePage.viewData?.Filters?.TagIdsFilter}
+            value={activePage?.viewData?.Filters?.TagIdsFilter}
             tagRender={tagRender}
             onChange={handleTagChange}
             maxLength={63}

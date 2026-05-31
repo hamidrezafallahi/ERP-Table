@@ -1,5 +1,4 @@
-import "react-chat-elements/dist/main.css";
-import "moment/locale/fa";
+// import "react-chat-elements/dist/main.css";
 
 import React, {
   useCallback,
@@ -7,28 +6,25 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from "react";
+} from 'react';
 
-import moment from "moment-jalaali";
-import { useTranslations } from "next-intl";
-import Image from "next/image";
-import { Input } from "react-chat-elements";
-import { shallowEqual } from "react-redux";
+import moment from 'moment-jalaali';
+import { useTranslations } from 'next-intl';
+import Image from 'next/image';
+import { shallowEqual } from 'react-redux';
 
+import { CustomModal } from '@components/atoms/defaultElements';
 import {
   AttachmentIcon,
   ChatWidgetIcon,
   ClosePageIcon,
   RecordingIcon,
-  Reload,
   SendIcon,
   SpinIcon,
   StopRecordingIcon,
-} from "@components/atoms/iconComponents";
-import { useChatWidget } from "@hooks/custom/useChatWidget";
-import { useAppSelector } from "@redux/index";
-import { CustomModal } from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useChatWidget } from '@hooks/custom/useChatWidget';
 
 export default function ChatWidget() {
   const t = useTranslations();

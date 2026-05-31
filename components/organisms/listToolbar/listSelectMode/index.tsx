@@ -1,20 +1,27 @@
-import { useMemo, useState } from "react";
+import {
+  useMemo,
+  useState,
+} from 'react';
 
-import DOMPurify from "dompurify";
-import { useTranslations } from "next-intl";
+import DOMPurify from 'dompurify';
+import { useTranslations } from 'next-intl';
 
 import {
   CustomDropdownButton,
   CustomModal,
-} from "@components/atoms/defaultElements";
-import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
-import { Dots, TrashBin } from "@components/atoms/iconComponents";
-import Confirmation from "@components/molecules/confirmation";
-import { TagManagement } from "@components/molecules/tag";
-import { ActionLabelsEnum } from "@components/organisms/list/enum";
-import { useDarkMode } from "@hooks/custom";
-import type { IToolbarMenu } from "@type/toolbar";
-import { getColoredIcon, showInfoToast } from "@utils/core";
+} from '@components/atoms/defaultElements';
+import { CustomDrawer } from '@components/atoms/defaultElements/drawer';
+import {
+  Dots,
+  TrashBin,
+} from '@components/atoms/iconComponents';
+import Confirmation from '@components/molecules/confirmation';
+import { TagManagement } from '@components/molecules/tag';
+import { ActionLabelsEnum } from '@components/organisms/list/enum';
+import { useDarkMode } from '@hooks/custom';
+import type { IToolbarMenu } from '@type/toolbar';
+import { getColoredIcon } from '@utils/core';
+import { showInfoToast } from '@utils/toast';
 
 export default function ListSelectMode({
   selectedItems,

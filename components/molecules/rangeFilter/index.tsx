@@ -2,7 +2,7 @@ import { Mask } from 'react-persian-range-picker';
 import { useDispatch } from 'react-redux';
 
 import { Close } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { filterTypeDateEnum } from '@services/base/type';
 import { setViewData } from '@slice/pages';
 
@@ -11,7 +11,7 @@ import type { IProps } from './type';
 export const RangeFilter = ({ onResetFilters, rangeFilterKey }: IProps) => {
   const dispatch = useDispatch();
   const activePage = useAppSelector((state) =>
-    state.withPersist.pages.find((page) => page.isActive)
+    state.withPersist.pages?.find((page) => page.isActive)
   );
 
   const fromRangeFilterValue = activePage?.viewData?.Filters?.FilterInfo?.find(

@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React from 'react';
 
-import CardSelect from "@components/molecules/cardSelect";
-import { useAppSelector } from "@redux/index";
+import CardSelect from '@components/molecules/cardSelect';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 export interface LicensePackage {
   id: number;

@@ -1,13 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 
-import { SelectProps, Spin } from "antd";
+import {
+  SelectProps,
+  Spin,
+} from 'antd';
+import { useTranslations } from 'next-intl';
 
-import RadioList from "@components/molecules/radioList";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import { showSuccessToast } from "@utils/core";
-import { useTranslations } from "next-intl";
-import { CustomButton } from "@components/atoms/defaultElements";
-import { SpinIcon } from "@components/atoms/iconComponents";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { SpinIcon } from '@components/atoms/iconComponents';
+import RadioList from '@components/molecules/radioList';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import { showSuccessToast } from '@utils/toast';
 
 export const MeasureUnitConfig = () => {
   const t = useTranslations();

@@ -7,7 +7,6 @@ import {
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { shallowEqual } from 'react-redux';
-import { Stimulsoft } from 'stimulsoft-reports-js/Scripts/stimulsoft.designer';
 
 import {
   CustomButton,
@@ -15,13 +14,13 @@ import {
 } from '@components/atoms/defaultElements';
 import ExpandedButton from '@components/molecules/expandedButton';
 import { useInitializePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useCUDFormDataMutation } from '@services/base';
 import { SystemEnum } from '@type/enum';
 import {
   showErrorToast,
   showSuccessToast,
-} from '@utils/core';
+} from '@utils/toast';
 
 export const ReportDesigner = ({ reportTemplate }) => {
   const StiLicKey =
@@ -47,7 +46,7 @@ export const ReportDesigner = ({ reportTemplate }) => {
   const { fullScreen, reportListPageId } = useAppSelector((state) => {
     const fullScreen = state.withPersist.config.fullScreen;
 
-    const reportListPageId = state.withPersist.pages.find(
+    const reportListPageId = state.withPersist.pages?.find(
       (page) => page.url === reportListConfig.url
     )?.pageId;
 
@@ -73,20 +72,23 @@ export const ReportDesigner = ({ reportTemplate }) => {
   };
 
   useEffect(() => {
-    const loadDesigner = async () => {
-      try {
-        //Activation with using license code
-        Stimulsoft.Base.StiLicense.Key = StiLicKey;
+      const loadDesigner = async () => {
+    try {
+      const { Stimulsoft } = await import(
+        "stimulsoft-reports-js/Scripts/stimulsoft.designer"
+      );
 
-        const options = new Stimulsoft.Designer.StiDesignerOptions();
-        // options.appearance.fullScreenMode = true;
-        options.appearance.theme = 36;
+      Stimulsoft.Base.StiLicense.Key = StiLicKey;
 
-        const designer = new Stimulsoft.Designer.StiDesigner(
-          options,
-          "StiDesigner",
-          false
-        );
+      const options = new Stimulsoft.Designer.StiDesignerOptions();
+
+      options.appearance.theme = 36;
+
+      const designer = new Stimulsoft.Designer.StiDesigner(
+        options,
+        "StiDesigner",
+        false
+      );
 
         designer.onSaveReport = async (e: any) => {
           const reportJson: string = designer.report.saveToJsonString();

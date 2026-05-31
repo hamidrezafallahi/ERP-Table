@@ -26,14 +26,12 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
   const selectedRows = controller.getSelectedRows();
   const count = selectedRows ? Object.keys(selectedRows).length : 0;
   const table = controller.getViewState();
-  const tableAction = table.action;
+  const tableAction = table?.action;
   const handleAddRow = () => {
     void controller.dispatch({ type: "ADD_EMPTY_ROW" });
   };
-  const AllRows = controller.getAllRows();
-  const isSelectedAllRows = AllRows.every(
-    (row) => !!table.selectedRows[row.id],
-  );
+ 
+ 
   const handleSelectAllRows = () => {
     controller.dispatch({ type: "TOGGLE_ROW_SELECTED" });
   };

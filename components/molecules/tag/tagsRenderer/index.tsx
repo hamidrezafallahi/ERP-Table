@@ -10,7 +10,7 @@ import {
 
 import { CustomTag } from '@components/atoms/defaultElements';
 import { useMediaQuery } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setViewData } from '@slice/pages';
 
 import type { IProps } from './type';
@@ -20,7 +20,7 @@ export const TagsRenderer = ({ RefId, defaultOpen }: IProps) => {
       const { match: minDesktop } = useMediaQuery("XLUP");
     const { match: maxDesktop } = useMediaQuery("XXLUP");
   const { activePage, TagsInfo,minimize } = useAppSelector((state) => {
-    const activePage = state.withPersist.pages.find((item) => item.isActive);
+    const activePage = state.withPersist.pages?.find((item) => item.isActive);
     const RepoId = activePage ? activePage.RepoId : null;
     const TagsInfo = RepoId
       ? state.withoutPersist.container.recordsTags.find(

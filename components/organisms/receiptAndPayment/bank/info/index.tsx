@@ -1,21 +1,33 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
-import Title from "@components/atoms/Title";
-import { useAppSelector } from "@redux/index";
-import { addNewPage } from "@slice/pages";
-import { PageTypeEnum } from "@type/enum";
-import { useGetData } from "@services/base";
-import { GenericSidebar } from "@components/molecules/receiptAndPayment/sidebarInfo";
-import DataGrid from "@components/molecules/dataGrid";
-import { BankStatementRow } from "@components/molecules/receiptAndPayment/headerInfo/type";
-import { HeaderInfo } from "@components/molecules/receiptAndPayment/headerInfo";
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 
-import { filterTypeDateEnum } from "@services/base/type";
-import ListToolbar from "@components/organisms/listToolbar";
-import { IRepoViewConfig } from "@services/generalType/type";
-import { getColumnsList } from "./config";
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import Title from '@components/atoms/Title';
+import DataGrid from '@components/molecules/dataGrid';
+import { HeaderInfo } from '@components/molecules/receiptAndPayment/headerInfo';
+import {
+  BankStatementRow,
+} from '@components/molecules/receiptAndPayment/headerInfo/type';
+import {
+  GenericSidebar,
+} from '@components/molecules/receiptAndPayment/sidebarInfo';
+import ListToolbar from '@components/organisms/listToolbar';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useGetData } from '@services/base';
+import { filterTypeDateEnum } from '@services/base/type';
+import { IRepoViewConfig } from '@services/generalType/type';
+import { addNewPage } from '@slice/pages';
+import { PageTypeEnum } from '@type/enum';
+
+import { getColumnsList } from './config';
 
 export default function Info() {
   const dispatch = useDispatch();
@@ -28,7 +40,7 @@ export default function Info() {
   const { fullScreen, minimizePanel, match, locale, initPage, lang, pages } =
     useAppSelector(
       (state) => ({
-        activePage: state.withPersist.pages.find(
+        activePage: state.withPersist.pages?.find(
           (item) => item.isActive === true,
         ),
         pages: state.withPersist.pages,

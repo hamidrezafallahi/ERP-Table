@@ -1,34 +1,48 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { Divider, Pagination } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual } from "react-redux";
+import {
+  Divider,
+  Pagination,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
-import { CustomButton, CustomModal } from "@components/atoms/defaultElements";
+import {
+  CustomButton,
+  CustomModal,
+} from '@components/atoms/defaultElements';
 import {
   FormulaIcon,
   LeftChevron,
   RightChevron,
-} from "@components/atoms/iconComponents";
-import Confirmation from "@components/molecules/confirmation";
+} from '@components/atoms/iconComponents';
+import Confirmation from '@components/molecules/confirmation';
 import {
   CardDynamicModal,
   TableDynamicModal,
-} from "@components/molecules/dynamicModal";
-import { ActionLabelsEnum } from "@components/organisms/list/enum";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation, useGetData, useGetInfinite } from "@services/base";
+} from '@components/molecules/dynamicModal';
+import { ActionLabelsEnum } from '@components/organisms/list/enum';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  useCUDDataMutation,
+  useGetData,
+  useGetInfinite,
+} from '@services/base';
 import type {
   IRequest,
   IStaffSpecialServices,
-} from "@services/hr/staffSpecialServices/type";
-import type { IToolbarMenu } from "@type/toolbar";
-import { showSuccessToast } from "@utils/core";
+} from '@services/hr/staffSpecialServices/type';
+import type { IToolbarMenu } from '@type/toolbar';
+import { showSuccessToast } from '@utils/toast';
 
-import { config } from "./config";
-import { FormulaParameterForm } from "./form";
-import FormulaValues from "./formulaValues";
-import type { IProps } from "./type";
+import { config } from './config';
+import { FormulaParameterForm } from './form';
+import FormulaValues from './formulaValues';
+import type { IProps } from './type';
 
 export const FormulaParameter = ({ id }: IProps) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);

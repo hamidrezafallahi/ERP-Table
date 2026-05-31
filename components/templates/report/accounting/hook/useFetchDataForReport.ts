@@ -11,7 +11,7 @@ import {
 } from 'react-redux';
 
 import { useInitializePage } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useGetConditionallyMutation,
   useGetData,
@@ -44,19 +44,19 @@ const useFetchDataForReport = () => {
   const initializePage = useInitializePage();
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find((item) => item.isActive),
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
     }),
     shallowEqual
   );
 
   const {
-    url = "/api/acc/select/repReviewGroh",
-    RepoViewId = 10007,
+    url = "/api/acc/select/repReviewCol",
+    RepoViewId = 10015,
     PageNumber = 1,
     YearIds = null,
     PlaceIds = null,
-    FromDate = moment().locale("fa").clone().startOf("jYear").valueOf(),
-    ToDate = moment().locale("fa").clone().endOf("day").valueOf(),
+    StartDate = moment().locale("fa").clone().startOf("jYear").valueOf(),
+    EndDate = moment().locale("fa").clone().endOf("day").valueOf(),
     InnerFilters = [],
     IsFirstPeriod = false,
     IsCurrencyCount = false,
@@ -65,7 +65,7 @@ const useFetchDataForReport = () => {
     PlaceIdsCols = null,
     FilterIds = null,
     FilterTypeIds = [1, 2, 3, 4, 5],
-    Level = 0,
+    Level = 1,
     showCurrency = true,
     child = null,
     TreeView = false,
@@ -76,7 +76,7 @@ const useFetchDataForReport = () => {
   const [prevStates, setPrevStates] = useState<IViewData[]>([]);
   const recordHeight = 40;
   const deviceHeight = window.innerHeight;
-  const recordsPerPage = Math.floor((deviceHeight - 400) / recordHeight);
+  const recordsPerPage = Math.floor((deviceHeight - 400) / recordHeight)-1;
   const dispatch = useDispatch();
 
   //TODO : add type
@@ -92,8 +92,8 @@ const useFetchDataForReport = () => {
       },
       YearIds,
       PlaceIds,
-      FromDate: FromDate ? new Date(FromDate).toISOString() : null,
-      ToDate: ToDate ? new Date(ToDate).toISOString() : null,
+      StartDate: StartDate ? new Date(StartDate).toISOString() : null,
+      EndDate: EndDate ? new Date(EndDate).toISOString() : null,
       InnerFilters,
       IsFirstPeriod,
       IsCurrencyCount,
@@ -135,7 +135,7 @@ const useFetchDataForReport = () => {
             ellipsis: true,
             align: fieldCaption === "کد حساب" ? "right" : "center",
             className: `text-nowrap text-ellipsis overflow-hidden  ${
-              fieldCaption === "شرح حساب" ? "!w-[218px]" : "!w-[160px]"
+              fieldCaption === "شرح حساب" ? "!w-[218px] !bg-main-white" : "!w-[160px]"
             } `,
           })),
           Data: formatData(Data, Level, child, TreeView, url),
@@ -143,7 +143,7 @@ const useFetchDataForReport = () => {
           TotalCount,
         });
       } else {
-        if (FilterIds?.length > 0 && FilterIds !== prevStates[0]?.FilterIds) {
+        if (FilterIds?.length > 0 && prevStates[0]?.FilterIds?.length > 0 && FilterIds !== prevStates[0]?.FilterIds) {
           dispatch(setParentPageId({ parentPageId: activePage.pageId }));
           dispatch(
             setViewData({ ...prevStates[0], lastSteps: prevStates[1]?.steps })
@@ -153,6 +153,7 @@ const useFetchDataForReport = () => {
               RepoId: activePage.RepoId,
               SystemId: activePage.SystemId,
               url: "acc/report/transaction",
+
             },
           });
         }
@@ -184,8 +185,8 @@ const useFetchDataForReport = () => {
               },
               YearIds,
               PlaceIds,
-              FromDate: new Date(FromDate).toISOString(),
-              ToDate: new Date(ToDate).toISOString(),
+              StartDate: new Date(StartDate).toISOString(),
+              EndDate: new Date(EndDate).toISOString(),
               InnerFilters,
               IsFirstPeriod,
               IsCurrencyCount,

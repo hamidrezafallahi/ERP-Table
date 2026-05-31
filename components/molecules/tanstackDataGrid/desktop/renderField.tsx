@@ -1,21 +1,30 @@
-import { Dispatch, JSX, useEffect, useState } from "react";
+import {
+  Dispatch,
+  JSX,
+  useEffect,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
+import { useTranslations } from 'next-intl';
 
 import {
   CustomTooltip,
   DynamicSelect,
-} from "@components/atoms/defaultElements";
-import { DynamicTree } from "@components/atoms/defaultElements/dynamicTree";
+} from '@components/atoms/defaultElements';
+import { DynamicTree } from '@components/atoms/defaultElements/dynamicTree';
 import {
   type IDetail,
   type IDetailColumnConfig,
   RowStateEnum,
-} from "@services/generalType/type";
-import type { IOption, IRequestConfig } from "@type/elementType";
-import { findItemInNestedData, getCookie } from "@utils/core";
+} from '@services/generalType/type';
+import type {
+  IOption,
+  IRequestConfig,
+} from '@type/elementType';
+import { getCookie } from '@utils/cookie';
+import { findItemInNestedData } from '@utils/core';
 
-import type { IActions } from "../type";
+import type { IActions } from '../type';
 
 interface IProps<T> {
   defaultData: T;

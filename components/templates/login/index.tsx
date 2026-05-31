@@ -30,10 +30,10 @@ import {
   useFcmToken,
   useNavigatePage,
 } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetPlaceConfigs } from '@hooks/custom/useGetPlaceConfigs';
 import DarkLogo from '@public/images/ArianTechDark.png';
 import LightLogo from '@public/images/ArianTechLight.png';
-import { useAppSelector } from '@redux/index';
 import {
   useForgetPassWordMutation,
   useLoginByPasswordMutation,
@@ -49,11 +49,9 @@ import {
   setLanguage,
   setUserSession,
 } from '@slice/config';
-import {
-  createCookie,
-  randomString,
-  showErrorToast,
-} from '@utils/core';
+import { createCookie } from '@utils/cookie';
+import { randomString } from '@utils/core';
+import { showErrorToast } from '@utils/toast';
 
 import BuyAccount from './buyAccount';
 import CallAdmin from './callAdmin';
@@ -167,7 +165,6 @@ export default function Login() {
         token: resetPasswordToken,
       }).unwrap();
 
- 
       if (res?.Result === true) {
         form.setFieldValue("password", pass);
         setStep("welcome");
@@ -209,23 +206,23 @@ export default function Login() {
           setManagementAccounts(res.ManagementAccounts);
           setStep("managementAccounts");
         }
-        
+
         // createCookie("_auth", res.access_token, 6);
         // createCookie("_rAuth", res.refresh_token, 6);
         // dispatch(
-          //   setUserSession({
-            //     userSession: res.UserSession,
-            //   })
-            // );
-            // dispatch(
-              //   setDefaultConfig({
-                //     ManagementAccountId: {
-                  //       id: res.ManagementAccounts[0].ManagementAccountId,
-                  //       desc: res.ManagementAccounts[0].ManagementAccountDesc,
-                  //     },
-                  //   })
-                  // );
-                  // localStorage.setItem("fcm_token", token);
+        //   setUserSession({
+        //     userSession: res.UserSession,
+        //   })
+        // );
+        // dispatch(
+        //   setDefaultConfig({
+        //     ManagementAccountId: {
+        //       id: res.ManagementAccounts[0].ManagementAccountId,
+        //       desc: res.ManagementAccounts[0].ManagementAccountDesc,
+        //     },
+        //   })
+        // );
+        // localStorage.setItem("fcm_token", token);
         // navigateLast();
       } else {
         showErrorToast(res.Error);
@@ -243,7 +240,7 @@ export default function Login() {
   const handleLoginByAccount = async (item: ManagementAccount) => {
     const pass = form.getFieldValue("password");
     const phoneNumber = form.getFieldValue("phoneNumber");
-     const res = await loginByPassword({
+    const res = await loginByPassword({
       Grant_Type: "password",
       DeviceToken: token,
       DeviceType: deviceInfo.mobile ? 2 : 1,
@@ -254,7 +251,7 @@ export default function Login() {
       Refresh_Token: null,
       ManagementAccountId: item.ManagementAccountId,
     }).unwrap();
-      if (res?.Result == "Success") {
+    if (res?.Result == "Success") {
       if (res.IsExpire) {
         if (res.UserSession?.UserInfo?.IsAdmin) {
           setStep("buyAccount");
@@ -286,7 +283,7 @@ export default function Login() {
           }),
         );
         localStorage.setItem("fcm_token", token);
-        getPlaceConfigs()
+        getPlaceConfigs();
         navigateLast();
       }
     } else {
@@ -564,7 +561,7 @@ export default function Login() {
               </CustomButton>
               <div className="w-full">
                 <Image
-                  priority
+                  priority={false}
                   src={theme == "light" ? DarkLogo : LightLogo}
                   alt={t("company.name")}
                   width={174}

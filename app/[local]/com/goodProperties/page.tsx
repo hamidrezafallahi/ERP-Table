@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { IGoodProperty, IRequest } from "@services/com/goodProperty/type";
+import { Form } from '@components/templates/form';
+import type {
+  IGoodProperty,
+  IRequest,
+} from '@services/com/goodProperty/type';
 
 export default function GoodPropertiesFormPage() {
   return (

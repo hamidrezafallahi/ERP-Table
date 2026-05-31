@@ -1,12 +1,19 @@
-import { FC, useEffect, useState } from "react";
+import {
+  FC,
+  useEffect,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
+import { useTranslations } from 'next-intl';
 
-import { useGetData } from "@services/base";
-import type { IOption, ISelectOption } from "@type/elementType";
+import { useGetData } from '@services/base';
+import type {
+  IOption,
+  ISelectOption,
+} from '@type/elementType';
 
-import { CustomSelect } from "../select";
-import type { IProps } from "./type";
+import { CustomSelect } from '../select';
+import type { IProps } from './type';
 
 export const DynamicSelect: FC<IProps> = ({
   className,
@@ -248,11 +255,16 @@ export const DynamicSelect: FC<IProps> = ({
         notFoundContent={isFetching ? "Loading..." : "No options found"}
         onChange={onChange}
         filterOption={(input, option) => {
-          const label = option?.label;
-          return (
-            typeof label === "string" &&
-            label.toLowerCase().includes(input.toLowerCase())
-          );
+          if(props.filterOption && typeof props.filterOption === "function"){
+            return props.filterOption(input, option)
+          }else{
+
+            const label = option?.label;
+            return (
+              typeof label === "string" &&
+              label.toLowerCase().includes(input.toLowerCase())
+            );
+          }
         }}
         onSearch={(value) => {
           if (infinite) {

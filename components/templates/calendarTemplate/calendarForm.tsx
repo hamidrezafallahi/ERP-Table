@@ -9,7 +9,7 @@ import { CustomSelect } from '@components/atoms/defaultElements';
 import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
 import InputText from '@components/atoms/defaultElements/inputText';
 import { NewTimePicker } from '@components/atoms/defaultElements/newTimePicker';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetData } from '@services/base';
 
 type CalendarFormValues = {

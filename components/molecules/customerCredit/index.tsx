@@ -1,19 +1,30 @@
-import { useEffect, useRef } from "react";
+import {
+  useEffect,
+  useRef,
+} from 'react';
 
-import { Form, Spin } from "antd";
-import { useTranslations } from "next-intl";
+import {
+  Form,
+  Spin,
+} from 'antd';
+import { useTranslations } from 'next-intl';
 
 import {
   CustomButton,
   DynamicSelect,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import { SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation, useGetData } from "@services/base";
-
-import type { ICustomer, IRequest } from "@services/sale/customer/type";
-import { showSuccessToast } from "@utils/core";
+} from '@components/atoms/defaultElements';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import { SpinIcon } from '@components/atoms/iconComponents';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import type {
+  ICustomer,
+  IRequest,
+} from '@services/sale/customer/type';
+import { showSuccessToast } from '@utils/toast';
 
 export const CustomerCredit = ({ handleClose, sourceKey, id }) => {
   const { data: defaultValue } = useGetData<ICustomer[], IRequest>({

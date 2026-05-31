@@ -1,19 +1,25 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
-import { Pagination } from "antd";
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import { Pagination } from 'antd';
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomButton, CustomModal } from "@components/atoms/defaultElements";
+import {
+  CustomButton,
+  CustomModal,
+} from '@components/atoms/defaultElements';
 import {
   DownChevron,
   LeftChevron,
   RightChevron,
   SettlementIcon,
-} from "@components/atoms/iconComponents";
-import { DetailDataGrid } from "@components/molecules/detailDataGrid";
+} from '@components/atoms/iconComponents';
+import { DetailDataGrid } from '@components/molecules/detailDataGrid';
 import {
   DiscountsDetail,
   DiscountsInfo,
@@ -23,17 +29,34 @@ import {
   Settlement,
   TaxesDetail,
   TaxesInfo,
-} from "@components/molecules/salesAndPurchase/salesInvoice";
-import { EtcFactorDetail } from "@components/molecules/salesAndPurchase/salesInvoice/etcFactorDetail";
-import { useAppSelector } from "@redux/index";
-import type { ISalesInvoiceDetails } from "@services/sale/salesInvoiceDetails/type";
-import { InvoicePatternTypeOneEnum } from "@services/sale/standardSalesInvoice/type";
-import { setAllPageData, setPageData, setPageInfo } from "@slice/pages";
-import { hasStoredValue } from "@utils/core";
+} from '@components/molecules/salesAndPurchase/salesInvoice';
+import {
+  EtcFactorDetail,
+} from '@components/molecules/salesAndPurchase/salesInvoice/etcFactorDetail';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import type {
+  ISalesInvoiceDetails,
+} from '@services/sale/salesInvoiceDetails/type';
+import {
+  InvoicePatternTypeOneEnum,
+} from '@services/sale/standardSalesInvoice/type';
+import {
+  setAllPageData,
+  setPageData,
+  setPageInfo,
+} from '@slice/pages';
+import { hasStoredValue } from '@utils/core';
 
-import { useLogic } from "../useLogic";
-import { calcDiscount, calcFactor, calcTax } from "../utils";
-import { columnConfig, formConfig } from "./config";
+import { useLogic } from '../useLogic';
+import {
+  calcDiscount,
+  calcFactor,
+  calcTax,
+} from '../utils';
+import {
+  columnConfig,
+  formConfig,
+} from './config';
 
 export const LandingBillSalesInvoice = ({ setMobileDrawerContent, form }) => {
   const t = useTranslations();

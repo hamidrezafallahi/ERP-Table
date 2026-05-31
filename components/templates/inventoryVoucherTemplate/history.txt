@@ -29,7 +29,7 @@ import {
   useFullScreen,
   useNavigatePage,
 } from '@hooks/custom';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { IPlaceConfig } from '@services/auth/base/type';
 import {
   useGetConditionallyMutation,

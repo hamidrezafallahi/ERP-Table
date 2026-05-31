@@ -1,18 +1,21 @@
-import { useRef } from "react";
+import { useRef } from 'react';
 
-import { Form, Spin } from "antd";
-import { useTranslations } from "next-intl";
+import {
+  Form,
+  Spin,
+} from 'antd';
+import { useTranslations } from 'next-intl';
 
 import {
   CustomButton,
   DynamicSelect,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation } from "@services/base";
-import type { IRequestConfig } from "@type/elementType";
-import { showSuccessToast } from "@utils/core";
+} from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
+import { SpinIcon } from '@components/atoms/iconComponents';
+import { useCUDDataMutation } from '@services/base';
+import type { IRequestConfig } from '@type/elementType';
+import { showSuccessToast } from '@utils/toast';
 
 export const PurchaseRequest = ({ handleClose, ids }) => {
   // Parse incoming ids (pattern: [goodId-quantity-measureUnitId])

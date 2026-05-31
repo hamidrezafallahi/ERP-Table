@@ -1,19 +1,26 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import type { CheckboxChangeEvent } from "antd/es/checkbox";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import type { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { useAppSelector } from "@redux/index";
-import { setPageData } from "@slice/pages";
-import type { IPage } from "@slice/pages/type";
-import { IFormFieldConfig } from "@type/elementType";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setPageData } from '@slice/pages';
+import type { IPage } from '@slice/pages/type';
+import { IFormFieldConfig } from '@type/elementType';
 
-import CustomCheckbox from "../checkbox";
-import { NewDatePicker } from "../newDatePicker";
-import { NewTimePicker } from "../newTimePicker";
+import CustomCheckbox from '../checkbox';
+import { NewDatePicker } from '../newDatePicker';
+import { NewTimePicker } from '../newTimePicker';
 
 interface ExpireDateTimePickerProps {
   initialShowEndDate?: boolean;

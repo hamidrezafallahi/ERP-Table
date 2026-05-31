@@ -21,7 +21,7 @@ import {
 } from '@components/atoms/iconComponents';
 import Confirmation from '@components/molecules/confirmation';
 import { ActionLabelsEnum } from '@components/organisms/list/enum';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useCUDDataMutation,
   useGetData,
@@ -32,7 +32,7 @@ import type {
   IRequest,
 } from '@services/com/goodExtraInfo/type';
 import type { IToolbarMenu } from '@type/toolbar';
-import { showSuccessToast } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 import {
   CardDynamicModal,

@@ -11,7 +11,7 @@ import {
 
 import { CustomButton } from '@components/atoms/defaultElements';
 import { LeftChevron } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setPageData } from '@slice/pages';
 import { IGoodsCategory } from '@slice/pages/factors/type';
 

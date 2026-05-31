@@ -1,21 +1,28 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Form } from "antd";
-import { useTranslations } from "next-intl";
-import { useAppSelector } from "@redux/index";
-import { ContextHeader } from "./contextHeader";
-import { ContextPagination } from "./contextPagination";
-import { ContextConfirmationPortals } from "./contextConfirmationPortals";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+
+import { Form } from 'antd';
+import { useTranslations } from 'next-intl';
+
+import { SpinIcon } from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+
 import {
   CustomFormComponentProps,
   IDynamicModalConfig,
   RecordType,
-} from "../types";
-import { useDataManager } from "./Hooks/useDataManager";
-import { ContextList } from "./contextList";
-import { SpinIcon } from "@components/atoms/iconComponents";
-import { useActionManager } from "./Hooks/useActionManager";
+} from '../types';
+import { ContextConfirmationPortals } from './contextConfirmationPortals';
+import { ContextHeader } from './contextHeader';
+import { ContextList } from './contextList';
+import { ContextPagination } from './contextPagination';
+import { useActionManager } from './Hooks/useActionManager';
+import { useDataManager } from './Hooks/useDataManager';
 
 interface SideBarFormContextProps {
   typeId: number;
@@ -115,7 +122,9 @@ export default function SideBarFormContext(props: SideBarFormContextProps) {
           refetchTable={refetchTable}
         />
         {cardIsLoading || tableIsLoading ? (
-          <div className="flex justify-center items-center h-[calc(100dvh-23.25rem)] text-gray-400">
+          <div
+            className={`${match ? "h-full" : "h-[calc(100dvh-23.25rem)]"} flex justify-center items-center text-gray-400`}
+          >
             <SpinIcon config={{ width: 24, height: 24 }} />
           </div>
         ) : (

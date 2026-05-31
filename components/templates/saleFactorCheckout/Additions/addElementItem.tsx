@@ -13,7 +13,7 @@ import {
 
 import { CustomButton } from '@components/atoms/defaultElements';
 import { NewButton } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setPageData } from '@slice/pages';
 import { IEffectiveTypeInFactor } from '@slice/pages/factors/type';
 
@@ -27,7 +27,7 @@ interface IProps {
 function AddElementItem({ ...props }: IProps) {
   const { Options } = props;
    const { Factor} = useAppSelector((state) => {
-     const Factor = state.withPersist.pages.find(
+     const Factor = state.withPersist.pages?.find(
        (p) => p.isActive
      )?.pageData?.find(i=>i.name == "factor")?.value;
      

@@ -1,14 +1,17 @@
-import React from "react";
+import React from 'react';
 
-import { Spin } from "antd";
-import { useTranslations } from "next-intl";
+import { Spin } from 'antd';
+import { useTranslations } from 'next-intl';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import { SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation } from "@services/base";
-import { showErrorToast, showSuccessToast } from "@utils/core";
+import { CustomButton } from '@components/atoms/defaultElements';
+import { SpinIcon } from '@components/atoms/iconComponents';
+import { useCUDDataMutation } from '@services/base';
+import {
+  showErrorToast,
+  showSuccessToast,
+} from '@utils/toast';
 
-import { DeleteNodeModalProps } from "./type";
+import { DeleteNodeModalProps } from './type';
 
 export default function DeleteOperation({
   onClose,

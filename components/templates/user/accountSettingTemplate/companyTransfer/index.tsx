@@ -13,7 +13,7 @@ import {
   CustomModal,
 } from '@components/atoms/defaultElements';
 import { Play } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 
 import { sampleData } from '../type';
 import AgreementAndTransfer from './agreementAndTransfer';
@@ -223,7 +223,7 @@ export default function MultiCompanyTransfer({ data = sampleData }: Props) {
                 {" "}
 
                   {` ${selectedNames.length > 1 && t("general.s") } `}
-                  <span className="font-semibold mx-2"> 
+                  <span className="mx-2 font-semibold"> 
                    {selectedNames.join(  t("general.and") ) }  
                   </span> 
                   {" "} 

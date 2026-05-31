@@ -1,8 +1,8 @@
-import Form from "@components/templates/form";
+import { Form } from '@components/templates/form';
 import type {
   IChequeReceipt,
   IRequest,
-} from "@services/trh/chequeReceipt/type";
+} from '@services/trh/chequeReceipt/type';
 
 export default function PriceAnnouncementFormPage() {
   return (

@@ -12,12 +12,10 @@ import {
 import { useTranslations } from 'next-intl';
 import { shallowEqual } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { IDefaultConfigs } from '@slice/config/type';
-import {
-  getCookie,
-  showErrorToast,
-} from '@utils/core';
+import { getCookie } from '@utils/cookie';
+import { showErrorToast } from '@utils/toast';
 
 import { IRequiredStep } from './type';
 
@@ -40,19 +38,19 @@ function HelperDelay({ ...props }: IProps) {
       const YearId = state.withPersist.config.defaultConfigs?.YearId;
       return { CashierId, CurrencyId, LanguageId, PlaceId, YearId };
     },
-    shallowEqual
+    shallowEqual,
   );
 
   const [show, setShow] = useState(false);
   const t = useTranslations();
 
-const globals: IDefaultConfigs = {
-  CurrencyId,
-  CashierId,
-  PlaceId,
-  YearId,
-  LanguageId,
-};
+  const globals: IDefaultConfigs = {
+    CurrencyId,
+    CashierId,
+    PlaceId,
+    YearId,
+    LanguageId,
+  };
 
   const tourSteps: TourProps["steps"] = requiredSteps?.map((step, index) => {
     return {
@@ -60,7 +58,9 @@ const globals: IDefaultConfigs = {
       description: step.description,
       target: step.target,
       nextButtonProps: {
-        disabled:  !globals["PlaceId" as keyof IDefaultConfigs] && step.id !== "initialSettings" ,
+        disabled:
+          !globals["PlaceId" as keyof IDefaultConfigs] &&
+          step.id !== "initialSettings",
         className:
           "!bg-gray-gray5 text-xs hover:!bg-gray-gray7 !border-1 border-gray-gray7 text-gray-gray7 px-4  ",
         children:
@@ -87,7 +87,7 @@ const globals: IDefaultConfigs = {
                 } else {
                   showErrorToast(
                     t("guide.descMessage"),
-                    t("guide.requiredMessage")
+                    t("guide.requiredMessage"),
                   );
                 }
               } else {

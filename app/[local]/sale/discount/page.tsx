@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import { IDiscount, IRequest } from "@services/sale/discount/type";
+import { Form } from '@components/templates/form';
+import {
+  IDiscount,
+  IRequest,
+} from '@services/sale/discount/type';
 
 export default function DiscountFormPage() {
   return (

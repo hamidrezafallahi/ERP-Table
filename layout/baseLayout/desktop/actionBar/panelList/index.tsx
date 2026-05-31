@@ -1,17 +1,20 @@
-import { TourProps } from "antd";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import { TourProps } from 'antd';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import { CustomTooltip } from "@components/atoms/defaultElements";
-import GuidanceButton from "@components/molecules/guidanceButton";
-import { useAppSelector } from "@redux/index";
-import { setMinimize as setMinimizeAction } from "@slice/container/index";
+import { CustomTooltip } from '@components/atoms/defaultElements';
+import GuidanceButton from '@components/molecules/guidanceButton';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { setMinimize as setMinimizeAction } from '@slice/container/index';
 
-import ShortcutsCollapse from "../panelForm/shortcutCollapse";
-import BookmarkFilter from "./bookmarkFilter";
-import Filters from "./filters";
-import SaveFilter from "./saveFilter";
-import TagFilters from "./tagFilters";
+import ShortcutsCollapse from '../panelForm/shortcutCollapse';
+import BookmarkFilter from './bookmarkFilter';
+import Filters from './filters';
+import SaveFilter from './saveFilter';
+import TagFilters from './tagFilters';
 
 export default function PanelList() {
   const { minimize } = useAppSelector(

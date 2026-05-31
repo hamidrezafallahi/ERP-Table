@@ -1,28 +1,42 @@
-import { FC, useMemo, useState } from "react";
+import {
+  FC,
+  useMemo,
+  useState,
+} from 'react';
 
-import DOMPurify from "dompurify";
-import { useTranslations } from "next-intl";
-import { shallowEqual, useDispatch } from "react-redux";
+import DOMPurify from 'dompurify';
+import { useTranslations } from 'next-intl';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import {
   CustomButton,
   CustomDropdownButton,
   CustomTooltip,
-} from "@components/atoms/defaultElements";
+} from '@components/atoms/defaultElements';
 import {
   DownChevron,
   ListIcon,
   Reload,
-} from "@components/atoms/iconComponents";
-import ExpandedButton from "@components/molecules/expandedButton";
-import { useDarkMode, useInvalidateTag } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { setPageState, setPageType, setViewData } from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
-import { IToolbarList } from "@type/toolbar";
-import { getColoredIcon } from "@utils/core";
+} from '@components/atoms/iconComponents';
+import ExpandedButton from '@components/molecules/expandedButton';
+import {
+  useDarkMode,
+  useInvalidateTag,
+} from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  setPageState,
+  setPageType,
+  setViewData,
+} from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
+import { IToolbarList } from '@type/toolbar';
+import { getColoredIcon } from '@utils/core';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
 export const NestedListToolbar: FC<IProps> = ({
   expandAll,
@@ -41,7 +55,7 @@ export const NestedListToolbar: FC<IProps> = ({
   const { activePage, lang, match } = useAppSelector(
     (state) => ({
       match: state.withPersist.config.initMatch,
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true,
       ),
       lang: state.withPersist.config.lang,

@@ -1,6 +1,8 @@
-import FormGenerator from '@components/organisms/formGenerator';
+export { Form } from './form';
+export { MasterForm } from './masterForm';
+import FormGenerator from "@components/organisms/formGenerator";
 
-import type { IProps } from './type';
+import type { IProps } from "./type";
 
 export default function Form<T, K>({
   caption,
@@ -20,7 +22,8 @@ export default function Form<T, K>({
   submitCaption,
   withSubmitButton = true,
   hasShorthandFormToolbar,
-  Component
+  Component,
+  hasReload,
 }: IProps) {
   return (
     <FormGenerator<T, K>
@@ -43,6 +46,7 @@ export default function Form<T, K>({
       withSubmitButton={withSubmitButton}
       hasShorthandFormToolbar={hasShorthandFormToolbar}
       Component={Component}
+      hasReload={hasReload}
     />
   );
 }

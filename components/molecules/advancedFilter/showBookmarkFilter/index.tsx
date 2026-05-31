@@ -9,14 +9,14 @@ import {
   BookMarkIconFilled,
   Close,
 } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setViewData } from '@slice/pages';
 
 export default function ShowBookmarkFilter() {
   const dispatch = useDispatch();
   const t = useTranslations();
   const { activePage } = useAppSelector((state) => ({
-    activePage: state.withPersist.pages.find((item) => item.isActive),
+    activePage: state.withPersist.pages?.find((item) => item.isActive),
   }));
   // if(activePage?.viewData?.ShowBookmarked == false ){return}
 

@@ -10,26 +10,32 @@ import {
   useReducer,
   useRef,
   useState,
-} from "react";
+} from 'react';
 
-import { Spin, Table, TableColumnsType } from "antd";
-import { CheckboxChangeEvent } from "antd/es/checkbox";
-import { ItemType } from "antd/es/menu/interface";
-import moment from "moment-jalaali";
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { shallowEqual, useDispatch } from "react-redux";
+import {
+  Spin,
+  Table,
+  TableColumnsType,
+} from 'antd';
+import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { ItemType } from 'antd/es/menu/interface';
+import moment from 'moment-jalaali';
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import {
   CustomButton,
   CustomDropdownButton,
-  CustomModal,
   CustomTooltip,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import CustomCheckbox from "@components/atoms/defaultElements/checkbox";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import InputText from "@components/atoms/defaultElements/inputText";
+} from '@components/atoms/defaultElements';
+import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import InputText from '@components/atoms/defaultElements/inputText';
 import {
   ApplyIcon,
   Dots,
@@ -37,40 +43,43 @@ import {
   SpinIcon,
   TrashBin,
   Undo,
-} from "@components/atoms/iconComponents";
-import type { DragEndEvent } from "@dnd-kit/core";
-import { DndContext } from "@dnd-kit/core";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+} from '@components/atoms/iconComponents';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { DndContext } from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import {
   arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { useDarkMode } from "@hooks/custom";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation } from "@services/base";
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useDarkMode } from '@hooks/custom/useDarkMode';
+import { useCUDDataMutation } from '@services/base';
 import {
   type IDetail,
   type IDetailColumnConfig,
   RowStateEnum,
-} from "@services/generalType/type";
-import { setPageData } from "@slice/pages";
+} from '@services/generalType/type';
+import { setPageData } from '@slice/pages';
 import {
   checkShortcutMatch,
   findNearestTrueValue,
-  showSuccessToast,
-} from "@utils/core";
+} from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
+import { IActions } from '../type';
 import {
   RenderSelectField,
   RenderStaticValue,
   RenderTreeField,
-} from "./renderField";
-import type { IProps, RowContextProps, RowProps } from "./type";
-
-import { IActions } from "../type";
+} from './renderField';
+import type {
+  IProps,
+  RowContextProps,
+  RowProps,
+} from './type';
 
 const RowContext = createContext<RowContextProps>({});
 
@@ -144,7 +153,7 @@ export function DesktopDetailDataGrid<T extends IDetail>({
   const deviceHeight = window.innerHeight;
   const { activePage } = useAppSelector(
     (state) => ({
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true
       ),
     }),

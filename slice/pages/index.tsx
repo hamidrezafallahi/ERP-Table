@@ -1,10 +1,14 @@
-import { createSlice, PayloadAction, Slice } from "@reduxjs/toolkit";
-import { ITagInfo } from "@services/base/type";
-import type { IFormFieldConfig } from "@type/elementType";
-import { levelUrl } from "@utils/core";
+import {
+  createSlice,
+  PayloadAction,
+  Slice,
+} from '@reduxjs/toolkit';
+import { ITagInfo } from '@services/base/type';
+import type { IFormFieldConfig } from '@type/elementType';
 
-import { PageTypeEnum } from "../../types/enum";
-import { PageStateEnum } from "./enum";
+// import { levelUrl } from '@utils/core';
+import { PageTypeEnum } from '../../types/enum';
+import { PageStateEnum } from './enum';
 import type {
   IPage,
   IPageInfo,
@@ -12,7 +16,7 @@ import type {
   IStateItem,
   IStep,
   IViewData,
-} from "./type";
+} from './type';
 
 const initialState: IPage[] = [];
 
@@ -217,6 +221,20 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
     setViewData: (state, action: PayloadAction<IViewData>) =>
       state.map((p) => (p.isActive ? { ...p, viewData: action.payload } : p)),
 
+    setPageFilters: (state, action: PayloadAction<Partial<IViewData>>) =>
+      state.map((p) =>
+        p.isActive
+          ? {
+              ...p,
+              viewData: {
+                ...p.viewData,
+                ...action.payload,
+              },
+            }
+          : p,
+      ),
+   
+
     setStatusItemsList: (
       state,
       action: PayloadAction<{ items: IStateItem; RepoId: number }>,
@@ -315,7 +333,7 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
           ...p,
           viewData: {
             ...p.viewData,
-            url: levelUrl(nextLevel),
+            // url: levelUrl(nextLevel),
             Level: nextLevel,
             TreeView: false,
             FilterIds,
@@ -349,7 +367,7 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
           ...p,
           viewData: {
             ...p.viewData,
-            url: levelUrl(Level + 1),
+            // url: levelUrl(Level + 1),
             Level: Level + 1,
             TreeView: false,
             FilterIds: [...currentFilterIds, { Level, Ids: [item.AccId] }],
@@ -377,7 +395,7 @@ export const PagesReducer: Slice<IPage[]> = createSlice({
           ...p,
           viewData: {
             ...p.viewData,
-            url: levelUrl(Level),
+            // url: levelUrl(Level),
             Level,
             TreeView: false,
             steps,
@@ -452,6 +470,7 @@ export const {
   resetPages,
   setPageType,
   setSelectedViewIndex,
+  setPageFilters,
 } = PagesReducer.actions;
 
 export default PagesReducer.reducer;

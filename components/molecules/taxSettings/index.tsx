@@ -22,7 +22,7 @@ import type {
   IGood,
   IRequest,
 } from '@services/com/good/type';
-import { showSuccessToast } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 export const TaxSettings = ({ handleClose, sourceKey, id }) => {
   const { data: defaultValue } = useGetData<IGood[], IRequest>({

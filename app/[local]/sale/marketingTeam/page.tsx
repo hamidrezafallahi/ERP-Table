@@ -1,8 +1,8 @@
-import Form from "@components/templates/form";
+import { Form } from '@components/templates/form';
 import type {
   IMarketingTeam,
   IRequest,
-} from "@services/sale/marketingTeam/type";
+} from '@services/sale/marketingTeam/type';
 
 export default function MarketingTeamFormPage() {
   return (

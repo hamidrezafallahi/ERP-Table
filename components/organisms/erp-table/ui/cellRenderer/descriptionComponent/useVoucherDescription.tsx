@@ -9,12 +9,12 @@ import {
   useDispatch,
 } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   useCUDDataMutation,
   useGetData,
 } from '@services/base';
-import { showSuccessToast } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 import {
   VoucherTypeApiResponse,
@@ -34,7 +34,7 @@ export const useVoucherDescription = (props: UseVoucherDescriptionProps) => {
   const [inputKey, setInputKey] = useState(0);
 
   const { voucherDescConfig, lang } = useAppSelector((state) => {
-    const activePage = state.withPersist.pages.find((p) => p.isActive);
+    const activePage = state.withPersist.pages?.find((p) => p.isActive);
     const lang = state.withPersist.config.lang;
     const voucherDescConfig = activePage?.pageData?.find(
       (pro) => pro.name === "VoucherDesc",

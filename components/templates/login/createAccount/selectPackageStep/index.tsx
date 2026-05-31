@@ -1,24 +1,36 @@
 "use client";
-import { FC, useState } from "react";
+import {
+  FC,
+  useState,
+} from 'react';
 
-import { useAppDispatch, useAppSelector } from "@redux/index";
-import { setIsEditing, setStep } from "@slice/account";
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
-import Backward from "../backward";
-import Cards from "./cards";
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  setIsEditing,
+  setStep,
+} from '@slice/account';
+
+import Backward from '../backward';
+import Cards from './cards';
 
 interface Props {
   onFinish: () => void;
 }
 
 const SelectPackageStep: FC<Props> = ({ onFinish }) => {
-  const packageId = useAppSelector(
-    (state) => state.withPersist.account.packageId
-  );
-  const isEditing = useAppSelector(
-    (state) => state.withPersist.account.isEditing
-  );
-  const dispatch = useAppDispatch();
+const { packageId, isEditing } = useAppSelector(
+  (state) => ({
+    packageId: state.withPersist.account.packageId,
+    isEditing: state.withPersist.account.isEditing,
+  }),
+  shallowEqual
+);
+  const dispatch = useDispatch();
 
   const [selectedDuration, setSelectedDuration] = useState("یک ماهه");
 

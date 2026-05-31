@@ -71,6 +71,7 @@ export async function createERPTable(config: CreateERPTableConfig) {
         minWidth: col.minWidth,
         style: col.style,
         popUpWidth: col.popUpWidth,
+        dynamicSelectFilterOption:col.dynamicSelectFilterOption,
         labelValue: col.labelValue
 
       });

@@ -10,13 +10,20 @@ export default function InventoryVoucherFormPage() {
   return (
     <FormGenerator<IInventoryVoucher, IRequest>
       fieldKey="VoucherHeaderId"
-      caption={""}
       url="api/inv/select/voucher"
       listUrl="inv/inventoryVoucherList"
       titleKey="VoucherNumber"
       pageIcon="VoucherTypeIcon"
       fromIndexedDb
       Component={InventoryVoucherTemplate}
+      headerFieldKey="VoucherHeaderId"
+      detailFieldKey="VoucherDetailId"
+      caption={"title.inventoryVoucherForm"}
+      headerGetUrl="api/inv/select/voucher/header"
+      detailGetUrl="api/inv/select/voucher/detail"
+      addUrl="api/inv/insert/voucher"
+      updateUrl="api/inv/update/voucher"
+      saveAsDraft={true}
     />
     // // <>
     // <InventoryVoucherTemplate<IInventoryVoucher, IRequest>
@@ -33,5 +40,5 @@ export default function InventoryVoucherFormPage() {
     //   pageIcon="VoucherTypeIcon"
     // />
     //   </>
-  )
+  );
 }

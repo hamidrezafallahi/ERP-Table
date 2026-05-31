@@ -1,21 +1,28 @@
 "use client";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import { useDispatch } from "react-redux";
+import { useTranslations } from 'next-intl';
+import { useDispatch } from 'react-redux';
 
-import Title from "@components/atoms/Title";
-
-import { useAppSelector } from "@redux/index";
-import { addNewPage } from "@slice/pages";
-import { PageStateEnum } from "@slice/pages/enum";
-import { PageTypeEnum, SystemEnum } from "@type/enum";
-import { AccountSettingTreasury } from "@components/organisms/accounting";
-import { IActiveTab } from "@components/molecules/accounting/accountSetting/tab/type";
+import Title from '@components/atoms/Title';
 import {
   AccountSettingTab,
   SubtotalSelection,
-} from "@components/molecules/accounting";
+} from '@components/molecules/accounting';
+import {
+  IActiveTab,
+} from '@components/molecules/accounting/accountSetting/tab/type';
+import { AccountSettingTreasury } from '@components/organisms/accounting';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { addNewPage } from '@slice/pages';
+import { PageStateEnum } from '@slice/pages/enum';
+import {
+  PageTypeEnum,
+  SystemEnum,
+} from '@type/enum';
 
 export default function AccountSetting() {
   const t = useTranslations();

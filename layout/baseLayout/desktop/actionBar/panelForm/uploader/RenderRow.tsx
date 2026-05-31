@@ -1,18 +1,25 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import Image from "next/image";
+import Image from 'next/image';
 
-import { CustomButton } from "@components/atoms/defaultElements";
+import { CustomButton } from '@components/atoms/defaultElements';
 import {
   PauseVideo,
   PlayVideo,
   TrashBin,
-} from "@components/atoms/iconComponents";
-import { useAppSelector } from "@redux/index";
-import { formatBytes, removeExtensionFromFileName } from "@utils/core";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import {
+  formatBytes,
+  removeExtensionFromFileName,
+} from '@utils/core';
 
-import { IconByFileExtension } from "./IconByFileExtension";
-import Loader from "./Loader";
+import { IconByFileExtension } from './IconByFileExtension';
+import Loader from './Loader';
 
 const RenderRow = ({ file, handleDeleteFile, isLast, isFirst }) => {
   const [fileUrl, setFileUrl] = useState("");

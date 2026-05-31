@@ -8,15 +8,14 @@ import type { TLang } from '@slice/config/type';
 
 interface IProps {
   children: ReactNode;
-  params: {
+  params: Promise<{
     local: TLang;
-  };
+  }>;
 }
 
-export default async function BodyLayout({
-  children,
-  params: { local },
-}: IProps) {
+export default async function BodyLayout({ children, params }: IProps) {
+  const { local } = await params;
+
   // const headersList = headers();
   // const userAgent = headersList.get("user-agent");
   // const deviceType = userAgent?.match(
@@ -26,9 +25,8 @@ export default async function BodyLayout({
   //   : "desktop";
   const messages = await getMessages();
 
-
   return (
-    <BaseLayout  local={local} messages={messages}>
+    <BaseLayout local={local} messages={messages}>
       {children}
     </BaseLayout>
   );

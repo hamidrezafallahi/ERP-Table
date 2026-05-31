@@ -21,10 +21,8 @@ import type {
   IOption,
   IRequestConfig,
 } from '@type/elementType';
-import {
-  findItemInNestedData,
-  getCookie,
-} from '@utils/core';
+import { getCookie } from '@utils/cookie';
+import { findItemInNestedData } from '@utils/core';
 
 import type { IActions } from '../type';
 

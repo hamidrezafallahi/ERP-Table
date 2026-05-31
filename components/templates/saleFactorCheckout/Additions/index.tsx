@@ -6,7 +6,10 @@ import React, {
 
 import { SelectProps } from 'antd';
 import { useTranslations } from 'next-intl';
-import { shallowEqual } from 'react-redux';
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
 
 import { CustomModal } from '@components/atoms/defaultElements';
 import {
@@ -14,10 +17,7 @@ import {
   DiscountSignIcon,
   TaxIcon,
 } from '@components/atoms/iconComponents';
-import {
-  useAppDispatch,
-  useAppSelector,
-} from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useGetConditionallyMutation } from '@services/base';
 import { setElementsInFactor } from '@slice/pages/factors';
 import { IEffectiveTypeInFactor } from '@slice/pages/factors/type';
@@ -34,13 +34,13 @@ function Additions() {
   const [open, setIsOpen] = useState(false);
 
   const t = useTranslations();
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
   const { Factor, activePageId } = useAppSelector((state) => {
-    const activePageId = state.withPersist.pages.find(
+    const activePageId = state.withPersist.pages?.find(
       (p) => p.isActive
     )?.pageId;
 
-    const Factor = state.withPersist.pages.find(
+    const Factor = state.withPersist.pages?.find(
         (p) => p.isActive
       )?.pageData?.find(i=>i.name == "Factor")?.value;
     return { Factor, activePageId };

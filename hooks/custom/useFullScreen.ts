@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setFullScreen } from '@slice/config';
 
 export const useFullScreen = () => {

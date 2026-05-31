@@ -13,6 +13,8 @@
     "import/no-unresolved": "warn",
     "react/react-in-jsx-scope": "off", // React 19 doesn't require React in scope
     "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-unused-expressions": "off",
+    "@typescript-eslint/no-empty-object-type": "off",
     "react/no-unknown-property": "warn",
     "react/prop-types": "off",
     "@typescript-eslint/no-explicit-any": "off",

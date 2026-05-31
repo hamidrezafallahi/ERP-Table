@@ -1,5 +1,8 @@
-import Form from "@components/templates/form";
-import type { IReport, IRequest } from "@services/mng/report/type";
+import { Form } from '@components/templates/form';
+import type {
+  IReport,
+  IRequest,
+} from '@services/mng/report/type';
 
 export default function ReportFormPage() {
   return (

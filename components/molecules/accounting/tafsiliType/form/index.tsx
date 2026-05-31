@@ -1,27 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect } from 'react';
 
-import { Form } from "antd";
-import { useTranslations } from "next-intl";
+import { Form } from 'antd';
+import { useTranslations } from 'next-intl';
+import { useDispatch } from 'react-redux';
 
-import CustomCheckbox from "@components/atoms/defaultElements/checkbox";
-import InputText from "@components/atoms/defaultElements/inputText";
-import type { IPlaceConfig } from "@services/auth/base/type";
-import { useGetData } from "@services/base";
-import { setPageData } from "@slice/pages";
-import { useDispatch } from "react-redux";
+import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
+import InputText from '@components/atoms/defaultElements/inputText';
+import { useGetConfigValueById } from '@hooks/custom/useGetConfigValueById';
+import { setPageData } from '@slice/pages';
 
 export const TafsiliTypeForm = ({ form }) => {
   const t = useTranslations();
   const dispatch = useDispatch();
-
   const formValues = Form.useWatch([], form);
-
-  const [accessLevel, setAccessLevel] = useState(null);
-
-  const { data: access } = useGetData<IPlaceConfig[], null>({
-    url: `/api/mng/select/placeConfigValue`,
-    body: {},
-  });
+  const { Value } = useGetConfigValueById({ id: 5006 });
+  const accessLevel = Number(Value);
 
   const CHECKBOX_FIELDS = [
     "IsTafsili",
@@ -37,20 +30,12 @@ export const TafsiliTypeForm = ({ form }) => {
   ];
 
   useEffect(() => {
-    if (access?.Data) {
-      const accessData = access?.Data[0];
-      const accessLevel = accessData?.AccLevel;
-      setAccessLevel(accessLevel);
-    }
-  }, [access?.Data]);
-
-  useEffect(() => {
     if (formValues) {
       dispatch(
         setPageData({
           name: "AllData",
           value: formValues,
-        })
+        }),
       );
     }
   }, [formValues]);
@@ -326,7 +311,7 @@ export const TafsiliTypeForm = ({ form }) => {
 
                 if (!isAnyChecked) {
                   return Promise.reject(
-                    new Error("حداقل یکی از سطوح باید انتخاب شود")
+                    new Error("حداقل یکی از سطوح باید انتخاب شود"),
                   );
                 }
 

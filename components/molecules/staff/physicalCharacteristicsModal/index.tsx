@@ -1,15 +1,30 @@
-import { useEffect, useRef } from "react";
+import {
+  useEffect,
+  useRef,
+} from 'react';
 
-import { Form, Spin } from "antd";
-import { useTranslations } from "next-intl";
+import {
+  Form,
+  Spin,
+} from 'antd';
+import { useTranslations } from 'next-intl';
 
-import { CustomButton, DynamicSelect } from "@components/atoms/defaultElements";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import type { IGood, IRequest } from "@services/com/good/type";
-import { showSuccessToast } from "@utils/core";
+import {
+  CustomButton,
+  DynamicSelect,
+} from '@components/atoms/defaultElements';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import InputText from '@components/atoms/defaultElements/inputText';
+import { SpinIcon } from '@components/atoms/iconComponents';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import type {
+  IGood,
+  IRequest,
+} from '@services/com/good/type';
+import { showSuccessToast } from '@utils/toast';
 
 export const PhysicalCharacteristicsModal = ({
   handleClose,

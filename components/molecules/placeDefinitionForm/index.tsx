@@ -18,15 +18,13 @@ import {
   NewDatePicker,
 } from '@components/atoms/defaultElements';
 import InputText from '@components/atoms/defaultElements/inputText';
-import type { INestedListConfig } from '@components/organisms/nestedList/type';
+import type { INestedListConfig } from '@components/organisms/nestedList/types';
 import {
   useCUDDataMutation,
   useGetData,
 } from '@services/base';
-import {
-  getChangedFields,
-  showSuccessToast,
-} from '@utils/core';
+import { getChangedFields } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 interface PlaceDefinitionFormProps<T> {
   config: INestedListConfig;
@@ -34,7 +32,7 @@ interface PlaceDefinitionFormProps<T> {
   id: number | null;
   level: number;
   onClose: () => void;
-  onGetDefault?:(e)=>void;
+  onGetDefault?: (e) => void;
 }
 
 const onlyNumbers = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -60,7 +58,7 @@ export const PlaceDefinitionForm = <T, K>({
   fatherId,
   onClose,
   config,
-  onGetDefault
+  onGetDefault,
 }: PlaceDefinitionFormProps<T>) => {
   const t = useTranslations();
 

@@ -13,15 +13,15 @@ import {
 } from '@components/atoms/iconComponents';
 import ExpandedButton from '@components/molecules/expandedButton';
 import { useNavigatePage } from '@hooks/custom';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import PanelList from '@layout/baseLayout/desktop/actionBar/panelList';
-import { useAppSelector } from '@redux/index';
 
 export const InventoryVoucherToolbar = () => {
   const t = useTranslations();
   const { activePage, lang,match } = useAppSelector(
     (state) => ({
       lang: state.withPersist.config.lang,
-      activePage: state.withPersist.pages.find(
+      activePage: state.withPersist.pages?.find(
         (item) => item.isActive === true
       ),
      match : state.withPersist.config.initMatch

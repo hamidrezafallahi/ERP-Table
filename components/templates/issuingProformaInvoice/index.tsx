@@ -1,12 +1,18 @@
 "use client";
 
-import { MainInfoCard } from "@components/molecules/mainInfoCard";
-import { useAppSelector } from "@redux/index";
-import { shallowEqual, useDispatch } from "react-redux";
-import { documentInfoConfig } from "./config";
-import { useEffect } from "react";
-import { addNewPage } from "@slice/pages";
-import { PageTypeEnum } from "@type/enum";
+import { useEffect } from 'react';
+
+import {
+  shallowEqual,
+  useDispatch,
+} from 'react-redux';
+
+import { MainInfoCard } from '@components/molecules/mainInfoCard';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { addNewPage } from '@slice/pages';
+import { PageTypeEnum } from '@type/enum';
+
+import { documentInfoConfig } from './config';
 
 export default function IssuingProformaInvoice() {
   const dispatch = useDispatch();

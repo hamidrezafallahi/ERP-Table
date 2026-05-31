@@ -9,7 +9,7 @@ import {
 
 import { WarningBoxIcon } from '@components/atoms/iconComponents';
 import Title from '@components/atoms/Title';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { addNewPage } from '@slice/pages';
 import { PageTypeEnum } from '@type/enum';
 

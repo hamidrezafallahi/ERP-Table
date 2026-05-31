@@ -1,60 +1,45 @@
 "use client";
-import { useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+} from 'react';
 
-import { Tree, TreeProps } from "antd";
-import { ItemType } from "antd/es/menu/interface";
-import DOMPurify from "dompurify";
-import { useTranslations } from "next-intl";
-import { usePathname } from "next/navigation";
-import { shallowEqual } from "react-redux";
+import { TreeProps } from 'antd';
+import { ItemType } from 'antd/es/menu/interface';
+import DOMPurify from 'dompurify';
+import { useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
+import { shallowEqual } from 'react-redux';
 
 import {
   CustomButton,
   CustomDropdownButton,
-  CustomModal,
-  CustomSpin,
-  CustomSwitch,
   CustomTooltip,
-} from "@components/atoms/defaultElements";
-import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
-import InputText from "@components/atoms/defaultElements/inputText";
+} from '@components/atoms/defaultElements';
 import {
   AddChild,
-  AddCircle,
-  CloseCircle,
   DownChevron,
-  Edit,
-  HeadOfAccountsIcon,
-  Link,
-  Magnifier,
-  NoData,
   Settings,
-  TrashBin,
-} from "@components/atoms/iconComponents";
-import Confirmation from "@components/molecules/confirmation";
-import {
-  NestedListForm,
-  NestedListToolbar,
-} from "@components/molecules/nestedList";
-import { PlaceDefinitionForm } from "@components/molecules/placeDefinitionForm";
-import RenderStatus from "@components/molecules/renderStatus";
-import { useDarkMode } from "@hooks/custom";
-import Uploader from "@layout/baseLayout/desktop/actionBar/panelForm/uploader";
-import { useAppSelector } from "@redux/index";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import { type IBaseDto, PendingStatusEnum } from "@services/base/type";
-import type { IToolbarMenu } from "@type/toolbar";
+} from '@components/atoms/iconComponents';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useDarkMode } from '@hooks/custom/useDarkMode';
+import { useGetData } from '@services/base';
+import { type IBaseDto } from '@services/base/type';
 import {
   findItemInNestedData,
-  findNestedLevel,
   getColoredIcon,
-  showSuccessToast,
-} from "@utils/core";
+} from '@utils/core';
 
-import { CustomerGroupCredit } from "@components/molecules/customerGroupCredit";
-import DynamicModal from "../dynamicModal";
-import { ActionLabelsEnum } from "../list/enum";
-import type { IProps } from "./type";
+import { useNestedListLogic } from './hooks/useNestedListLogic';
+import NestedListModals from './nestedListModals';
+import NestedListTree from './nestedListTree';
+import { TreeTitle } from './treeTitle';
+import type { IProps } from './types';
+import {
+  getAllKeys,
+  handleFilterTreeData,
+} from './utils';
 
 export default function NestedList<T extends IBaseDto, K>({
   config,
@@ -79,7 +64,6 @@ export default function NestedList<T extends IBaseDto, K>({
 
   const {
     getUrl,
-    deleteUrl,
     repoViewId,
     uniqueKey,
     displayKey,
@@ -88,141 +72,108 @@ export default function NestedList<T extends IBaseDto, K>({
     fatherKey,
     levelKey,
     tooltips,
-    showUploadAction = false,
   } = config;
 
-  const { data, isFetching, refetch } = useGetData<T[], K>({
+  const { data, isFetching, refetch, isLoading } = useGetData<T[], K>({
     url: getUrl,
     body: {
       RepoViewId: repoViewId,
     },
   });
-  const [trigger, { isLoading: triggerIsLoading }] = useCUDDataMutation();
-  const [title, setTitle] = useState<string | null>(null);
-  const [isDeleteDrawerVisible, setIsDeleteDrawerVisible] = useState(false);
-  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false);
-  const [attachmentModalDesc, setAttachmentModalDesc] = useState(
-    t("sidebar.drag"),
-  );
-  const [isDynamicModalOpen, setIsDynamicModalOpen] = useState(false);
-  const [isCustomerGroupCreditModalOpen, setIsCustomerGroupCreditModalOpen] =
-    useState(false);
-  const [dynamicAction, setDynamicAction] = useState<{
-    icon: string;
-    label: string;
-    actionConfig: IToolbarMenu;
-  }>();
-  const [id, setId] = useState<number>(null);
-  const [fatherId, setFatherId] = useState<number>(null);
-  const [level, setLevel] = useState<number>(null);
-  const [draggedKey, setDraggedKey] = useState<number | string | null>(null);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [expandedKeys, setExpandedKeys] = useState<number[]>([]);
+  const {
+    selection,
+    ui,
+    modals,
+    setSelection,
+    setUi,
+    setModals,
+    setDynamicAction,
+    actions,
+    triggerIsLoading,
+    attachmentDesc,
+    setAttachmentDesc,
+  } = useNestedListLogic(config, titleKey, data, refetch, match);
 
-  const repoId = initPage?.RepoId;
   const parts = pathname.split("/").filter(Boolean);
   const systemName = parts[1];
   const repoName = parts[2]?.replace(/List$/, "");
+  const repoId = initPage?.RepoId;
 
-  const switcherIcon = (nodeProps) => (
-    <>
-      {nodeProps?.expanded ? (
-        <span className={`custom-switcher-icon ${"rotate-180"} h-full `}>
-          <DownChevron />
-        </span>
-      ) : (
-        <span className="custom-switcher-icon">
-          <DownChevron />
-        </span>
-      )}
-    </>
+  const switcherIcon = useCallback(
+    (nodeProps) => (
+      <>
+        {nodeProps?.expanded ? (
+          <span className={`custom-switcher-icon ${"rotate-180"} h-full `}>
+            <DownChevron />
+          </span>
+        ) : (
+          <span className="custom-switcher-icon">
+            <DownChevron />
+          </span>
+        )}
+      </>
+    ),
+    [],
   );
 
-  const findCorrectTooltip = (mode: "add" | "addChild", level?: number) => {
-    if (!tooltips || !level)
-      return mode === "add" ? t("general.add") : t("general.addChild");
-    switch (mode) {
-      case "add":
-        if (level === 1) {
-          return `${t("general.add")} ${tooltips.level1}`;
-        } else if (level === 2) {
-          return `${t("general.add")} ${tooltips.level2}`;
-        } else return `${t("general.add")} ${tooltips.level3}`;
+  const findCorrectTooltip = useCallback(
+    (mode: "add" | "addChild", level?: number) => {
+      if (!tooltips || !level)
+        return mode === "add" ? t("general.add") : t("general.addChild");
+      switch (mode) {
+        case "add":
+          if (level === 1) {
+            return `${t("general.add")} ${tooltips.level1}`;
+          } else if (level === 2) {
+            return `${t("general.add")} ${tooltips.level2}`;
+          } else return `${t("general.add")} ${tooltips.level3}`;
+        case "addChild":
+          if (level === 1) {
+            return `${t("general.add")} ${tooltips.level2}`;
+          } else if (level === 2) {
+            return `${t("general.add")} ${tooltips.level3}`;
+          } else return t("general.addChild");
 
-      case "addChild":
-        if (level === 1) {
-          return `${t("general.add")} ${tooltips.level2}`;
-        } else if (level === 2) {
-          return `${t("general.add")} ${tooltips.level3}`;
-        } else return t("general.addChild");
-
-      default:
-        return null;
-    }
-  };
-
-  const renderAddChildAction = (item: T) => {
-    const condition = addChildCondition ? addChildCondition(item) : true;
-    if (!condition) return null;
-    return (
-      <CustomTooltip title={findCorrectTooltip("addChild", item[levelKey])}>
-        <CustomButton
-          type="link"
-          icon={
-            <AddChild
-              config={
-                !match ? { width: 20, height: 18 } : { width: 16, height: 16 }
-              }
-            />
-          }
-          onClick={() => {
-            handleAddAction(item[uniqueKey], item[fatherKey], "addChild");
-          }}
-          style={{ padding: 0 }}
-        />
-      </CustomTooltip>
-    );
-  };
-
-  const getAllKeys = (data: T[]) => {
-    const keys = [];
-    const traverse = (nodes) => {
-      nodes.forEach((node) => {
-        keys.push(node.key);
-        if (node.children) {
-          traverse(node.children);
-        }
-      });
-    };
-    traverse(data);
-    return keys;
-  };
-
-  const handleAction = async (action: IToolbarMenu) => {
-    try {
-      setDynamicAction({
-        icon: action.Icon as string,
-        label: action.MenuDesc,
-        actionConfig: action,
-      });
-
-      switch (action.MenuDesc) {
-        case ActionLabelsEnum.CustomerGroupCredit as string:
-          setIsCustomerGroupCreditModalOpen(true);
-          break;
         default:
-          setIsDynamicModalOpen(true);
-          break;
+          return null;
       }
-    } catch (error) {
-      null;
-    }
-  };
+    },
+    [tooltips],
+  );
 
-  const renderCustomAction = (item: T) => {
+  const renderAddChildAction = useCallback(
+    (item: T) => {
+      const condition = addChildCondition ? addChildCondition(item) : true;
+      if (!condition) return null;
+      return (
+        <CustomTooltip title={findCorrectTooltip("addChild", item[levelKey])}>
+          <CustomButton
+            type="link"
+            icon={
+              <AddChild
+                config={
+                  !match ? { width: 20, height: 18 } : { width: 16, height: 16 }
+                }
+              />
+            }
+            onClick={(e) => {
+              e.stopPropagation();
+              actions.handleAddAction(
+                item[config.uniqueKey],
+                item[config.fatherKey],
+                "addChild",
+              );
+            }}
+            style={{ padding: 0 }}
+          />
+        </CustomTooltip>
+      );
+    },
+    [addChildCondition, findCorrectTooltip, levelKey, actions.handleAddAction],
+  );
+
+  const renderCustomAction = useCallback((item: T) => {
     const condition = addChildCondition ? addChildCondition(item) : true;
     if (!condition) return null;
     const settingMenuItems: ItemType[] =
@@ -232,9 +183,10 @@ export default function NestedList<T extends IBaseDto, K>({
             label: (
               <span
                 className="flex items-center gap-3 text-sm"
-                onClick={() => {
-                  setId(item[uniqueKey]);
-                  handleAction(menuItem);
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelection((prev) => ({ ...prev, id: item[uniqueKey] }));
+                  actions.handleAction(menuItem);
                 }}
               >
                 {typeof menuItem.Icon === "string" && (
@@ -275,179 +227,40 @@ export default function NestedList<T extends IBaseDto, K>({
         </CustomTooltip>
       </>
     );
-  };
+  }, []);
 
   const transformDataToTree = (data: T[]) => {
     return data?.map((item) => {
-      const displayDesc = item?.[displayKey]
-        ? item?.[displayKey]
-        : item[uniqueKey];
-      const isPending =
-        item?.PendingStatusId === PendingStatusEnum.Pending1 ||
-        item?.PendingStatusId === PendingStatusEnum.Pending2 ||
-        item?.PendingStatusId === PendingStatusEnum.Pending3;
-      const isActive = withoutActivation ? true : item.Inactive ? false : true;
       return {
         key: item[uniqueKey],
-        name: `${displayDesc} - ${item[descriptionKey]}`,
+        name: `${item[displayKey] || item[uniqueKey]} - ${item[descriptionKey]}`,
         title: (
-          <div
-            className={`${
-              match
-                ? "flex flex-wrap items-center gap-2 p-2"
-                : "flex flex-col gap-2 p-2 w-full"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span
-                onClick={() => handleDeselect()}
-                className={`${
-                  id === item[uniqueKey] && "inline-flex font-bold"
-                } ${!isActive && "text-gray-gray7"}`}
-              >
-                {displayDesc} - {item[descriptionKey]}
-              </span>
-              {!!item?.PendingStatusId && (
-                <RenderStatus
-                  id={item[uniqueKey]}
-                  pendingStatusId={item?.PendingStatusId}
-                  pendingMessage={item?.PendingMessage}
-                  isMobile={!match ? true : false}
-                />
-              )}
-            </div>
-            {id === item[uniqueKey] && !isPending && (
-              <div className="flex items-center gap-3">
-                {isActive && (
-                  <CustomTooltip
-                    title={findCorrectTooltip("add", item[levelKey])}
-                  >
-                    <CustomButton
-                      type="link"
-                      icon={
-                        <AddCircle
-                          config={
-                            !match
-                              ? {
-                                  width: 20,
-                                  height: 20,
-                                }
-                              : {
-                                  width: 16,
-                                  height: 16,
-                                }
-                          }
-                        />
-                      }
-                      onClick={() => {
-                        handleAddAction(
-                          item[uniqueKey],
-                          item[fatherKey],
-                          "addSide",
-                        );
-                      }}
-                      style={{ padding: 0 }}
-                    />
-                  </CustomTooltip>
-                )}
-                {isActive && renderAddChildAction(item)}
-                {isActive &&
-                  settingItems &&
-                  settingItems?.length > 0 &&
-                  renderCustomAction(item)}
-
-                {isActive && customAction && customAction(item)}
-
-                {isActive && (
-                  <CustomTooltip title={t("general.update")}>
-                    <CustomButton
-                      type="link"
-                      icon={
-                        <Edit
-                          config={
-                            !match
-                              ? {
-                                  width: 18,
-                                  height: 18,
-                                }
-                              : {
-                                  width: 16,
-                                  height: 16,
-                                }
-                          }
-                        />
-                      }
-                      onClick={() => {
-                        handleEditAction(item[uniqueKey]);
-                      }}
-                    />
-                  </CustomTooltip>
-                )}
-                {isActive && showUploadAction && (
-                  <CustomButton
-                    type="text"
-                    className="flex justify-between hover:!bg-transparent p-0 w-full"
-                    onClick={() => setIsAttachmentModalOpen(true)}
-                  >
-                    <Link
-                      config={
-                        !match
-                          ? {
-                              width: 22,
-                              height: 22,
-                            }
-                          : {
-                              width: 20,
-                              height: 20,
-                            }
-                      }
-                    />
-                  </CustomButton>
-                )}
-                {isActive && (
-                  <CustomTooltip title={t("general.delete")}>
-                    <CustomButton
-                      type="link"
-                      icon={
-                        <TrashBin
-                          config={
-                            !match
-                              ? {
-                                  width: 18,
-                                  height: 18,
-                                }
-                              : {
-                                  width: 16,
-                                  height: 16,
-                                }
-                          }
-                        />
-                      }
-                      onClick={() => handleDeleteAction(item[uniqueKey])}
-                    />
-                  </CustomTooltip>
-                )}
-
-                {!withoutActivation && conditionalActivation(item) && (
-                  <CustomTooltip
-                    title={
-                      item.Inactive
-                        ? t("general.notActive")
-                        : t("general.active")
-                    }
-                  >
-                    <CustomSwitch
-                      config={{
-                        url: `/api/${systemName}/inActive/${repoName}`,
-                        id: item[uniqueKey],
-                      }}
-                      defaultChecked={item.Inactive ? false : true}
-                    />
-                  </CustomTooltip>
-                )}
-              </div>
-            )}
-          </div>
+          <TreeTitle
+            item={item}
+            selectedId={selection.selectedId}
+            config={config}
+            systemName={systemName}
+            repoName={repoName}
+            renderAddChildAction={renderAddChildAction}
+            renderCustomAction={renderCustomAction}
+            handlers={{
+              findTooltip: findCorrectTooltip,
+              onAdd: () =>
+                actions.handleAddAction(
+                  item[uniqueKey],
+                  item[fatherKey],
+                  "addSide",
+                ),
+              onEdit: () => actions.handleEditAction(item),
+              onDelete: () => actions.handleDeleteAction(item[uniqueKey]),
+              onUpload: () =>
+                setModals((prev) => ({ ...prev, attachment: true })),
+            }}
+            customAction={customAction}
+            setStates={{ setSelection, setUi, setModals, setDynamicAction }}
+            conditionalActivation={conditionalActivation}
+            withoutActivation={withoutActivation}
+          />
         ),
         children:
           item[nestedKey] && item[nestedKey].length > 0
@@ -456,145 +269,69 @@ export default function NestedList<T extends IBaseDto, K>({
       };
     });
   };
-  const transformedTreeData = transformDataToTree(data?.Data || []);
-
-  const handleFilterTreeData = (data, searchTerm) => {
-    if (!searchTerm) return data;
-
-    return data
-      .map((item) => {
-        const title = item.name?.toLowerCase() || "";
-        const isMatch = title.includes(searchTerm.toLowerCase());
-
-        const filteredChildren = handleFilterTreeData(
-          item.children || [],
-          searchTerm,
-        );
-
-        if (isMatch) {
-          return {
-            ...item,
-            children: item.children?.length > 0 ? item.children : undefined,
-          };
-        }
-
-        if (filteredChildren.length > 0) {
-          return {
-            ...item,
-            children: filteredChildren,
-          };
-        }
-
-        return null;
-      })
-      .filter(Boolean);
-  };
+  const transformedTreeData = useMemo(
+    () => transformDataToTree(data?.Data ?? []),
+    [data?.Data, selection.selectedId, mode],
+  );
 
   const filteredTreeData = handleFilterTreeData(
     transformedTreeData,
-    searchTerm,
+    ui.searchTerm,
   );
 
   useEffect(() => {
-    if (!searchTerm) return;
-
+    if (!ui.searchTerm) return;
     const keysToExpand = getAllKeys(filteredTreeData);
-
-    setExpandedKeys((prev) => {
+    setUi((prev) => {
       if (
-        prev.length === keysToExpand.length &&
-        prev.every((key, index) => key === keysToExpand[index])
+        prev.expandedKeys.length === keysToExpand.length &&
+        prev.expandedKeys.every((key, index) => key === keysToExpand[index])
       ) {
         return prev;
       }
-
-      return keysToExpand;
+      return {
+        ...prev,
+        expandedKeys: keysToExpand,
+      };
     });
-  }, [searchTerm, filteredTreeData]);
+  }, [ui.searchTerm, filteredTreeData]);
 
   const expandAll = () => {
     const keysToExpand = getAllKeys(filteredTreeData);
-    setExpandedKeys(keysToExpand);
+    setUi((prev) => ({
+      ...prev,
+      expandedKeys: keysToExpand,
+    }));
   };
   const collapseAll = () => {
-    setExpandedKeys([]);
+    setUi((prev) => ({
+      ...prev,
+      expandedKeys: [],
+    }));
   };
   const onExpand = (keys: number[]) => {
-    setExpandedKeys(keys);
+    setUi((prev) => ({
+      ...prev,
+      expandedKeys: keys,
+    }));
   };
   const handleSelect = (selectedKeys: number[]) => {
     if (selectedKeys.length > 0) {
-      const isSelected = selectedKeys[0] === id;
-      setId(isSelected ? null : selectedKeys[0]);
-    }
-  };
-  const handleDeselect = () => {
-    setId(null);
-    setFatherId(null);
-    setLevel(null);
-  };
+      const newId = selectedKeys[0];
+      const isAlreadySelected = selection.selectedId === newId;
 
-  const handleAddAction = (
-    id: number,
-    fatherId: number,
-    type: "addSide" | "addChild" | "firstItem",
-  ) => {
-    if (type === "firstItem") {
-      setFatherId(null);
-      setId(null);
-      setLevel(1);
-    } else if (type === "addChild") {
-      const level = findNestedLevel(data?.Data, id, {
-        idKey: uniqueKey,
-        childrenKey: nestedKey,
-      });
-      setFatherId(id);
-      setId(null);
-      setLevel(level + 1);
+      setSelection((prev) => ({
+        ...prev,
+        selectedId: isAlreadySelected ? null : newId,
+        id: isAlreadySelected ? null : newId,
+      }));
     } else {
-      const level = findNestedLevel(data?.Data, id, {
-        idKey: uniqueKey,
-        childrenKey: nestedKey,
-      });
-      setFatherId(fatherId);
-      setId(null);
-      setLevel(level);
-    }
-    setIsFormModalOpen(true);
-  };
-  const handleEditAction = (id: number) => {
-    const level = findNestedLevel(data.Data, id, {
-      idKey: uniqueKey,
-      childrenKey: nestedKey,
-    });
-    setId(id);
-    setLevel(level);
-    setFatherId(null);
-    setIsFormModalOpen(true);
-  };
-  const handleDeleteAction = (id: number) => {
-    setId(id);
-    if (match) {
-      setIsDeleteModalVisible(true);
-    } else {
-      setIsDeleteDrawerVisible(true);
-    }
-  };
-  const handleDeleteConfirm = async () => {
-    try {
-      const deleteResult = await trigger({
-        url: deleteUrl,
-        body: { Id: id },
-      }).unwrap();
-
-      if (deleteResult.DeleteResults[0].IsDelete === true) {
-        showSuccessToast(t("toast.successTitle"));
-        setId(null);
-      }
-      setIsDeleteModalVisible(false);
-      setIsDeleteDrawerVisible(false);
-    } catch (error) {
-      null;
+      // اگر سلکشن برداشته شد
+      setSelection((prev) => ({
+        ...prev,
+        selectedId: null,
+        id: null,
+      }));
     }
   };
 
@@ -608,286 +345,57 @@ export default function NestedList<T extends IBaseDto, K>({
         ]
       : null;
 
-    await handleDropAction(dragKey, newFatherId);
-    setDraggedKey(null);
+    await actions.handleDropAction(dragKey, newFatherId);
+    setUi((prev) => ({ ...prev, draggedKey: null }));
   };
 
   const handleWhiteSpaceDrop = async () => {
-    if (draggedKey) {
-      await handleDropAction(draggedKey, null);
-      setDraggedKey(null);
-    }
-  };
-
-  const handleDropAction = async (
-    dragKey: number | string,
-    newFatherId: number | null,
-  ) => {
-    try {
-      const triggerFormResponse = await trigger({
-        url: config.updateUrl,
-        body: {
-          [fatherKey]: newFatherId,
-          [uniqueKey]: dragKey,
-          ChangeFields: [`${fatherKey}`],
-        },
-      }).unwrap();
-
-      if (triggerFormResponse?.Result !== "Failed") {
-        showSuccessToast(t("toast.successTitle"));
-        refetch();
-      }
-    } catch (error) {
-      null;
+    if (ui.draggedKey) {
+      await actions.handleDropAction(ui.draggedKey, null);
+      setUi((prev) => ({ ...prev, draggedKey: null }));
     }
   };
 
   return (
     <>
-      <div className={`${match && "relative"} w-full flex flex-col gap-2 p-2`}>
-        <NestedListToolbar
-          expandAll={expandAll}
-          collapseAll={collapseAll}
-          refetch={refetch}
-          handleAddFirstItem={() => handleAddAction(null, null, "firstItem")}
-        />
-        <div className="flex flex-col gap-2 w-full h-[calc(100dvh-180px)] overflow-y-auto">
-          <InputText
-            placeholder={t("general.search")}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ marginBottom: 10 }}
-            prefix={<Magnifier />}
-            allowClear={{
-              clearIcon: <CloseCircle />,
-            }}
-            className="flex items-center !bg-gray-gray5 rounded w-full text-xs"
-          />
-          <div
-            className="hidden-show-scrollBar h-[540px] overflow-scroll"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault();
-              if (draggedKey) {
-                handleWhiteSpaceDrop();
-              }
-            }}
-          >
-            {isFetching ? (
-              <div className="flex items-center w-full h-[400px]">
-                <CustomSpin className="w-full" size="large" />
-              </div>
-            ) : filteredTreeData?.length > 0 ? (
-              <Tree
-                className="draggable-tree"
-                showLine={{ showLeafIcon: false }}
-                selectedKeys={id ? [id] : []}
-                onSelect={handleSelect}
-                treeData={filteredTreeData}
-                switcherIcon={switcherIcon}
-                expandedKeys={expandedKeys}
-                onExpand={onExpand}
-                draggable
-                onDragStart={(info) => {
-                  setDraggedKey(info.node.key as number | string);
-                }}
-                onDrop={onDrop}
-              />
-            ) : (
-              <div className="flex flex-col justify-center items-center gap-8 m-28">
-                <NoData />
-                <span className="text-[18px] text-gray-gray9">
-                  {t("general.noData")}
-                </span>
-
-                <CustomButton
-                  type="text"
-                  className="bg-black-black8 hover:bg-white px-8 border hover:border-black-black8 rounded text-white disabled:text-gray-gray6 text-xs"
-                  onClick={() => handleAddAction(null, null, "firstItem")}
-                >
-                  {t("general.addNew")}
-                </CustomButton>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      {isFormModalOpen && (
-        <CustomModal
-          contentClassName={`  ${match ? "!min-w-[520px] h-full" : ""}`}
-          headerName={
-            id ? (
-              <div className="flex flex-col justify-between items-start">
-                <div className="flex items-center gap-1">
-                  <HeadOfAccountsIcon config={{ width: 18, height: 18 }} />
-                  <span className="font-bold text-gray-gray10 dark:text-white lg:text-lg">
-                    {t("general.update")}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  {title && (
-                    <span className="font-light text-gray-gray85 text-xs">
-                      {title}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ) : (
-              t("general.addNew")
-            )
-          }
-          closeModal={() => setIsFormModalOpen(false)}
-          isModalOpen={isFormModalOpen}
-          content={
-            config.formType === "placeDefinition" ? (
-              <PlaceDefinitionForm
-                config={config}
-                fatherId={fatherId}
-                id={id}
-                level={level}
-                onClose={() => setIsFormModalOpen(false)}
-                onGetDefault={(e) => {
-                  if (!titleKey) return;
-
-                  if (Array.isArray(titleKey)) {
-                    const combinedTitle = titleKey
-                      .map((key) => e?.[key])
-                      .filter(Boolean)
-                      .join(" - ");
-
-                    setTitle(combinedTitle || null);
-                  } else {
-                    setTitle(e?.[titleKey] ?? null);
-                  }
-                }}
-              />
-            ) : (
-              <NestedListForm
-                config={config}
-                fatherId={fatherId}
-                onGetDefault={(e) => {
-                  if (!titleKey) return;
-
-                  if (Array.isArray(titleKey)) {
-                    const combinedTitle = titleKey
-                      .map((key) => e?.[key])
-                      .filter(Boolean)
-                      .join(" - ");
-
-                    setTitle(combinedTitle || null);
-                  } else {
-                    setTitle(e?.[titleKey] ?? null);
-                  }
-                }}
-                id={id}
-                level={level}
-                onClose={() => setIsFormModalOpen(false)}
-              />
-            )
-          }
-        />
-      )}
-      {isAttachmentModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "!min-w-[520px] h-full" : ""}`}
-          headerName={t("sidebar.attachment")}
-          headerDescription={attachmentModalDesc}
-          closeModal={() => setIsAttachmentModalOpen(false)}
-          isModalOpen={isAttachmentModalOpen}
-          content={
-            <Uploader
-              setModalTitle={setAttachmentModalDesc}
-              RepoId={repoId}
-              RefId={id}
-              onlyAcceptImage
-            />
-          }
-        />
-      )}
-      <CustomDrawer
-        isOpen={isDeleteDrawerVisible}
-        onClose={() => setIsDeleteDrawerVisible(false)}
-        content={
-          <Confirmation
-            onLoading={triggerIsLoading}
-            itemsToConfirm={id}
-            onCancel={() => setIsDeleteDrawerVisible(false)}
-            onConfirm={handleDeleteConfirm}
-          />
+      <NestedListTree
+        match={match}
+        collapseAll={collapseAll}
+        expandAll={expandAll}
+        refetch={refetch}
+        handleAddFirstItem={() =>
+          actions.handleAddAction(null, null, "firstItem")
         }
+        handleWhiteSpaceDrop={handleWhiteSpaceDrop}
+        states={{ ui, selection }}
+        setStates={{ setUi }}
+        isFetching={isFetching}
+        filteredTreeData={filteredTreeData}
+        onDrop={onDrop}
+        handleAddAction={() => actions.handleAddAction(null, null, "firstItem")}
+        handleSelect={handleSelect}
+        onExpand={onExpand}
+        switcherIcon={switcherIcon}
       />
-
-      {isDeleteModalVisible && (
-        <CustomModal
-          centered
-          width={300}
-          disableTitle
-          closeModal={() => setIsDeleteModalVisible(false)}
-          isModalOpen={isDeleteModalVisible}
-          content={
-            <Confirmation
-              onLoading={triggerIsLoading}
-              itemsToConfirm={id}
-              onCancel={() => setIsDeleteModalVisible(false)}
-              onConfirm={handleDeleteConfirm}
-            />
-          }
-        />
-      )}
-      {isDynamicModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[520px] h-[470px] " : ""}`}
-          headerName={dynamicAction.label}
-          headerIcon={
-            <span
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(
-                  getColoredIcon(dynamicAction.icon, mode),
-                ),
-              }}
-            />
-          }
-          closeModal={() => setIsDynamicModalOpen(false)}
-          isModalOpen={isDynamicModalOpen}
-          content={
-            <DynamicModal
-              id={id}
-              sourceKey={"GoodsCategoryId"}
-              config={
-                JSON.parse(dynamicAction.actionConfig.Config)
-                // dynamicModalConfig?.find(
-                //   (item) => item.name === dynamicAction.label
-                // )?.config
-              }
-            />
-          }
-        />
-      )}
-      {isCustomerGroupCreditModalOpen && (
-        <CustomModal
-          contentClassName={`${match ? "w-[540px] h-[220px]" : ""}`}
-          headerName={dynamicAction.label}
-          headerIcon={
-            match && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getColoredIcon(dynamicAction.icon, mode),
-                }}
-                style={{ width: "18px", height: "17px" }}
-              />
-            )
-          }
-          closeModal={() => setIsCustomerGroupCreditModalOpen(false)}
-          isModalOpen={isCustomerGroupCreditModalOpen}
-          content={
-            <CustomerGroupCredit
-              id={id}
-              sourceKey={"CustomerGroupId"}
-              handleClose={() => setIsCustomerGroupCreditModalOpen(false)}
-            />
-          }
-        />
-      )}
+      <NestedListModals
+        states={{ modals }}
+        match={match}
+        data={{
+          id: selection.id,
+          fatherId: selection.fatherId,
+          level: selection.level,
+          title: selection.title,
+          titleKey: titleKey,
+          repoId: repoId,
+        }}
+        config={config}
+        loading={{ isLoading, triggerIsLoading }}
+        setStates={{ setModals, setSelection }}
+        attachmentDesc={attachmentDesc}
+        setAttachmentDesc={setAttachmentDesc}
+        handlers={{ handleDeleteConfirm: actions.handleDeleteConfirm }}
+        mode={mode}
+      />
     </>
   );
 }

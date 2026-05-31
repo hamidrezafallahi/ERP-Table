@@ -1,14 +1,33 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Form, Spin } from "antd";
-import { useTranslations } from "next-intl";
+import {
+  Form,
+  Spin,
+} from 'antd';
+import { useTranslations } from 'next-intl';
 
-import { CustomButton, CustomTooltip } from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { PlusOutline, SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation, useGetData } from "@services/base";
-import { IActParam, IRequest } from "@services/hr/actParam/type";
-import { showSuccessToast, transformDotNotationToNested } from "@utils/core";
+import {
+  CustomButton,
+  CustomTooltip,
+} from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
+import {
+  PlusOutline,
+  SpinIcon,
+} from '@components/atoms/iconComponents';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
+import {
+  IActParam,
+  IRequest,
+} from '@services/hr/actParam/type';
+import { transformDotNotationToNested } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 export const FormulaParameterForm = ({
   locale,
@@ -138,7 +157,7 @@ export const FormulaParameterForm = ({
         <div className="flex justify-end items-center gap-2">
           <CustomTooltip title={t("general.addNew")}>
             <span
-              className="px-2 py-[2.8px] bg-gray-gray3 rounded cursor-pointer"
+              className="bg-gray-gray3 px-2 py-[2.8px] rounded cursor-pointer"
               onClick={() => {
                 clearId();
                 form.resetFields();

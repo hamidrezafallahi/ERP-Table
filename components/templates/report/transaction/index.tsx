@@ -1,11 +1,14 @@
-import { useEffect } from 'react';
+import {
+  useEffect,
+  useState,
+} from 'react';
 
 import {
   shallowEqual,
   useDispatch,
 } from 'react-redux';
 
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { addNewPage } from '@slice/pages';
 import { PageTypeEnum } from '@type/enum';
 
@@ -16,28 +19,30 @@ import TransactionTable from './TransactionTable';
 
 function TransactionTemplate() {
   const dispatch = useDispatch();
+  const [ready, setReady] = useState(false);
+
   const { initPage, parentPage } = useAppSelector(
     (state) => ({
       initPage: state.withPersist.init,
-      parentPage: state.withPersist.pages.find(
-        (item) => item.pageId == state.withPersist.config.parentPageId
+      parentPage: state.withPersist.pages?.find(
+        (item) => item.pageId == state.withPersist.config.parentPageId,
       ),
     }),
-    shallowEqual
+    shallowEqual,
   );
 
   useEffect(() => {
     if (parentPage) {
       let selectedRow = null;
       if (
-        parentPage?.viewData?.selectedItems.length > 0 &&
+        parentPage?.viewData?.selectedItems?.length > 0 &&
         !!parentPage?.viewData?.selectedItems?.find(
-          (item) => item.Level == parentPage.viewData.Level
+          (item) => item.Level == parentPage.viewData.Level,
         )
       ) {
         selectedRow = {
           Level: parentPage?.viewData?.selectedItems?.find(
-            (item) => item.Level == parentPage.viewData.Level
+            (item) => item.Level == parentPage.viewData.Level,
           )?.Level,
           Ids: parentPage.viewData.selectedItems
             ?.find((item) => item.Level == parentPage.viewData.Level)
@@ -48,7 +53,6 @@ function TransactionTemplate() {
         ...parentPage.viewData,
         url: "/api/acc/select/repgardesh",
         RepoViewId: 10008,
-        FilterTypeIds: null,
         FilterIds: [
           ...(parentPage.viewData.FilterIds
             ? parentPage.viewData.FilterIds
@@ -67,23 +71,24 @@ function TransactionTemplate() {
           type: PageTypeEnum.Custom,
           RepoId: initPage.RepoId,
           SystemId: initPage.SystemId,
-          url: "/acc/report/transaction",
-          listUrl: "/acc/report/accounting",
+          url: "acc/report/transaction",
+          listUrl: "acc/report/accounting",
           viewData: temp,
-        })
+        }),
       );
+      setReady(true);
     }
   }, []);
 
   return (
     <div className="relative flex flex-col gap-2 h-full">
-      <div className={`absolute rtl:left-0 right-0 -top-[60px] flex gap-2`}>
+      <div className={`absolute end-0 -top-[60px] flex gap-2`}>
         <TransactionToolbar />
       </div>
       <div className="flex flex-col gap-1 px-3 w-full h-full">
         <Header />
         <Navbar active={false} />
-        <TransactionTable />
+        {ready && <TransactionTable />}
       </div>
     </div>
   );

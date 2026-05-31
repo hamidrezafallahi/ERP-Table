@@ -49,95 +49,92 @@ export class ChangeCellValueHandler {
   ): Promise<TableEvent[]> {
     const table = await this.repo.getById(command.store, command.tableKey);
     try {
+const rowId = new RowId(command.rowId);
+const columnId = new ColumnId(command.columnId);
+/* ---------- 1. schema existence ---------- */
+const schema = table.getColumnSchema(columnId);
+if (!schema) {
+  throw new DomainError(
+    'COLUMN_NOT_FOUND',
+    'Column does not exist',
+    { columnId: columnId.value }
+  );
+}
+/* ---------- 2. editable policy ---------- */
+if (
+  schema.editable === false
+) {
+  throw new DomainError(
+    'NOT_EDITABLE',
+    'Cell is not editable',
+    { rowId: rowId.value, columnId: columnId.value }
+  );
+}
 
-      const rowId = new RowId(command.rowId);
-      const columnId = new ColumnId(command.columnId);
-      /* ---------- 1. schema existence ---------- */
-      const schema = table.getColumnSchema(columnId);
-      if (!schema) {
-        throw new DomainError(
-          'COLUMN_NOT_FOUND',
-          'Column does not exist',
-          { columnId: columnId.value }
-        );
-      }
-
-      /* ---------- 2. editable policy ---------- */
-      if (
-        schema.editable === false
-      ) {
-        throw new DomainError(
-          'NOT_EDITABLE',
-          'Cell is not editable',
-          { rowId: rowId.value, columnId: columnId.value }
-        );
-      }
-
-
-      /* ---------- 3. permission policy ---------- */
-      if (
-        !this.permissionPolicy.canChangeCell({
-          actor,
-          rowId: command.rowId,
-          columnId: command.columnId,
-        })
-      ) {
-        throw new DomainError(
-          'FORBIDDEN',
-          'Actor is not allowed to change this cell',
-          {
-            actor,
-            rowId: rowId.value,
+/* ---------- 3. permission policy ---------- */
+if (
+  !this.permissionPolicy.canChangeCell({
+    actor,
+    rowId: command.rowId,
+    columnId: command.columnId,
+  })
+) {
+  throw new DomainError(
+    'FORBIDDEN',
+    'Actor is not allowed to change this cell',
+    {
+      actor,
+      rowId: rowId.value,
             columnId: columnId.value,
           }
         );
       }
-
-      /* ---------- 4. type validation ---------- */
+      
+     /* ---------- 4. type validation ---------- */
       const validated = this.validateCellValue(
         schema.renderType,
         command.newValue
       );
-
+      
       // if (!validated.ok) {
-      //   throw new DomainError(
-      //     'INVALID_VALUE',
-      //     validated.error.message,
-      //     validated.error.details
-      //   );
-      // }
-
-      /* ---------- 5. domain mutation ---------- */
-      const domainEvent = table.changeCell(
-        rowId,
-        columnId,
-        new CellValue(validated.value)
-      );
-      table.changeDisplay(
-        rowId,
-        columnId,
-        new CellValue(validated.value)
-      );
-
-      if (!domainEvent) {
-        throw new DomainError(
-          'CELL_NOT_FOUND',
-          'Cell not found or value not changed',
-          { rowId: rowId.value, columnId: columnId.value }
-        );
-      }
-
-      /* ---------- 6. application-level side effects ---------- */
-
-      if (this.dynamic) {
-        // Phase 2: PURE computation
-        await this.applyComputedColumns({
-          table,
-          rowId,
+        //   throw new DomainError(
+          //     'INVALID_VALUE',
+          //     validated.error.message,
+          //     validated.error.details
+          //   );
+          // }
+          
+          /* ---------- 5. domain mutation ---------- */
+          const domainEvent = table.changeCell(
+            rowId,
+            columnId,
+            new CellValue(validated.value)
+          );
+          table.changeDisplay(
+            rowId,
+            columnId,
+            new CellValue(validated.value)
+          );
+          
+          if (!domainEvent) {
+            throw new DomainError(
+              'CELL_NOT_FOUND',
+              'Cell not found or value not changed',
+              { rowId: rowId.value, columnId: columnId.value }
+            );
+          }
+          
+          /* ---------- 6. application-level side effects ---------- */
+          
+          if (this.dynamic) {
+            // Phase 2: PURE computation
+            await this.applyComputedColumns({
+              table,
+              rowId,
           changedColumnId: columnId,
           remoteApi: this.dynamic!.remoteApi,
         });
-
+        
         // Phase 3: remote resolution
         await this.applyRemoteVisibilityRules({
           table,
@@ -145,7 +142,7 @@ export class ChangeCellValueHandler {
           changedColumnId: columnId,
           newValue: command.newValue,
         });
-
+        
         // Phase 4: projection
         this.applyDynamicProjection({
           table,
@@ -156,14 +153,14 @@ export class ChangeCellValueHandler {
       }
       /* ---------- 7. RowState management ---------- */
       const state =
-        table
-          .getRows()
-          .find(r => r.id.value === rowId.value)
-          ?.getCells()
-          .get('RowState')
-          ?.getValue()
-          ?.value;
-
+      table
+      .getRows()
+      .find(r => r.id.value === rowId.value)
+      ?.getCells()
+      .get('RowState')
+      ?.getValue()
+      ?.value;
+      
       if (state === RowStateEnum.Unchanged) {
         table.changeCell(
           rowId,
@@ -381,42 +378,41 @@ export class ChangeCellValueHandler {
     }
   }
 
-  private validateCellValue(type: FieldType, value: unknown) {
-    if (type === 'text' || type === 'date') {
+private validateCellValue(type: FieldType, value: unknown) {
+  switch (type) {
+    case 'text':
+    case 'date':
       return typeof value === 'string'
         ? { ok: true as const, value }
-        : {
-          ok: false as const,
-          error: { message: 'Expected string', details: { value } },
-        };
-    }
-    if (type === 'static') {
-      return { ok: true as const, value }
-    }
+        : { ok: false as const, error: { message: 'Expected string', details: { value } } };
 
-    if (type === 'number' || type === 'price' || type === 'selectOption') {
-      // اضافه شدن چک برای undefined
+    case 'static':
+      return { ok: true as const, value };
+    case 'checkbox':
+       return typeof value === 'boolean'
+        ? { ok: true as const, value }
+        : { ok: false as const, error: { message: 'Expected boolean', details: { value } } };
+
+    case 'number':
+    case 'price':
+    case 'select':
+    case 'selectOption': {
       if (value === '' || value === undefined) {
         return { ok: true as const, value: value as any };
       }
-      const n =
-        typeof value === 'number'
-          ? value
-          : typeof value === 'string'
-            ? Number(value)
-            : NaN;
+      
+      const n = typeof value === 'number' ? value : Number(value);
+      
       return Number.isFinite(n)
         ? { ok: true as const, value: n }
-        : {
-          ok: false as const,
-          error: { message: 'Expected number', details: { value } },
-        };
+        : { ok: false as const, error: { message: 'Expected number', details: { value } } };
     }
-    return {
-      ok: false as const,
-      error: { message: 'Unsupported type', details: { type, value } },
-    };
+
+    default:
+      return { ok: false as const, error: { message: 'Unsupported type', details: { type, value } } };
   }
+}
+
   private applyDynamicProjection(input: {
     table: Table;
     rowId: RowId;
@@ -869,7 +865,6 @@ export class ApplyDynamicProjectionHandler {
           : typeof value === 'string'
             ? Number(value)
             : NaN;
-      console.log(n)
       return Number.isFinite(n)
         ? { ok: true as const, value: n }
         : {

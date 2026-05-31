@@ -1,17 +1,17 @@
-FROM 216.65.200.215:50001/samplenode:2.0
+FROM node:20-bookworm-slim
 
 WORKDIR /app
 
-COPY yarn.lock .npmrc package.json ./
-
-RUN yarn install && yarn cache clean
+COPY package.json package-lock.json .npmrc ./
 
 COPY . .
 
+RUN npm install
+
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 
-RUN yarn testing-build
+RUN npm run testing-build
 
 EXPOSE 3000
 
-CMD ["yarn", "testing-start"]
+CMD ["npm", "run", "testing-start"]

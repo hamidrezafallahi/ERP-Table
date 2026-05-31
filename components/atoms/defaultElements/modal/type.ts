@@ -11,5 +11,6 @@ export interface IProps extends ModalProps {
   withFullscreen?: boolean;
   isModalOpen: boolean;
   closeModal: () => void;
-  content: ReactNode;
+    content: ReactNode;
+  
 }

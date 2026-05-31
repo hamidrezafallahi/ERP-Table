@@ -10,7 +10,7 @@ import {
 } from 'react-redux';
 
 import { CustomButton } from '@components/atoms/defaultElements';
-import { useAppSelector } from '@redux/index';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setPageData } from '@slice/pages';
 import { ISelectOption } from '@type/elementType';
 

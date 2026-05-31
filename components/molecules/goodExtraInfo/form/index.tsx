@@ -1,26 +1,40 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Checkbox, Form, Spin } from "antd";
-import moment from "moment-jalaali";
-import { useTranslations } from "next-intl";
+import {
+  Checkbox,
+  Form,
+  Spin,
+} from 'antd';
+import moment from 'moment-jalaali';
+import { useTranslations } from 'next-intl';
 
 import {
   CustomButton,
   CustomTooltip,
   DynamicSelect,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { PlusOutline, SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation, useGetData } from "@services/base";
+} from '@components/atoms/defaultElements';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import InputText from '@components/atoms/defaultElements/inputText';
+import {
+  PlusOutline,
+  SpinIcon,
+} from '@components/atoms/iconComponents';
+import {
+  useCUDDataMutation,
+  useGetData,
+} from '@services/base';
 import type {
   IGoodExtraInfo,
   IGoodExtraInfoSelect,
   IRequest,
-} from "@services/com/goodExtraInfo/type";
-import type { IRequestConfig } from "@type/elementType";
-import { showSuccessToast, transformDotNotationToNested } from "@utils/core";
+} from '@services/com/goodExtraInfo/type';
+import type { IRequestConfig } from '@type/elementType';
+import { transformDotNotationToNested } from '@utils/core';
+import { showSuccessToast } from '@utils/toast';
 
 enum fieldType {
   text = 1,

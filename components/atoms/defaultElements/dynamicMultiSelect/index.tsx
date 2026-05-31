@@ -1,14 +1,17 @@
+import {
+  FC,
+  useEffect,
+  useState,
+} from 'react';
 
-import { FC, useEffect, useState } from "react";
+import { useTranslations } from 'next-intl';
 
-import { useTranslations } from "next-intl";
+import { DownChevron } from '@components/atoms/iconComponents';
+import { useGetData } from '@services/base';
+import type { ISelectOption } from '@type/elementType';
 
-import { DownChevron } from "@components/atoms/iconComponents";
-import { useGetData } from "@services/base";
-import type { ISelectOption } from "@type/elementType";
-
-import { CustomSelect } from "../select";
-import type { IProps } from "./type";
+import { CustomSelect } from '../select';
+import type { IProps } from './type';
 
 export const DynamicMultiSelect: FC<IProps> = ({
   dynamicValue,
@@ -89,7 +92,7 @@ export const DynamicMultiSelect: FC<IProps> = ({
         mode="multiple"
         virtual={false}
         style={{ width: "100%" }}
-        className="!bg-gray-gray3 dark:!bg-gray-gray10 !h-[42px] lg:!h-[2.125rem] !m-0 !p-1 [&>.ant-select-selector]:!p-0 rounded w-full h-fit"
+        className="!bg-gray-gray3 dark:!bg-gray-gray10 !m-0 !p-1 [&>.ant-select-selector]:!p-0 rounded w-full !h-[42px] lg:!h-[2.125rem]"
         options={options}
         optionFilterProp={"label"}
         onChange={props.onChange}

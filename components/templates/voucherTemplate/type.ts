@@ -1,13 +1,8 @@
-import {
-  Dispatch,
-  SetStateAction,
-} from 'react';
-
 import { FormInstance } from 'antd';
 
 export interface IProps {
-  form:FormInstance<any>;
-  setIsFormSubmitting:(boolean)=>void
+  form: FormInstance<any>;
+  setIsFormSubmitting: (boolean) => void
   caption: string;
   captionII?: string;
   listUrl: string;
@@ -19,19 +14,13 @@ export interface IProps {
   updateUrl: string;
   tableTitle: string;
   titleKey: string;
+  DefaultDetailRepoViewId:number
+  DefaultHeaderRepoViewId:number
+  formHeight:number
+  storeName:string
   pageIcon?: string;
-  conditionalActions?: {
-    conditionalProperty: string;
-    conditionallyAction?: string;
-  }[];
-  isModal?: boolean;
-  parentPageId?: string;
-  mutationSystemId?: number;
-  conditionalFields?: any[] | boolean;
-  setConditionalFields?: Dispatch<SetStateAction<any[]>>;
-  extraFunction?: (x: any) => void;
-  withImage?: boolean;
-}
+  handleSubmit?: () => void;
+ }
 
 export interface IRequestMeta {
   requestKey?: string;

@@ -1,14 +1,28 @@
-import { CustomButton, NewDatePicker } from "@components/atoms/defaultElements";
-import { SpinIcon } from "@components/atoms/iconComponents";
-import { useCUDDataMutation } from "@services/base";
-import { Form, Input, Spin } from "antd";
-import { useTranslations } from "next-intl";
-import { Dispatch, SetStateAction, useState } from "react";
-import InputText from "@components/atoms/defaultElements/inputText";
-import { DateValue } from "react-persian-range-picker";
-import { showSuccessToast } from "@utils/core";
-import { ActiveModal } from "@components/organisms/listToolbar/type";
-import { useDocumentMerge } from "./hooks";
+import {
+  Dispatch,
+  SetStateAction,
+  useState,
+} from 'react';
+
+import {
+  Form,
+  Input,
+  Spin,
+} from 'antd';
+import { useTranslations } from 'next-intl';
+import { DateValue } from 'react-persian-range-picker';
+
+import {
+  CustomButton,
+  NewDatePicker,
+} from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
+import { SpinIcon } from '@components/atoms/iconComponents';
+import { ActiveModal } from '@components/organisms/listToolbar/type';
+import { useCUDDataMutation } from '@services/base';
+import { showSuccessToast } from '@utils/toast';
+
+import { useDocumentMerge } from './hooks';
 
 interface DocumentMergeProps {
   refIds: number[];
@@ -61,11 +75,11 @@ export const DocumentMerge = (props: DocumentMergeProps) => {
       form={form}
       layout="vertical"
       onFinish={handleSubmit}
-      className="flex flex-col w-full gap-6 p-2"
+      className="flex flex-col gap-6 p-2 w-full"
     >
       <Form.Item
         name="MergeType"
-        className="flex flex-col w-full lg:col-span-12 !mb-0 !pb-0 text-xs"
+        className="flex flex-col lg:col-span-12 !mb-0 !pb-0 w-full text-xs"
       >
         <div className="flex justify-between items-center w-full">
           {radioOptions.map((item) => (
@@ -92,10 +106,10 @@ export const DocumentMerge = (props: DocumentMergeProps) => {
         <Form.Item
           label={""}
           name="VDate"
-          className="flex gap-2 items-center !mb-0 !pb-0 text-xs w-1/2"
+          className="flex items-center gap-2 !mb-0 !pb-0 w-1/2 text-xs"
         >
-          <div className="flex gap-2 items-center">
-            <span className="items-center font-normal text-gray-gray10 text-xs inline-flex flex-none w-auto">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex flex-none items-center w-auto font-normal text-gray-gray10 text-xs">
               {t("general.voucherDate")}:
             </span>
             {!allSameVoucherDate ? (
@@ -122,13 +136,13 @@ export const DocumentMerge = (props: DocumentMergeProps) => {
           <Form.Item
             label={""}
             name="VoucherDesc"
-            className="flex gap-2 items-center !mb-0 !pb-0 text-xs w-1/2"
+            className="flex items-center gap-2 !mb-0 !pb-0 w-1/2 text-xs"
           >
-            <div className="flex gap-2 items-center">
-              <span className="items-center font-normal text-gray-gray10 text-xs inline-flex flex-none w-auto">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex flex-none items-center w-auto font-normal text-gray-gray10 text-xs">
                 {t("general.voucherType")}:
               </span>
-              <div className="h-[38px] flex items-center px-3">
+              <div className="flex items-center px-3 h-[38px]">
                 {voucherTypeDesc}
               </div>
               <Form.Item name="VoucherType" hidden>
@@ -140,13 +154,13 @@ export const DocumentMerge = (props: DocumentMergeProps) => {
         <Form.Item
           label={""}
           name="VouchersCount"
-          className="flex gap-2 items-center !mb-0 !pb-0 text-xs w-1/2"
+          className="flex items-center gap-2 !mb-0 !pb-0 w-1/2 text-xs"
         >
-          <div className="flex gap-2 items-center">
-            <span className="items-center font-normal text-gray-gray10 text-xs inline-flex flex-none w-auto">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex flex-none items-center w-auto font-normal text-gray-gray10 text-xs">
               {t("general.vouchersCount")}:
             </span>
-            <div className="h-[38px] flex items-center px-3">
+            <div className="flex items-center px-3 h-[38px]">
               {vouchersCount}
             </div>
             <Form.Item name="VouchersCount" hidden>
@@ -157,17 +171,17 @@ export const DocumentMerge = (props: DocumentMergeProps) => {
         <Form.Item
           label=""
           name="VoucherDesc"
-          className="flex gap-2 items-center !mb-0 !pb-0 text-xs w-full documentsMerge"
+          className="flex items-center gap-2 !mb-0 !pb-0 w-full text-xs documentsMerge"
         >
-          <div className="flex gap-2 items-center w-full">
-            <span className="items-center font-normal text-gray-gray10 text-xs inline-flex flex-none w-auto">
+          <div className="flex items-center gap-2 w-full">
+            <span className="inline-flex flex-none items-center w-auto font-normal text-gray-gray10 text-xs">
               {t("general.caption")}:
             </span>
             <InputText className="w-full" />
           </div>
         </Form.Item>
       </div>
-      <div className="w-full flex justify-end">
+      <div className="flex justify-end w-full">
         <CustomButton
           type="text"
           htmlType="submit"

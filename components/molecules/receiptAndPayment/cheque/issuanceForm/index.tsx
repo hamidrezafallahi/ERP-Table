@@ -1,22 +1,39 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Form } from "antd";
-import { useTranslations } from "next-intl";
+import { Form } from 'antd';
+import { useTranslations } from 'next-intl';
+import { shallowEqual } from 'react-redux';
 
 import {
   CustomSpin,
   DynamicSelect,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
-import type { IAccount } from "@services/acc/account/type";
-import { useGetData } from "@services/base";
-import type { IRequest, IRpWay } from "@services/trh/rpWay/type";
-import type { IRequestConfig } from "@type/elementType";
+} from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
+import { useAppSelector } from '@hooks/custom/useAppSelector';
+import type { IAccount } from '@services/acc/account/type';
+import { useGetData } from '@services/base';
+import type {
+  IRequest,
+  IRpWay,
+} from '@services/trh/rpWay/type';
+import type { IRequestConfig } from '@type/elementType';
 
-import type { ICondition, IProps } from "./type";
+import type {
+  ICondition,
+  IProps,
+} from './type';
 
-export const IssuanceChequeForm = ({ activePage, form }: IProps) => {
+export const IssuanceChequeForm = ({ form, onSubmitCallback }: IProps) => {
+  const { activePage } = useAppSelector(
+    (state) => ({
+      activePage: state.withPersist.pages?.find((item) => item.isActive),
+    }),
+    shallowEqual,
+  );
   const t = useTranslations();
 
   const [condition, setCondition] = useState<ICondition>();
@@ -208,6 +225,7 @@ export const IssuanceChequeForm = ({ activePage, form }: IProps) => {
   return (
     <Form
       form={form}
+      onFinish={onSubmitCallback}
       name="receiptChequeForm"
       layout="vertical"
       className={`flex flex-col gap-2 lg:grid lg:grid-cols-4 lg:gap-3  max-h-[calc(100dvh-160px)] h-auto overflow-y-auto hidden-show-scrollBar`}
