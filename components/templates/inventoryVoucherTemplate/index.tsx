@@ -16,27 +16,19 @@ import { ERPTable } from '@components/organisms/erp-table';
 import { useERPGrid } from '@components/organisms/erp-table/ui/useERPGrid';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setPageData } from '@slice/pages';
+import { GridContainedPageProps } from '@type/elementType';
 
 import {
   columnConfig,
   formConfig,
 } from './config';
-import { IProps } from './type';
 
-export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
+export default function InventoryVoucherTemplate<T, K>({
+  ...props
+}: GridContainedPageProps) {
   const {
     form,
-    caption,
-    captionII,
-    listUrl,
-    pageIcon,
-    detailFieldKey,
-    headerFieldKey,
-    headerGetUrl,
-    detailGetUrl,
-    addUrl,
-    updateUrl,
-    setIsFormSubmitting,
+  
   } = props;
 
   const { activePage } = useAppSelector(
@@ -53,35 +45,16 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
   const VoucherHeaderId = activePage?.pageData?.find(
     (d) => d.name == "VoucherHeaderId",
   )?.value;
-  const titleKey = "VoucherNumber";
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const formHeight = 420;
   const colConfigs = useMemo(() => {
     return columnConfig(vti, internal, NeedReference, StockId, VoucherHeaderId);
   }, [vti, internal, NeedReference, StockId, VoucherHeaderId]);
-  const { pageReady, handleSubmit, setTableApi, tableApi, tableProps } =
+  const { pageReady, handleSubmit, setController, controller, tableProps } =
     useERPGrid({
-      headerGetUrl,
-      DefaultHeaderRepoViewId: 10011,
-      formConfig,
-      headerFieldKey,
-      detailGetUrl,
-      DefaultDetailRepoViewId: 70003,
-      detailFieldKey,
-      titleKey,
-      addUrl,
-      updateUrl,
-      listUrl,
-      caption,
-      pageIcon,
-      captionII,
-      storeName: "Voucher",
-      tableTitle: "اقلام سند",
+      ...props,
+       formConfig,
       columnConfig: colConfigs,
-      formHeight,
-      recordHeight: 40,
-      mobileRecordsPerPage: 100,
-      setIsFormSubmitting,
     });
   // const { data: renderUnitData } = useGetData<IPlaceConfig[], null>({
   //   url: `/api/mng/select/placeConfigValue`,
@@ -109,9 +82,11 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
   //   };
   // }, [tableApi]);
   useEffect(() => {
-    if (pageReady && vti) dispatch(setPageData({ name: "VoucherTypeId",value:vti,originalValue:vti }));
+    if (pageReady && vti)
+      dispatch(
+        setPageData({ name: "VoucherTypeId", value: vti, originalValue: vti }),
+      );
   }, [pageReady]);
-
   return (
     <div className="flex flex-col gap-10">
       <InventoryVoucherHeaderForm form={form} onSubmitCallback={handleSubmit} />
@@ -119,8 +94,8 @@ export default function InventoryVoucherTemplate<T, K>({ ...props }: IProps) {
         <ERPTable //<IMoreProps>
           {...tableProps}
           // moreDetailComponent={More}
-          onReady={(api) => {
-            setTableApi(api);
+          onReady={(controller) => {
+            setController(controller);
           }}
         />
       )}

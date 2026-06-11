@@ -1,7 +1,10 @@
 "use client";
-import { ReactNode, useEffect } from "react";
+import {
+  ReactNode,
+  useEffect,
+} from 'react';
 
-import { useFullScreen } from "@hooks/custom";
+import { useFullScreen } from '@hooks/custom/useFullScreen';
 
 export default function Shortcuts(props: { children: ReactNode }) {
   const { children } = props;

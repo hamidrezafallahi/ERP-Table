@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { CustomTooltip } from '@components/atoms/defaultElements';
 import {
+  CustomModal,
+  CustomTooltip,
+} from '@components/atoms/defaultElements';
+import {
+  ClipboardCheck,
   ClipboardIcon,
   CutIcon,
   GuaranteeReceive,
@@ -14,15 +18,21 @@ import {
 
 import { TableActions } from '../domain/value-objects';
 import { UITableController } from '../infrastructure/ui/UITableController';
+import MultiselectList from './multiSelectList';
+import { IMultiSelectConfig } from './type';
 
 interface GroupActionButtonsProps {
   controller: UITableController;
+  multiSelectConfig?: IMultiSelectConfig;
 }
 
 export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
   controller,
+  multiSelectConfig,
 }) => {
   const t = useTranslations();
+  const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
+
   const selectedRows = controller.getSelectedRows();
   const count = selectedRows ? Object.keys(selectedRows).length : 0;
   const table = controller.getViewState();
@@ -30,8 +40,7 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
   const handleAddRow = () => {
     void controller.dispatch({ type: "ADD_EMPTY_ROW" });
   };
- 
- 
+
   const handleSelectAllRows = () => {
     controller.dispatch({ type: "TOGGLE_ROW_SELECTED" });
   };
@@ -100,6 +109,34 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
           <TrashBin config={{ width: 18, height: 18 }} />
         </button>
       </CustomTooltip>
+      {multiSelectConfig && (
+        <>
+          <CustomTooltip title={t("general.chooseFromList")}>
+            <button
+              onClick={() => {
+                setModalIsOpen(true);
+              }}
+              className="flex justify-center items-center p-1 border rounded"
+            >
+              <ClipboardCheck config={{ width: 18, height: 18 }} />
+            </button>
+          </CustomTooltip>
+          <CustomModal
+            contentClassName={"w-[720px] !h-[480px]"}
+            headerName={t("general.chooseFromList")}
+            headerIcon={<ClipboardCheck config={{ width: 18, height: 18 }} />}
+            closeModal={() => setModalIsOpen(false)}
+            isModalOpen={modalIsOpen}
+            content={
+              <MultiselectList
+                controller={controller}
+                multiSelectConfig={multiSelectConfig}
+                handleCloseModal={()=>{setModalIsOpen(false)}}
+              />
+            }
+          />
+        </>
+      )}
       <CustomTooltip title={t("general.toggle")}>
         <button
           onClick={handleSelectAllRows}
@@ -109,9 +146,9 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
         </button>
       </CustomTooltip>
 
-        <span className="px-2 text-black-black6 text-xs">
-          {t("general.selected")} {count}
-        </span>
+      <span className="px-2 text-black-black6 text-xs">
+        {t("general.selected")} {count}
+      </span>
     </div>
   );
 };

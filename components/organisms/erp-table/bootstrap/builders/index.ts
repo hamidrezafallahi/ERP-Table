@@ -4,9 +4,11 @@ import {
   ApplyDynamicProjectionHandler,
   ChangeCellDisplayValueHandler,
   ChangeCellValueHandler,
+  SaveDescriptionHandler,
 } from '../../application/handlers/cellCommandsHandler';
 import {
   AddNewRowCommandHandler,
+  AddNewRowsCommandHandler,
   DeleteRowCommandHandler,
   DuplicateRowCommandHandler,
   ReorderRowCommandHandler,
@@ -14,6 +16,7 @@ import {
 import {
   ChangePageCommandHandler,
   ChangePageSizeCommandHandler,
+  ChangeTableTypeCommandHandler,
   ChangeUnitLevelHandler,
   DeleteTableCommandHandler,
   ResetTableCommandHandler,
@@ -89,13 +92,12 @@ export function buildColumns(
       minWidth: col.minWidth,
       style: col.style,
       popUpWidth: col.popUpWidth,
-      dynamicSelectFilterOption:col.dynamicSelectFilterOption,
+      dynamicSelectFilterOption: col.dynamicSelectFilterOption,
       labelValue: col.labelValue,
       enableDeleteButton: col.enableDeleteButton,
       enableExpandButton: col.enableExpandButton,
       enableMoveButton: col.enableMoveButton,
       enableOptionsButton: col.enableOptionsButton,
-
     };
     columns.set(schema.id, schema);
     columnMeta.set(schema.id, col);
@@ -110,32 +112,33 @@ export async function buildRows(
   repo: TableRepository,
   store: string,
   tableKey: string,
+  tableType: string,
   remoteApi: FetchRemoteApi
 ): Promise<{ rows: Map<number, Row>; table?: Table }> {
   let rowMap = new Map<number, Row>();
   // ---------- rows: ابتدا IndexedDB, fallback به ورودی ----------
-  if (await repo.exists(store, tableKey)) {
+  const exist = await repo.exists(store, tableKey)
+  if (exist) {
     const persistedTable = await repo.getById(store, tableKey);
     rowMap = new Map<number, Row>(
       persistedTable.getRows().map(r => [r.id.value, r])
     );
     return { rows: rowMap, table: persistedTable };
   } else {
-    const rows = inputRows && inputRows.length > 0 ? inputRows.sort((a, b) => a.id - b.id) : [{ id: ((1 + Math.random()) * 0x10000000000000000), RowNum: 1, values: { RowState: RowStateEnum.Added }, moreDetails: undefined }];
+    const rows = inputRows && inputRows.length > 0 ? inputRows.sort((a, b) => a.id - b.id) : [{ id: ((1 + Math.random()) * 0x10000000000000000), RowNum: 1, values: { RowState: RowStateEnum.Added }, moreDetails: undefined, rowType: tableType }];
     for (const [idx, r] of rows.entries()) {
       const rowId = new RowId(r.id);
       const cells = new Map<string, Cell>();
       for (const [colId, schema] of columns.entries()) {
         const meta = columnMeta.get(colId);
-        const incoming = r.values?.[colId];
+        const hasValue = Object.prototype.hasOwnProperty.call(r.values ?? {}, colId);
+        const incoming = hasValue ? (meta.returnValue?.(r.values, colId) ?? r.values?.[colId]) : null;
         const RowNum = r.values['RowNum'];
-        // مقدار اولیه
-        const description = r.values[colId.replace(/Id$/, '')]?.[colId.replace(/Id$/, 'Desc')]
-
+        const description = hasValue
+          ? (meta.returnDisplayValue?.(r.values, colId) ?? r.values[colId.replace(/Id$/, '')]?.[colId.replace(/Id$/, 'Desc')])
+          : undefined;
         let value = meta.fieldType === 'index' ? RowNum ?? idx + 1 : incoming ?? null;
         let display = meta.fieldType === 'index' ? RowNum ?? idx + 1 : description ?? incoming;
-
-        // اگر ستون computed داشت، مقدار async اش را await کن
         if (meta?.computed?.dependsOn) {
           value = await meta.computed.compute(r.values, remoteApi);
           display = value;
@@ -148,7 +151,7 @@ export async function buildRows(
             rowId,
             new ColumnId(colId),
             new CellValue(value),
-            new CellValue(value), // این تکراری است، اما در اولیه همین‌طور
+            new CellValue(value),
             new CellDisplay(display)
           )
         );
@@ -163,6 +166,8 @@ export async function buildRows(
           new Set(),
           r.moreDetails,
           visibilityCondition,
+          r.rowType,
+          false
         )
       );
     }
@@ -260,7 +265,9 @@ export function createTableAppService(
   const changeCellHandler = new ChangeCellValueHandler(repo, audit, permissionPolicy, { columnMeta, remoteApi });
   const applyDynamicProjection = new ApplyDynamicProjectionHandler(repo, audit, permissionPolicy, { columnMeta, remoteApi });
   const changeCellDisplayHandler = new ChangeCellDisplayValueHandler(repo, audit, permissionPolicy);
-  const addRowHandler = new AddNewRowCommandHandler(repo, audit, permissionPolicy);
+  const saveDescriptionHandler = new SaveDescriptionHandler(repo, audit, permissionPolicy);
+  const addNewRowHandler = new AddNewRowCommandHandler(repo, audit, permissionPolicy);
+  const addNewRowsHandler = new AddNewRowsCommandHandler(repo, audit, permissionPolicy);
   const duplicateRowHandler = new DuplicateRowCommandHandler(repo, audit, permissionPolicy);
   const deleteRowHandler = new DeleteRowCommandHandler(repo, audit, permissionPolicy);
   const deleteTableHandler = new DeleteTableCommandHandler(repo, audit, permissionPolicy);
@@ -269,17 +276,21 @@ export function createTableAppService(
   const unitLevelHandler = new ChangeUnitLevelHandler(repo, audit, { columnMeta, remoteApi });
   const setPageSize = new ChangePageSizeCommandHandler(repo, audit);
   const setPage = new ChangePageCommandHandler(repo, audit);
+  const changeTableType = new ChangeTableTypeCommandHandler(repo, audit);
 
   return new TableAppService(
     changeCellHandler,
     changeCellDisplayHandler,
-    addRowHandler,
+    saveDescriptionHandler,
+    addNewRowHandler,
+    addNewRowsHandler,
     duplicateRowHandler,
     deleteRowHandler,
     reorderRowHandler,
     unitLevelHandler,
     setPageSize,
     setPage,
+    changeTableType,
     deleteTableHandler,
     resetTableHandler,
     applyDynamicProjection

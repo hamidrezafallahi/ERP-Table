@@ -1,5 +1,5 @@
-import { IDetailColumnConfig } from "@services/generalType/type";
-import type { IFormFieldConfig } from "@type/elementType";
+import { IDetailColumnConfig } from '@components/organisms/erp-table';
+import type { IFormFieldConfig } from '@type/elementType';
 
 export const formConfig: IFormFieldConfig[] = [
   {
@@ -70,164 +70,234 @@ export const formConfig: IFormFieldConfig[] = [
 export const columnConfig: IDetailColumnConfig[] = [
   {
     fieldName: "index",
-    fieldCaption: `ردیف - عملیات`,
+    fieldCaption: " ردیف - عملیات",
     fieldType: "index",
     order: 1,
+    visibility: { kind: "always" },
   },
   {
     fieldName: "VoucherDate",
     fieldCaption: "تاریخ سند",
     fieldType: "date",
-    mobileRender: true,
+    visibility: { kind: "always" },
     order: 2,
   },
   {
     fieldName: "FishNumber",
     fieldCaption: "شماره فیش",
     fieldType: "text",
+    visibility: { kind: "always" },
     order: 3,
   },
-  // {
-  // fieldName: "",
-  // fieldCaption: "دستور پرداخت",
-  // fieldType: "selectOption",
-  // dynamicValue: {
-  //     endpoint: "/api/acc/select/tafsiliLevel4",
-  //   },
-  // },
-  // order: 5,
+  {
+    fieldName: "CashierId",
+    fieldCaption: "صندوقدار",
+    fieldType: "selectOption",
+    visibility: { kind: "always" },
+    dynamicSource: {
+      endpoint: "api/trh/Select/Cashier4SelectOption",
+      repoViewId: 140002,
+    },
+    order: 4,
+  },
+  {
+    fieldName: "TankhahdarId",
+    fieldCaption: "تنخواه دار",
+    fieldType: "selectOption",
+    visibility: { kind: "always" },
+    dynamicSource: {
+      endpoint: "api/trh/Select/TankhahDar4SelectOption",
+      repoViewId: 140002,
+    },
+    order: 5,
+  },
+  {
+    fieldName: "BankAccountId",
+    fieldCaption: "حساب بانکی",
+    fieldType: "selectOption",
+    visibility: { kind: "always" },
+    dynamicSource: {
+      endpoint: "api/trh/select/bankAccount4SelectOption",
+      repoViewId: 106081,
+    },
+    order: 6,
+  },
   {
     fieldName: "RpWayId",
     fieldCaption: "نحوه دریافت و پرداخت",
     fieldType: "selectOption",
-    dynamicValue: {
-      endpoint: "api/trh/select/rpWay4voucher",
-      repoViewId: null,
+    dynamicSource: { endpoint: "api/trh/select/rpWay4voucher" },
+    visibility: { kind: "always" },
+    resolveOn: {
+      fieldName: "RpWayId",
+      endpoint: "/api/trh/select/account",
+      buildParams: (row) => ({ RpWayId: Number(row.RpWayId) }),
+      mapFlags: (res) => {
+        const temp = res.Data[0]
+        console.log(temp)
+        return {
+          TafsiliId: res.Data[0].HasTafsili,
+          FifthId: res.Data[0].HasFifth,
+          SixthId: res.Data[0].HasSixth,
+          SeventhId: res.Data[0].HasSeventh,
+          EightId: res.Data[0].HasEight,
+          NineId: res.Data[0].HasNine,
+          TenId: res.Data[0].HasTen,
+          ElevenId: res.Data[0].HasEleven,
+          TwelveId: res.Data[0].HasTwelve,
+          ThirteenId: res.Data[0].HasThirteen,
+        }
+      },
     },
-    order: 6,
+    order: 7,
   },
 
   {
     fieldName: "TafsiliId",
     fieldCaption: "سطح چهارم",
-    conditionKey: "RpWayId",
     fieldType: "selectOption",
-    dynamicValue: {
-      endpoint: "/api/acc/select/tafsiliLevel4",
-      repoViewId: 10017,
+    visibility: {
+      kind: "whenRemoteFlag",
+      sourceFieldName: "RpWayId",
+      flag: "TafsiliId",
     },
-    order: 7,
-  },
-  {
-    fieldName: "FifthId",
-    fieldCaption: "سطح پنجم",
-    conditionKey: "RpWayId",
-    fieldType: "selectOption",
-    dynamicValue: {
-      endpoint: "/api/acc/select/tafsiliLevel5",
-      repoViewId: null,
+    dynamicSource: {
+      endpoint: "/api/acc/select/tafsiliLevel4",
+      repoViewId: 10017
     },
     order: 8,
   },
   {
+    fieldName: "FifthId",
+    fieldCaption: "سطح پنجم",
+    fieldType: "selectOption",
+    visibility: {
+      kind: "whenRemoteFlag",
+      sourceFieldName: "RpWayId",
+      flag: "FifthId",
+    },
+    dynamicSource: {
+      endpoint: "/api/acc/select/tafsiliLevel5",
+      repoViewId: 10017
+     },
+    order: 9,
+
+  },
+  {
     fieldName: "SixthId",
     fieldCaption: "سطح ششم",
-    conditionKey: "RpWayId",
+
     fieldType: "selectOption",
-    dynamicValue: {
-      endpoint: "/api/acc/select/tafsiliLevel6",
-      repoViewId: null,
+    visibility: {
+      kind: "whenRemoteFlag",
+      sourceFieldName: "RpWayId",
+      flag: "SixthId",
     },
-    order: 9,
+    dynamicSource: { endpoint: "/api/acc/select/tafsiliLevel6",repoViewId: 10017 },
+    order: 10,
   },
   {
     fieldName: "SeventhId",
     fieldCaption: "سطح 7",
-    conditionKey: "RpWayId",
+
     fieldType: "selectOption",
-    dynamicValue: {
-      endpoint: "/api/acc/select/tafsiliLevel7",
-      repoViewId: null,
+    visibility: {
+      kind: "whenRemoteFlag",
+      sourceFieldName: "RpWayId",
+      flag: "SeventhId",
     },
-    order: 10,
+    dynamicSource: { endpoint: "/api/acc/select/tafsiliLevel7",repoViewId: 10017 },
+    order: 11,
   },
   {
     fieldName: "EightId",
     fieldCaption: "سطح 8",
-    conditionKey: "RpWayId",
+
     fieldType: "selectOption",
-    dynamicValue: {
-      endpoint: "/api/acc/select/tafsiliLevel8",
-      repoViewId: null,
+    visibility: {
+      kind: "whenRemoteFlag",
+      sourceFieldName: "RpWayId",
+      flag: "EightId",
     },
-    order: 11,
+    dynamicSource: { endpoint: "/api/acc/select/tafsiliLevel8",repoViewId: 10017 },
+    order: 12,
   },
   {
     fieldName: "NineId",
     fieldCaption: "سطح 9",
-    conditionKey: "RpWayId",
+
     fieldType: "selectOption",
-    dynamicValue: {
-      endpoint: "/api/acc/select/tafsiliLevel9",
-      repoViewId: null,
+    visibility: {
+      kind: "whenRemoteFlag",
+      sourceFieldName: "RpWayId",
+      flag: "NineId",
     },
-    order: 12,
+    dynamicSource: { endpoint: "/api/acc/select/tafsiliLevel9",repoViewId: 10017 },
+    order: 13,
   },
   {
     fieldName: "TenId",
     fieldCaption: "سطح 10",
-    conditionKey: "RpWayId",
     fieldType: "selectOption",
-    dynamicValue: {
-      endpoint: "/api/acc/select/tafsiliLevel10",
-      repoViewId: null,
+    visibility: {
+      kind: "whenRemoteFlag",
+      sourceFieldName: "RpWayId",
+      flag: "TenId",
     },
-    order: 13,
+    dynamicSource: { endpoint: "/api/acc/select/tafsiliLevel10",repoViewId: 10017 },
+    order: 14,
   },
   {
     fieldName: "ElevenId",
     fieldCaption: "سطح 11",
-    conditionKey: "RpWayId",
+
     fieldType: "selectOption",
-    dynamicValue: {
-      endpoint: "/api/acc/select/tafsiliLevel11",
-      repoViewId: null,
+    visibility: {
+      kind: "whenRemoteFlag",
+      sourceFieldName: "RpWayId",
+      flag: "ElevenId",
     },
-    order: 14,
+    dynamicSource: { endpoint: "/api/acc/select/tafsiliLevel11",repoViewId: 10017 },
+    order: 15,
   },
   {
     fieldName: "TwelveId",
     fieldCaption: "سطح 12",
-    conditionKey: "RpWayId",
+
     fieldType: "selectOption",
-    dynamicValue: {
-      endpoint: "/api/acc/select/tafsiliLevel12",
-      repoViewId: null,
+    visibility: {
+      kind: "whenRemoteFlag",
+      sourceFieldName: "RpWayId",
+      flag: "TwelveId",
     },
-    order: 15,
+    dynamicSource: { endpoint: "/api/acc/select/tafsiliLevel12",repoViewId: 10017 },
+    order: 16,
   },
   {
     fieldName: "ThirteenId",
     fieldCaption: "سطح 13",
-    conditionKey: "RpWayId",
     fieldType: "selectOption",
-    dynamicValue: {
-      endpoint: "/api/acc/select/tafsiliLevel13",
-      repoViewId: null,
+    visibility: {
+      kind: "whenRemoteFlag",
+      sourceFieldName: "RpWayId",
+      flag: "ThirteenId",
     },
-    order: 16,
+    dynamicSource: { endpoint: "/api/acc/select/tafsiliLevel13",repoViewId: 10017 },
+    order: 17,
   },
   {
     fieldName: "Price",
     fieldCaption: "مبلغ",
     fieldType: "price",
-    mobileRender: true,
-    order: 17,
+    visibility: { kind: "always" },
+    order: 18,
   },
   {
     fieldName: "VoucherDesc",
     fieldCaption: "شرح",
     fieldType: "text",
-    order: 18,
+    visibility: { kind: "always" },
+    order: 19,
   },
-];
+
+]

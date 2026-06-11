@@ -1,3 +1,5 @@
+import { PageTypeEnum } from '@type/enum';
+
 import { PageStateEnum } from '../pages/enum';
 
 export interface IInitialPage {
@@ -16,6 +18,8 @@ export interface IInitialPage {
   Key?: number;
   returnPageId?: string;
   data?: Record<string, any>;
+  pageData?: Record<string, any>[];
   caption?: string;
   captionII?: string;
+  type?: PageTypeEnum;
 }

@@ -10,7 +10,7 @@ import { useTranslations } from 'next-intl';
 
 import {
   DownChevron,
-  Info,
+  InfoIcon,
 } from '@components/atoms/iconComponents';
 
 type KeyActionHelpItem = {
@@ -42,7 +42,7 @@ export default function ShortcutsCollapse({ ...props }: IProps) {
           id="keyActionHelp"
           className="flex gap-1"
         >
-          <Info
+          <InfoIcon
             config={{
               width: 24,
               height: 24,

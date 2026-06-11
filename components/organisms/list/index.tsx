@@ -800,9 +800,6 @@ export default function List<T extends IBaseDto, K>({
     const voucherId = (
       gridData?.Data?.find((item) => item[rowFieldKey] === id) as any
     )?.VoucherHeaderId;
-
-    console.log({ voucherId });
-
     if (isDeleted) {
       showInfoToast(t("toast.needReload"));
     } else {

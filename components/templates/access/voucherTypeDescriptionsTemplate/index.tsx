@@ -16,7 +16,6 @@ import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { addNewPage } from '@slice/pages';
 import { HeaderTypeEnum } from '@slice/pages/enum';
 import { PageTypeEnum } from '@type/enum';
-
 import { voucherTypeConfig } from './voucherTypeConfig';
 
 export default function VoucherTypeDescriptionTemplate() {

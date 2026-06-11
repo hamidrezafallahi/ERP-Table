@@ -11,7 +11,7 @@ import {
   Menu,
   Spin,
 } from 'antd';
-import { MenuProps } from 'antd/lib';
+import type { MenuProps } from 'antd/lib';
 import DOMPurify from 'dompurify';
 import { useTranslations } from 'next-intl';
 import {
@@ -34,7 +34,6 @@ import {
   MenuSquareIcon,
   PlusOutline,
   Printer,
-  Reload,
   RemindMeIcon,
   ReportIcon,
   SavePlus,
@@ -134,11 +133,9 @@ export default function FormToolbar({
   submitCaption,
   withSubmitButton = true,
   hasShorthandFormToolbar,
-  fromIndexedDb = false,
-  hasReload=false,
-  loadingFromOutsideComponents,
+  setMasterForm,
+  masterForm,
   saveAsDraft = false,
-  handleRefreshData
 }: IProps) {
   const t = useTranslations();
   const dispatch = useDispatch();
@@ -192,6 +189,8 @@ export default function FormToolbar({
     activePage: activePage,
     pages: pages,
     form: form,
+    masterForm: masterForm,
+    setMasterForm: setMasterForm,
     mutationSystemId: mutationSystemId,
   });
 
@@ -666,11 +665,7 @@ export default function FormToolbar({
             </div>
           ),
           onClick: () => {
-            if (fromIndexedDb) {
-              form?.submit();
-            } else {
-              handleSubmitAndClean();
-            }
+            handleSubmitAndClean;
           },
           type: "item",
         },
@@ -693,24 +688,16 @@ export default function FormToolbar({
       label: t("general.save"),
       key: "1",
       onClick: () => {
-        if (fromIndexedDb) {
-          form?.submit();
-        } else {
-          handleSelectedSubmit("1");
-          handleSubmit();
-        }
+        handleSelectedSubmit("1");
+        handleSubmit();
       },
     },
     {
       label: t("general.saveAndClose"),
       key: "2",
       onClick: () => {
-        if (fromIndexedDb) {
-          form?.submit();
-        } else {
-          handleSelectedSubmit("2");
-          handleSubmit();
-        }
+        handleSelectedSubmit("2");
+        handleSubmit();
       },
     },
   ];
@@ -736,7 +723,6 @@ export default function FormToolbar({
     }
   }, [toolbarData, selectedView, selectedViewIndex]);
 
-
   return (
     <>
       {!match && (
@@ -760,25 +746,6 @@ export default function FormToolbar({
               >
                 <ExpandedButton />
               </CustomTooltip>
-              {hasReload && (
-                <CustomTooltip
-                  className="flex bg-gray-gray3 dark:!bg-gray-gray11 rounded h-full"
-                  title={t("general.reload")}
-                >
-                  <div
-                    className="flex bg-gray-gray3 dark:!bg-gray-gray11 p-[6px] rounded h-full cursor-pointer"
-                    onClick={handleRefreshData}
-                    id="reload"
-                  >
-                    <Reload
-                      config={{
-                        width: 24,
-                        height: 24,
-                      }}
-                    />
-                  </div>
-                </CustomTooltip>
-              )}
               {moreItems.length > 0 && (
                 <CustomDropdownButton
                   placement={lang === "fa" ? "bottomRight" : "bottomLeft"}
@@ -793,13 +760,7 @@ export default function FormToolbar({
               {hasShorthandFormToolbar && (
                 <ShorthandFormToolbar
                   handleReset={handleReset}
-                  handleSubmitAndSave={
-                    fromIndexedDb
-                      ? () => {
-                          form?.submit();
-                        }
-                      : handleSubmitAndClean
-                  }
+                  handleSubmitAndSave={handleSubmitAndClean}
                   handleAdd={handleAdd}
                   handleNextItem={handleNextItem}
                   handlePrevItem={handlePrevItem}
@@ -893,7 +854,7 @@ export default function FormToolbar({
                 <div>
                   <CustomTooltip title={t("general.saveDraft")}>
                     <CustomButton
-                      loading={isLoading || loadingFromOutsideComponents}
+                      loading={isLoading || (masterForm?.loading && masterForm.action ==="saveAndClose")}
                       type="text"
                       className="flex justify-center items-center bg-gray-gray3 !hover:bg-white hover:bg-gray-gray8 dark:bg-gray-gray11 px-[10px] border rounded h-9 text-gray dark:text-white"
                       onClick={() => {
@@ -905,7 +866,7 @@ export default function FormToolbar({
                           }),
                         );
 
-                        fromIndexedDb ? form?.submit() : handleSubmitAndClose();
+                        handleSubmitAndClose();
                       }}
                     >
                       <AddCircle />
@@ -946,7 +907,7 @@ export default function FormToolbar({
                           activePage.pageData?.find(
                             (i) => i.isTitleField === true,
                           )?.value
-                        : t(activePage.caption) + " - " + t("general.newForm")
+                        : t(activePage?.caption) + " - " + t("general.newForm")
                       : t(activePage?.caption)}
                 </span>
                 <div className="flex justify-center items-center">
@@ -1024,16 +985,10 @@ export default function FormToolbar({
                   className="hidden xxl:block"
                 >
                   <CustomButton
-                    loading={isLoading}
+                    loading={isLoading|| (masterForm?.loading && masterForm.action ==="saveAndNew")}
                     type="text"
                     className="flex justify-center items-center bg-gray-gray3 hover:bg-gray-gray8 dark:bg-gray-gray11 px-[6px] border rounded h-9 text-gray dark:text-white"
-                    onClick={() => {
-                      if (fromIndexedDb) {
-                        form?.submit();
-                      } else {
-                        handleSubmitAndClean();
-                      }
-                    }}
+                    onClick={handleSubmitAndClean}
                     id="SavePlus"
                   >
                     <SavePlus />
@@ -1044,7 +999,7 @@ export default function FormToolbar({
                     <span onClick={activeSubmitButton?.onClick}>
                       {activeSubmitButton?.label}
                     </span>
-                    {(isLoading || loadingFromOutsideComponents) && (
+                    {(isLoading || (masterForm?.loading && masterForm.action ==="save")) && (
                       <Spin
                         size="small"
                         indicator={
@@ -1070,16 +1025,10 @@ export default function FormToolbar({
             ) : (
               <div>
                 <CustomButton
-                  loading={isLoading || loadingFromOutsideComponents}
+                  loading={isLoading || (masterForm?.loading && masterForm.action ==="saveAndClose")}
                   type="text"
                   className={`flex flex-1 lg:flex-none justify-center items-center bg-black-black8 !hover:bg-white px-3  border hover:border-black-black8 rounded h-9 text-white dark:bg-gray-gray11 dark:text-white !text-sm`}
-                  onClick={
-                    fromIndexedDb
-                      ? () => {
-                          form?.submit();
-                        }
-                      : handleSubmitAndClose
-                  }
+                  onClick={handleSubmitAndClose}
                 >
                   {submitCaption}
                 </CustomButton>

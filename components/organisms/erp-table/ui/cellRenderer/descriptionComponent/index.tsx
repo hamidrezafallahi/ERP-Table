@@ -1,33 +1,48 @@
+"use client";
 import React, {
   forwardRef,
-  useEffect,
-  useState,
+  Ref,
+  useMemo,
 } from 'react';
 
-import { ItemType } from 'antd/es/menu/interface';
-import {
-  useLocale,
-  useTranslations,
-} from 'next-intl';
+import { useLocale } from 'next-intl';
 
 import {
   CustomDropdownButton,
   CustomTooltip,
 } from '@components/atoms/defaultElements';
-import InputText from '@components/atoms/defaultElements/inputText';
 import {
   Dots,
   SavePlus,
 } from '@components/atoms/iconComponents';
+import {
+  UITableController,
+} from '@components/organisms/erp-table/infrastructure/ui/UITableController';
 import { useGetData } from '@services/base';
 
 import { CellMeta } from '../';
+import { IRow } from '../../type';
+import {
+  VoucherTypeApiResponse,
+  voucherTypeReq,
+} from './type';
 
 export interface DescriptionComponentProps extends React.HTMLAttributes<HTMLDivElement> {
   disabled?: boolean;
   value?: unknown;
   onChange?: (e: unknown) => void;
   meta: CellMeta;
+  controller: UITableController;
+  tableKey: string;
+  row: IRow;
+  columnId: string;
+  idx: number;
+  inputRef: Ref<HTMLInputElement | null>;
+  isDeleted: boolean;
+  editable: boolean;
+  blockDrag: (e: React.DragEvent) => void;
+  dispatchChangeValue: (newValue: unknown) => void;
+  activeCell: () => void;
 }
 export interface IDesc {
   AccountDescItemId: number;
@@ -39,42 +54,83 @@ export const DescriptionComponent = forwardRef<
   HTMLDivElement,
   DescriptionComponentProps
 >((props, ref) => {
-  const t = useTranslations();
-  const [items, setItems] = useState<ItemType[]>([]);
   const locale = useLocale();
   //    const { inputKey, items, isDisabled, lang, handleSaveDescription } = useVoucherDescription({});
-  const { meta } = props;
-  const dynamicValue = meta.dynamicValue;
-  const { endpoint, ...res } = dynamicValue;
-  const { data, isLoading } = useGetData<any, IDesc>({
-    url: endpoint,
-    body: { ...res },
-  });
-  useEffect(() => {
-    if (data?.Result == "Success") {
-      const temp: ItemType[] = data.Data.map((item, idx) => ({
-        key: idx,
-        label: (
-          <span
-            className="flex text-sm"
-            // onClick={() => handleAdjustToZeroBalance(index)}
-          >
-            {item.Desc}
-          </span>
-        ),
- 
-      }));
-      setItems(temp)
-    }
-  }, [data]);
+  const {
+    meta,
+    controller,
+    tableKey,
+    row,
+    columnId,
+    idx,
+    inputRef,
+    isDeleted,
+    editable,
+    value,
+    blockDrag,
+    dispatchChangeValue,
+    activeCell,
+  } = props;
+  const { endpoint, dependOn } = meta.dynamicValue;
+  const { data: menuData } = useGetData<VoucherTypeApiResponse, voucherTypeReq>(
+    {
+      url: endpoint,
+      body: {
+        Id: dependOn.value as number,
+        PagingInfo: {
+          PageNumber: 1,
+          PageRecordCount: 10000,
+        },
+      },
+      skip: !dependOn.value,
+    },
+  );
+  //api /api/trh/select/checkassignment/header
+  const items = useMemo(
+    () =>
+      menuData?.Data?.map((item, index) => ({
+        key: String(index),
+        label: item.Desc,
+        onClick: () => {
+          meta.onChange?.(tableKey, row.id, row, controller);
+          controller?.dispatch({
+            type: "UI_CELL_CHANGE",
+            rowId: row.id,
+            columnId,
+            value: item.Desc,
+          });
+        },
+      })) || [],
+    [menuData?.Data],
+  );
+const handleSaveDescription = ()=>{
+  controller?.dispatch({
+            type: "UI_DESCRIPTION_SAVE",
+            rowId: row.id,
+            flag:true
+          });
+}
   return (
     <div className="flex justify-between items-center w-full">
-      <InputText />
+      <input
+        key={idx}
+        ref={inputRef}
+        disabled={isDeleted || !editable}
+        value={value == null ? "" : String(value)}
+        className={`${isDeleted && "cursor-not-allowed"}
+              bg-transparent px-2 outline-none focus-visible:outline-none
+           focus:outline-none ring-0 focus:!ring-0 focus:ring-offset-0  transition-colors !h-full w-full text-xs  ${meta.className}`}
+        draggable={false}
+        onDragStart={blockDrag}
+        onDragOver={blockDrag}
+        onDrop={blockDrag}
+        onChange={(e) => dispatchChangeValue(e.target.value)}
+        onClick={() => activeCell()}
+      />
 
       <CustomDropdownButton
         placement={locale !== "fa" ? "bottomRight" : "bottomLeft"}
-        loading={isLoading}
-        //   className={`${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} flex bg-gray-gray3 dark:!bg-gray-gray11 p-[6px] rounded h-[2.125rem]`}
+        className="flex justify-center items-center bg-gray-gray3 dark:!bg-gray-gray11 p-0 rounded !h-9 cursor-pointer"
         items={items}
         dropdownClassName="max-h-[20rem] max-w-[40vw]"
       >
@@ -82,6 +138,7 @@ export const DescriptionComponent = forwardRef<
           <Dots />
         </span>
       </CustomDropdownButton>
+
       <CustomTooltip
       //   title={isDisabled ? t("general.notActive") : t("general.save")}
       //   className={`
@@ -89,10 +146,10 @@ export const DescriptionComponent = forwardRef<
       //               ${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
       //             `}
       >
-        <span
+        <button
           onClick={() => {
             //   if (!isDisabled) {
-            //     handleSaveDescription();
+                handleSaveDescription();
             //   }
           }}
         >
@@ -103,23 +160,9 @@ export const DescriptionComponent = forwardRef<
               stroke: "black",
             }}
           />
-        </span>
+        </button>
       </CustomTooltip>
     </div>
-    // key={idx}
-    // ref={inputRef}
-    // disabled={isDeleted || !editable}
-    // value={value == null ? "" : String(value)}
-    // className={`${isDeleted && "cursor-not-allowed"}
-    //   bg-transparent px-2 outline-none focus-visible:outline-none
-    //   focus:outline-none ring-0 focus:!ring-0 focus:ring-offset-0 border transition-colors h-full w-full text-xs bg-red-400 ${meta.className}`}
-    // draggable={false}
-    // onDragStart={blockDrag}
-    // onDragOver={blockDrag}
-    // onDrop={blockDrag}
-    // onChange={(e) => dispatchChangeValue(e.target.value)}
-    // onClick={() => activeCell()}
-    // />
   );
 });
 

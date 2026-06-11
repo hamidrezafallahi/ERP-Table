@@ -12,6 +12,7 @@ import {
   ChangeUnitLevelCommand,
   DeleteTableCommand,
   ResetTableCommand,
+  TableChangeTypeCommand,
 } from '../commands';
 import { TableEvent } from '../events';
 import { AuditLogger } from '../ports/AuditLogger';
@@ -251,6 +252,51 @@ export class ResetTableCommandHandler {
       await this.repo.save(command.store, table);
       const out: TableEvent = {
         type: 'TABLE_RESET',
+        tableId: command.tableKey,
+      };
+
+      this.audit.log({
+        type: out.type,
+        message: out.type,
+        payload: out.tableId
+      }); return [out];
+    } catch (error) {
+
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error }
+        });
+      } return null
+    }
+  }
+}
+/* ======================================================
+  Reset Table 
+  ====================================================== */
+
+export class ChangeTableTypeCommandHandler {
+  constructor(
+    private readonly repo: TableRepository,
+    private readonly audit: AuditLogger,
+  ) { }
+  async execute(
+    command: TableChangeTypeCommand,
+    actor: Actor
+  ): Promise<TableEvent[]> {
+    const table = await this.repo.getById(command.store, command.tableKey);
+    try {
+      table.setActiveTableType(command.tableType)
+      await this.repo.save(command.store, table);
+      const out: TableEvent = {
+        type: 'TABLE_TYPE_CHANGED',
         tableId: command.tableKey,
       };
 

@@ -20,11 +20,11 @@ export const MainInfoSection = () => {
     <div
       className={`${
         match
-          ? "gap-3 grid grid-cols-5 w-full max-h-[calc(100dvh-330px)] overflow-y-auto"
+          ? "gap-3 grid grid-cols-5 w-full"
           : "flex flex-col gap-2 "
       }`}
     >
-      <div className="flex flex-col gap-2 col-span-2">
+      <div className="flex flex-col gap-2 col-span-2 h-full">
         <div
           className={`bg-gray-gray2 text-gray-gray10 text-sm h-[3.125rem] !w-full rounded-lg flex items-center justify-center p-1  whitespace-nowrap text-ellipsis overflow-hidden`}
         >
@@ -33,7 +33,7 @@ export const MainInfoSection = () => {
         <div
           className={`${
             match
-              ? "gap-3 grid grid-cols-2 h-fit max-h-full"
+              ? "gap-3 grid grid-cols-2 max-h-[calc(100dvh-250px)] overflow-y-auto"
               : "flex flex-col gap-2"
           }`}
         >

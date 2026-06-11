@@ -75,7 +75,6 @@ function Navbar({ active }) {
                   <CustomButton
                     onClick={() => handleLevelItem(step, step.Items[0], index)}
                     type="text"
-                    ghost
                     className="m-0 px-1 h-6 text-xs"
                   >
                     {t(`report.sidebar.level${step.Level + 1}`)}
@@ -125,7 +124,7 @@ function Navbar({ active }) {
                       }
                       overlayClassName="[&>ul>li]:!px-1 [&>ul>li]:hover:!bg-main-white "
                     >
-                      <CustomButton className="m-0 px-1 h-6" type="text" ghost>
+                      <CustomButton className="m-0 px-1 h-6" type="text">
                         {t(`report.sidebar.level${step.Level + 1}`)}
                         {" : . . ."}
                         {!isLastIndex ? (

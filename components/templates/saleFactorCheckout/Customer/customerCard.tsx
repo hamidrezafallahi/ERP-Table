@@ -10,7 +10,7 @@ import {
 } from '@components/atoms/defaultElements';
 import {
   Edit,
-  Info,
+  InfoIcon,
 } from '@components/atoms/iconComponents';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { setPageData } from '@slice/pages';
@@ -62,7 +62,7 @@ export default function CustomerCard({ ...props }) {
         <div className="flex items-center gap-1 font-medium text-gray-gray10 dark:text-white text-sm text-center">
           {customer?.CustomerCode}
 
-          <Info />
+          <InfoIcon />
         </div>
         <div className="hidden lg:block text-gray-gray10 dark:text-white text-lg">
           مانده بدهی

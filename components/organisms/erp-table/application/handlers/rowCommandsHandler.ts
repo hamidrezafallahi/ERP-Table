@@ -8,6 +8,7 @@ import {
 import { RowId } from '../../domain/value-objects';
 import {
   AddEmptyRowCommand,
+  AddNewRowsCommand,
   DeleteRowCommand,
   DuplicateRowCommand,
   RowReorderedCommand,
@@ -58,6 +59,60 @@ export class AddNewRowCommandHandler {
     }
   }
 }
+/* ======================================================
+   Add New Rows
+   ====================================================== */
+
+export class AddNewRowsCommandHandler {
+  constructor(
+    private readonly repo: TableRepository,
+    private readonly audit: AuditLogger,
+    private readonly permission: PermissionPolicy
+  ) {}
+
+  async execute(command: AddNewRowsCommand, actor: Actor) {
+    try {
+      const table = await this.repo.getById(command.store, command.tableKey);
+if (!this.permission.canAddRow({ actor })) {
+  throw new DomainError(
+    'FORBIDDEN',
+    'Actor is not allowed to add rows',
+    { actor }
+  );
+}
+const events = table.addNewRows(command);
+await this.repo.save(command.store, table);
+      events.forEach(event => {
+        this.audit.log({
+          type: 'INFORMATION',
+          message: event.type,
+          payload: event.rowId
+        });
+      });
+
+      return events;
+
+    } catch (error) {
+
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error }
+        });
+      }
+
+      return null;
+    }
+  }
+}
+
 
 /* ======================================================
    Duplicate Row

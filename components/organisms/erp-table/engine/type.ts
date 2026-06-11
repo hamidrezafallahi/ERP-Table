@@ -34,15 +34,16 @@ export type TableViewState = {
   };
   action: TableActions
 };
+
 export type TableSnapShot = {
-  table: Table
   rows: Array<{
     id: number;
     cells: Record<string, unknown>;
     rowState: RowStateEnum
     moreDetails: unknown,
-
-
+    rowType: string
+    changeFields:readonly string[]
+    isSaveDescription:boolean
   }>;
 };
 
@@ -58,14 +59,14 @@ export type ViewColumn = {
   /* ==== UI Rendering Meta ==== */
   renderType: FieldType;
   editable?: boolean;
-  options?: { label: string; value: string|number }[];
+  options?: { label: string; value: string | number }[];
   dynamicValue?: IRequestConfig;
   indexOptions?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => ItemType[]
   onChange?: (tableKey: string, rowId: number, row: { id: string | number; cells: Record<string, TCell>; isExpanded: boolean }, engine: UITableController) => void
   minWidth?: number;
   style?: React.CSSProperties;
   popUpWidth?: number
-  dynamicSelectFilterOption?:(inputValue: string, option?: DefaultOptionType) => boolean
+  dynamicSelectFilterOption?: (inputValue: string, option?: DefaultOptionType) => boolean
   labelValue?: 'selectDisplay' | 'selectValue';
 
 };
@@ -85,14 +86,7 @@ export type TableState = {
 };
 
 
-export type TableSnapshot = {
-  tableId: string;
-  version: number;
-  rows: {
-    id: string;
-    cells: Record<string, TCell>;
-  }[];
-};
+
 
 export type TCell = {
   value: unknown;

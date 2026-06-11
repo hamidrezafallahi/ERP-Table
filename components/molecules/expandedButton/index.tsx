@@ -1,10 +1,10 @@
-import { CustomButton } from '@components/atoms/defaultElements';
+import { CustomButton } from '@components/atoms/defaultElements/button';
 import {
   Expand,
   Shrink,
 } from '@components/atoms/iconComponents';
-import { useFullScreen } from '@hooks/custom';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useFullScreen } from '@hooks/custom/useFullScreen';
 
 export default function ExpandedButton() {
   const fullScreen = useAppSelector(

@@ -16,4 +16,5 @@ export interface IProps extends SelectProps {
   addButton?: IInitialPage;
   handleRefetch?: () => void;
   isFetching?: boolean;
+  showRefetch?: boolean;
 }

@@ -1,4 +1,8 @@
-import { Dispatch, FC, SetStateAction } from "react";
+import {
+  Dispatch,
+  FC,
+  SetStateAction,
+} from 'react';
 
 export interface IProps {
   detailFieldKey?: string;
@@ -30,9 +34,7 @@ export interface IProps {
   withSubmitButton?: boolean;
   hasShorthandFormToolbar?: boolean;
   Component?: FC<any> | undefined;
-  fromIndexedDb?: boolean;
-  saveAsDraft?: boolean;
-  hasReload?: boolean;
+   saveAsDraft?: boolean;
 }
 export interface IResponse<T = unknown> {
   Data: T;

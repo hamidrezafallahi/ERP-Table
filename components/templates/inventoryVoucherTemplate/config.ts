@@ -212,7 +212,7 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
         params: { VoucherTypeId: vti }, // چه پارامتر هایی از این سطر ارسال بشه  
       },
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "GoodsId",
         flag: "BatchId",
       },
@@ -223,7 +223,7 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
       fieldType: "text",
       order: 10,
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "GoodsId",
         flag: "BatchNo",
       },
@@ -234,7 +234,7 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
       fieldType: "date",
       order: 11,
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "GoodsId",
         flag: "ExpiryDate",
       },
@@ -248,7 +248,7 @@ export const columnConfig = (vti: string, internal: boolean, NeedReference: bool
         endpoint: "api/inv/Select/StockLocation4SelectOption"
       },
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "GoodsId",
         flag: "InventoryLocationId",
       },

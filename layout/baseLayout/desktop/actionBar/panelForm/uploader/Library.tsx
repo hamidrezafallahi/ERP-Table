@@ -141,7 +141,6 @@ const Library = ({
       >
         <CustomButton
           type="text"
-          ghost
           className="z-50 relative m-0 p-0 w-fit h-7"
           onClick={() => {
             setShowLibrary(false);
@@ -226,8 +225,7 @@ function LibraryButton({
   };
   return (
     <CustomButton
-      type="text"
-      ghost
+      type="text"   
       className={`flex flex-col  w-48 h-[150px] dark:bg-gray-gray10 bg-gray-gray3 hover:!bg-gray-gray3 dark:hover:bg-darkHover relative rounded overflow-hidden 
             ${
               selectable && selected

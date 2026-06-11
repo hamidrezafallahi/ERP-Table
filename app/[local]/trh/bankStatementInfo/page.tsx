@@ -1,8 +1,8 @@
-import Info from '@components/organisms/receiptAndPayment/bank/info';
+import { InfoIcon } from '@components/atoms/iconComponents';
 import React from 'react';
 
 export default function BankStatementInfoPage() {
   return (
-    <Info />
+    <InfoIcon />
   );
 }

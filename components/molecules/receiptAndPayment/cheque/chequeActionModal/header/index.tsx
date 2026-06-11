@@ -1,22 +1,19 @@
-import { useTranslations } from 'next-intl';
-import { shallowEqual } from 'react-redux';
+import { useTranslations } from "next-intl";
+import { shallowEqual } from "react-redux";
 
-import {
-  Info,
-  RowInfoIcon,
-} from '@components/atoms/iconComponents';
+import { InfoIcon, RowInfoIcon } from "@components/atoms/iconComponents";
 import {
   isRegisteredConfig,
   stateConfig,
-} from '@components/organisms/receiptAndPayment/config';
-import { useProcessedData } from '@hooks/custom';
-import { useAppSelector } from '@hooks/custom/useAppSelector';
-import { useGetData } from '@services/base';
-import type { IColumnConfig } from '@services/generalType/type';
+} from "@components/organisms/receiptAndPayment/config";
+import { useProcessedData } from "@hooks/custom";
+import { useAppSelector } from "@hooks/custom/useAppSelector";
+import { useGetData } from "@services/base";
+import type { IColumnConfig } from "@services/generalType/type";
 import type {
   IReceivedCheque,
   IRequest,
-} from '@services/trh/receivedCheque/type';
+} from "@services/trh/receivedCheque/type";
 
 export const HeaderAction = ({
   id,
@@ -40,7 +37,7 @@ export const HeaderAction = ({
       Id: id,
     },
   });
-
+  
   const columnsConfig: IColumnConfig[] = [
     {
       fieldName: "DocumentCheque.Num",
@@ -88,6 +85,7 @@ export const HeaderAction = ({
   });
 
   const finalData = processedData[0];
+  
 
   return (
     <div className="flex flex-col gap-2">
@@ -100,16 +98,12 @@ export const HeaderAction = ({
       <div
         className={`${
           !isMulti && "border border-1"
-        } flex flex-wrap gap-8 p-4 rounded`}
+        } flex flex-wrap gap-8 p-4 rounded justify-between`}
       >
-        {/* <div className="flex gap-2">
-          <span className="text-xs">{t("general.chequeNumber")} :</span>
-          <span className="text-xs">{processedData?.CheckNumber ?? "---"}</span>
-        </div> */}
         <div className="flex gap-2">
           <span className="text-xs">{t("general.sayyadNumber")} :</span>
           <span className="text-xs">
-            {finalData?.["DocumentCheque.Num"] ?? "---"}
+            {finalData?.["DocumentCheque.IssuerSerial"] ?? "---"}
           </span>
         </div>
         <div className="flex gap-2">
@@ -231,7 +225,7 @@ export const HeaderAction = ({
             onClick={handleReturn}
           >
             <span className="cursor-pointer">
-              <Info />
+              <InfoIcon config={{ stroke: "#595959", width: 20, height: 20 }} />
             </span>
           </div>
         )}

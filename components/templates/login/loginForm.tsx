@@ -1,12 +1,18 @@
 "use client";
 
-import React, { FC, useState } from "react";
+import React, {
+  FC,
+  useState,
+} from 'react';
 
-import { Form, FormInstance } from "antd";
-import { useTranslations } from "next-intl";
+import {
+  Form,
+  FormInstance,
+} from 'antd';
+import { useTranslations } from 'next-intl';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import InputText from "@components/atoms/defaultElements/inputText";
+import { CustomButton } from '@components/atoms/defaultElements';
+import InputText from '@components/atoms/defaultElements/inputText';
 
 interface LoginFormProps {
   isLoading?: boolean;
@@ -28,7 +34,7 @@ const LoginForm: FC<LoginFormProps> = ({ isLoading, onFinish, form }) => {
         String.fromCharCode(char.charCodeAt(0) - 1728)
       );
 
-    let normalized = persianToEnglishDigits(rawValue);
+    const normalized = persianToEnglishDigits(rawValue);
 
     // if (normalized.length > 11) {
     //   normalized = normalized.slice(0, 11);

@@ -24,4 +24,5 @@ export interface IProps {
   setRecordPerPage: Dispatch<SetStateAction<number>>;
   setSelectedItems: Dispatch<SetStateAction<number[]>>;
   setSelectedHeaderId: Dispatch<SetStateAction<number[]>>;
+  setSelectedDetails:Dispatch<SetStateAction<[]>>;
 }

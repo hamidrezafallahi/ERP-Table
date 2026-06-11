@@ -1,9 +1,7 @@
 export { ActionGrid } from "./actionGrid";
-export { ActionGridToolbar } from "./actionGridToolbar";
-export { ActionToolbar } from "./actionToolbar";
+export { ActionGridToolbar } from "../generalComponents/actionGridToolbar";
+export { ActionToolbar } from "../generalComponents/actionToolbar";
 export { ChequeActionModal } from "./chequeActionModal";
 export { ChequeDynamicForm } from "./chequeDynamicForm";
 export { ChequeInfoModal } from "./chequeInfoModal";
 export { ChequeCirculationModal } from "./chequeCirculationModal";
-export { IssuanceChequeForm } from "./issuanceForm";
-export { ReceiptChequeForm } from "./receiptForm";

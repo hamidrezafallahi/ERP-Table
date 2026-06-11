@@ -26,9 +26,6 @@ export const FinalizeVoucherPage = ({ setMobileDrawerContent, form }) => {
     shallowEqual
   );
 
-
-
-
   const pageId = activePage?.pageId;
 
   const info = {

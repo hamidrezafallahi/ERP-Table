@@ -1,15 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { useTranslations } from "next-intl";
-import Image from "next/image";
+import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 
-import { CustomButton } from "@components/atoms/defaultElements";
+import { CustomButton } from '@components/atoms/defaultElements';
 import {
   Camera,
   FolderOpen,
   LinkHorizontal,
   Monitor,
-} from "@components/atoms/iconComponents";
+} from '@components/atoms/iconComponents';
 
 const ButtonsRow = ({
   fileInputRef,
@@ -113,8 +117,7 @@ function TemplateButton({
         </span>
       )}
       <CustomButton
-        type="text"
-        ghost
+        type="text"       
         className="flex flex-col hover:!bg-transparent !p-1 w-fit h-20"
         onClick={handelClick}
       >

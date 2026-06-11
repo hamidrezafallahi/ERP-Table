@@ -1,9 +1,15 @@
-import { ReactNode } from 'react';
+import {
+  FC,
+  ReactNode,
+} from 'react';
 
 import { FormInstance } from 'antd';
 import { NamePath } from 'antd/es/form/interface';
 import { HtmlProps } from 'next/dist/shared/lib/html-context.shared-runtime';
 
+import { IDetailColumnConfig } from '@components/organisms/erp-table';
+import { IMultiSelectConfig } from '@components/organisms/erp-table/ui/type';
+import { MasterToolbar } from '@components/organisms/formToolbar/type';
 import type { IBaseRequest } from '@services/base/type';
 import { IInitialPage } from '@slice/init/type';
 
@@ -13,7 +19,7 @@ export interface IPageConfig {
   deleteEndpoint: string;
   formIdField: number;
   fields: IFormFieldConfig[];
-  repoViewId?: number;   
+  repoViewId?: number;
   data?: string;
 }
 
@@ -42,13 +48,17 @@ export interface IRequestConfig {
   addButton?: IInitialPage;
   Level?: number;
   OrderInfo?: IBaseRequest<null>["OrderInfo"];
+  Filters?: IBaseRequest<null>["Filters"];
   type?: number;
   IsAnonymous?: boolean;
   dependOn?: {
     fieldName: string;
     value: any;
   };
-    
+  Types?: string[] | number[];
+  Type?: number;
+  PrommisoryType?: number;
+  level?: number;
 }
 
 export interface ISelectOption {
@@ -89,12 +99,8 @@ export interface IRadioValue {
   value: any;
 }
 
-
-
-
 type rulesType = "required" | "minLength" | "maxLength" | "nationalCode";
 export type IRule = { rule: rulesType; condition: any; message: string };
- 
 
 export interface IFormFieldConfig {
   name?: string;
@@ -118,7 +124,6 @@ export interface IFormFieldConfig {
   maxLength?: number;
   mode?: "text" | "number";
   props?: HtmlProps;
-
 }
 
 export interface IMenuItem {
@@ -127,13 +132,15 @@ export interface IMenuItem {
   className: string;
   children?: IMenuItem[] | null;
 }
- 
 
- 
 
-export interface GridContainedPageProps {
-  form:FormInstance<any>;
-  setIsFormSubmitting:(boolean)=>void
+
+export interface IMasterProps {
+
+}
+
+export interface GridContainedPageProps extends MasterToolbar {
+  form: FormInstance<any>;
   caption: string;
   captionII?: string;
   listUrl: string;
@@ -144,8 +151,27 @@ export interface GridContainedPageProps {
   addUrl: string;
   updateUrl: string;
   tableTitle: string;
-  titleKey: string;
-  fieldKey: string;
-  pageIcon?: string;
- 
+  pageIcon: string;
+  DefaultDetailRepoViewId: number
+  DefaultHeaderRepoViewId: number
+  formHeight: number
+  storeName: string
+  Component: FC<any>;
+  saveAsDraft?: boolean
+  type?: string//CheckDocumentOperationType
+
+
+
+
+
+
+
+
+  formConfig: IFormFieldConfig[]
+  tableType?: string
+  columnConfig: IDetailColumnConfig[]
+  multiSelectConfig?: IMultiSelectConfig
+  actor?: { userId: string, roles: string[] }
+  recordHeight?: number
+  mobileRecordsPerPage?: number
 }

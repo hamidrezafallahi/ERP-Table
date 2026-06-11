@@ -213,7 +213,24 @@
     "CurrencyDoc": "سند تسعیر ارز",
     "currencyDockList": "لیست اسناد تسعیر ارز",
     "comprehensiveReport": "گزارش جامع",
-    "comparativeReport": "گزارش مقایسه ای"
+    "comparativeReport": "گزارش مقایسه ای",
+    "promissoryNoteReceipt": "دریافت سفته",
+    "promissoryNoteReceiptList": "لیست دریافت سفته",
+    "promissoryNoteIssuance": "صدور سفته",
+    "promissoryNoteIssuanceList": "لیست صدور سفته",
+    "chequeDeployList": "لیست استقرار چک",
+    "chequeDeploy": "استقرار چک",
+    "promissoryNoteDeploy": "استقرار سفته",
+    "promissoryNoteDeployList": "لیست استقرار سفته",
+    "assignmentChequeList": "لیست واگذاری چک",
+    "assignmentCheque": "واگذاری چک",
+    "cachingAndRejectedCheckList": "لیست وصولی - برگشتی ",
+    "CachingAndRejectedCheck": " وصولی - برگشتی ",
+    "refundChequeList": " استرداد چک ",
+    "rpWay": "نحو",
+    "issuedCheckOperation": "عملیات چک صادره",
+    "assignmentPromissoryNote":"واگذاری سفته",
+    "assignmentPromissoryNoteList":"لیست واگذاری سفته"
   },
   "homePage": {
     "title": "Hello world!",
@@ -872,7 +889,9 @@
     "debtToAssetRatio": "نسبت بدهی به دارایی",
     "none": "هیچکدام",
     "regulatoryORStatistical": "انتظامی/آماری",
-    "defaultDescription": "شرح پیش فرض"
+    "defaultDescription": "شرح پیش فرض",
+    "returnFromOutage": "برگشت از قطعی",
+    "chooseFromList": "انتخاب از لیست"
   },
   "systemSetting": {
     "cheque": "چک",
@@ -1063,7 +1082,6 @@
     "chequeIssuance": "صدور چک",
     "chequeBounce": "برگشت چک",
     "chequeClearance": "وصول چک",
-    "chequeEndorsement": "واگذاری چک",
     "bankWithdrawal": "پرداخت از حساب",
     "bankDeposit": "واریز به حساب",
     "cashWithdrawal": "پرداخت از صندوق",
@@ -1072,9 +1090,24 @@
     "cashFundDeposit": "واریز به تنخواه",
     "receivedChequeList": "لیست چک دریافتی",
     "receivedChequeAction": "عملیات چک دریافتی",
+    "assignmentCheque": "واگذاری چک",
+    "assignmentPromissoryNote": "واگذاری سفته",
+    "issuedPromissoryNoteAction": "عملیات سفته صادره",
+    "issuedCheckOperation": "عملیات چک صادره",
+    "collection/dishonorCheque": "وصول - برگشت چک",
+    "collection/dishonorPromissoryNote": "وصول - برگشت سفته",
+    "receivedPromissoryNoteAction": "عملیات سفته دریافتی",
     "notRegisteredReceivedCheque": "چک های دریافتی ثبت نشده",
+    "notRegisteredReceivedPromissoryNote": "سفته های دریافتی ثبت نشده",
     "notRegisteredIssuanceCheque": "چک های صادره ثبت نشده",
-    "bankStatementInfo": "گردش حساب"
+    "notRegisteredIssuancePromissoryNote": "سفته های صادره ثبت نشده",
+    "bankStatementInfo": "گردش حساب",
+    "chequeDeploy": "استقرار چک",
+    "promissoryNoteDeploy": "استقرار سفته",
+    "promissoryNoteReceipt": "دریافت سفته",
+    "promissoryNoteIssuance": "صدور سفته",
+    "refundCheque": "استرداد چک",
+    "refundPromissoryNote": "استرداد سفته"
   },
   "company": {
     "name": "آرین سیستم"

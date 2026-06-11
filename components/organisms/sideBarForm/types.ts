@@ -34,6 +34,7 @@ export interface IDynamicModalConfig {
   idFieldName?: string;
   idFieldKeyUpdate?: string;
   idFieldKeyUpdateSide?: string;
+  sidebarUrl?: string;
 }
 
 export interface ListColumn {
@@ -111,8 +112,6 @@ export type ReloadType = () => QueryActionCreatorResult<
 >;
 
 export type TFunction = ReturnType<typeof useTranslations>;
-
-
 
 export type RecordType = {
   Desc?: string;

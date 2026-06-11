@@ -1,4 +1,6 @@
-import { Form } from '@components/templates/form';
+import AdvancedBankWithdrawal
+  from '@components/organisms/receiptAndPayment/bank/withdrawal';
+import { MasterForm } from '@components/templates/form';
 import type {
   IBankWithdrawal,
   IRequest,
@@ -6,13 +8,21 @@ import type {
 
 export default function BankWithdrawalFormPage() {
   return (
-    <Form<IBankWithdrawal, IRequest>
-      fieldKey="BankStatementId"
+    <MasterForm<IBankWithdrawal, IRequest>
       caption={"title.bankWithdrawal"}
-      url="api/trh/select/bankStatement/withdrawal"
+      detailFieldKey="VoucherDetailId"
+      headerFieldKey="VoucherHeaderId"
       listUrl="trh/withdrawalList"
-      titleKey="VoucherNumber"
       pageIcon="BankWithdrawalIcon"
+      addUrl="api/trh/bankStatement/advanced/Withdrawal"
+      updateUrl="api/trh/update/bankStatement/advanced/withdrawal"
+      tableTitle="اقلام"
+      Component={AdvancedBankWithdrawal}
+      headerGetUrl="api/trh/select/bankStatement/withdrawal"
+      DefaultHeaderRepoViewId={3020}
+      DefaultDetailRepoViewId={3020}
+      storeName="receiptAndPayment"
+      detailGetUrl="api/trh/select/checkDetail/issuance"
     />
   );
 }

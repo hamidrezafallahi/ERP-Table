@@ -1,16 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { FormInstance } from "antd";
 
 interface UseFormChangeFieldsProps<T> {
   setInitialValues: (values: T) => void;
   reset: () => void;
   changeFields: string[];
-  setChangeFields: React.Dispatch<React.SetStateAction<string[]>>;
+  setChangeFields: Dispatch<SetStateAction<string[]>>;
 }
 
 export function useFormChangeFields<T extends Record<string, any>>(
   form: FormInstance<T>,
-  formValues: T
+  formValues: T,
+  ignoreFields: string[] = [],
 ): UseFormChangeFieldsProps<T> {
   const [originalValues, setOriginalValues] = useState<T | null>(null);
   const [changeFields, setChangeFields] = useState<string[]>([]);
@@ -34,7 +35,10 @@ export function useFormChangeFields<T extends Record<string, any>>(
     if (!originalValues || !formValues) return;
     const changed: string[] = [];
     for (const key in formValues) {
-      if (originalValues[key] !== formValues[key]) {
+      if (
+        originalValues[key] !== formValues[key] &&
+        !ignoreFields.includes(key)
+      ) {
         changed.push(key);
       }
     }

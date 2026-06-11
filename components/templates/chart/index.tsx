@@ -17,8 +17,8 @@ import {
 } from '@components/atoms/iconComponents';
 import Title from '@components/atoms/Title';
 import OrganizationChart from '@dabeng/react-orgchart';
-import { useFullScreen } from '@hooks/custom';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useFullScreen } from '@hooks/custom/useFullScreen';
 import {
   useCUDDataMutation,
   useGetData,

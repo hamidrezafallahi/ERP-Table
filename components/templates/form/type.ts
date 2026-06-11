@@ -59,21 +59,22 @@ export interface IProps {
   withSubmitButton?: boolean;
   hasShorthandFormToolbar?: boolean;
   Component?: any;
-  hasReload?: boolean;
 }
 export interface IMasterProps {
-  fieldKey: string;
+  fieldKey?: string;
   caption: string;
-  captionII: string;
+  captionII?: string;
   addUrl: string;
   updateUrl: string;
   listUrl: string;
   pageIcon: string;
-  tableTitle: string;
-  titleKey: string;
+  tableTitle?: string;
+  // titleKey: string;
   detailFieldKey: string;
   headerFieldKey: string;
   headerGetUrl: string;
   detailGetUrl: string;
   Component: FC<any>;
+  saveAsDraft?: boolean;
+  type?: number | string;
 }

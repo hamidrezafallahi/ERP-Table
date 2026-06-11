@@ -8,6 +8,7 @@ import {
   useDispatch,
 } from 'react-redux';
 
+import { MasterToolbar } from '@components/organisms/formToolbar/type';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useCUDDataMutation } from '@services/base';
 import { addHistory } from '@slice/history';
@@ -37,6 +38,8 @@ import { useNavigatePage } from './useNavigatePage';
 export const useFormHandlers = ({
   pages,
   activePage,
+  masterForm,
+  setMasterForm,
   form = null,
   mutationSystemId = null,
 }: {
@@ -44,7 +47,7 @@ export const useFormHandlers = ({
   activePage: IPage;
   form?: FormInstance<any>;
   mutationSystemId?: number;
-}) => {
+}&MasterToolbar) => {
   const dispatch = useDispatch();
   const { navigateBack } = useNavigatePage();
   const pathname = usePathname();
@@ -141,88 +144,91 @@ export const useFormHandlers = ({
   }, [activePage, id, mutationSystemId]);
   const handleSave = useCallback(async () => {
     const currentForm = form ? form : null;
-
     try {
       await currentForm?.validateFields();
-      const { body, changedFields } = extractBodyAndChangedFields();
+      if (masterForm) {
+        await currentForm?.submit()
+      } else {
+        const { body, changedFields } = extractBodyAndChangedFields();
 
-      const cleanBody = transformDotNotationToNested(body);
-      const result = await trigger({
-        url: id
-          ? activePage?.pageInfo?.updateEndpoint
-          : activePage?.pageInfo?.addEndpoint,
-        body: id
-          ? {
-            ...cleanBody,
-            ChangeFields: changedFields,
+        const cleanBody = transformDotNotationToNested(body);
+        const result = await trigger({
+          url: id
+            ? activePage?.pageInfo?.updateEndpoint
+            : activePage?.pageInfo?.addEndpoint,
+          body: id
+            ? {
+              ...cleanBody,
+              ChangeFields: changedFields,
+            }
+            : cleanBody,
+          id: id || null,
+        }).unwrap();
+
+
+        if (result?.Result === "Success" || result?.Result === "Pending") {
+          if (result?.Result === "Success") showSuccessToast(t("toast.save"));
+          if (result?.Result === "Pending") showInfoToast(t("toast.Pending"));
+          const pageState = findingPageState(result.PendingStatusId.toString());
+          const existItem = historyItems.find(
+            (item) =>
+              item.key === result.Key &&
+              item.type === (id ? HistoryTypeEnum.Update : HistoryTypeEnum.Add),
+          );
+          if (!existItem) {
+            dispatch(
+              addHistory({
+                initConfig: {
+                  RepoId: activePage.RepoId,
+                  SystemId: activePage.SystemId,
+                  url: !id
+                    ? `${activePage.url}?id=${result.Key}`
+                    : activePage.url,
+                  pageId: activePage.pageId,
+                  Id: result.Key,
+                  originalPageState: null,
+                  pageState: null,
+                  listPageId: activePage.listPageId,
+                  returnPageId: activePage.returnPageId,
+                  selectedView: activePage.selectedView,
+                  Key: result.Key,
+                },
+                key: result.Key,
+                type: id ? HistoryTypeEnum.Update : HistoryTypeEnum.Add,
+                pageName: activePage.caption,
+                name: formData.find((i: any) => i.isTitleField)?.value,
+                pageIcon: activePage?.icon,
+              }),
+            );
           }
-          : cleanBody,
-        id: id || null,
-      }).unwrap();
-
-      if (result?.Result === "Success" || result?.Result === "Pending") {
-        if (result?.Result === "Success") showSuccessToast(t("toast.save"));
-        if (result?.Result === "Pending") showInfoToast(t("toast.Pending"));
-        const pageState = findingPageState(result.PendingStatusId.toString());
-        const existItem = historyItems.find(
-          (item) =>
-            item.key === result.Key &&
-            item.type === (id ? HistoryTypeEnum.Update : HistoryTypeEnum.Add),
-        );
-        if (!existItem) {
+          const keyName = activePage?.pageData?.find(
+            (i) => i.caption === "MainIdField",
+          )?.name;
           dispatch(
-            addHistory({
-              initConfig: {
-                RepoId: activePage.RepoId,
-                SystemId: activePage.SystemId,
-                url: !id
-                  ? `${activePage.url}?id=${result.Key}`
-                  : activePage.url,
-                pageId: activePage.pageId,
-                Id: result.Key,
-                originalPageState: null,
-                pageState: null,
-                listPageId: activePage.listPageId,
-                returnPageId: activePage.returnPageId,
-                selectedView: activePage.selectedView,
-                Key: result.Key,
-              },
-              key: result.Key,
-              type: id ? HistoryTypeEnum.Update : HistoryTypeEnum.Add,
-              pageName: activePage.caption,
-              name: formData.find((i: any) => i.isTitleField)?.value,
-              pageIcon: activePage?.icon,
+            setPageData({
+              name: keyName,
+              value: result.Key,
+              originalValue: result.Key,
             }),
           );
+
+          dispatch(setSavePageData(result.Key));
+          dispatch(
+            setPageState({
+              ...activePage,
+              caption:
+                activePage.caption +
+                " - " +
+                formData.find((i: any) => i.isTitleField)?.value,
+              Key: result.Key,
+              pageState: pageState,
+            }),
+          );
+          return result;
+        } else {
+          return false;
         }
-        const keyName = activePage?.pageData?.find(
-          (i) => i.caption === "MainIdField",
-        )?.name;
-        dispatch(
-          setPageData({
-            name: keyName,
-            value: result.Key,
-            originalValue: result.Key,
-          }),
-        );
-
-        dispatch(setSavePageData(result.Key));
-        dispatch(
-          setPageState({
-            ...activePage,
-            caption:
-              activePage.caption +
-              " - " +
-              formData.find((i: any) => i.isTitleField)?.value,
-            Key: result.Key,
-            pageState: pageState,
-          }),
-        );
-        return result;
-      } else {
-        return false;
       }
-
     } catch (error) {
       null;
     }
@@ -237,27 +243,30 @@ export const useFormHandlers = ({
     initializePage,
   ]);
   const handleSubmit = useCallback(async () => {
-    const result: any = await handleSave();
-    if (result?.Result === "Success" || result?.Result === "Pending") {
-      const listPage = listPages.at(-1);
-
-      if (pathname.includes("/patterns")) return;
-
-      if (listPage) {
-        const u = listPage.url.split("id=");
-        initializePage({
-          config: {
-            RepoId: listPage.RepoId,
-            SystemId: listPage.SystemId,
-            url: listPage.url,
-            pageId: listPage.pageId,
-            Id: u.length > 0 ? Number(u[1]) : 0,
-            originalPageState: listPage.originalPageState,
-            pageState: listPage.pageState,
-          },
-        });
-      } else {
-        navigateBack();
+    if (masterForm) {
+      setMasterForm((prev) => ({ ...prev, action: "save" }))
+      handleSave();
+    } else {
+      const result: any = await handleSave();
+      if (result?.Result === "Success" || result?.Result === "Pending") {
+        const listPage = listPages.at(-1);
+        if (pathname.includes("/patterns")) return;
+        if (listPage) {
+          const u = listPage.url.split("id=");
+          initializePage({
+            config: {
+              RepoId: listPage.RepoId,
+              SystemId: listPage.SystemId,
+              url: listPage.url,
+              pageId: listPage.pageId,
+              Id: u.length > 0 ? Number(u[1]) : 0,
+              originalPageState: listPage.originalPageState,
+              pageState: listPage.pageState,
+            },
+          });
+        } else {
+          navigateBack();
+        }
       }
     }
   }, [
@@ -271,6 +280,10 @@ export const useFormHandlers = ({
     initializePage,
   ]);
   const handleSubmitAndClose = useCallback(async () => {
+        if (masterForm) {
+      setMasterForm((prev) => ({ ...prev, action: "saveAndClose" }))
+      handleSave();
+    } else {
     const result: any = await handleSave();
     if (result?.Result === "Success" || result?.Result === "Pending") {
       if (listPages && listPages.length > 0) {
@@ -286,6 +299,7 @@ export const useFormHandlers = ({
       navigateBack();
       dispatch(removePage(activePage.pageId));
     }
+  }
   }, [
     form,
     activePage,
@@ -297,20 +311,30 @@ export const useFormHandlers = ({
     initializePage,
   ]);
   const handleSubmitAndClean = useCallback(async () => {
+     if (masterForm) {
+      setMasterForm((prev) => ({ ...prev, action: "saveAndClose" }))
+      handleSave();
+    } else {
     const result: any = await handleSave();
     if (result?.Result === "Success" || result?.Result === "Pending") {
       handleAdd();
     }
+  }
   }, [handleSave, activePage]);
 
   const handleAdd = useCallback(() => {
     const u = activePage.url.split("?id=");
-
     if (u[1]?.length > 0) {
       initializePage({
         config: {
           RepoId: activePage.RepoId,
           SystemId: activePage.SystemId,
+          type: activePage.type,
+          caption: activePage.caption,
+          captionII: activePage.captionII,
+          pageState: PageStateEnum.Opened,
+          originalPageState: PageStateEnum.Opened,
+          pageData: [],
           url: u[0],
           Id: u.length > 0 ? Number(u[1]) : 0,
         },

@@ -18,14 +18,14 @@ export type UseERPTableResult =
   | {
     ready: true;
     controller: UITableController;
-    table: TableSnapShot;
+    rows: TableSnapShot;
   };
 
 export function useERPTable(config: CreateERPTableConfig): UseERPTableResult {
 
   const [controller, setController] =
     useState<UITableController | null>(null);
-  const [table, setTable] = useState<TableSnapShot | null>(null);
+  const [rows, setRows] = useState<TableSnapShot | null>(null);
   // ---------- bootstrap ----------
   useEffect(() => {
   createERPTable(config).then(({ controller }) => {setController(controller)});
@@ -36,11 +36,11 @@ export function useERPTable(config: CreateERPTableConfig): UseERPTableResult {
     if (!controller) return;
     const table = controller.getSnapShot()
     if (table) {
-      setTable(table);
+      setRows(table);
     }
     const unsubscribe = controller.subscribe(
       () => {
-        setTable(controller.getSnapShot());
+        setRows(controller.getSnapShot());
       }
     );
 
@@ -48,13 +48,13 @@ export function useERPTable(config: CreateERPTableConfig): UseERPTableResult {
       unsubscribe?.();
     };
   }, [controller, config.store, config.tableKey]);
-  if (!controller || !table) {
+  if (!controller || !rows) {
     return { ready: false };
   }
   return {
     ready: true,
     controller,
-    table,
+    rows,
   };
 
 }

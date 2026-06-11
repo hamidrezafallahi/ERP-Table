@@ -5,7 +5,6 @@ import React, {
 } from 'react';
 
 import { useTranslations } from 'next-intl';
-import { shallowEqual } from 'react-redux';
 
 import {
   VoucherForm,
@@ -13,29 +12,18 @@ import {
 } from '@components/molecules/accounting';
 import { ERPTable } from '@components/organisms/erp-table/ui';
 import { useERPGrid } from '@components/organisms/erp-table/ui/useERPGrid';
-import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { GridContainedPageProps } from '@type/elementType';
 
 import {
   columnConfig,
   formConfig,
 } from './config';
-import { IProps } from './type';
 
-export default function VoucherTemplate<T, K>({ ...props }: IProps) {
+export default function VoucherTemplate<T, K>({
+  ...props
+}: GridContainedPageProps) {
   const {
     form,
-    caption,
-    captionII,
-    listUrl,
-    pageIcon,
-    detailFieldKey,
-    headerFieldKey,
-    headerGetUrl,
-    detailGetUrl,
-    addUrl,
-    updateUrl,
-    tableTitle,
-    setIsFormSubmitting,
   } = props;
   const [sum, setSum] = React.useState<{ bed: number; bes: number }>({
     bed: 0,
@@ -43,37 +31,14 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
   });
   const t = useTranslations();
 
-  const { activePage } = useAppSelector(
-    (state) => ({
-      activePage: state?.withPersist?.pages?.find((item) => item.isActive),
-      pages: state?.withPersist?.pages,
-    }),
-    shallowEqual,
-  );
+ 
   const memoizedColumns = useMemo(() => columnConfig(t), []);
 
-  const { pageReady, handleSubmit, setTableApi, tableApi, tableProps } =
+  const { pageReady, handleSubmit, setController, controller, tableProps } =
     useERPGrid({
-      headerGetUrl,
-      DefaultHeaderRepoViewId: 10011,
+      ...props,
       formConfig,
-      headerFieldKey,
-      detailGetUrl,
-      DefaultDetailRepoViewId: 70003,
-      detailFieldKey,
-      addUrl,
-      updateUrl,
-      listUrl,
-      caption,
-      pageIcon,
-      captionII,
-      storeName: "Voucher",
-      tableTitle,
       columnConfig: memoizedColumns,
-      formHeight: 500,
-      recordHeight: 40,
-      mobileRecordsPerPage: 100,
-      setIsFormSubmitting,
     });
 
   // const { data: renderUnitData } = useGetData<IPlaceConfig[], null>({
@@ -88,11 +53,11 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
   // },
   // };
   useEffect(() => {
-    if (!tableApi) {
+    if (!controller) {
       return;
     }
 
-    const data = tableApi.getSnapShot() as any;
+    const data = controller.getSnapShot() as any;
     setSum({
       bed: data.rows.reduce((acc, curr) => {
         const val = curr.cells["Bed"];
@@ -105,42 +70,44 @@ export default function VoucherTemplate<T, K>({ ...props }: IProps) {
         return acc + (Number(num) || 0);
       }, 0),
     });
-    const unsubscribe1 = tableApi.subscribeColumn<{
+
+    const unsubscribe1 = controller.subscribeColumn<{
       id: number;
       rowNum: number;
       value: number;
     }>("Bed", (values) => {
       setSum((prev) => ({
         ...prev,
-        bed: values.reduce((acc, curr) => acc + (curr.value || 0), 0),
+        bed: values.reduce((acc, curr) => acc + curr.value, 0),
       }));
     });
-    const unsubscribe2 = tableApi.subscribeColumn<{
+
+    const unsubscribe2 = controller.subscribeColumn<{
       id: number;
       rowNum: number;
       value: number;
     }>("Bes", (values) => {
       setSum((prev) => ({
         ...prev,
-        bes: values.reduce((acc, curr) => acc + (curr.value || 0), 0),
+        bes: values.reduce((acc, curr) => acc + curr.value, 0),
       }));
     });
     return () => {
       unsubscribe1?.();
       unsubscribe2?.();
     };
-  }, [tableApi]);
+  }, [controller]);
   return (
     <>
       <VoucherForm form={form} onSubmitCallback={handleSubmit} />
-      <div className="flex flex-col gap-5 -translate-y-5">
-        {pageReady && activePage?.pageId && (
+      <div className="flex flex-col gap-5 pt-5">
+        {pageReady && (
           <>
             <ERPTable //<IMoreProps>
               {...tableProps}
               // moreDetailComponent={More}
-              onReady={(api) => {
-                setTableApi(api);
+              onReady={(controller) => {
+                setController(controller);
               }}
             />
             <div className="flex justify-end w-full">

@@ -1,29 +1,21 @@
-import {
-  Checkbox,
-  Form,
-  Spin,
-} from 'antd';
-import { useTranslations } from 'next-intl';
-
+import { Checkbox, Form, Spin } from "antd";
+import { useTranslations } from "next-intl";
 import {
   CustomButton,
   DynamicSelect,
   NewDatePicker,
-} from '@components/atoms/defaultElements';
-import { DynamicTree } from '@components/atoms/defaultElements/dynamicTree';
-import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
-import InputText from '@components/atoms/defaultElements/inputText';
-import { SpinIcon } from '@components/atoms/iconComponents';
-import { useCUDDataMutation } from '@services/base';
-import type { IRequestConfig } from '@type/elementType';
-import { transformDotNotationToNested } from '@utils/core';
-import {
-  showErrorToast,
-  showSuccessToast,
-} from '@utils/toast';
-
-import { ConditionalFields } from './conditionalFields';
-import type { IProps } from './type';
+} from "@components/atoms/defaultElements";
+import { DynamicTree } from "@components/atoms/defaultElements/dynamicTree";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
+import InputText from "@components/atoms/defaultElements/inputText";
+import { SpinIcon } from "@components/atoms/iconComponents";
+import { useCUDDataMutation } from "@services/base";
+import type { IRequestConfig } from "@type/elementType";
+import { transformDotNotationToNested } from "@utils/core";
+import { showErrorToast, showSuccessToast } from "@utils/toast";
+import { ConditionalFields } from "./conditionalFields";
+import type { IProps } from "./type";
+import { useMemo } from "react";
 
 export const ChequeDynamicForm = ({
   sourceKey,
@@ -31,131 +23,90 @@ export const ChequeDynamicForm = ({
   handleClose,
   config,
   selectedRecords,
+  type,
 }: IProps) => {
-  const createUrl = config.createUrl;
-  const voucherTypeId = config.voucherTypeId;
-
-  // const { data: defaultValue } = useGetData<null, null>({
-  //   url: getUrl,
-  //   body: {
-  //     RepoViewId: repoViewId,
-  //     [sourceKey]: sourceId,
-  //     Id: id,
-  //   },
-  //   skip: !id,
-  // });
-
+  const createUrl = config?.createUrl;
+  const voucherTypeId = config?.voucherTypeId;
   const [mutateItem, { isLoading: mutateIsLoading }] = useCUDDataMutation();
-
-  // const [changeFields, setChangeFields] = useState([]);
-  // const [originalValues, setOriginalValues] = useState(null);
   const t = useTranslations();
   const [form] = Form.useForm();
   const formValues = Form.useWatch([], form);
 
-  const formIsValid = formValues
-    ? Object.values(formValues).every((value) => value !== undefined)
-    : false;
+  const formIsValid =
+    formValues &&
+    form.isFieldsTouched(true) &&
+    form.getFieldsError().every(({ errors }) => errors.length === 0);
+
+  const resolveAlternativeKey = () => {
+    if (!config?.alternativeKey) return {};
+    const values = selectedRecords.map((item) => {
+      const keys = config.alternativeFindKey.split(".");
+      return keys.reduce((acc, key) => acc?.[key], item);
+    });
+    const isValid = values.every((v) => v === values[0]);
+    if (!isValid) {
+      showErrorToast(config.alternativeErr, t("general.fail"));
+      return null;
+    }
+    return { [config.alternativeKey]: values[0] };
+  };
 
   const handleSubmit = async (values) => {
     const cleanValues = transformDotNotationToNested(values);
-    let body = {
+    const alternative = resolveAlternativeKey();
+    if (alternative === null) return;
+    const body = {
       ...cleanValues,
+      ...alternative,
       [sourceKey]: sourceId,
       VoucherTypeId: voucherTypeId,
     };
-
-    if (config?.alternativeKey) {
-      const alternativeValue = selectedRecords.map((item) => {
-        const key = config?.alternativeFindKey.split(".");
-        let value = item;
-        for (let i = 0; i < key.length; i++) {
-          value = value?.[key[i]];
-        }
-
-        return value;
-      });
-      const validation = alternativeValue.every(
-        (value) => value === alternativeValue[0],
-      );
-      validation
-        ? (body = {
-            ...body,
-            [config.alternativeKey]: alternativeValue[0],
-          })
-        : showErrorToast(config?.alternativeErr, t("general.fail"));
-
-      if (!validation) return;
-    }
-
     try {
-      // let mutateResult;
-
-      // if (id) {
-      //   mutateResult = await mutateItem({
-      //     url: updateUrl,
-      //     body: {
-      //       ...cleanValues,
-      //       Details: {
-
-      //       }
-      //       [sourceKey]: sourceId,
-      //       [fieldKey]: id,
-      //       ChangeFields: changeFields,
-      //     },
-      //   }).unwrap();
-      // } else {
-
       const mutateResult = await mutateItem({
         url: createUrl,
         body: body,
         id: "all",
       }).unwrap();
-
-      // }
       if (mutateResult?.Result === "Success") {
         showSuccessToast(t("toast.successTitle"));
         form.resetFields();
         handleClose();
       }
     } catch (error) {
-      null;
+      showErrorToast(t("general.fail"));
     }
   };
 
-  // useEffect(() => {
-  //   if (originalValues) {
-  //     for (const key in formValues) {
-  //       if (originalValues[key] !== formValues[key]) {
-  //         const exist = changeFields.find((item) => item === key);
+  const sortedFields = useMemo(() => {
+    return [...(config.formFields ?? [])]
+      .filter((item) => item.type !== "info")
+      .sort((a, b) => a.order - b.order);
+  }, [config.formFields]);
 
-  //         if (!exist) {
-  //           setChangeFields((prevState) => [...prevState, key]);
-  //         }
-  //       }
-  //     }
-  //   }
-  // }, [formValues, originalValues]);
-
-  // useEffect(() => {
-  //   form.resetFields();
-  //   setChangeFields([]);
-  //   setOriginalValues(null);
-  //   if (id && defaultValue?.Data) {
-  //     form.setFieldsValue(defaultValue?.Data);
-  //   }
-  // }, [defaultValue?.Data, form, id]);
+  const fieldRenderers = useMemo(
+    () => ({
+      date: () => <NewDatePicker />,
+      checkbox: () => <Checkbox />,
+      number: () => (
+        <CustomInputNumber keyboard={false} controls={false} min={0} />
+      ),
+      price: () => (
+        <CustomInputNumber
+          min={0}
+          controls={false}
+          parser={(value) =>
+            value?.replace(/\$\s?|(,*)/g, "") as unknown as number
+          }
+          formatter={(value) =>
+            `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+          }
+        />
+      ),
+    }),
+    [],
+  );
 
   const renderField = (item) => {
-    if (item.type === "date") {
-      // form.setFieldValue(item.name,new Date().toISOString())
-      return <NewDatePicker />;
-    }
-
-    if (item.type === "checkbox") {
-      return <Checkbox />;
-    }
-
     if (item.type === "selectOption") {
       const dynamicValue: IRequestConfig = {
         addWebUrl: item.selectEndpoint?.addWebUrl,
@@ -185,26 +136,9 @@ export const ChequeDynamicForm = ({
       };
       return <DynamicTree dynamicValue={dynamicValue} showSearch allowClear />;
     }
-    if (item.type === "number") {
-      return <CustomInputNumber keyboard={false} controls={false} min={0} />;
-    }
-    if (item.type === "price") {
-      return (
-        <CustomInputNumber
-          min={0}
-          controls={false}
-          parser={(value) =>
-            value?.replace(/\$\s?|(,*)/g, "") as unknown as number
-          }
-          formatter={(value) =>
-            `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-          }
-        />
-      );
-    }
-
-    return <InputText type={item.type} />;
+    return fieldRenderers[item.type]?.() ?? <InputText type={item.type} />;
   };
+
 
   return (
     <Form
@@ -212,46 +146,45 @@ export const ChequeDynamicForm = ({
       name="chequeDynamicForm"
       layout="vertical"
       onFinish={handleSubmit}
-      className={`flex flex-col lg:grid lg:grid-cols-2 gap-2 h-full`}
+      className="flex flex-col lg:grid lg:grid-cols-2 gap-2 h-full items-center"
     >
-      {config.formFields
-        ?.filter((item) => item.type !== "info")
-        .sort((a, b) => a.order - b.order)
-        .map((item, index) =>
-          item.type === "checkbox" ? (
-            <Form.Item
-              key={index}
-              name={item.name}
-              rules={item.rules}
-              className="flex flex-col justify-end !mb-0 !pb-0 text-xs"
-              valuePropName="checked"
-              initialValue={false}
-            >
-              <Checkbox>{item.caption}</Checkbox>
-            </Form.Item>
-          ) : (
-            <Form.Item
-              key={index}
-              label={item.caption}
-              name={item.name}
-              rules={item.rules}
-              className={`flex flex-col !mb-0 !pb-0 text-xs ${
-                config.formFields.length % 2 !== 0 &&
-                index === config.formFields.length - 1 &&
-                "col-span-2"
-              }`}
-            >
-              {renderField(item)}
-            </Form.Item>
-          ),
-        )}
-      {config.conditionalFields && <ConditionalFields form={form} />}
+      {sortedFields.map((item, index) =>
+        item.type === "checkbox" ? (
+          <Form.Item
+            key={item.name}
+            name={item.name}
+            rules={item.rules}
+            className="flex flex-col justify-end !mb-0 !pb-0 text-xs"
+            valuePropName="checked"
+            initialValue={false}
+          >
+            <Checkbox>{item.caption}</Checkbox>
+          </Form.Item>
+        ) : (
+          <Form.Item
+            key={item.name}
+            label={item.caption}
+            name={item.name}
+            rules={item.rules}
+            className={`flex flex-col !mb-0 !pb-0 text-xs ${
+              config.formFields.length % 2 !== 0 &&
+              index === config.formFields.length - 1 &&
+              !config.conditionalFields &&
+              "col-span-2"
+            }`}
+          >
+            {renderField(item)}
+          </Form.Item>
+        ),
+      )}
+      {config.conditionalFields && (
+        <ConditionalFields form={form} type={type} />
+      )}
       <Form.Item className="col-span-2 m-0 p-0 text-xs">
         <div className="flex justify-end items-end gap-2 pt-2">
           <CustomButton
             type="text"
             htmlType="submit"
-            // disabled={id ? changeFields.length === 0 : !formIsValid}
             disabled={!formIsValid}
             className="bg-black-black8 hover:bg-white px-8 border hover:border-black-black8 rounded text-white disabled:text-gray-gray6 text-xs"
           >

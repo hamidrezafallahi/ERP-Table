@@ -1,7 +1,7 @@
 import { Spin } from 'antd';
 import { useTranslations } from 'next-intl';
 
-import { CustomButton } from '@components/atoms/defaultElements';
+import { CustomButton } from '@components/atoms/defaultElements/button';
 import { SpinIcon } from '@components/atoms/iconComponents';
 
 import type { IProps } from './type';

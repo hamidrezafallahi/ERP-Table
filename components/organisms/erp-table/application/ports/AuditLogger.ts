@@ -31,6 +31,7 @@ export type AuditEvent = {
   | 'DUPLICATE_ROW'
   | 'INVARIANT_VIOLATION'
   | 'ROW_NOT_EXPANDED'
+  | 'TABLE_TYPE_CHANGED'
   | 'DRAG_OR_DROP_ROW_NOT_FOUND';
 };
 export interface AuditLogger {

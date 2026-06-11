@@ -12,8 +12,9 @@ import {
 } from '@components/organisms/managementSystem';
 import {
   AdvancedBankDeposit,
-  AdvancedBankWithdrawal,
 } from '@components/organisms/receiptAndPayment/bank';
+import AdvancedBankWithdrawal
+  from '@components/organisms/receiptAndPayment/bank/withdrawal';
 import {
   AdvancedCashDeposit,
   AdvancedCashWithdrawal,

@@ -1,7 +1,7 @@
+"use client";
 import React, { useEffect } from 'react';
 
 import { DefaultOptionType } from 'antd/es/select';
-import moment from 'moment-jalaali';
 import {
   useLocale,
   useTranslations,
@@ -22,6 +22,7 @@ import {
   TCell,
 } from '../../engine/type';
 import { UITableController } from '../../infrastructure/ui/UITableController';
+import { valueParser } from '../helper';
 import { IRow } from '../type';
 import { DescriptionComponent } from './descriptionComponent';
 
@@ -141,35 +142,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     e.preventDefault();
     e.stopPropagation();
   };
-  const valueParser = (val, type: FieldType) => {
-    if (val == null || val == undefined) {
-      if (type == "selectOption") {
-        return t("general.selectField");
-      } else {
-        return "";
-      }
-    }
-    switch (type) {
-      case "text":
-      case "number":
-      case "select":
-      case "selectOption":
-      case "static":
-        return val;
-      case "checkbox":
-        return val ? "✔" : "✘";
-      case "price":
-        return `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-      case "date":
-        if (locale === "fa") {
-          return moment(val).format("jYYYY/jMM/jDD");
-        } else {
-          return moment(val).format("YYYY/MM/DD");
-        }
-      default:
-        return "—";
-    }
-  };
+
 
   useEffect(() => {
     if (isActive && inputRef.current) {
@@ -177,30 +150,29 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
       inputRef.current.select();
     }
   }, [isActive]);
-
-  if (disable) {
-    return (
+// console.log({disable},{editable},{isActive},{type},{columnId})
+   if (disable) {
+     return (
       <span key={idx} className={` "text-xs"  ${meta.className}`}>
         {disable ? "--" : String(value ?? "")}
       </span>
     );
-  } else if (!editable) {
+  } else if (editable === false) {
     if (meta.renderType === "selectOption") {
       return (
         <span key={idx} className={`text-xs text-start  ${meta.className} `}>
-          {value ? String(value) : "--"}
+          {value ? valueParser(value,meta.renderType,locale,t)   : "--"}
         </span>
       );
     } else {
       return (
         <span key={idx} className={`text-xs ${meta.className} `}>
-          {String(value ?? "")}
+          {valueParser(value,meta.renderType,locale,t)}
         </span>
       );
     }
   } else if (!isActive || isDeleted) {
     /* ===== view mode ===== */
-
     return (
       <>
         <button
@@ -220,16 +192,9 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     ${meta.renderType === "checkbox" ? "justify-center" : "justify-start"}`}
           >
             <div className="truncate">
-              {valueParser(display ?? value, meta.renderType)}
+              {valueParser(display ?? value, meta.renderType,locale,t)}
             </div>
           </div>
-          {/* {!validation.isValid && (
-          <Tooltip title={validation.cellError.message}>
-          <span>
-          <Info config={{ width: 18, height: 18, stroke: "#f87171" }} />
-          </span>
-          </Tooltip>
-        )} */}
         </button>
       </>
     );
@@ -438,6 +403,17 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     case "description":
       return (
         <DescriptionComponent
+          activeCell={activeCell}
+          blockDrag={blockDrag}
+          isDeleted={isDeleted}
+          editable={editable}
+          dispatchChangeValue={dispatchChangeValue}
+          idx={idx}
+          inputRef={inputRef}
+          tableKey={tableKey}
+          row={row}
+          controller={controller}
+          columnId={columnId}
           key={idx}
           ref={inputRef as any}
           disabled={isDeleted || !editable}

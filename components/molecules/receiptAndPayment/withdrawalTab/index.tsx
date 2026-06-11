@@ -1,7 +1,7 @@
-import { CustomDropdownButton } from "@components/atoms/defaultElements";
-import { DownChevron } from "@components/atoms/iconComponents";
+import { CustomDropdownButton } from '@components/atoms/defaultElements';
+import { DownChevron } from '@components/atoms/iconComponents';
 
-import { IProps } from "./type";
+import { IProps } from './type';
 
 interface ITabConfig {
   key: string;
@@ -55,7 +55,7 @@ const tabConfig: ITabConfig[] = [
   },
 ];
 
-export const WithdrawalTab = ({ active, setActive }: IProps) => {
+export const WithdrawalTab = ({ active, handleActive }: IProps) => {
   const renderOption = (items: ITabConfig[]) =>
     items.map((item) => {
       return {
@@ -65,7 +65,7 @@ export const WithdrawalTab = ({ active, setActive }: IProps) => {
           <span
             className="flex text-sm"
             onClick={() => {
-              setActive({
+              handleActive({
                 key: item.key,
                 value: item.value,
                 fieldKey: item.extra.fieldKey,
@@ -112,16 +112,8 @@ export const WithdrawalTab = ({ active, setActive }: IProps) => {
             ) : (
               <span
                 onClick={() => {
-                  if (!item.disabled && !item.children) {
-                    setActive({
-                      key: item.key,
-                      value: item.value,
-                      fieldKey: item.extra.fieldKey,
-                      detailKey: item.extra.detailKey,
-                      detailCaption: item.label,
-                    });
-                  }
-                  setActive({
+                  
+                  handleActive({
                     key: item.key,
                     value: item.value,
                     fieldKey: item.extra.fieldKey,

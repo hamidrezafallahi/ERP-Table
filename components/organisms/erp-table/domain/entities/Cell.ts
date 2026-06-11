@@ -18,20 +18,20 @@ export class Cell {
     private originalValue: CellValue,
     private display: CellDisplay
   ) { }
-  changeValue(newValue: CellValue): CellChanged | null {
+  changeValue(newValue: unknown): CellChanged | null {
     // if (this.value.equals(newValue)) return null;
-    this.value = newValue;
+    this.value = new CellValue(newValue);
     return new CellChanged(this.rowId, this.columnId, newValue);
   }
-  changeDisplay(newValue: CellValue): DisplayChanged | null {
-    if (this.display.equals(newValue)) return null;
-    this.display = newValue;
+  changeDisplay(newValue: unknown): DisplayChanged | null {
+    if (this.display.value===newValue) return null;
+    this.display = new CellValue(newValue);
     return new DisplayChanged(this.rowId, this.columnId, newValue);
   }
 
-  changeOriginalValue(newValue: CellValue): CellChanged | null {
-    if (this.originalValue.equals(newValue)) return null;
-    this.originalValue = newValue;
+  changeOriginalValue(newValue: unknown): CellChanged | null {
+    if (this.originalValue.value ===newValue) return null;
+    this.originalValue = new CellValue(newValue);
     return new CellChanged(this.rowId, this.columnId, newValue);
   }
 

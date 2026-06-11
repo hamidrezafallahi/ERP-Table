@@ -5,20 +5,20 @@ import {
   useCallback,
   useEffect,
   useState,
-} from 'react';
+} from "react";
 
-import { useTranslations } from 'next-intl';
-import { shallowEqual } from 'react-redux';
+import { useTranslations } from "next-intl";
+import { shallowEqual } from "react-redux";
 
-import { DynamicSelect } from '@components/atoms/defaultElements';
-import { useAppSelector } from '@hooks/custom/useAppSelector';
-import { useGetData } from '@services/base';
-import { ISelectOption } from '@type/elementType';
+import { DynamicSelect } from "@components/atoms/defaultElements";
+import { useAppSelector } from "@hooks/custom/useAppSelector";
+import { useGetData } from "@services/base";
+import { ISelectOption } from "@type/elementType";
 
-import { useFilteredList } from '../hooks/useFilteredList';
-import { IDynamicModalConfig } from '../types';
-import { DebounceSearch } from './debounceSearch';
-import SideBarFormList from './sideBarFormList';
+import { useFilteredList } from "../hooks/useFilteredList";
+import { IDynamicModalConfig } from "../types";
+import { DebounceSearch } from "./debounceSearch";
+import SideBarFormList from "./sideBarFormList";
 
 interface SideBarProps {
   typeId: number;
@@ -27,7 +27,12 @@ interface SideBarProps {
   sideBarTitle: string;
 }
 
-export default function SideBar({ typeId, setTypeId, config,sideBarTitle }: SideBarProps) {
+export default function SideBar({
+  typeId,
+  setTypeId,
+  config,
+  sideBarTitle,
+}: SideBarProps) {
   const t = useTranslations();
   const [searchPhrase, setSearchPhrase] = useState("");
   const [list, setList] = useState<ISelectOption[]>([]);
@@ -42,7 +47,7 @@ export default function SideBar({ typeId, setTypeId, config,sideBarTitle }: Side
   }, []);
 
   const { data, isFetching, isError } = useGetData({
-    url: "/api/acc/select/voucherType4searchBox",
+    url: config.sidebarUrl ?? "/api/acc/select/voucherType4searchBox",
     body: {
       FullSearchPhrase: "",
       PagingInfo: {

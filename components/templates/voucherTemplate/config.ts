@@ -181,7 +181,6 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       // },
       dynamicSelectFilterOption: (input, option) => {
         const label = option?.label;
-        console.log(label)
         return (
           typeof label === "string" &&
           option.option._SelectDisplay
@@ -226,7 +225,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         dependOn: { fieldName: "AccountId", value: null }
       },
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "FifthId",
       },
@@ -245,7 +244,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         dependOn: { fieldName: "AccountId", value: null }
       },
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "SixthId",
       },
@@ -264,7 +263,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         dependOn: { fieldName: "AccountId", value: null }
       },
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "SeventhId",
       },
@@ -283,7 +282,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         dependOn: { fieldName: "AccountId", value: null }
       },
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "EightId",
       },
@@ -302,7 +301,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         dependOn: { fieldName: "AccountId", value: null }
       },
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "NineId",
       },
@@ -321,7 +320,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         dependOn: { fieldName: "AccountId", value: null }
       },
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "TenId",
       },
@@ -340,7 +339,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         dependOn: { fieldName: "AccountId", value: null }
       },
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "ElevenId",
       },
@@ -359,7 +358,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         dependOn: { fieldName: "AccountId", value: null }
       },
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "TwelveId",
       },
@@ -378,7 +377,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         dependOn: { fieldName: "AccountId", value: null }
       },
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "ThirteenId",
       },
@@ -388,13 +387,12 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
     }, {
       fieldName: "DetailDesc",
       fieldCaption: t("general.rowDescription"),
-      fieldType: "text",//must be description after complete desc component
-      // dynamicSource: {
-      //   endpoint: "/api/acc/select/accountDescription",
-      //   dependsOn: ["AccountId"],
-      //   dependOn: { fieldName: "id", value: null }
-
-      // },
+      fieldType: "description",//must be description after complete desc component
+      dynamicSource: {
+        endpoint: "/api/acc/select/accountDescription",
+        dependsOn: ["AccountId"],
+        dependOn: { fieldName: "id", value: null }
+      },
       style: { width: 250 },
       visibility: { kind: 'always' },
       order: 13
@@ -425,7 +423,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       fieldType: "number",
       rules: [{ type: "number", min: 2, message: " 2 حداقل" }],
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "ReferNumber",
       },
@@ -436,7 +434,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       fieldCaption: t("general.referDate"),
       fieldType: "date",
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "ReferDate",
       },
@@ -454,7 +452,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
         // PagingInfo:{ PageRecordCount: 5000, PageNumber: 1 }
       },
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "CurrencyId",
       },
@@ -466,7 +464,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       rules: [{ type: "number", min: 2, message: " 2 حداقل" }],
       order: 19,
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "CurrencyNumber",
       },
@@ -476,7 +474,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       fieldCaption: t("general.countNumber"),
       fieldType: "number",
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "Count",
       },
@@ -487,7 +485,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       fieldCaption: t("general.followUpNumber"),
       fieldType: "text",
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "FollowUpNumber",
       },
@@ -498,7 +496,7 @@ export const columnConfig = (t: (e: string) => string): IDetailColumnConfig[] =>
       fieldCaption: t("general.insuranceNumber"),
       fieldType: "number",
       visibility: {
-        kind: "whenFlag",
+        kind: "whenRemoteFlag",
         sourceFieldName: "AccountId",
         flag: "InsuranceNumber",
       },

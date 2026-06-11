@@ -73,6 +73,13 @@ export interface ChangeCellValueCommand extends BaseTableCommand {
   readonly columnId: string;
   readonly newValue: unknown;
 }
+ 
+export interface SaveDescriptionCommand extends BaseTableCommand {
+  readonly type: 'SAVE_DESCRIPTION';
+  readonly rowId: number;
+  readonly flag: boolean;
+ 
+}
 export interface ChangeCellDisplayValueCommand extends BaseTableCommand {
   readonly type: 'CHANGE_CELL_DISPLAY_VALUE';
   readonly rowId: number;
@@ -87,6 +94,17 @@ export interface AddEmptyRowCommand extends BaseTableCommand {
   readonly type: 'ADD_EMPTY_ROW';
   readonly autoActivate: boolean;
 }
+export interface AddNewRowsCommand extends BaseTableCommand {
+  readonly type: 'ADD_NEW_ROWS';
+  readonly detailFieldKey: string;
+  readonly rows: {
+    key: string;
+    value: unknown;
+    display: unknown;
+  }[][];
+  readonly autoActivate?: boolean;
+}
+
 
 export interface DuplicateRowCommand extends BaseTableCommand {
   readonly type: 'DUPLICATE_ROW';
@@ -181,6 +199,11 @@ export interface DeleteTableCommand extends BaseTableCommand {
   readonly type: 'TABLE_DELETED';
 
 }
+export interface TableChangeTypeCommand extends BaseTableCommand {
+  readonly type: 'SET_TABLE_TYPE';
+  readonly tableType: string;
+
+}
 export interface ResetTableCommand extends BaseTableCommand {
   readonly type: 'TABLE_RESET';
   readonly rowId: string;
@@ -251,12 +274,15 @@ export type TableCommand =
   | MoveVerticalActiveRow
   | ActiveFirstCellCommand
   | ChangeCellValueCommand
+  | SaveDescriptionCommand
   | ChangeCellDisplayValueCommand
   | AddEmptyRowCommand
+  | AddNewRowsCommand
   | DuplicateRowCommand
   | DeleteRowCommand
   | DeleteRowsCommand
   | DeleteTableCommand
+  | TableChangeTypeCommand
   | ResetTableCommand
   | RowReorderedCommand
   | ColumnReorderedCommand

@@ -15,8 +15,8 @@ import {
   PlusOutline,
   Reload,
 } from '@components/atoms/iconComponents';
-import { useInitializePage } from '@hooks/custom';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useInitializePage } from '@hooks/custom/useInitializePage';
 import { setPageData } from '@slice/pages';
 
 import { MobileTreeSelect } from './mobileTreeSelect';

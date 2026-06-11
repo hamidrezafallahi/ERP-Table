@@ -5,7 +5,10 @@ import {
 } from 'react';
 
 import { Spin } from 'antd';
-import { useTranslations } from 'next-intl';
+import {
+  useLocale,
+  useTranslations,
+} from 'next-intl';
 import { useDispatch } from 'react-redux';
 
 import {
@@ -13,12 +16,11 @@ import {
   CustomTooltip,
 } from '@components/atoms/defaultElements';
 import {
-  Info,
+  InfoIcon,
   NotExistNotificationIcon,
   SpinIcon,
   TrashBin,
 } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@hooks/custom/useAppSelector';
 import {
   QueryActionCreatorResult,
   QueryDefinition,
@@ -68,9 +70,7 @@ export const RenderNotification = ({
 }: RenderNotificationProps) => {
   const t = useTranslations();
   const [changeStatus] = useCUDDataMutation();
-  const { locale } = useAppSelector((state) => ({
-    locale: state.withPersist.config.lang,
-  }));
+ const locale = useLocale()
   const dispatch = useDispatch();
   const [loadingItems, setLoadingItems] = useState<number[]>([]);
 
@@ -158,12 +158,12 @@ export const RenderNotification = ({
                   <div className="flex justify-between items-center gap-2">
                     {isDropdown ? (
                       <CustomTooltip title={item?.Message?.Message}>
-                        <Info
+                        <InfoIcon
                           config={{ stroke: isNew ? "#0E0E0E" : "#939393" }}
                         />
                       </CustomTooltip>
                     ) : (
-                      <Info />
+                      <InfoIcon />
                     )}
                     <span
                       className={`${

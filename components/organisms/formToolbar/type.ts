@@ -1,6 +1,21 @@
-import type { FormInstance } from "antd";
+import {
+  Dispatch,
+  SetStateAction,
+} from 'react';
 
-export interface IProps {
+import type { FormInstance } from 'antd';
+
+export interface MasterToolbar{
+  setMasterForm?: Dispatch<
+    SetStateAction<{
+      loading: boolean;
+      action: "save" | "saveAndNew" | "saveAndClose";
+    }>
+  >;
+  masterForm?: { loading: boolean, action: "save" | "saveAndNew" | "saveAndClose" }
+}
+
+export interface IProps extends MasterToolbar {
   toolbarData: any;
   isEdit: boolean;
   id: number;
@@ -20,9 +35,6 @@ export interface IProps {
   submitCaption?: string;
   withSubmitButton?: boolean;
   hasShorthandFormToolbar?: boolean;
-  fromIndexedDb?: boolean;
-  loadingFromOutsideComponents?: boolean;
   saveAsDraft?: boolean;
-  hasReload?: boolean;
-  handleRefreshData?: () => void;
+  
 }

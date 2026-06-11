@@ -14,8 +14,8 @@ import {
   CustomTooltip,
 } from '@components/atoms/defaultElements';
 import ExpandedButton from '@components/molecules/expandedButton';
-import { useInitializePage } from '@hooks/custom';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useInitializePage } from '@hooks/custom/useInitializePage';
 import { useCUDFormDataMutation } from '@services/base';
 import { SystemEnum } from '@type/enum';
 import {

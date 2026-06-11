@@ -82,7 +82,6 @@ function DocType() {
         >
           <CustomButton
             type="text"
-            ghost
             className="flex justify-end gap-2 bg-gray-gray2 m-0 p-1 border border-gray-gray5 w-full overflow-hidden text-gray-gray10"
             onClick={handleCloseDropdown}
           >

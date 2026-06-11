@@ -40,7 +40,7 @@ import {
   formConfig,
 } from './config';
 
-export const AdvancedCashWithdrawal = ({ form }) => {
+export const AdvancedCashWithdrawal = ({ form, handleSubmit }) => {
   const titleKey = "VoucherNumber";
   const baseFieldKey = "CashStatementId";
   const repoViewId = 3019;
@@ -298,10 +298,15 @@ export const AdvancedCashWithdrawal = ({ form }) => {
             }  transition-all duration-500 ease-in-out`}
           >
             {isShowForm && (
-              <AdvancedBankWithdrawalForm activePage={activePage} form={form} />
+              <AdvancedBankWithdrawalForm
+                activePage={activePage}
+                form={form}
+                handleSubmit={handleSubmit}
+                totalDebit={1000}
+              />
             )}
           </div>
-          <WithdrawalTab active={active} setActive={setActive} />
+          <WithdrawalTab active={active} handleActive={setActive} />
           <div className="flex items-center gap-2 pt-8">
             <div
               className={`${isShowForm ? "rotate-180" : ""} `}

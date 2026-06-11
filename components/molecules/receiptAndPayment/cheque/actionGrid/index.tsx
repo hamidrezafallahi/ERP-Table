@@ -1,38 +1,28 @@
-﻿import {
-  Pagination,
-  Spin,
-  Table,
-  TableColumnsType,
-} from 'antd';
-import { useTranslations } from 'next-intl';
-import { shallowEqual } from 'react-redux';
+﻿import { Pagination, Spin, Table, TableColumnsType } from "antd";
+import { useTranslations } from "next-intl";
+import { shallowEqual } from "react-redux";
 
 import {
   CustomButton,
   CustomSelect,
   CustomTooltip,
-} from '@components/atoms/defaultElements';
+} from "@components/atoms/defaultElements";
 import {
-  Info,
+  InfoIcon,
   LeftChevron,
   NoData,
   RightChevron,
   SpinIcon,
   Undo,
-} from '@components/atoms/iconComponents';
-import RenderStatus from '@components/molecules/renderStatus';
-import {
-  ActionLabelsEnum,
-} from '@components/organisms/receiptAndPayment/cheque/action/enum';
-import {
-  useDarkMode,
-  useProcessedData,
-} from '@hooks/custom';
-import { useAppSelector } from '@hooks/custom/useAppSelector';
-import type { IColumnConfig } from '@services/generalType/type';
-import { getColoredIcon } from '@utils/core';
+} from "@components/atoms/iconComponents";
+import RenderStatus from "@components/molecules/renderStatus";
+import { useDarkMode, useProcessedData } from "@hooks/custom";
+import type { IColumnConfig } from "@services/generalType/type";
+import { getColoredIcon } from "@utils/core";
 
-import type { IProps } from './type';
+import type { IProps } from "./type";
+import { useAppSelector } from "@hooks/custom/useAppSelector";
+import { ActionLabelsEnum } from "@components/organisms/receiptAndPayment/action/enum";
 
 export const ActionGrid = ({
   data,
@@ -50,6 +40,7 @@ export const ActionGrid = ({
   selectedItems,
   setSelectedItems,
   setSelectedHeaderId,
+  setSelectedDetails,
 }: IProps) => {
   const { mode = "light" } = useDarkMode();
 
@@ -111,7 +102,9 @@ export const ActionGrid = ({
                   className="cursor-pointer"
                   onClick={() => onActionClick(action, record)}
                 >
-                  <Info />
+                  <InfoIcon
+                    config={{ stroke: "#595959", width: 20, height: 20 }}
+                  />
                 </div>
               </div>
             );
@@ -145,7 +138,9 @@ export const ActionGrid = ({
                     className="cursor-pointer"
                     onClick={() => onActionClick(action, record)}
                   >
-                    <Info />
+                    <InfoIcon
+                      config={{ stroke: "#595959", width: 20, height: 20 }}
+                    />
                   </div>
                 </CustomTooltip>
               </div>
@@ -192,7 +187,9 @@ export const ActionGrid = ({
                   onClick={() => onActionClick(action, record)}
                 >
                   <CustomTooltip title={ActionLabelsEnum.ChequeStatus}>
-                    <Info />
+                    <InfoIcon
+                      config={{ stroke: "#595959", width: 20, height: 20 }}
+                    />{" "}
                   </CustomTooltip>
                 </div>
                 {record["DocumentCheque.StateId"] !== "نزد صندوق" && (
@@ -254,18 +251,20 @@ export const ActionGrid = ({
                           onActionClick(action, record);
                       }}
                     >
-                        {typeof action.Icon === "string" && (
-                          <div
-                            dangerouslySetInnerHTML={{
-                              __html: getColoredIcon(action.Icon, mode),
-                            }}
-                            style={{
-                              width: "18px",
-                              height: "17px",
-                              opacity: `${1}`,
-                            }}
-                          />
-                        )}
+                      {typeof action.Icon === "string" ? (
+                        <div
+                          dangerouslySetInnerHTML={{
+                            __html: getColoredIcon(action.Icon, mode),
+                          }}
+                          style={{
+                            width: "18px",
+                            height: "17px",
+                            opacity: `${1}`,
+                          }}
+                        />
+                      ) : (
+                        action.Icon
+                      )}
                     </span>
                   </CustomTooltip>
                 );
@@ -321,6 +320,7 @@ export const ActionGrid = ({
             selectedRowKeys: selectedItems as any,
 
             onChange: (selectedRowKeys, selectedRows) => {
+              setSelectedDetails(selectedRows as any);
               setSelectedItems(selectedRowKeys as any);
               setSelectedHeaderId(selectedRows.map((i) => i[headerKey]));
             },

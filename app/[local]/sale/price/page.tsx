@@ -33,10 +33,10 @@ export default function PriceFormPage() {
     (state) => ({
       initPage: state.withPersist.init,
       activePage: state?.withPersist?.pages?.find(
-        (item) => item.isActive === true
+        (item) => item.isActive === true,
       ),
     }),
-    shallowEqual
+    shallowEqual,
   );
   const params = useSearchParams();
   const id = params.get("id");
@@ -61,7 +61,7 @@ export default function PriceFormPage() {
   });
 
   const detailInitialData = activePage?.pageData?.find(
-    (item) => item.name === "Details"
+    (item) => item.name === "Details",
   )?.originalValue;
 
   const recordHeight = 33;
@@ -205,7 +205,7 @@ export default function PriceFormPage() {
             },
           },
           listPageId: listPageId,
-        })
+        }),
       );
     }
   }, [formIsSuccess, detailsDataIsSuccess, pageId]);

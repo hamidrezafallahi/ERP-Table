@@ -51,7 +51,6 @@ function ReportSidebar() {
           return (
             <CustomButton
               type="text"
-              ghost
               className={`w-full h-10 text-center text-xs bg-gray-gray2 dark:bg-gray-gray95  dark:text-white border-gray-gray5 active:bg-gray-gray9 active:font-medium ${
                 activePage?.viewData?.Level === level &&
                 "!bg-gray-gray7 !font-medium text-main-black border border-gray-gray7"

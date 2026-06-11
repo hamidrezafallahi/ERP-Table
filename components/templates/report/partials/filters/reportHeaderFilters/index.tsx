@@ -43,13 +43,20 @@ export default function ReportHeaderFilters({
       content: (
         <FinancialYear
           value={activePage?.viewData?.YearIds ?? []}
-          onChange={(e) => {
-            console.log(e);
-            // HandleSubmitDate("financial", e);
-          }}
+          // onChange={(e) => {
+          //  dispatch(
+          //   setViewData({
+          //     ...activePage.viewData,
+          //     StartDate:null,
+          //     EndDate:null,
+          //     YearIds: e.yearIds,
+
+          //   }),
+          // );
+          // }}
         />
       ),
-    } 
+    },
   ];
 
   useEffect(() => {
@@ -79,6 +86,16 @@ export default function ReportHeaderFilters({
         label={false}
         exportType="IsoString"
         locale={locale}
+        onSubmit={({ type, Data }: { type: string; Data: any }) => {
+          dispatch(
+            setViewData({
+              ...activePage.viewData,
+              StartDate: null,
+              EndDate: null,
+              YearIds: Data.customData.yearIds,
+            }),
+          );
+        }}
         // activeTable = "Month"
         onChange={(e: any) => {
           console.log(e);
@@ -105,7 +122,7 @@ export default function ReportHeaderFilters({
           );
         }}
         // buttonStyle={{ height: "36px", transform: "translateY(-4px)" }}
-        buttonStyle={{ height: "36px"}}
+        buttonStyle={{ height: "36px" }}
       />
       <FilterSection
         defaultFilters={

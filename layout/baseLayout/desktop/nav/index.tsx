@@ -4,6 +4,7 @@ import { CustomBreadcrumb } from '@components/atoms/defaultElements/breadcrumb';
 import PageTitle from '@components/atoms/pageTitle';
 import History from '@components/molecules/history';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { PageTypeEnum } from '@type/enum';
 import { renderPageState } from '@utils/core';
 
 import TopHeadSearchbar from '../topHead/topHeadSearchbar';
@@ -30,7 +31,7 @@ export default function Navbar() {
     >
       <div className="flex justify-start items-center gap-x-2 w-full h-full">
         <PageTitle/>
-        {renderPageState(activePage?.pageState)}
+        {activePage?.type === PageTypeEnum.Form || activePage?.type === PageTypeEnum.List && renderPageState(activePage?.pageState)}
       </div>
       <CustomBreadcrumb />
       <div className="-top-12 absolute flex items-center gap-2 w-1/3">

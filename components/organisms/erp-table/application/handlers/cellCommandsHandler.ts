@@ -11,7 +11,6 @@ import {
   PermissionPolicy,
 } from '../../domain/policies';
 import {
-  CellValue,
   ColumnId,
   ColumnSchema,
   RowId,
@@ -21,6 +20,7 @@ import {
   ApplyDynamicProjectionCommand,
   ChangeCellDisplayValueCommand,
   ChangeCellValueCommand,
+  SaveDescriptionCommand,
 } from '../commands';
 import { TableEvent } from '../events';
 import { AuditLogger } from '../ports/AuditLogger';
@@ -49,92 +49,90 @@ export class ChangeCellValueHandler {
   ): Promise<TableEvent[]> {
     const table = await this.repo.getById(command.store, command.tableKey);
     try {
-const rowId = new RowId(command.rowId);
-const columnId = new ColumnId(command.columnId);
-/* ---------- 1. schema existence ---------- */
-const schema = table.getColumnSchema(columnId);
-if (!schema) {
-  throw new DomainError(
-    'COLUMN_NOT_FOUND',
-    'Column does not exist',
-    { columnId: columnId.value }
-  );
-}
-/* ---------- 2. editable policy ---------- */
-if (
-  schema.editable === false
-) {
-  throw new DomainError(
-    'NOT_EDITABLE',
-    'Cell is not editable',
-    { rowId: rowId.value, columnId: columnId.value }
-  );
-}
-
-/* ---------- 3. permission policy ---------- */
-if (
-  !this.permissionPolicy.canChangeCell({
-    actor,
-    rowId: command.rowId,
-    columnId: command.columnId,
-  })
-) {
-  throw new DomainError(
-    'FORBIDDEN',
-    'Actor is not allowed to change this cell',
-    {
-      actor,
-      rowId: rowId.value,
+      const rowId = new RowId(command.rowId);
+      const columnId = new ColumnId(command.columnId);
+      /* ---------- 1. schema existence ---------- */
+      const schema = table.getColumnSchema(columnId);
+      if (!schema) {
+        throw new DomainError(
+          'COLUMN_NOT_FOUND',
+          'Column does not exist',
+          { columnId: columnId.value }
+        );
+      }
+      /* ---------- 2. editable policy ---------- */
+      if (
+        schema.editable === false
+      ) {
+        throw new DomainError(
+          'NOT_EDITABLE',
+          'Cell is not editable',
+          { rowId: rowId.value, columnId: columnId.value }
+        );
+      }
+      /* ---------- 3. permission policy ---------- */
+      if (
+        !this.permissionPolicy.canChangeCell({
+          actor,
+          rowId: command.rowId,
+          columnId: command.columnId,
+        })
+      ) {
+        throw new DomainError(
+          'FORBIDDEN',
+          'Actor is not allowed to change this cell',
+          {
+            actor,
+            rowId: rowId.value,
             columnId: columnId.value,
           }
         );
       }
-      
-     /* ---------- 4. type validation ---------- */
+
+      /* ---------- 4. type validation ---------- */
       const validated = this.validateCellValue(
         schema.renderType,
         command.newValue
       );
-      
       // if (!validated.ok) {
-        //   throw new DomainError(
-          //     'INVALID_VALUE',
-          //     validated.error.message,
-          //     validated.error.details
-          //   );
-          // }
-          
-          /* ---------- 5. domain mutation ---------- */
-          const domainEvent = table.changeCell(
-            rowId,
-            columnId,
-            new CellValue(validated.value)
-          );
-          table.changeDisplay(
-            rowId,
-            columnId,
-            new CellValue(validated.value)
-          );
-          
-          if (!domainEvent) {
-            throw new DomainError(
-              'CELL_NOT_FOUND',
-              'Cell not found or value not changed',
-              { rowId: rowId.value, columnId: columnId.value }
-            );
-          }
-          
-          /* ---------- 6. application-level side effects ---------- */
-          
-          if (this.dynamic) {
-            // Phase 2: PURE computation
-            await this.applyComputedColumns({
-              table,
-              rowId,
+      //   throw new DomainError(
+      //     'INVALID_VALUE',
+      //     validated.error.message,
+      //     validated.error.details
+      //   );
+      // }
+
+      /* ---------- 5. domain mutation ---------- */
+      const domainEvent = table.changeCell(
+        rowId,
+        columnId,
+        validated.value
+      );
+      table.changeDisplay(
+        rowId,
+        columnId,
+        validated.value
+      );
+
+      if (!domainEvent) {
+        throw new DomainError(
+          'CELL_NOT_FOUND',
+          'Cell not found or value not changed',
+          { rowId: rowId.value, columnId: columnId.value }
+        );
+      }
+
+      /* ---------- 6. application-level side effects ---------- */
+
+      if (this.dynamic) {
+        // Phase 2: PURE computation
+        await this.applyComputedColumns({
+          table,
+          rowId,
           changedColumnId: columnId,
           remoteApi: this.dynamic!.remoteApi,
         });
-        
+
         // Phase 3: remote resolution
         await this.applyRemoteVisibilityRules({
           table,
@@ -142,7 +140,7 @@ if (
           changedColumnId: columnId,
           newValue: command.newValue,
         });
-        
+
         // Phase 4: projection
         this.applyDynamicProjection({
           table,
@@ -153,24 +151,24 @@ if (
       }
       /* ---------- 7. RowState management ---------- */
       const state =
-      table
-      .getRows()
-      .find(r => r.id.value === rowId.value)
-      ?.getCells()
-      .get('RowState')
-      ?.getValue()
-      ?.value;
-      
+        table
+          .getRows()
+          .find(r => r.id.value === rowId.value)
+          ?.getCells()
+          .get('RowState')
+          ?.getValue()
+          ?.value;
+
       if (state === RowStateEnum.Unchanged) {
         table.changeCell(
           rowId,
           new ColumnId('RowState'),
-          new CellValue(RowStateEnum.Modified)
+          RowStateEnum.Modified
         );
         table.changeDisplay(
           rowId,
           new ColumnId('RowState'),
-          new CellValue(RowStateEnum.Modified)
+          RowStateEnum.Modified
         );
       }
 
@@ -184,7 +182,7 @@ if (
         tableId: command.tableKey,
         rowId: domainEvent.rowId.value,
         columnId: domainEvent.columnId.value,
-        newValue: domainEvent.newValue.value,
+        newValue: domainEvent.newValue,
       };
       this.audit.log({ type: 'INFORMATION', message: out.type, payload: { out } });
 
@@ -236,7 +234,7 @@ if (
       params,
       method: 'POST',
     });
-    resolveOn.getResponse?.(response)
+    resolveOn.getResponse?.(response, row)
     const flags: Record<string, boolean> =
       resolveOn.mapFlags?.(response) ?? {};
 
@@ -245,16 +243,26 @@ if (
     meta.forEach(colCfg => {
       const v = colCfg.visibility;
       if (
-        v?.kind === 'whenFlag' &&
+        v?.kind === 'whenRemoteFlag' &&
         v.sourceFieldName === changedColumnId.value
       ) {
         const colId = new ColumnId(colCfg.fieldName);
         const cell = row.getCell(colCfg.fieldName)
-        cell.changeValue(new CellValue(null))
-        cell.changeDisplay(new CellValue(null))
+        cell.changeValue(null)
+        cell.changeDisplay(null)
         const schema = table.getColumnSchema(colId);
         visibilityCondition[v.flag] = flags[v.flag] ?? false
         if (flags[v.flag]) {
+          if (schema) {
+            toShow.push({ ...schema, hidden: false });
+          }
+        }
+      } else if (v?.kind === 'whenTableType') {
+        const colId = new ColumnId(colCfg.fieldName);
+        const schema = table.getColumnSchema(colId);
+        const tableType = table.getActiveTableType()
+        visibilityCondition[colId.value] = row.rowType === tableType
+        if (row.rowType === tableType) {
           if (schema) {
             toShow.push({ ...schema, hidden: false });
           }
@@ -263,8 +271,8 @@ if (
       const dependency = colCfg.dynamicSource?.dependsOn;
       if (dependency && dependency.length > 0 && !Object.hasOwn(visibilityCondition, colCfg.fieldName)) {
         const cell = row.getCell(colCfg.fieldName)
-        cell.changeValue(new CellValue(null))
-        cell.changeDisplay(new CellValue(null))
+        cell.changeValue(null)
+        cell.changeDisplay(null)
       }
     });
     if (toShow.length > 0) {
@@ -345,12 +353,12 @@ if (
         table.changeCell(
           rowId,
           targetColId,
-          new CellValue(validated.value)
+          validated.value
         );
         table.changeDisplay(
           rowId,
           targetColId,
-          new CellValue(validated.value)
+          validated.value
         );
 
         if (schema.displayFormat) {
@@ -361,13 +369,13 @@ if (
           table.changeDisplay(
             rowId,
             targetColId,
-            new CellValue(validatedDisplayValue.value)
+            validatedDisplayValue.value
           );
         } else {
           table.changeDisplay(
             rowId,
             targetColId,
-            new CellValue(validated.value)
+            validated.value
           );
         }
 
@@ -378,40 +386,41 @@ if (
     }
   }
 
-private validateCellValue(type: FieldType, value: unknown) {
-  switch (type) {
-    case 'text':
-    case 'date':
-      return typeof value === 'string'
-        ? { ok: true as const, value }
-        : { ok: false as const, error: { message: 'Expected string', details: { value } } };
+  private validateCellValue(type: FieldType, value: unknown) {
+    switch (type) {
+      case 'text':
+      case 'description':
+      case 'date':
+        return typeof value === 'string'
+          ? { ok: true as const, value }
+          : { ok: false as const, error: { message: 'Expected string', details: { value } } };
 
-    case 'static':
-      return { ok: true as const, value };
-    case 'checkbox':
-       return typeof value === 'boolean'
-        ? { ok: true as const, value }
-        : { ok: false as const, error: { message: 'Expected boolean', details: { value } } };
+      case 'static':
+        return { ok: true as const, value };
+      case 'checkbox':
+        return typeof value === 'boolean'
+          ? { ok: true as const, value }
+          : { ok: false as const, error: { message: 'Expected boolean', details: { value } } };
 
-    case 'number':
-    case 'price':
-    case 'select':
-    case 'selectOption': {
-      if (value === '' || value === undefined) {
-        return { ok: true as const, value: value as any };
+      case 'number':
+      case 'price':
+      case 'select':
+      case 'selectOption': {
+        if (value === '' || value === undefined) {
+          return { ok: true as const, value: value as any };
+        }
+
+        const n = typeof value === 'number' ? value : Number(value);
+
+        return Number.isFinite(n)
+          ? { ok: true as const, value: n }
+          : { ok: false as const, error: { message: 'Expected number', details: { value } } };
       }
-      
-      const n = typeof value === 'number' ? value : Number(value);
-      
-      return Number.isFinite(n)
-        ? { ok: true as const, value: n }
-        : { ok: false as const, error: { message: 'Expected number', details: { value } } };
-    }
 
-    default:
-      return { ok: false as const, error: { message: 'Unsupported type', details: { type, value } } };
+      default:
+        return { ok: false as const, error: { message: 'Unsupported type', details: { type, value } } };
+    }
   }
-}
 
   private applyDynamicProjection(input: {
     table: Table;
@@ -527,7 +536,7 @@ export class ChangeCellDisplayValueHandler {
       const domainEvent = table.changeDisplay(
         rowId,
         columnId,
-        new CellValue(command.newValue)
+        command.newValue
       );
 
       if (!domainEvent) {
@@ -547,7 +556,7 @@ export class ChangeCellDisplayValueHandler {
         tableId: command.tableKey,
         rowId: domainEvent.rowId.value,
         columnId: domainEvent.columnId.value,
-        newValue: domainEvent.newValue.value,
+        newValue: domainEvent.newValue,
       };
 
       this.audit.log({ type: 'INFORMATION', message: out.type, payload: { out } });
@@ -636,12 +645,12 @@ export class ApplyDynamicProjectionHandler {
         table.changeCell(
           rowId,
           new ColumnId('RowState'),
-          new CellValue(RowStateEnum.Modified)
+          RowStateEnum.Modified
         );
         table.changeDisplay(
           rowId,
           new ColumnId('RowState'),
-          new CellValue(RowStateEnum.Modified)
+          RowStateEnum.Modified
         );
       }
 
@@ -707,7 +716,7 @@ export class ApplyDynamicProjectionHandler {
       params,
       method: 'POST',
     });
-    resolveOn.getResponse?.(response)
+    resolveOn.getResponse?.(response, row)
     const flags: Record<string, boolean> =
       resolveOn.mapFlags?.(response) ?? {};
 
@@ -716,7 +725,7 @@ export class ApplyDynamicProjectionHandler {
 
       const v = colCfg.visibility;
       if (
-        v?.kind === 'whenFlag' &&
+        v?.kind === 'whenRemoteFlag' &&
         v.sourceFieldName === changedColumnId.value
       ) {
         const colId = new ColumnId(colCfg.fieldName);
@@ -808,12 +817,12 @@ export class ApplyDynamicProjectionHandler {
         table.changeCell(
           rowId,
           targetColId,
-          new CellValue(validated.value)
+          validated.value
         );
         table.changeDisplay(
           rowId,
           targetColId,
-          new CellValue(validated.value)
+          validated.value
         );
 
         if (schema.displayFormat) {
@@ -824,13 +833,13 @@ export class ApplyDynamicProjectionHandler {
           table.changeDisplay(
             rowId,
             targetColId,
-            new CellValue(validatedDisplayValue.value)
+            validatedDisplayValue.value
           );
         } else {
           table.changeDisplay(
             rowId,
             targetColId,
-            new CellValue(validated.value)
+            validated.value
           );
         }
 
@@ -929,5 +938,74 @@ export class ApplyDynamicProjectionHandler {
       }
     });
   }
+
+}
+
+
+export class SaveDescriptionHandler {
+  constructor(
+    private readonly repo: TableRepository,
+    private readonly audit: AuditLogger,
+    private readonly permissionPolicy: PermissionPolicy,
+  ) {
+    // ---------- لاگ زمان ساخت ----------
+
+  }
+
+
+  async execute(
+    command: SaveDescriptionCommand,
+    actor: Actor
+  ): Promise<TableEvent[]> {
+    const table = await this.repo.getById(command.store, command.tableKey);
+    try {
+
+      const rowId = new RowId(command.rowId);
+      const flag = command.flag
+
+      const domainEvent = table.saveDescription(rowId, flag);
+
+      if (!domainEvent) {
+        throw new DomainError(
+          'CELL_NOT_FOUND',
+          'Cell not found or value not changed',
+          { rowId: rowId.value, flag: flag }
+        );
+      }
+
+      /* ---------- 6. application-level side effects ---------- */
+      await this.repo.save(command.store, table);
+
+      /* ---------- 9. output event ---------- */
+      const out: TableEvent = {
+        type: 'ROW_DESCRIPTION_SAVED',
+        tableId: command.tableKey,
+        rowId: domainEvent.rowId.value,
+        description: command.flag
+      };
+
+      this.audit.log({ type: 'INFORMATION', message: out.type, payload: { out } });
+      return [out];
+
+    } catch (error: any) {
+
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error }
+        });
+      } return null
+    }
+  }
+
+
+
 
 }

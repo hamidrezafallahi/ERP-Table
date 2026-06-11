@@ -242,7 +242,6 @@ const { direction, match } = useAppSelector(
 
         <CustomButton
           type="text"
-          ghost
           className="z-50 relative m-0 p-0 w-fit h-7"
           onClick={handleCloseCapturing}
         >

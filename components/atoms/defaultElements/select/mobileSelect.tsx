@@ -47,7 +47,7 @@ export const MobileSelect: FC<IProps> = ({
   const dispatch = useDispatch();
 
   const selectHandler = useCallback(
-    (e) => {
+    (value, option) => {
       if (config) {
         const {
           caption,
@@ -70,11 +70,11 @@ export const MobileSelect: FC<IProps> = ({
             rules,
             type,
             selectEndpoint,
-            value: e,
+            value: value,
           }),
         );
       }
-      props.onChange && props.onChange(e);
+      props.onChange && props.onChange(value, option);
     },
     [config],
   );
@@ -190,7 +190,7 @@ export const MobileSelect: FC<IProps> = ({
                     <div
                       key={option.value}
                       onClick={() => {
-                        selectHandler(option.value);
+                        selectHandler(option.value,option);
                         setOpenModal(false);
                         setPhrase("");
                       }}

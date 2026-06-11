@@ -16,6 +16,7 @@ export interface IProps extends SelectProps {
   dynamicValue: IRequestConfig & {dependsOn?:string[]};
   showId?: boolean;
   selectedId?: number;
+  showRefetch?: boolean;
   infinite?: boolean;
   config?: IFormFieldConfig;
   selectFirstDefault?: boolean;

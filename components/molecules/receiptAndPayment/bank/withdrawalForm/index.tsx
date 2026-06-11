@@ -1,19 +1,27 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-import { Form } from "antd";
-import { useTranslations } from "next-intl";
+import { Form } from 'antd';
+import { useTranslations } from 'next-intl';
 
 import {
   DynamicSelect,
   NewDatePicker,
-} from "@components/atoms/defaultElements";
-import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
-import type { IRequestConfig } from "@type/elementType";
-import { SystemEnum } from "@type/enum";
+} from '@components/atoms/defaultElements';
+import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
+import type { IRequestConfig } from '@type/elementType';
+import { SystemEnum } from '@type/enum';
 
-import type { IProps } from "./type";
+import type { IProps } from './type';
 
-export const AdvancedBankWithdrawalForm = ({ activePage, form }: IProps) => {
+export const AdvancedBankWithdrawalForm = ({
+  activePage,
+  form,
+  handleSubmit,
+  totalDebit
+}: IProps) => {
   const [debit, setDebit] = useState(0);
   const t = useTranslations();
 
@@ -32,51 +40,18 @@ export const AdvancedBankWithdrawalForm = ({ activePage, form }: IProps) => {
     (item) => item.name === "Price",
   )?.value;
 
-  const cashStatementPricesValue = activePage?.pageData
-    ?.find((item) => item.name === "CashStatements")
-    ?.value?.map((item) => Number(item.Price))
-    ?.filter((value) => !isNaN(value));
-  const tankhahStatementPricesValue = activePage?.pageData
-    ?.find((item) => item.name === "TankhahStatements")
-    ?.value?.map((item) => Number(item.Price))
-    ?.filter((value) => !isNaN(value));
-  const tafsiliStatementPricesValue = activePage?.pageData
-    ?.find((item) => item.name === "TafsiliStatements")
-    ?.value?.map((item) => Number(item.Price))
-    ?.filter((value) => !isNaN(value));
-  const bankStatementPricesValue = activePage?.pageData
-    ?.find((item) => item.name === "BankStatements")
-    ?.value?.map((item) => Number(item.Price))
-    ?.filter((value) => !isNaN(value));
+  
 
   useEffect(() => {
-    const totalDebit =
-      (cashStatementPricesValue?.reduce((sum, current) => sum + current, 0) ||
-        0) +
-      (tankhahStatementPricesValue?.reduce(
-        (sum, current) => sum + current,
-        0,
-      ) || 0) +
-      (tafsiliStatementPricesValue?.reduce(
-        (sum, current) => sum + current,
-        0,
-      ) || 0) +
-      (bankStatementPricesValue?.reduce((sum, current) => sum + current, 0) ||
-        0);
-
     if (totalDebit > 0) {
       setDebit(totalDebit);
     }
-  }, [
-    cashStatementPricesValue,
-    tankhahStatementPricesValue,
-    tafsiliStatementPricesValue,
-    bankStatementPricesValue,
-  ]);
+  }, [totalDebit]);
 
   return (
     <Form
       form={form}
+      onFinish={handleSubmit}
       name="advancedBankWithdrawalForm"
       layout="vertical"
       className="hidden-show-scrollBar gap-5 lg:gap-y-5 grid grid-cols-12 pt-4 lg:pt-0 h-auto max-h-[calc(100dvh-160px)] overflow-y-auto"

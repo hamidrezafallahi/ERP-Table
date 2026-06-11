@@ -3,6 +3,7 @@
 import {
   CellChanged,
   ColumnReordered,
+  DescriptionSaved,
   DisplayChanged,
   MinimumRowConstraintViolated,
   RowAdded,
@@ -16,6 +17,7 @@ import {
   CellValue,
   ColumnId,
   ColumnSchema,
+  KeyValue,
   Pagination,
   RowId,
   RowState,
@@ -32,9 +34,25 @@ export class Table {
     private columns: Map<string, ColumnSchema>,
     private pagination: Pagination,
     private action: TableActions,
+    private activeTableType: string = "default"
+
   ) { }
   getColumnSchema(columnId: ColumnId): ColumnSchema | undefined {
     return this.columns.get(columnId.value);
+  }
+  getActiveTableType(): string {
+    return this.activeTableType;
+  }
+  setActiveTableType(activeTableType: string) {
+    this.activeTableType = activeTableType;
+  }
+  getRowType(rowId: number): string {
+    const row = this.rows.get(rowId);
+    return row.getRowType()
+  }
+  setRowType(rowId: number, type: string) {
+    const row = this.rows.get(rowId);
+    row.setRowType(type)
   }
   setColumnSchema(columnId: ColumnId, columnSchema: ColumnSchema): ColumnSchema | undefined {
     const prev = this.columns.get(columnId.value);
@@ -78,7 +96,7 @@ export class Table {
   changeCell(
     rowId: RowId,
     columnId: ColumnId,
-    value: CellValue
+    value: unknown
   ): CellChanged | null {
     const row = this.rows.get(rowId.value);
     if (!row) return null;
@@ -91,11 +109,20 @@ export class Table {
   changeDisplay(
     rowId: RowId,
     columnId: ColumnId,
-    value: CellValue
+    value: unknown
   ): DisplayChanged | null {
     const row = this.rows.get(rowId.value);
     if (!row) return null;
     const ev = row.changeDisplay(columnId, value);
+    return ev;
+  }
+  saveDescription(
+    rowId: RowId,
+    flag: boolean
+  ): DescriptionSaved | null {
+    const row = this.rows.get(rowId.value);
+    if (!row) return null;
+    const ev = row.saveDescription(flag);
     return ev;
   }
   duplicateRow(rowId: RowId): RowAdded {
@@ -151,7 +178,9 @@ export class Table {
       new RowState(RowStateEnum.Added),
       new Set(),
       target.moreDetails,
-      target.visibilityCondition
+      target.visibilityCondition,
+      target.rowType,
+      target.isSaveDescription
     );
     rowsArray.sort((a, b) =>
       (a.getCell("index")?.getValue().value as number) -
@@ -231,7 +260,9 @@ export class Table {
       new RowState(RowStateEnum.Added),
       new Set(),
       target.moreDetails,
-      target.visibilityCondition
+      target.visibilityCondition,
+      target.rowType,
+      target.isSaveDescription
     );
     rowsArray.sort((a, b) =>
       (a.getCell("index")?.getValue().value as number) -
@@ -246,14 +277,39 @@ export class Table {
 
     return new RowAdded(newRowId);
   }
-  addNewRow(): RowAdded {
-    const newRowId = new RowId(Math.floor((1 + Math.random()) * 0x10000000000000000))
-    const cells = new Map<string, Cell>();
+
+
+  addNewRow(data?: KeyValue[]): RowAdded {
+    const newRowId = new RowId(
+      Math.floor((1 + Math.random()) * 0x10000000000000000)
+    );
+
     const rowId = new RowId(newRowId.value);
+    const cells = new Map<string, Cell>();
+
+      const dataMap = data
+      ? new Map(data.map(kv => [kv.key, kv]))
+      : undefined;
+
     this.getColumns().forEach((column) => {
       const columnId = column.id;
-      const cellValue = new CellValue(columnId == "index" ? this.rows.size + 1 : null)
-      const cellDisplay = new CellValue(columnId == "index" ? this.rows.size + 1 : null)
+
+      let value: unknown = null;
+      let display: unknown = null;
+
+      if (columnId === "index") {
+        value = this.rows.size + 1;
+        display = this.rows.size + 1;
+      } else if (dataMap?.has(columnId)) {
+        const item = dataMap.get(columnId);
+        value = item?.value;
+        display = item?.display;
+      }
+
+     
+
+      const cellValue = new CellValue(value);
+      const cellDisplay = new CellValue(display);
       const cell = new Cell(
         rowId,
         new ColumnId(columnId),
@@ -261,16 +317,51 @@ export class Table {
         cellValue,
         cellDisplay
       );
+
       cells.set(columnId, cell);
     });
-    const visibilityCondition = new Object() as Record<string, boolean>;
-    const newRow = new Row(newRowId, cells, new RowState(RowStateEnum.Added), new Set(), undefined, visibilityCondition);
+
+    const visibilityCondition: Record<string, boolean> = {};
+
+    const newRow = new Row(
+      newRowId,
+      cells,
+      new RowState(RowStateEnum.Added),
+      new Set(),
+      undefined,
+      visibilityCondition,
+      this.activeTableType,
+      false
+    );
+
     this.rows.set(newRowId.value, newRow);
+
+    // ✅ pagination update
     const totalRows = this.rows.size;
     const pageSize = this.pagination.pageSize;
     const lastPage = Math.ceil(totalRows / pageSize);
     this.changePage(lastPage);
+
     return new RowAdded(newRowId);
+  }
+  addNewRows(cmd: { rows: KeyValue[][], detailFieldKey: string }): RowAdded[] {
+    const events: RowAdded[] = [];
+    const rows = this.getRows();
+    const existingValues = new Set(
+      rows.map(r => {
+        const cell = r.getCell(cmd.detailFieldKey);
+        return cell?.getValue()?.value;
+      })
+    );
+    for (const data of cmd.rows) {
+      const incomingValue = data.find(kv => kv.key === cmd.detailFieldKey)?.value;
+      if (incomingValue !== undefined && !existingValues.has(incomingValue)) {
+        const event = this.addNewRow(data);
+        events.push(event);
+        existingValues.add(incomingValue);
+      }
+    }
+    return events;
   }
   addColumns(newColumns: ColumnSchema[]): { added: ColumnId[] } {
     const added: ColumnId[] = [];
@@ -360,9 +451,10 @@ export class Table {
 
   }
   getVisibleRows() {
+    const filteredRows = this.getRows().filter(r => r.rowType === this.activeTableType);
     const start = (this.pagination.page - 1) * this.pagination.pageSize;
     const end = start + this.pagination.pageSize;
-    return this.getRows().slice(start, end);
+    return filteredRows.slice(start, end);
   }
   getTableAction() {
     return this.action
@@ -439,7 +531,7 @@ export class Table {
 
     moved.changeCell(
       new ColumnId("index"),
-      new CellValue(newIndex),
+      newIndex,
     );
     rowsArray.splice(insertIndex, 0, moved);
     this.rows = new Map(rowsArray.map(r => [r.id.value, r]));
@@ -457,7 +549,7 @@ export class Table {
     const clonedRows = new Map<number, Row>();
     for (const [k, row] of this.rows.entries()) {
       const clonedColumns = new Map(this.columns);
-      const cloned = new Table(this.id, clonedRows, clonedColumns, this.pagination, null);
+      const cloned = new Table(this.id, clonedRows, clonedColumns, this.pagination, null, this.activeTableType);
       cloned.pagination = this.pagination;
       return cloned;
     }

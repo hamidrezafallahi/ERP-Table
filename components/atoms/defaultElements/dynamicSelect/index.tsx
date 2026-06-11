@@ -1,19 +1,12 @@
-import {
-  FC,
-  useEffect,
-  useState,
-} from 'react';
+import { FC, useEffect, useState } from "react";
 
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 
-import { useGetData } from '@services/base';
-import type {
-  IOption,
-  ISelectOption,
-} from '@type/elementType';
+import { useGetData } from "@services/base";
+import type { IOption, ISelectOption } from "@type/elementType";
 
-import { CustomSelect } from '../select';
-import type { IProps } from './type';
+import { CustomSelect } from "../select";
+import type { IProps } from "./type";
 
 export const DynamicSelect: FC<IProps> = ({
   className,
@@ -29,6 +22,7 @@ export const DynamicSelect: FC<IProps> = ({
   selectFirstDefault = false,
   displayFormatter,
   disabled,
+  showRefetch,
   ...props
 }) => {
   const t = useTranslations();
@@ -217,11 +211,18 @@ export const DynamicSelect: FC<IProps> = ({
     return results;
   };
 
+  useEffect(() => {
+    if (value === null || value === undefined) {
+      setSearchPhrase(null);
+      setPageNumber(1);
+    }
+  }, [value]);
   return (
     <>
       <CustomSelect
         labelInValue={false}
         isFetching={isFetching}
+        showRefetch={showRefetch}
         handleRefetch={handleRefetch}
         searchPhrase={searchPhrase}
         setSearchPhrase={setSearchPhrase}
@@ -235,7 +236,7 @@ export const DynamicSelect: FC<IProps> = ({
             setSearchPhrase("");
             setPageNumber(1);
           }
-          props.onClear;
+          props.onClear?.();
         }}
         placeholder={
           props.placeholder
@@ -255,10 +256,9 @@ export const DynamicSelect: FC<IProps> = ({
         notFoundContent={isFetching ? "Loading..." : "No options found"}
         onChange={onChange}
         filterOption={(input, option) => {
-          if(props.filterOption && typeof props.filterOption === "function"){
-            return props.filterOption(input, option)
-          }else{
-
+          if (props.filterOption && typeof props.filterOption === "function") {
+            return props.filterOption(input, option);
+          } else {
             const label = option?.label;
             return (
               typeof label === "string" &&
@@ -282,7 +282,7 @@ export const DynamicSelect: FC<IProps> = ({
           }
           props.onSearch;
         }}
-        options={options}
+        options={props.options ?? options}
         config={config}
         addButton={addButton}
       />

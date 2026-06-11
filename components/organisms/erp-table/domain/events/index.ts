@@ -18,7 +18,7 @@ export class CellChanged {
   constructor(
     public readonly rowId: RowId,
     public readonly columnId: ColumnId,
-    public readonly newValue: CellValue
+    public readonly newValue: unknown
   ) { }
 }
 export class DisplayChanged {
@@ -26,7 +26,15 @@ export class DisplayChanged {
   constructor(
     public readonly rowId: RowId,
     public readonly columnId: ColumnId,
-    public readonly newValue: CellValue
+    public readonly newValue: unknown
+  ) { }
+}
+export class DescriptionSaved {
+  readonly type = 'DESCRIPTION_SAVED';
+  constructor(
+    public readonly rowId: RowId,
+    public readonly flag: boolean,
+ 
   ) { }
 }
 export class Validated {

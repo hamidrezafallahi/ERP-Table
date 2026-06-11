@@ -10,8 +10,8 @@ import {
   useDispatch,
 } from 'react-redux';
 
-import { useInitializePage } from '@hooks/custom';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useInitializePage } from '@hooks/custom/useInitializePage';
 import {
   useGetConditionallyMutation,
   useGetData,

@@ -37,8 +37,8 @@ import {
   Level9,
   SpinIcon,
 } from '@components/atoms/iconComponents';
-import { useInitializePage } from '@hooks/custom';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useInitializePage } from '@hooks/custom/useInitializePage';
 import { useGetData } from '@services/base';
 import { setParentPageId } from '@slice/config';
 import {
@@ -129,7 +129,6 @@ function ReportToolbar() {
               <CustomButton
                 onClick={handleShowTransaction}
                 type="text"
-                ghost
                 className="m-0 p-1 w-9 h-9"
               >
                 {loading ? <SpinIcon /> : <DatabaseCheck />}
@@ -153,7 +152,6 @@ function ReportToolbar() {
                             activePage?.viewData?.TreeView
                           }
                           type="text"
-                          ghost
                           className="m-0 p-1 w-9 h-9"
                           onClick={() => {
                             setLevel(item.Level);
@@ -262,7 +260,6 @@ const ReportDropdown = ({ activePage }) => {
     <Dropdown menu={{ items }}>
       <CustomButton
         type="text"
-        ghost
         className="flex gap-2 bg-gray-gray2 dark:bg-gray-gray10 m-0 p-1 border border-gray-gray5 h-full text-gray-gray10 dark:text-white text-xs"
       >
         <div>{display}</div>

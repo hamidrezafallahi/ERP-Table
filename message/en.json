@@ -212,7 +212,20 @@
     "currencyDoc": "Currency Exchange Rate Document",
     "CurrencyDoc": "Currency Exchange Rate Document",
     "currencyDockList": "Currency Exchange Rate Document List",
-    "comprehensiveReport": "Comprehensive Report"
+    "comprehensiveReport": "Comprehensive Report",
+    "promissoryNoteReceipt": "Promissory Note Receipt",
+    "promissoryNoteReceiptList": "Promissory Note Receipt List",
+    "promissoryNoteIssuance": "Promissory Note Issuance",
+    "promissoryNoteIssuanceList": "Promissory Note Issuance List",
+    "chequeDeployList": "Cheque Deploy List",
+    "chequeDeploy": "Cheque Deploy",
+    "promissoryNoteDeploy": "Promissory Note Deploy",
+    "promissoryNoteDeployList": "Promissory Note Deploy List",
+    "rpWay": "RpWay",
+    "issuedCheckOperation": "Issued Check Operation",
+    "assignmentPromissoryNote":"Assignment promissory note",
+    "assignmentPromissoryNoteList":"Assignment promissory note list"
+
   },
   "homePage": {
     "title": "Hello world!",
@@ -846,7 +859,8 @@
     "debtToAssetRatio": "Debt to Asset Ratio",
     "none": "None",
     "regulatoryORStatistical": "Regulatory OR Statistical",
-    "defaultDescription":"Default Description"
+    "defaultDescription": "Default Description",
+    "returnFromOutage": "Return From Outage"
   },
   "rate": "Rate",
   "systemSetting": {
@@ -1039,7 +1053,6 @@
     "chequeIssuance": "Cheque Issuance",
     "chequeBounce": "Cheque Bounce",
     "chequeClearance": "Cheque Clearance",
-    "chequeEndorsement": "Cheque Endorsement",
     "bankWithdrawal": "Withdrawal from Account",
     "bankDeposit": "Deposit to Account",
     "cashWithdrawal": "Withdrawal from Fund",
@@ -1048,9 +1061,24 @@
     "cashFundDeposit": "Deposit to Cash Fund",
     "receivedChequeList": "Received Cheque List",
     "receivedChequeAction": "Received Cheque Action",
+    "assignmentCheque": "Assignment Cheque",
+    "assignmentPromissoryNote": "Assignment Promissory Note",
+    "issuedCheckOperation": "Issued Check Operation",
+    "issuedPromissoryNoteAction": "Issued Promissory Note Action",
+    "collection/dishonorPromissoryNote": "Promissory Note Collection / Promissory Note Dishonor",
+    "collection/dishonorCheque": "Cheque Collection / Cheque Dishonor",
+    "receivedPromissoryNoteAction": "Received Promissory Note Action",
     "notRegisteredReceivedCheque": "Not Registered Received Cheque",
+    "notRegisteredReceivedPromissoryNote": "Not Registered Received Promissory Note",
     "notRegisteredIssuanceCheque": "Not Registered Issuance Cheque",
-    "bankStatementInfo": "bank Statement Info"
+    "notRegisteredIssuancePromissoryNote": "Not Registered Issuance Promissory Note",
+    "bankStatementInfo": "bank Statement Info",
+    "chequeDeploy": "Cheque Deploy",
+    "promissoryNoteDeploy": "Promissory Note Deploy",
+    "promissoryNoteReceipt": "Promissory Note Receipt",
+    "promissoryNoteIssuance": "Promissory Note Issuance",
+    "refundCheque": "Refund Cheque",
+    "refundPromissoryNote": "Refund Promissory Note"
   },
   "company": {
     "name": "Arian System"

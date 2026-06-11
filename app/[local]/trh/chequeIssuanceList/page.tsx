@@ -1,10 +1,10 @@
-﻿import { useTranslations } from "next-intl";
+﻿import { useTranslations } from 'next-intl';
 
-import ViewList from "@components/templates/viewList";
+import ViewList from '@components/templates/viewList';
 import type {
   IChequeIssuance,
   IRequest,
-} from "@services/trh/chequeIssuance/type";
+} from '@services/trh/chequeIssuance/type';
 
 export default function ChequeIssuanceListPage() {
   const t = useTranslations();
@@ -20,6 +20,7 @@ export default function ChequeIssuanceListPage() {
       caption={"title.chequeIssuanceList"}
       baseRepoId={3023}
       pageIcon="ChequeIssuanceIcon"
+      bodyKey={"PrommisoryType"}
     />
   );
 }

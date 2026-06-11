@@ -1,5 +1,5 @@
-import { FormInstance } from 'antd';
-import moment from 'moment-jalaali';
+import { FormInstance } from "antd";
+import moment from "moment-jalaali";
 
 import {
   BadgeError,
@@ -14,45 +14,42 @@ import {
   NeedReloadBadge,
   NewDatePicker,
   SavedBadge,
-} from '@components/atoms/defaultElements';
-import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
-import { DynamicTree } from '@components/atoms/defaultElements/dynamicTree';
-import CustomInputNumber from '@components/atoms/defaultElements/inputNumber';
-import InputText from '@components/atoms/defaultElements/inputText';
+} from "@components/atoms/defaultElements";
+import CustomCheckbox from "@components/atoms/defaultElements/checkbox";
+import { DynamicTree } from "@components/atoms/defaultElements/dynamicTree";
+import CustomInputNumber from "@components/atoms/defaultElements/inputNumber";
+import InputText from "@components/atoms/defaultElements/inputText";
 import {
   ErrorAddIcon,
   ErrorDeleteIcon,
   ErrorUpdateIcon,
-  Info,
+  InfoIcon,
   Media,
   Monitor,
   PendingAddIcon,
   PendingDeleteIcon,
   PendingUpdateIcon,
-} from '@components/atoms/iconComponents';
-import DynamicRadio from '@components/molecules/dynamicRadioList';
-import { Dispatch } from '@reduxjs/toolkit';
-import {
-  BadgeTypeEnum,
-  type IColumnConfig,
-} from '@services/generalType/type';
-import { resetContainer } from '@slice/container';
-import { resetEndYearOperation } from '@slice/endYearOperations';
-import { resetInit } from '@slice/init';
-import type { IInitialPage } from '@slice/init/type';
-import { resetAllItems } from '@slice/items';
-import { resetNavigateList } from '@slice/navigateList';
-import { resetPages } from '@slice/pages';
-import { PageStateEnum } from '@slice/pages/enum';
-import { resetFactors } from '@slice/pages/factors';
+} from "@components/atoms/iconComponents";
+import DynamicRadio from "@components/molecules/dynamicRadioList";
+import { Dispatch } from "@reduxjs/toolkit";
+import { BadgeTypeEnum, type IColumnConfig } from "@services/generalType/type";
+import { resetContainer } from "@slice/container";
+import { resetEndYearOperation } from "@slice/endYearOperations";
+import { resetInit } from "@slice/init";
+import type { IInitialPage } from "@slice/init/type";
+import { resetAllItems } from "@slice/items";
+import { resetNavigateList } from "@slice/navigateList";
+import { resetPages } from "@slice/pages";
+import { PageStateEnum } from "@slice/pages/enum";
+import { resetFactors } from "@slice/pages/factors";
 import type {
   IFormFieldConfig,
   IRequestConfig,
   IRule,
-} from '@type/elementType';
-import { SystemEnum } from '@type/enum';
+} from "@type/elementType";
+import { SystemEnum } from "@type/enum";
 
-import { validateNationalCode } from './checkingHelper';
+import { validateNationalCode } from "./checkingHelper";
 
 export const getColoredIcon = (
   icon: string,
@@ -189,7 +186,7 @@ export const renderFormField = (
           {item.help !== "" ? (
             <div>
               <CustomTooltip title={item.help} arrow>
-                <Info />
+                <InfoIcon />
               </CustomTooltip>
             </div>
           ) : null}
@@ -502,7 +499,6 @@ export const formatCurrency = (value: number | string): string => {
   }).format(numericValue);
 };
 export const toman = (rial: number) => Math.round(rial / 10);
-
 
 export const convertToStringDate = (date: Date) => {
   const year = date.getFullYear();
@@ -882,35 +878,35 @@ export const getChangedFields = <T extends Record<string, any>>(
 };
 
 export function findNestedLevel<T>(
-    items: T[],
-    targetId: unknown,
-    options: { idKey?: string; childrenKey?: string } = {},
-    level: number = 0,
+  items: T[],
+  targetId: unknown,
+  options: { idKey?: string; childrenKey?: string } = {},
+  level: number = 0,
 ): number {
-    const { idKey = "id", childrenKey = "children" } = options;
+  const { idKey = "id", childrenKey = "children" } = options;
 
-    for (const item of items) {
-        if (item[idKey as keyof T] == targetId) {
-            return level;
-        }
-
-        const children = item[childrenKey as keyof T] as T[] | undefined;
-
-        if (children && children.length > 0) {
-            const childLevel = findNestedLevel(
-                children,
-                targetId,
-                options,
-                level + 1,
-            );
-
-            if (childLevel !== -1) {
-                return childLevel;
-            }
-        }
+  for (const item of items) {
+    if (item[idKey as keyof T] == targetId) {
+      return level;
     }
 
-    return -1;
+    const children = item[childrenKey as keyof T] as T[] | undefined;
+
+    if (children && children.length > 0) {
+      const childLevel = findNestedLevel(
+        children,
+        targetId,
+        options,
+        level + 1,
+      );
+
+      if (childLevel !== -1) {
+        return childLevel;
+      }
+    }
+  }
+
+  return -1;
 }
 
 export const findingPageState = (state) => {

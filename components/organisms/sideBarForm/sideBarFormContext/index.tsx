@@ -1,28 +1,24 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useEffect, useRef, useState } from "react";
 
-import { Form } from 'antd';
-import { useTranslations } from 'next-intl';
+import { Form } from "antd";
+import { useTranslations } from "next-intl";
 
-import { SpinIcon } from '@components/atoms/iconComponents';
-import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { SpinIcon } from "@components/atoms/iconComponents";
+import { useAppSelector } from "@hooks/custom/useAppSelector";
 
 import {
   CustomFormComponentProps,
   IDynamicModalConfig,
   RecordType,
-} from '../types';
-import { ContextConfirmationPortals } from './contextConfirmationPortals';
-import { ContextHeader } from './contextHeader';
-import { ContextList } from './contextList';
-import { ContextPagination } from './contextPagination';
-import { useActionManager } from './Hooks/useActionManager';
-import { useDataManager } from './Hooks/useDataManager';
+} from "../types";
+import { ContextConfirmationPortals } from "./contextConfirmationPortals";
+import { ContextHeader } from "./contextHeader";
+import { ContextList } from "./contextList";
+import { ContextPagination } from "./contextPagination";
+import { useActionManager } from "./Hooks/useActionManager";
+import { useDataManager } from "./Hooks/useDataManager";
 
 interface SideBarFormContextProps {
   typeId: number;

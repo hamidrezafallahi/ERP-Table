@@ -494,7 +494,6 @@ export class TableEngine {
     const { table } = store.getState()
     if (!table) return null;
     const row = table.getRows().find(r => r.id.value === cmd.rowId);
-
     await this.fetchVisibilityCondition(cmd, row)
     store.setState(prev => {
       if (prev.activeRowId === cmd.rowId) {
@@ -518,12 +517,12 @@ export class TableEngine {
     const store = this.getStore(cmd.tableKey);
     const { table } = store.getState()
     if (!table) return null;
-
+    
     const Columns = table.getColumns()
     const cellDependency = new Set<string>()
-
+    
     Columns.filter(col => col.dynamicValue?.dependsOn && col.dynamicValue?.dependsOn.length > 0)
-      .map(col => col.dynamicValue?.dependsOn.map(depend => cellDependency.add(depend)))
+    .map(col => col.dynamicValue?.dependsOn.map(depend => cellDependency.add(depend)))
     for (const col of cellDependency) {
       const val = row.getCell(col).getValue().value
       if (val) {
@@ -815,16 +814,16 @@ export class TableEngine {
       }
     });
   }
-  private deleteAll( tableKey: string  ) {
+  private deleteAll(tableKey: string) {
     const store = this.getStore(tableKey);
-       const { table, selectedRows } = store.getState()
+    const { table, selectedRows } = store.getState()
     Object.entries(selectedRows).map(([key]) => table.deleteRow(new RowId(Number(key))));
     store.setState(prev => {
-        return {
-          ...prev,
-          selectedRows: {},
-          table
-        };
+      return {
+        ...prev,
+        selectedRows: {},
+        table
+      };
     });
   }
   private toggleSelectPageRows(cmd: { tableKey: string }) {
@@ -940,7 +939,6 @@ export class TableEngine {
     }
 
     store.setState(prev => {
-      console.log(table)
       return {
         ...prev,
         table: table,
@@ -1097,13 +1095,13 @@ export class TableEngine {
         width: col.minWidth,
         style: col.style,
         popUpWidth: col.popUpWidth,
-        dynamicSelectFilterOption:col.dynamicSelectFilterOption,
+        dynamicSelectFilterOption: col.dynamicSelectFilterOption,
         labelValue: col.labelValue,
         className: col.className,
-         enableDeleteButton:col.enableDeleteButton,
-        enableExpandButton:col.enableExpandButton,
-        enableMoveButton:col.enableMoveButton,
-        enableOptionsButton:col.enableOptionsButton,
+        enableDeleteButton: col.enableDeleteButton,
+        enableExpandButton: col.enableExpandButton,
+        enableMoveButton: col.enableMoveButton,
+        enableOptionsButton: col.enableOptionsButton,
       })),
       pagination: {
         page: pagination.page,
@@ -1168,7 +1166,6 @@ export class TableEngine {
     }
     const { table } = store
     return {
-      table,
       rows: table.getRows().map(row => ({
         id: row.id.value,
         changeFields: row.getSnapshotChangeFields(),
@@ -1176,7 +1173,9 @@ export class TableEngine {
           [...row.getCells()].map(([k, c]) => [k, c.getValue()?.value])
         ),
         rowState: row.rowState.value,
-        moreDetails: row.moreDetails
+        rowType: row.rowType,
+        moreDetails: row.moreDetails,
+        isSaveDescription: row.isSaveDescription
       })),
     };
 

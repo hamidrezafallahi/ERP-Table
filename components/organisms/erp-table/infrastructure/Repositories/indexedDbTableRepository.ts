@@ -26,6 +26,8 @@ interface SerializedRow {
   rowState: RowStateEnum;
   moreDetails: unknown;
   visibilityCondition: Record<string, boolean>
+  rowType:string
+  isSaveDescription:boolean
 
 }
 
@@ -33,6 +35,7 @@ interface SerializedTable {
   id: string | null;
   pages: string[];
   rows: SerializedRow[];
+  activeDetailType:string
 }
 
 export class IndexedDbTableRepository implements TableRepository {
@@ -73,6 +76,8 @@ export class IndexedDbTableRepository implements TableRepository {
       rowState: row.rowState.value,
       moreDetails: row.moreDetails,
       visibilityCondition: row.visibilityCondition,
+      rowType:row.rowType,
+      isSaveDescription:row.isSaveDescription,
       cells: Array.from(row.getCells().entries()).map(([colId, cell]) => ({
         colId,
         value: cell.getValue().value,
@@ -104,7 +109,7 @@ export class IndexedDbTableRepository implements TableRepository {
       }
       rowMap.set(
         r.rowId,
-        new Row(new RowId(r.rowId), cells, new RowState(r.rowState), changeFields, r.moreDetails, r.visibilityCondition)
+        new Row(new RowId(r.rowId), cells, new RowState(r.rowState), changeFields, r.moreDetails, r.visibilityCondition,r.rowType,r.isSaveDescription)
       );
     });
     return rowMap;
@@ -142,6 +147,7 @@ export class IndexedDbTableRepository implements TableRepository {
       id: table.id,
       pages: [table.id],
       rows: this.serializeRows(table.getRows()),
+      activeDetailType:table.getActiveTableType()
     };
     return new Promise((resolve, reject) => {
       const tx = db.transaction(storeName, 'readwrite');
@@ -166,7 +172,7 @@ export class IndexedDbTableRepository implements TableRepository {
           reject(new Error(`Table ${tableId} not found`));
           return;
         }
-        resolve(new Table(tableId, this.deserializeRows(req.result.rows), new Map(), new Pagination(1, 10, 10),null));
+        resolve(new Table(tableId, this.deserializeRows(req.result.rows), new Map(), new Pagination(1, 10, 10),null,req.result.activeDetailType));
       };
       req.onerror = () => reject(req.error);
     });
@@ -209,7 +215,7 @@ export class IndexedDbTableRepository implements TableRepository {
           reject(new Error(`Table ${tableId} not found`));
           return;
         }
-        const resetTable: SerializedTable = { id: tableId, pages: [tableId], rows: [] };
+        const resetTable: SerializedTable = { id: tableId, pages: [tableId], rows: [] ,activeDetailType:getReq.result.activeDetailType};
         const putReq = objectStore.put(resetTable);
         putReq.onsuccess = () => resolve();
         putReq.onerror = () => reject(putReq.error);

@@ -24,20 +24,21 @@ export interface DynamicValueConfig {
 
 export type FieldType = 'index' | 'text' | 'number' | 'price' | 'select' | 'selectOption' | 'date' | 'static' | 'description' | 'checkbox';
 
-export type RowInput = { id: number; values?: Record<string, unknown>, moreDetails: unknown };
+export type RowInput = { id: number; values?: Record<string, unknown>, moreDetails?: unknown, rowType: string };
 
 export type ColumnVisibilityRule =
     | { kind: 'always' }
+    | { kind: 'never' }
     | { kind: 'showUnitLevelConditionally'; fieldName: string }
     | { kind: 'whenFieldTruthy'; fieldName: string }
     | { kind: 'whenRemoteFlag'; sourceFieldName: string; flag: string; }
-    | { kind: 'whenFlag'; sourceFieldName: string; flag: string; };
+    | { kind: 'whenTableType'; tableType: string };
 export interface ResolveOnConfig {
     endpoint: string;
     // flags:  string[];
     fieldName: string;
-    buildParams: (row: Record<string, unknown>) => Record<string, string | number>;
-    getResponse?: (response: any) => unknown;
+    buildParams: (row: Record<string, unknown>) => Record<string, unknown>;
+    getResponse?: (response: any, row: Row) => unknown;
     mapFlags?: (response: any) => Record<string, boolean>;
 }
 type ColumnAccessControl = {
@@ -61,11 +62,13 @@ export interface IDetailColumnConfig {
     order?: number;
     rules?: IRule[];
     editable?: boolean;
+    returnValue?: (values: Record<string, unknown>, colId: string) => unknown
+    returnDisplayValue?: (values: Record<string, unknown>, colId: string) => unknown
     enableDeleteButton?: boolean;
     enableExpandButton?: boolean;
     enableMoveButton?: boolean;
     enableOptionsButton?: boolean;
-    disable?: Record<string, boolean>[];
+    disable?: boolean;
     colAccess?: ColumnAccessControl;
     dynamicSource?: {
         endpoint: string;
@@ -76,7 +79,7 @@ export interface IDetailColumnConfig {
     };
     hidden?: boolean
     className?: string
-    visibility?: ColumnVisibilityRule;
+    visibility: ColumnVisibilityRule;
     resolveOn?: ResolveOnConfig;
     computed?: {
         dependsOn: readonly string[];
@@ -95,15 +98,17 @@ export interface IDetailColumnConfig {
     popUpWidth?: number
     dynamicSelectFilterOption?: (inputValue: string, option?: DefaultOptionType) => boolean
     labelValue?: 'selectDisplay' | 'selectValue';
-
 }
-export type CreateERPTableConfig<TMoreDetail = unknown> = {
+
+
+export type CreateERPTableConfig = {
     store: string;
     tableKey: string;
+    tableType?: string;
     actor: Actor;
     rowAccess?: RowAccessControl;
     columns: IDetailColumnConfig[];
-    rows?: Array<{ id: number; values?: Record<string, unknown>, moreDetails: TMoreDetail }>;
+    rows?: Array<{ id: number; values?: Record<string, unknown>, moreDetails?: Record<string, unknown>, rowType: string }>;
     repo?: TableRepository;
     audit?: AuditLogger;
     permissionPolicy?: PermissionPolicy;

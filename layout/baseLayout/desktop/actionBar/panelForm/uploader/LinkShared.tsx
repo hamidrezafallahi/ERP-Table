@@ -144,7 +144,6 @@ const LinkShared = ({
       >
         <CustomButton
           type="text"
-          ghost
           className="z-50 relative m-0 p-0 w-fit h-7"
           onClick={handleCloseLinkShared}
         >
@@ -166,7 +165,6 @@ const LinkShared = ({
                   <CustomButton
                     disabled={searchText.length == 0}
                     type="text"
-                    ghost
                     className="opacity-0 hover:opacity-100 m-0 p-0"
                     onClick={handleClearField}
                   >
@@ -176,7 +174,6 @@ const LinkShared = ({
                 <CustomButton
                   disabled={searchText.length < 4}
                   type="text"
-                  ghost
                   className="m-0 p-0"
                   onClick={downloadHandler}
                 >

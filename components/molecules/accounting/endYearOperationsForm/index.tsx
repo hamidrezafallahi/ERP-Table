@@ -26,8 +26,8 @@ import {
   InfoIcon,
   SpinIcon,
 } from '@components/atoms/iconComponents';
-import { useInitializePage } from '@hooks/custom';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useInitializePage } from '@hooks/custom/useInitializePage';
 import { useCUDDataMutation } from '@services/base';
 import {
   resetEndYearOperation,

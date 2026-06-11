@@ -79,6 +79,7 @@ export interface IBaseRequest<T> {
     HeaderId?: number;
     RepoViewId?: number;
     Ids?: number[];
+    ChangeFields?: string[];
     PagingInfo?: IPagingInfo;
     OrderInfo?: IOrderInfo[];
     Filters?: IFilters;

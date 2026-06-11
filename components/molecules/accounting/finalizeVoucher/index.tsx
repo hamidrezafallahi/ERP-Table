@@ -5,20 +5,12 @@ import {
 import moment from 'moment-jalaali';
 import { useTranslations } from 'next-intl';
 import { shallowEqual } from 'react-redux';
-
-import { NewDatePicker } from '@components/atoms/defaultElements';
+import { NewDatePicker } from "@components/atoms/defaultElements";
+import { useCUDDataMutation, useGetData } from "@services/base";
+import type { IRequest } from "@services/mng/report/type";
+import { Reload, SpinIcon, TrashBin } from "@components/atoms/iconComponents";
 import { useAppSelector } from '@hooks/custom/useAppSelector';
-import {
-  useCUDDataMutation,
-  useGetData,
-} from '@services/base';
-import type { IRequest } from '@services/mng/report/type';
 import { showSuccessToast } from '@utils/toast';
-
-import {
-  SpinIcon,
-  TrashBin,
-} from '../../../atoms/iconComponents';
 
 interface ILastCloseDate {
   Date: string;
@@ -32,26 +24,27 @@ export const FinalizeVoucher = ({ form, setMobileDrawerContent }) => {
     shallowEqual,
   );
 
-  const { data: lastCloseDate } = useGetData<ILastCloseDate, IRequest>({
-    url: "/api/acc/select/finished/lastDate",
-    body: {},
-  });
+  const { data: lastCloseDate, refetch } = useGetData<ILastCloseDate, IRequest>(
+    {
+      url: "/api/acc/select/finished/lastDate",
+      body: {},
+    },
+  );
 
   const closeDate = lastCloseDate?.Data?.[0]?.Date
     ? moment(lastCloseDate.Data[0].Date)
         .locale(locale === "fa" ? "fa" : "en")
         .format(locale === "fa" ? "jYYYY/jMM/jDD" : "YYYY/MM/DD")
     : "";
+
   const [mutateItem, { isLoading: removeFinish }] = useCUDDataMutation();
   const handelRemove = async () => {
     const res = await mutateItem({
       url: "api/acc/Reverce/Confirmation",
       body: {},
     }).unwrap();
-
     if (res?.Result == "Pending") {
       const newId = res?.Key;
-
       showSuccessToast(
         "عملیات برگشت زمان برست . درخواست برگشت ثبت شد پس از پایان نتیجه به اطلاع شما خواهد رسید",
       );
@@ -61,22 +54,41 @@ export const FinalizeVoucher = ({ form, setMobileDrawerContent }) => {
     <div className="flex flex-col gap-6">
       <Form form={form}>
         <div className="flex flex-col gap-4">
-          <div className="font-normal text-blue-blue5 text-xs">
-            {closeDate.length ? (
-              <div className="flex items-center gap-2">
-                <div>{t("account.lastCloseDate", { date: closeDate })}</div>
-                {removeFinish == true ? (
-                  <Spin size="large" indicator={<SpinIcon />} />
-                ) : (
-                  <div onClick={handelRemove} className="flex items-center">
-                    <TrashBin />
-                    <span className="text-gray-gray10">برگشت از قطعی</span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              "تاریخی ثبت نشده."
-            )}
+          <div className="flex gap-2 items-center">
+            <div className="font-normal text-blue-blue5 text-xs">
+              {closeDate.length ? (
+                <div className="flex items-center gap-2">
+                  <div>{t("account.lastCloseDate", { date: closeDate })}</div>
+                  {removeFinish == true ? (
+                    <Spin size="large" indicator={<SpinIcon />} />
+                  ) : (
+                    <div
+                      onClick={handelRemove}
+                      className="flex gap-2 items-center cursor-pointer"
+                    >
+                      <TrashBin />
+                      <span className="text-gray-gray10">
+                        {t("general.returnFromOutage")}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                "تاریخی ثبت نشده."
+              )}
+            </div>
+            <div
+              className="flex items-center gap-2 cursor-pointer font-normal text-xs"
+              onClick={() => refetch()}
+            >
+              <Reload
+                config={{
+                  height: 16,
+                  width: 16,
+                }}
+              />
+              <span className="text-gray-gray10">{t("general.reload")}</span>
+            </div>
           </div>
           <Form.Item
             label="تا تاریخ"

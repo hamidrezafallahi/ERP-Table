@@ -1,43 +1,30 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useEffect, useRef, useState } from "react";
 
-import {
-  Divider,
-  Pagination,
-} from 'antd';
-import { useTranslations } from 'next-intl';
-import { useDispatch } from 'react-redux';
+import { Divider, Pagination } from "antd";
+import { useTranslations } from "next-intl";
+import { useDispatch } from "react-redux";
 
-import {
-  CustomButton,
-  CustomModal,
-} from '@components/atoms/defaultElements';
-import { CustomDrawer } from '@components/atoms/defaultElements/drawer';
-import {
-  LeftChevron,
-  RightChevron,
-} from '@components/atoms/iconComponents';
-import Confirmation from '@components/molecules/confirmation';
+import { CustomButton, CustomModal } from "@components/atoms/defaultElements";
+import { CustomDrawer } from "@components/atoms/defaultElements/drawer";
+import { LeftChevron, RightChevron } from "@components/atoms/iconComponents";
+import Confirmation from "@components/molecules/confirmation";
 import {
   CardDynamicModal,
   FormDynamicModal,
   TableDynamicModal,
-} from '@components/molecules/dynamicModal';
-import { ActionLabelsEnum } from '@components/organisms/list/enum';
-import { useAppSelector } from '@hooks/custom/useAppSelector';
+} from "@components/molecules/dynamicModal";
+import { ActionLabelsEnum } from "@components/organisms/list/enum";
+import { useAppSelector } from "@hooks/custom/useAppSelector";
 import {
   apiService,
   useCUDDataMutation,
   useGetData,
   useGetInfinite,
-} from '@services/base';
-import type { IToolbarMenu } from '@type/toolbar';
-import { showSuccessToast } from '@utils/toast';
+} from "@services/base";
+import type { IToolbarMenu } from "@type/toolbar";
+import { showSuccessToast } from "@utils/toast";
 
-import type { IProps } from './type';
+import type { IProps } from "./type";
 
 export default function DynamicModal({
   id,

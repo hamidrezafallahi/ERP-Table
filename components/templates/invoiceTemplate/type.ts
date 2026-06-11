@@ -23,7 +23,3 @@ export interface IProps {
   withImage?: boolean;
 }
 
-export interface IRequestMeta {
-  requestKey?: string;  
-  ignoreOnSubmit?: boolean;
-}

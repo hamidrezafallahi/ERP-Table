@@ -5,38 +5,27 @@ import React, {
   useEffect,
 } from 'react';
 
-import { shallowEqual } from 'react-redux';
-
-import {
-  useFullScreen,
-  useMediaQuery,
-} from '@hooks/custom';
-import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useTranslations } from 'next-intl';
 
 import { CreateERPTableConfig } from '../bootstrap/type';
+import { UITableController } from '../infrastructure/ui/UITableController';
 import { ERPTableBody } from './ERPTableBody';
 import { ERPTableHeader } from './ERPTableHeader';
 import { GroupActionButtons } from './groupActionButtons';
 import ERPTablePagination from './pagination';
+import { IMultiSelectConfig } from './type';
 import { useERPTable } from './useERPTable';
 
-export type ERPTableApi = {
-  getSnapShot: () => unknown;
-  subscribeColumn: <T = unknown>(
-    columnId: string,
-    cb: (values: T[]) => void,
-  ) => () => void;
-  // validation: () => (cb: ValidationCallback) => void;
-  addNewRows: () => void;
-};
 export interface ERPTableProps<
   TMoreDetail = unknown,
-> extends CreateERPTableConfig<TMoreDetail> {
-  onReady?: (api: ERPTableApi) => void;
+> extends CreateERPTableConfig {
+  onReady?: (controller: UITableController) => void;
   tableTitle?: string;
   header?: ReactNode;
   footer?: ReactNode;
+  tableType?: string;
   tableHeight: number;
+  multiSelectConfig: IMultiSelectConfig;
   moreDetailComponent?: React.ComponentType<{ data: TMoreDetail }>;
 }
 export function ERPTable<TMoreDetail = unknown>(
@@ -54,21 +43,15 @@ export function ERPTable<TMoreDetail = unknown>(
     header,
     footer,
     tableHeight,
+    tableType,
     recordPerPage,
+    multiSelectConfig,
     moreDetailComponent: MoreDetailComponent,
   } = props;
-  const toggleFullScreen = useFullScreen();
-  const { match } = useMediaQuery("XLUP");
-  const { match: xXlMatch } = useMediaQuery("XXLUP");
-
-  const { menuBarIsOpen, actionBarIsOpen } = useAppSelector((state) => {
-    const menuBarIsOpen = !state.withPersist.config.fullScreen;
-    const actionBarIsOpen = !state.withoutPersist.container.minimize;
-    return { menuBarIsOpen, actionBarIsOpen };
-  }, shallowEqual);
   const result = useERPTable({
     store,
     tableKey,
+    tableType,
     columns,
     rows,
     actor,
@@ -76,12 +59,11 @@ export function ERPTable<TMoreDetail = unknown>(
     tableHeight,
     recordPerPage,
   });
-
+  const t = useTranslations();
   // ---------- keyboard handler ----------
   useEffect(() => {
     if (!result.ready) return;
     const { controller } = result;
-
     const clickHandler = async (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const button = target.closest("button");
@@ -96,7 +78,13 @@ export function ERPTable<TMoreDetail = unknown>(
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
 
-      if (target.closest(".ant-select") && (e.code === "ArrowUp" || e.code === "ArrowDown" || e.code === "Enter"|| e.code === "NumpadEnter")) {
+      if (
+        target.closest(".ant-select") &&
+        (e.code === "ArrowUp" ||
+          e.code === "ArrowDown" ||
+          e.code === "Enter" ||
+          e.code === "NumpadEnter")
+      ) {
         return;
       }
 
@@ -122,31 +110,11 @@ export function ERPTable<TMoreDetail = unknown>(
   useEffect(() => {
     if (result.ready) {
       const { controller } = result;
-      onReady?.({
-        getSnapShot: () => controller.getSnapShot(),
-        addNewRows: () => {}, // controller.addNewRows(tableKey,[])},
-        // validation: () => controller.validation(),
-        subscribeColumn: (columnId, cb) =>
-          controller.subscribeColumn(columnId, cb),
-      });
+      onReady?.(controller);
     }
   }, [result.ready]);
-  if (!result.ready) return null;
+ if (!result.ready) return null;
   const { controller } = result;
-  const getMenuWidth = () => {
-    if (!menuBarIsOpen) return 0;
-    return xXlMatch ? 280 : 260;
-  };
-  const getActionWidth = () => {
-    if (!actionBarIsOpen) return 100;
-    return xXlMatch ? 310 : 145;
-  };
-  const menuSideWidth = getMenuWidth();
-  const actionSideWidth = getActionWidth();
-  const maxWidth =
-    typeof window !== "undefined"
-      ? window.innerWidth - (menuSideWidth + actionSideWidth)
-      : "100%";
   return (
     <div className="flex flex-col w-full h-full transition-all duration-200">
       {tableTitle}
@@ -154,7 +122,8 @@ export function ERPTable<TMoreDetail = unknown>(
         className={`overflow-auto `}
         style={{
           height: tableHeight ?? "100%",
-          width: typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth,
+          // width: typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth,
+          width: "auto",
         }}
       >
         <table className="w-full border-collapse">
@@ -171,7 +140,8 @@ export function ERPTable<TMoreDetail = unknown>(
         </table>
       </div>
       <div className="flex justify-between items-center gap-3 w-full">
-        <GroupActionButtons controller={controller} />
+        <GroupActionButtons controller={controller}  multiSelectConfig={multiSelectConfig}/>
+        
         <ERPTablePagination
           controller={controller}
           store={store}

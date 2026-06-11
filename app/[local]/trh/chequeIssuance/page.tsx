@@ -1,29 +1,32 @@
-import FormGenerator from '@components/organisms/formGenerator';
-import ChequeIssuance
-  from '@components/organisms/receiptAndPayment/cheque/issuance';
+import { MasterForm } from '@components/templates/form';
+import {
+  CheckDocumentOperationType,
+} from '@components/templates/treasury/receiptAndPayment/cheque&promissoryNote/enum';
+import IssuanceTemplate
+  from '@components/templates/treasury/receiptAndPayment/cheque&promissoryNote/issuance';
 import type {
   IChequeIssuance,
   IRequest,
 } from '@services/trh/chequeIssuance/type';
 
 export default function ChequeIssuanceFormPage() {
-
   return (
-    <FormGenerator<IChequeIssuance, IRequest>
-      fieldKey="CheckIssuanceHeaderId"
-      caption={"title.chequeIssuance"}
-      url="api/trh/select/check/issuance"
+    <MasterForm<IChequeIssuance, IRequest>
+       caption={"title.chequeIssuance"}
+      detailFieldKey="VoucherDetailId"
+      headerFieldKey="VoucherHeaderId"
       listUrl="trh/chequeIssuanceList"
-      titleKey="VoucherNumber"
-      pageIcon="ChequeIssuanceIcon"
+       pageIcon="ChequeIssuanceIcon"
       addUrl="api/trh/insert/check/issuance"
       updateUrl="api/trh/update/check/issuance"
       tableTitle="اقلام"
-      Component={ChequeIssuance}
-      fromIndexedDb
+      Component={IssuanceTemplate}
       headerGetUrl="api/trh/select/check/issuance"
       detailGetUrl="api/trh/select/checkDetail/issuance"
-     
+      type={CheckDocumentOperationType.IssuedCheck}
+      DefaultHeaderRepoViewId={3023}
+      DefaultDetailRepoViewId={3022}
+      storeName="chequeIssuance"
     />
   );
 }

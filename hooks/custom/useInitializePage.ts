@@ -13,17 +13,21 @@ import { setMenuBar } from '@slice/config';
 import { setInitialPageData } from '@slice/init';
 import type { IInitialPage } from '@slice/init/type';
 import { setNavigateList } from '@slice/navigateList';
-import { setActivePage } from '@slice/pages';
+import {
+  addNewPage,
+  setActivePage,
+} from '@slice/pages';
 import { PageStateEnum } from '@slice/pages/enum';
 
 export const useInitializePage = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const path = usePathname();
-  const { locale, match } = useAppSelector((state) => {
+  const { locale, match, pages } = useAppSelector((state) => {
     const locale = state.withPersist.config.lang;
     const match = state.withPersist.config.initMatch;
-    return { locale, match };
+    const pages = state.withPersist.pages;
+     return { locale, match, pages };
   }, shallowEqual);
 
   const initializePage = ({
@@ -33,7 +37,7 @@ export const useInitializePage = () => {
     subMenu?: IMenu;
     config?: IInitialPage;
   }) => {
-    const newPageId = Math.floor(Math.random() * 1000).toString();
+     const newPageId = Math.floor(Math.random() * 1000).toString();
     const init: IInitialPage = {
       RepoId: config?.RepoId ?? subMenu.RepoId,
       SystemId: config?.SystemId ?? subMenu?.SystemId,
@@ -45,6 +49,7 @@ export const useInitializePage = () => {
       pageState: config?.pageState ?? PageStateEnum.Opened,
       selectedView: config?.selectedView ?? null,
       listPageId: config?.listPageId ?? null,
+      type: config?.type ?? null,
       returnPageId: config?.returnPageId ?? null,
       Key: config?.Key ? config?.Key : config?.Id ? config?.Id : null,
       data: config?.data,
@@ -60,7 +65,11 @@ export const useInitializePage = () => {
     }
     router.replace(`/${locale}/${init.url}`);
     if (`/${locale}/${init.url}` === path) {
-      dispatch(setActivePage(init.pageId));
+      if (pages.some(p => p.pageId === init.pageId)) {
+        dispatch(setActivePage(init.pageId));
+      } else {
+         dispatch(addNewPage(init));
+      }
     }
     dispatch(setInitialPageData(init));
     dispatch(setNavigateList({ init }));

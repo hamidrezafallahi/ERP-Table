@@ -15,8 +15,8 @@ import {
   PlusOutline,
   Reload,
 } from '@components/atoms/iconComponents';
-import { useInitializePage } from '@hooks/custom';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useInitializePage } from '@hooks/custom/useInitializePage';
 import { setPageData } from '@slice/pages';
 
 import { MobileSelect } from './mobileSelect';
@@ -30,6 +30,7 @@ export const CustomSelect: FC<IProps> = ({
   addButton,
   handleRefetch,
   isFetching,
+  showRefetch=true,
   disabled,
   filterOption,
   ...props
@@ -230,11 +231,11 @@ export const CustomSelect: FC<IProps> = ({
                 )
           }
         />
-        {handleRefetch && (
+        {handleRefetch && showRefetch && (
           <div
             className={`${
               isFetching ? "animate-spin" : ""
-            } ${disabled ? "opacity-50" : "opacity-100"} top-3 left-8 absolute cursor-pointer transition-all duration-400`}
+            } ${disabled ? "opacity-50" : "opacity-100"} top-[0.65rem] left-6 absolute cursor-pointer transition-all duration-400`}
             onClick={handleRefetch}
           >
             <Reload
@@ -288,11 +289,11 @@ export const CustomSelect: FC<IProps> = ({
                 )
           }
         />
-        {handleRefetch && (
+        {handleRefetch &&  showRefetch && (
           <div
             className={`${
               isFetching ? "animate-spin" : ""
-            } ${disabled ? "opacity-50" : "opacity-100"} top-3 left-8 absolute cursor-pointer transition-all duration-400`}
+            } ${disabled ? "opacity-50" : "opacity-100"} top-[0.65rem] left-8 absolute cursor-pointer transition-all duration-400`}
             onClick={handleRefetch}
           >
             <Reload

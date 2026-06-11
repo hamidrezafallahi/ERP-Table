@@ -1,21 +1,18 @@
 "use client";
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
-import {
-  shallowEqual,
-  useDispatch,
-} from 'react-redux';
+import { shallowEqual, useDispatch } from "react-redux";
 
-import Title from '@components/atoms/Title';
-import { useAppSelector } from '@hooks/custom/useAppSelector';
-import { addNewPage } from '@slice/pages';
-import { PageTypeEnum } from '@type/enum';
+import Title from "@components/atoms/Title";
+import { useAppSelector } from "@hooks/custom/useAppSelector";
+import { addNewPage } from "@slice/pages";
+import { PageTypeEnum } from "@type/enum";
 
 import {
   MainHeaderSection,
   MainInfoSection,
   ReceiptAndPaymentToolbar,
-} from './main';
+} from "./main";
 
 export default function ReceiptAndPayment() {
   const dispatch = useDispatch();
@@ -25,7 +22,7 @@ export default function ReceiptAndPayment() {
       initPage: state.withPersist.init,
       match: state.withPersist.config.initMatch,
     }),
-    shallowEqual
+    shallowEqual,
   );
   useEffect(() => {
     dispatch(
@@ -40,12 +37,11 @@ export default function ReceiptAndPayment() {
         SystemId: initPage.SystemId,
         url: "trh/receiptAndPayment",
         listPageId: initPage?.listPageId,
-      })
+      }),
     );
   }, []);
 
   return (
-    // <div className="flex flex-col items-center">
     <>
       <Title caption={"title.receiptAndPayment"} />
       <div className={`${match ? "relative" : ""} w-full`}>
@@ -60,12 +56,10 @@ export default function ReceiptAndPayment() {
       <div
         className={`${
           !match && "h-[calc(100dvh-140px)] overflow-y-auto"
-        } flex flex-col gap-3 p-2`}
+        } flex flex-col gap-3 p-2 h-full`}
       >
-        <MainHeaderSection />
         <MainInfoSection />
       </div>
     </>
-    // </div>
   );
 }

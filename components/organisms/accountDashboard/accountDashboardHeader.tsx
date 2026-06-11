@@ -38,7 +38,7 @@ const AccountDashboardHeader = () => {
         <span className="text-lg">{t("general.date")}</span>
         <RangePicker
           label={false}
-          handleSubmit={(e: any) => {
+          onSubmit={(e: any) => {
             dispatch(
               setViewData({
                 ...activePage?.viewData,

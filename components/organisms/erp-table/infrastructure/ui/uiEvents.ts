@@ -17,6 +17,11 @@ export interface UICellChangeEvent extends UICommandBase {
   readonly columnId: string;
   readonly value: unknown;
 }
+export interface UIDescriptionSaveEvent extends UICommandBase {
+  readonly type: 'UI_DESCRIPTION_SAVE';
+  readonly rowId: number;
+  readonly flag: boolean;
+}
 export interface UICellChangeDisplayEvent extends UICommandBase {
   readonly type: 'UI_CELL_CHANGE_DISPLAY';
   readonly rowId: number;
@@ -76,6 +81,15 @@ export interface ActiveRowUiCommand extends UICommandBase {
 export interface AddEmptyRowUiCommand extends UICommandBase {
   readonly type: 'ADD_EMPTY_ROW';
 }
+export interface AddNewRowsUiCommand extends UICommandBase {
+  readonly type: 'ADD_NEW_ROWS';
+  readonly detailFieldKey: string;
+  readonly rows: {
+    key: string;
+    value: unknown;
+    display: unknown;
+  }[][];
+}
 
 export interface DuplicateRowUiCommand extends UICommandBase {
   readonly type: 'DUPLICATE_ROW';
@@ -88,7 +102,7 @@ export interface DeleteRowUiCommand extends UICommandBase {
 }
 export interface DeleteSelectedRowsUiCommand extends UICommandBase {
   readonly type: 'UI_DELETE_SELECTED_ROW';
- }
+}
 export interface DeleteTableUiCommand extends UICommandBase {
   readonly type: 'TABLE_DELETED';
 }
@@ -107,15 +121,15 @@ export interface ReorderRowUiCommand extends UICommandBase {
   readonly type: 'ROW_REORDERED';
   readonly draggedRowId: number;
   readonly droppedRowId: number;
-  readonly position:'before' | 'after';
+  readonly position: 'before' | 'after';
 }
 export interface ToggleRowSelectedUiCommand extends UICommandBase {
   readonly type: 'TOGGLE_ROW_SELECTED';
- 
+
 }
 export interface TogglePageRowSelectedUiCommand extends UICommandBase {
   readonly type: 'TOGGLE_PAGE_ROW_SELECTED';
- 
+
 }
 export interface RowSelectedUiCommand extends UICommandBase {
   readonly type: 'ROW_SELECTED';
@@ -125,11 +139,13 @@ export interface RowSelectedUiCommand extends UICommandBase {
 
 export interface ActionTableUiCommand extends UICommandBase {
   readonly type: 'UI_ACTION_TABLE';
-   readonly action: TableActions;
-
-
+  readonly action: TableActions;
 }
- 
+export interface TableTypeUiCommand extends UICommandBase {
+  readonly type: 'UI_CHANGE_TABLE_TYPE';
+  readonly tableType: string;
+}
+
 /* ---------- Keyboard ---------- */
 
 export interface KeyDownUiCommand extends UICommandBase {
@@ -154,10 +170,12 @@ export type UITableCommand =
   | UIActiveCellEvent
   | UIActiveFirstCellEvent
   | UICellChangeEvent
+  | UIDescriptionSaveEvent
   | UICellChangeDisplayEvent
   | ChangePageSizeUiCommand
   | ChangePageUiCommand
   | AddEmptyRowUiCommand
+  | AddNewRowsUiCommand
   | DuplicateRowUiCommand
   | DeleteRowUiCommand
   | DeleteTableUiCommand
@@ -165,5 +183,6 @@ export type UITableCommand =
   | ToggleRowExpandedUiCommand
   | ReorderRowUiCommand
   | ActionTableUiCommand
+  | TableTypeUiCommand
   | DeleteSelectedRowsUiCommand
   | KeyDownUiCommand;

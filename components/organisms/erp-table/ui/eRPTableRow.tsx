@@ -36,7 +36,7 @@ function ERPTableRowComponent({
   moreDetailComponent: MoreDetailComponent,
 }: ERPTableRowProps) {
   const t = useTranslations();
-  const rowNum = row.cells["index"].value as number;
+  const rowNum = row.cells["index"]?.value as number;
   const [dropZone, setDropZone] = useState<"before" | "after" | null>(null);
   const isDeleted = row.rowState === RowStateEnum.Deleted;
   const isActiveRow = controller.isActiveRow(row.id);
@@ -91,7 +91,6 @@ function ERPTableRowComponent({
 
     setDropZone(null);
   };
-  const cols = table.columns.filter((c) => !c.hidden).length;
 
   const rowClass = useMemo(() => {
     return `relative w-full border
@@ -125,13 +124,12 @@ function ERPTableRowComponent({
           .filter((c: any) => !c.hidden)
           .map((c: any, idx: number) => {
             const meta: CellMeta = {
-             ...c,
-              enableDeleteButton: c.enableDeleteButton??true,
-              enableExpandButton: c.enableExpandButton??true,
-              enableMoveButton: c.enableMoveButton??true,
-              enableOptionsButton: c.enableOptionsButton??true,
+              ...c,
+              enableDeleteButton: c.enableDeleteButton ?? true,
+              enableExpandButton: c.enableExpandButton ?? true,
+              enableMoveButton: c.enableMoveButton ?? true,
+              enableOptionsButton: c.enableOptionsButton ?? true,
             };
-
             if (c.id === "index") {
               return (
                 <td className="p-0 h-full" key={c.id}>

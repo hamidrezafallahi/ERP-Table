@@ -17,7 +17,7 @@ import type {
 } from '@services/com/year/type';
 
 interface IProps {
-  onChange: (value: any) => void;
+  onChange?: (value: any) => void;
   value: number[];
 }
 interface ICheckbox {

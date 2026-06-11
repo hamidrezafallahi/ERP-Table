@@ -20,6 +20,8 @@ export default function ChequeReceiptListPage() {
       caption={"title.chequeReceiptList"}
       baseRepoId={3025}
       pageIcon="ChequeReceiptIcon"
+      bodyKey={"PrommisoryType"}
+      withoutActivation={true}
     />
   );
 }

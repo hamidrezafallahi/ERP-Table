@@ -1,4 +1,4 @@
-import { useInitializePage } from '@hooks/custom';
+import { useInitializePage } from '@hooks/custom/useInitializePage';
 import { SystemEnum } from '@type/enum';
 
 import MainTable from '../../partials/Table';

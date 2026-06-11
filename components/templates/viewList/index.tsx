@@ -153,6 +153,7 @@ export default function ViewList<T extends IBaseDto, K>({
     }, [activePage?.pageId]);
 
     useEffect(() => {
+            
         if (
             isSuccess &&
             dataToolbar?.Result &&
@@ -222,6 +223,8 @@ export default function ViewList<T extends IBaseDto, K>({
                 );
                 SetFetchToolbarData(false);
             } catch (error) {
+                console.log(error)
+
                 null;
             }
         }

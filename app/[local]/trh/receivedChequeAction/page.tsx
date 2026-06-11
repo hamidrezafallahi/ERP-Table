@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
-import { useDispatch } from 'react-redux';
-
-import { ChequeAction } from '@components/organisms/receiptAndPayment/cheque';
-import { useAppSelector } from '@hooks/custom/useAppSelector';
-import { addNewPage } from '@slice/pages';
-import { PageStateEnum } from '@slice/pages/enum';
-import { PageTypeEnum } from '@type/enum';
+import { useDispatch } from "react-redux";
+import { useAppSelector } from "@hooks/custom/useAppSelector";
+import { addNewPage } from "@slice/pages";
+import { PageStateEnum } from "@slice/pages/enum";
+import { PageTypeEnum } from "@type/enum";
+import { ReceivedChequeOperationTemplate } from "@components/templates/treasury/receiptAndPayment/receivedChequeOperation";
 
 export default function ReceivedChequeActionPage() {
   const dispatch = useDispatch();
@@ -33,9 +32,9 @@ export default function ReceivedChequeActionPage() {
         pageData: [],
         url: baseUrl,
         listPageId: listPageId,
-      })
+      }),
     );
   }, [id]);
 
-  return <ChequeAction />;
+  return <ReceivedChequeOperationTemplate />;
 }

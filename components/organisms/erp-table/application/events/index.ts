@@ -31,6 +31,7 @@ export interface CellDisplayChangedEvent extends BaseTableEvent {
   newValue: unknown;
 }
 
+
 /* ======================================================
    Row Events
    ====================================================== */
@@ -59,6 +60,11 @@ export interface RowReorderedEvent extends BaseTableEvent {
   type: 'ROW_REORDERED';
   sourceIndex: number;
   destIndex: number;
+}
+export interface RowDescriptionSaved extends BaseTableEvent {
+  type: 'ROW_DESCRIPTION_SAVED';
+  rowId: number;
+  description: boolean;
 }
 
 /* ======================================================
@@ -96,6 +102,10 @@ export interface TableDeletedEvent extends BaseTableEvent {
 }
 export interface TableResetEvent extends BaseTableEvent {
   type: 'TABLE_RESET';
+  tableId:string
+}
+export interface TableTypeChangeEvent extends BaseTableEvent {
+  type: 'TABLE_TYPE_CHANGED';
   tableId:string
 }
 
@@ -138,6 +148,7 @@ export type TableEvent =
   | RowDeletedEvent
   | RowRestoredEvent
   | RowReorderedEvent
+  | RowDescriptionSaved
   | ColumnReorderedEvent
   | UnitColumnAddedEvent
   | PageChangedEvent
@@ -146,4 +157,5 @@ export type TableEvent =
   | DynamicDataRequestedEvent
   | ValidationFailedEvent
   | TableDeletedEvent
+  | TableTypeChangeEvent
   | TableResetEvent;

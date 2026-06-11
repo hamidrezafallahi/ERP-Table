@@ -35,6 +35,7 @@ export async function createERPTable(config: CreateERPTableConfig) {
     : config.recordPerPage ?? 10;
   // ---------- columns & rows (با چک repo) ----------
   let { columns, columnMeta } = buildColumns(config.columns, config.rows);
+ 
   let { rows, table: loadedTable } = await buildRows(
     columns,
     columnMeta,
@@ -42,6 +43,7 @@ export async function createERPTable(config: CreateERPTableConfig) {
     repo,
     config.store,
     config.tableKey,
+    config.tableType,
     remoteApi
   );
   if (loadedTable) {
@@ -62,23 +64,24 @@ export async function createERPTable(config: CreateERPTableConfig) {
         dynamicValue: col.dynamicSource,
         selectOptions: col.selectOptions,
         indexOptions: col.indexOptions,
-        enableDeleteButton:col.enableDeleteButton,
-        enableExpandButton:col.enableExpandButton,
-        enableMoveButton:col.enableMoveButton,
-        enableOptionsButton:col.enableOptionsButton,
+        enableDeleteButton: col.enableDeleteButton,
+        enableExpandButton: col.enableExpandButton,
+        enableMoveButton: col.enableMoveButton,
+        enableOptionsButton: col.enableOptionsButton,
         onChange: col.onChange,
         displayFormat: col.displayFormat,
         minWidth: col.minWidth,
         style: col.style,
         popUpWidth: col.popUpWidth,
-        dynamicSelectFilterOption:col.dynamicSelectFilterOption,
+        dynamicSelectFilterOption: col.dynamicSelectFilterOption,
         labelValue: col.labelValue
 
       });
     }
   }
   // ---------- table ----------
-  const table = loadedTable || new Table(config.tableKey, rows, columns, new Pagination(page, pageSize, pageSize), null); if (loadedTable) {
+  const table = loadedTable || new Table(config.tableKey, rows, columns, new Pagination(page, pageSize, pageSize), null, config.tableType);
+  if (loadedTable) {
     table.setColumns(Array.from(columns.values()));
     table.setPagination(new Pagination(page, pageSize, pageSize)); await repo.save(config.store, table);
   } else {

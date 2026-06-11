@@ -1,21 +1,13 @@
-import React, {
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useState,
-} from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 
-import { shallowEqual } from 'react-redux';
+import { shallowEqual } from "react-redux";
 
-import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useAppSelector } from "@hooks/custom/useAppSelector";
 
-import SideBar from './sideBar';
-import SideBarFormContext from './sideBarFormContext';
-import SideBarFormToolbar from './sideBarFormToolbar';
-import {
-  CustomFormComponentProps,
-  IDynamicModalConfig,
-} from './types';
+import SideBar from "./sideBar";
+import SideBarFormContext from "./sideBarFormContext";
+import SideBarFormToolbar from "./sideBarFormToolbar";
+import { CustomFormComponentProps, IDynamicModalConfig } from "./types";
 
 interface SideBarBaseProps {
   config: IDynamicModalConfig;
@@ -32,6 +24,7 @@ interface SideBarFormProps extends SideBarBaseProps {
   isModal?: boolean;
   ExternalSidebar?: React.ComponentType<SideBarComponentProps>;
   ExternalCustomForm?: React.ComponentType<CustomFormComponentProps>;
+  accountId?: number;
 }
 
 export default function SideBarForm(props: SideBarFormProps) {
@@ -50,7 +43,7 @@ export default function SideBarForm(props: SideBarFormProps) {
   const setTypeId = setId ?? setInternalId;
 
   const { selectedTafsiliId, match } = useAppSelector((state) => {
-    const selectedTafsiliId = state.withPersist.pages
+    const selectedTafsiliId = state.withPersist?.pages
       .find((item) => item.isActive)
       ?.pageData?.find((pro) => pro.name === "selectedTafsiliId")?.value;
     const match = state.withPersist.config.initMatch;

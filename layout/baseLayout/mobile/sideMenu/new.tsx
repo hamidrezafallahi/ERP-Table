@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import InputText from '@components/atoms/defaultElements/inputText';
-import { useInitializePage } from '@hooks/custom';
+import { useInitializePage } from '@hooks/custom/useInitializePage';
 import { flatItems } from '@layout/baseLayout/desktop/topHead/config';
 
 export default function New() {

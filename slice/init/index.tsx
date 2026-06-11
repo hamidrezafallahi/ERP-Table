@@ -45,7 +45,6 @@ export const InitReducer: Slice<IInitialPage> = createSlice({
         data,
         caption,
       } = action.payload ?? {};
-
       state.RepoId = RepoId ?? null;
       state.SystemId = SystemId ?? null;
       state.data = data ?? null;

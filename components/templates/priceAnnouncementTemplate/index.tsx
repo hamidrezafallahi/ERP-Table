@@ -17,9 +17,8 @@ import {
 import {
   PriceAnnouncementForm,
 } from '@components/molecules/salesAndPurchase/priceAnnouncementForm';
-import { ERPTableApi } from '@components/organisms/erp-table/ui';
-import { useInitializePage } from '@hooks/custom';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useInitializePage } from '@hooks/custom/useInitializePage';
 import { useGetConditionallyMutation } from '@services/base';
 import { IBaseRequest } from '@services/base/type';
 import { PageTypeEnum } from '@type/enum';
@@ -90,7 +89,7 @@ export default function PriceAnnouncementTemplate<T, K>({ ...props }: IProps) {
   const [itemMutate] = useGetConditionallyMutation();
 
   // for control table without re-render
-  const tableApiRef = useRef<ERPTableApi | null>(null);
+  const tableApiRef = useRef<any | null>(null);
 
   // save page in redux and navigation - chnage url - save
   const initializePage = useInitializePage();

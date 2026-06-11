@@ -7,8 +7,8 @@ import { shallowEqual } from 'react-redux';
 
 import { CustomButton } from '@components/atoms/defaultElements';
 import { MenuDrawerIcon } from '@components/atoms/iconComponents';
-import { useInitializePage } from '@hooks/custom';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useInitializePage } from '@hooks/custom/useInitializePage';
 import { useCUDDataMutation } from '@services/base';
 import { PageStateEnum } from '@slice/pages/enum';
 import { SystemEnum } from '@type/enum';

@@ -48,11 +48,7 @@ import {
 } from '@utils/core';
 
 import FormToolbar from '../formToolbar';
-import type {
-  IProps,
-  IRequest,
-  IResponse,
-} from './type';
+import type { IProps } from './type';
 
 const safeParse = (s: any) => {
   try {
@@ -81,9 +77,7 @@ export default function FormGenerator<T, K>({ ...props }: IProps) {
     withSubmitButton = true,
     hasShorthandFormToolbar,
     Component = undefined,
-    fromIndexedDb = false,
-    saveAsDraft = false,
-    hasReload,
+     saveAsDraft = false,
   } = props;
   const t = useTranslations();
   const dispatch = useDispatch();
@@ -92,8 +86,7 @@ export default function FormGenerator<T, K>({ ...props }: IProps) {
   const id = Number(params.get("id"));
   const [mobileDrawerContent, setMobileDrawerContent] = useState(null);
   const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
-  const [isFormSubmitting, setIsFormSubmitting] = useState(false);
-  const [mobileDrawerHeight, setMobileDrawerHeight] = useState(160);
+   const [mobileDrawerHeight, setMobileDrawerHeight] = useState(160);
   const [fields, setFields] = useState([]);
 
   const { initPage, activePage, pages, match } = useAppSelector(
@@ -228,7 +221,7 @@ export default function FormGenerator<T, K>({ ...props }: IProps) {
     }
   }, [formData, activePage?.pageData]);
   useEffect(() => {
-    if (!fromIndexedDb) {
+     
       const setNewPage = async () => {
         let pageData = [];
         try {
@@ -353,7 +346,7 @@ export default function FormGenerator<T, K>({ ...props }: IProps) {
       if (formData?.length > 0 || Config?.data) {
         setNewPage();
       }
-    }
+ 
   }, [formData, titleKey, id, Config?.data]);
 
   useEffect(() => {
@@ -364,15 +357,6 @@ export default function FormGenerator<T, K>({ ...props }: IProps) {
   }, [handleOutsideClick]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { refetch } = useGetData<IResponse, IRequest>({
-    url,
-    body: {},
-    skip: !hasReload || !url,
-  });
-
-  const handleRefreshData = () => {
-    if (hasReload && url) refetch();
-  };
 
   return (
     <>
@@ -402,15 +386,11 @@ export default function FormGenerator<T, K>({ ...props }: IProps) {
             statusHandler={(routing) => {
               routingValue.current = routing;
             }}
-            handleRefreshData={handleRefreshData}
             mutationSystemId={mutationSystemId}
             submitCaption={submitCaption}
             withSubmitButton={withSubmitButton}
             hasShorthandFormToolbar={hasShorthandFormToolbar}
-            fromIndexedDb={fromIndexedDb}
-            loadingFromOutsideComponents={isFormSubmitting}
-            saveAsDraft={saveAsDraft}
-            hasReload={hasReload}
+             saveAsDraft={saveAsDraft}
           />
         </div>
         <div className="hidden-show-scrollBar flex flex-col gap-10 mt-4 lg:mt-0 h-full max-h-[calc(100dvh-160px)] overflow-auto">
@@ -418,8 +398,7 @@ export default function FormGenerator<T, K>({ ...props }: IProps) {
             <Component
               setMobileDrawerContent={setMobileDrawerContent}
               setMobileDrawerHeight={setMobileDrawerHeight}
-              setIsFormSubmitting={setIsFormSubmitting}
-              form={form}
+               form={form}
               {...props}
             />
           ) : Config?.data ? (

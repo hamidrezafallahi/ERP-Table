@@ -36,6 +36,11 @@ export type SelectOption = {
   label: string;
   value: string|number;
 };
+export type KeyValue = {
+  key: string;
+  value: unknown;
+  display: unknown;
+};
 
 export type IRule = {
   type?: string | 'array' | 'object' | 'enum' | 'date' | 'number' | 'integer' | 'float' | 'boolean' | 'email' | 'url' | 'hex' | RegExp;

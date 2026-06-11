@@ -38,3 +38,16 @@ export enum SystemEnum {
   "mng" = 207,
   "logs" = 208,
 }
+
+export enum ChequeState {
+  AtTheBank = 1,
+  AtTheCash,
+  Passed,
+  AtThePerson,
+  AtTheCashFund,
+  Reversal
+}
+export enum eChequePrommisoryType {
+  Cheque = 1,
+  Promissory
+}

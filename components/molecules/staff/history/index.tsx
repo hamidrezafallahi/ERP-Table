@@ -17,8 +17,8 @@ import {
   TableDynamicModal,
 } from '@components/molecules/dynamicModal';
 import { ActionLabelsEnum } from '@components/organisms/list/enum';
-import { useInitializePage } from '@hooks/custom';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useInitializePage } from '@hooks/custom/useInitializePage';
 import {
   useGetData,
   useGetInfinite,

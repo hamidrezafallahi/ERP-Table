@@ -11,7 +11,7 @@ export class FetchRemoteApi implements RemoteApi {
   }): Promise<TResponse> {
     let storage: string | null = null;
     if (typeof window !== 'undefined') {
-      storage = localStorage.getItem('persist:root');
+      storage = localStorage.getItem('persist:arianERP');
     }
     const parsedStorage = JSON.parse(storage);
     const parsedConfig = JSON.parse(parsedStorage.config);

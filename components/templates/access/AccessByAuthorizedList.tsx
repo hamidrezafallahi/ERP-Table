@@ -1,14 +1,17 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { Dropdown, MenuProps } from "antd";
-import { useTranslations } from "next-intl";
+import {
+  Dropdown,
+  MenuProps,
+} from 'antd';
+import { useTranslations } from 'next-intl';
 
-import { CustomButton } from "@components/atoms/defaultElements";
-import CustomCheckbox from "@components/atoms/defaultElements/checkbox";
-import { Close } from "@components/atoms/iconComponents";
-import { useGetData } from "@services/base";
+import { CustomButton } from '@components/atoms/defaultElements';
+import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
+import { Close } from '@components/atoms/iconComponents';
+import { useGetData } from '@services/base';
 
-import type { IAccessByAuthorizedList } from "./type";
+import type { IAccessByAuthorizedList } from './type';
 
 function AccessByAuthorizedList({ ...props }: IAccessByAuthorizedList) {
   const { item, handleChange, handleSubmit, title, hasCheckbox = true } = props;
@@ -110,8 +113,7 @@ const AuthorizedList = ({ item, submitHandler, setOpen, setExceptList }) => {
         {t("general.authorizedCompanies")}
         <div className="">
           <CustomButton
-            type="text"
-            ghost
+            type="text"         
             className="hover:!bg-transparent m-0 p-0 cursor-pointer"
             onClick={() => setOpen(false)}
           >

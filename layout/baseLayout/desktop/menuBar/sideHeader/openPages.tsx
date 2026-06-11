@@ -21,8 +21,8 @@ import {
   Close,
   New,
 } from '@components/atoms/iconComponents';
-import { useInitializePage } from '@hooks/custom';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useInitializePage } from '@hooks/custom/useInitializePage';
 import { resetItemsByPage } from '@slice/items';
 import {
   removePage,
@@ -228,7 +228,7 @@ export default function OpenPages() {
                   )}
                 </div>
                 <div className="flex justify-center items-center">
-                  {renderPageState(item.pageState)}
+                  {item.type === PageTypeEnum.Form || item.type === PageTypeEnum.List &&  renderPageState(item.pageState)}
                 </div>
               </div>
               <CustomButton

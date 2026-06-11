@@ -1,6 +1,7 @@
 //domain/entities
 import {
   CellChanged,
+  DescriptionSaved,
   DisplayChanged,
 } from '../events';
 import {
@@ -21,7 +22,9 @@ export class Row {
     public rowState: RowState,
     public changeFields: Set<string> = new Set(),
     public moreDetails: unknown,
-    public visibilityCondition: Record<string,boolean>
+    public visibilityCondition: Record<string, boolean>,
+    public rowType: string = "default",
+    public isSaveDescription: boolean
   ) { }
   updateChangeFields(columnId: ColumnId): void {
     const cell = this.cells.get(columnId.value);
@@ -42,25 +45,39 @@ export class Row {
     }
   }
 
+  getRowType(): string {
+    return this.rowType
+  }
+  setRowType(type:string) {
+      this.rowType = type
+  }
   getChangeFields(): readonly string[] {
     return Array.from(this.changeFields);
   }
   getSnapshotChangeFields(): readonly string[] {
-    return Array.from(this.changeFields).map(field => 
-  field.replace("index", "RowNum")
-);
+    return Array.from(this.changeFields).map(field =>
+      field.replace("index", "RowNum")
+    );
   }
   changeCell(
     columnId: ColumnId,
-    value: CellValue
+    value:  unknown
   ): CellChanged | null {
     const cell = this.cells.get(columnId.value);
     if (!cell) return null;
+        console.log("here",columnId.value,value)
     return cell.changeValue(value);
+  }
+  saveDescription(
+    flag: boolean,
+
+  ): DescriptionSaved {
+    this.isSaveDescription = flag
+    return new DescriptionSaved( this.id,flag)   
   }
   changeDisplay(
     columnId: ColumnId,
-    value: CellValue
+    value: unknown
   ): DisplayChanged | null {
     const cell = this.cells.get(columnId.value);
     if (!cell) return null;
@@ -84,11 +101,11 @@ export class Row {
   setMoreDetails(detail: unknown) {
     this.moreDetails = detail;
   }
-  setVisibilityCondition(Condition: Record<string,boolean>) {
+  setVisibilityCondition(Condition: Record<string, boolean>) {
     this.visibilityCondition = Condition;
   }
-  getVisibilityCondition():Record<string,boolean> {
-    return this.visibilityCondition 
+  getVisibilityCondition(): Record<string, boolean> {
+    return this.visibilityCondition
   }
   getMoreDetails() {
     return this.moreDetails;
@@ -105,7 +122,7 @@ export class Row {
       const clonedCell = cell.clone();
       clonedCells.set(k, clonedCell);
     }
-    return new Row(this.id, clonedCells, this.rowState, this.changeFields, this.moreDetails,this.visibilityCondition);
+    return new Row(this.id, clonedCells, this.rowState, this.changeFields, this.moreDetails, this.visibilityCondition, this.rowType,this.isSaveDescription);
   }
 
 }

@@ -32,7 +32,7 @@ export const ChequeInfoModal = ({
   const data = infoData?.Data[0];
 
   return (
-    <div className="flex flex-col justify-between gap-2 p-4 text-xs">
+    <div className="flex flex-col justify-between gap-4 h-[calc(100dvh-44rem)] text-xs">
       <div className="gap-4 grid grid-cols-2">
         {data?.VoucherDate && (
           <div className="flex gap-2">

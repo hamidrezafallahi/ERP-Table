@@ -6,42 +6,37 @@ import { useSearchParams } from 'next/navigation';
 
 import Title from '@components/atoms/Title';
 import FormToolbar from '@components/organisms/formToolbar';
+import { GridContainedPageProps } from '@type/elementType';
 
-import type { IMasterProps } from './type';
-
-export function MasterForm<T, K>({ ...props }: IMasterProps) {
-  const {
-    fieldKey,
-    caption,
-    listUrl,
-    Component,
-  } = props;
+export function MasterForm<T, K>({ ...props }: Omit<GridContainedPageProps,"form"|"tableType"|"masterForm" |"setMasterForm"|"actor"|"columnConfig"|"formConfig"|"multiSelectConfig"|"formHeight"|"recordHeight"|"mobileRecordsPerPage"> ) {
+  const { headerFieldKey , caption, listUrl, Component ,saveAsDraft} = props;
   const params = useSearchParams();
   const id = Number(params.get("id"));
-  const [isFormSubmitting, setIsFormSubmitting] = useState<boolean>(false);
+  const [masterForm, setMasterForm] = useState<{loading:boolean,action:"save"|"saveAndNew"|"saveAndClose"}>({loading:false,action:"save"});
   const [form] = Form.useForm();
+
   return (
     <>
       <Title caption={caption} />
       <div className="relative">
-        <div
-          className="-top-[60px] absolute end-0" 
-        >
+        <div className="-top-[60px] absolute end-0">
           <FormToolbar
             listUrl={listUrl}
             toolbarData={toolbar}
             isEdit={id > 0}
             form={form}
-            fieldKey={fieldKey}
+            fieldKey={headerFieldKey}
             id={id}
-            fromIndexedDb={false}
-            loadingFromOutsideComponents={isFormSubmitting}
+            setMasterForm={setMasterForm}
+            masterForm={masterForm}
+            saveAsDraft={saveAsDraft}
           />
         </div>
         <Component
-          setIsFormSubmitting={setIsFormSubmitting}
-          form={form}
           {...props}
+          setMasterForm={setMasterForm}
+          masterForm={masterForm} 
+          form={form}
         />
       </div>
     </>

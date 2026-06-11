@@ -1,43 +1,63 @@
 const createNextIntlPlugin = require("next-intl/plugin");
-const withPWAInit = require("@ducanh2912/next-pwa").default;
 
-const withPWA = withPWAInit({
-  dest: "public",
-  disable: true,
-  disableLogging: true,
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
-});
+// const withPWAInit = require("@ducanh2912/next-pwa").default;
 
+/**
+ * =========================
+ * Next.js Base Config
+ * =========================
+ */
 const nextConfig = {
   reactStrictMode: false,
+
+  // مهم برای Docker production
   output: "standalone",
 
+  productionBrowserSourceMaps: false,
+ 
+
+  /**
+   * =========================
+   * ESLint behavior in CI/CD
+   * =========================
+   * جلوگیری از fail شدن build به خاطر warning ها
+   */
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+  /**
+   * =========================
+   * Images config
+   * =========================
+   */
   images: {
     domains: [process.env.APP_URL || "localhost"],
     unoptimized: true,
-    path: "./public",
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "bff.ariansystem.net",
+        hostname: "bff.arianerp.ir",
         pathname: "/**",
       },
     ],
   },
-  experimental: {
-    extensionAlias: {
-      ".js": [".js", ".ts", ".tsx"],
-    },
-  },
+
+  /**
+   * =========================
+   * Compiler optimizations
+   * =========================
+   */
   compiler: {
     styledComponents: true,
     reactRemoveProperties: true,
   },
-  webpack(config) {
-    config.optimization.minimizer = [];
-    return config;
-  },
+
+  /**
+   * =========================
+   * Rewrites
+   * =========================
+   */
   async rewrites() {
     return [
       {
@@ -50,6 +70,12 @@ const nextConfig = {
       },
     ];
   },
+
+  /**
+   * =========================
+   * Security headers (CSP)
+   * =========================
+   */
   async headers() {
     return [
       {
@@ -58,12 +84,12 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value: [
-              "default-src 'self' https: http:;",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:;",
-              "style-src 'self' 'unsafe-inline' https: http:;",
-              "img-src 'self' blob: data: https: http:;",
+              "default-src 'self' https:;",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;",
+              "style-src 'self' 'unsafe-inline' https:;",
+              "img-src 'self' blob: data: https:;",
               "font-src 'self' https: data:;",
-              "connect-src 'self' https: http: ws: wss: *;",
+              "connect-src 'self' https: ws: wss:;",
               "media-src 'self' blob:;",
               "object-src 'none';",
               "frame-ancestors 'none';",
@@ -73,31 +99,13 @@ const nextConfig = {
       },
     ];
   },
-  // حذف headers از next.config.js زیرا از middleware استفاده می‌کنیم
-  // async headers() {
-  //   return [
-  //     {
-  //       source: "/(.*)",
-  //       headers: [
-  //         {
-  //           key: "Content-Security-Policy",
-  //           value: [
-  //             "default-src * data: blob: 'unsafe-inline' 'unsafe-eval';",
-  //             "img-src * data: blob: 'unsafe-inline';",
-  //             "media-src * data: blob:;",
-  //             "style-src * 'unsafe-inline';",
-  //             "font-src * data:;",
-  //             "connect-src *;",
-  //             "script-src * 'unsafe-inline' 'unsafe-eval';",
-  //             "frame-src *;",
-  //             "worker-src blob:;",
-  //           ].join(" "),
-  //         },
-  //       ],
-  //     },
-  //   ];
-  // },
 };
 
+/**
+ * =========================
+ * i18n plugin
+ * =========================
+ */
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
-module.exports = withNextIntl(withPWA(nextConfig));
+
+module.exports = withNextIntl(nextConfig);

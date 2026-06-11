@@ -27,7 +27,7 @@ function CardSimpleInner<
       ref={index === processedDataLength - 1 ? ref : null}
       className={`${actions.length > 1 ? "flex-col" : "flex-row"} p-4 flex gap-4 items-start justify-between  bg-gray-gray1 rounded-lg border-2 border-gray-gray05`}
     >
-      <div className="flex flex-col gap-1 flex-1">
+      <div className="flex gap-1 flex-1">
         {columnsConfig?.map((el: any, idx: number) => (
           <div key={idx} className="flex text-sm text-justify text-gray-gray10">
             <p>{item[el.fieldName]}</p>

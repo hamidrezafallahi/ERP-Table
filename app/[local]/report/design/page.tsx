@@ -20,8 +20,8 @@ import {
   DashboardDesigner,
   ReportDesigner,
 } from '@components/organisms/managementSystem';
-import { useInitializePage } from '@hooks/custom';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
+import { useInitializePage } from '@hooks/custom/useInitializePage';
 import { useGetData } from '@services/base';
 import { ReportTypeEnum } from '@services/mng/report/type';
 import type {

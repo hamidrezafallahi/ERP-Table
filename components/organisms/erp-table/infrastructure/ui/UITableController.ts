@@ -9,7 +9,7 @@ type KeydownCtx = {
   activeRowId: number | null;
   activeColumnId: string | null;
 };
- 
+
 
 export class UITableController {
   constructor(
@@ -42,6 +42,15 @@ export class UITableController {
       rowId,
       columnId,
       newValue: value,
+    });
+  }
+  private onDescriptionSave(rowId: number,flag:boolean ) {
+    this.engine.dispatch({
+      type: 'SAVE_DESCRIPTION',
+      store: this.store,
+      tableKey: this.tableKey,
+      rowId,
+      flag
     });
   }
   private onCellDisplayChange(rowId: number, columnId: string, value: string) {
@@ -108,6 +117,20 @@ export class UITableController {
       autoActivate: true,
     });
   }
+  private addNewRows(cmd:{rows: {
+    key: string;
+    value: unknown;
+    display: unknown;
+  }[][],detailFieldKey:string}) {
+    
+    this.engine.dispatch({
+      type: 'ADD_NEW_ROWS',
+      store: this.store,
+      tableKey: this.tableKey,
+      rows:cmd.rows,
+      detailFieldKey:cmd.detailFieldKey
+    });
+  }
   private duplicateRow(rowId: number) {
     this.engine.dispatch({
       type: 'DUPLICATE_ROW',
@@ -123,12 +146,12 @@ export class UITableController {
       tableKey: this.tableKey,
       rowId,
     });
-  }  private deleteRows( ) {
+  } private deleteRows() {
     this.engine.dispatch({
       type: 'ROWS_DELETED',
       store: this.store,
       tableKey: this.tableKey,
- 
+
     });
   }
   private deleteTable() {
@@ -189,7 +212,7 @@ export class UITableController {
     const { altKey, shiftKey, ctrlKey, code } = e;
     const { activeRowId, activeColumnId } = ctx;
     const selectedRows = this.engine.getSelectedRows(this.tableKey)
-     switch (code) {
+    switch (code) {
       case 'KeyN': {
         if (altKey) {
           e.preventDefault();
@@ -241,17 +264,17 @@ export class UITableController {
         //   await this.toggleRowExpanded(activeRowId);
         //   return;
         // }  else 
-       
-          if (activeRowId) {
+
+        if (activeRowId) {
           if (!activeColumnId) {
             this.activateFirstEditableCell(activeRowId);
           } else {
-             e.preventDefault();
-          this.moveToNextCell(
-            activeRowId,
-            activeColumnId,
-            shiftKey ? 'prev' : 'next'
-          );
+            e.preventDefault();
+            this.moveToNextCell(
+              activeRowId,
+              activeColumnId,
+              shiftKey ? 'prev' : 'next'
+            );
           }
         }
         return;
@@ -290,7 +313,7 @@ export class UITableController {
           e.preventDefault();
           await this.moveVerticalSelectedRows('down');
           return;
-        }else if (ctrlKey && activeRowId) {
+        } else if (ctrlKey && activeRowId) {
           e.preventDefault();
           await this.moveVerticalActiveRow('down');
           return;
@@ -424,6 +447,15 @@ export class UITableController {
     });
 
   }
+  private async setTableType(tableType: string) {
+    await this.engine.dispatch({
+      type: 'SET_TABLE_TYPE',
+      store: this.store,
+      tableKey: this.tableKey,
+      tableType
+    });
+
+  }
   getViewState() {
     try {
       return this.engine.getViewState(this.tableKey);
@@ -480,8 +512,15 @@ export class UITableController {
       return null;
     }
   }
-  subscribeColumn(columnId: string, cb: (values: unknown[]) => void) {
-    return this.engine.subscribeColumn(this.tableKey, columnId, cb);
+  subscribeColumn<T>(
+    columnId: string,
+    cb: (values: T[]) => void
+  ) {
+    return this.engine.subscribeColumn(
+      this.tableKey,
+      columnId,
+      cb as (values: unknown[]) => void
+    );
   }
 
   isActiveCell(rowId: number, columnId: string) {
@@ -513,7 +552,7 @@ export class UITableController {
       return null;
     }
   }
- 
+
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
@@ -562,7 +601,10 @@ export class UITableController {
         return;
 
       case 'UI_CELL_CHANGE':
-        this.onCellChange(command.rowId, command.columnId, command.value);
+         this.onCellChange(command.rowId, command.columnId, command.value);
+        return;
+      case 'UI_DESCRIPTION_SAVE':
+         this.onDescriptionSave(command.rowId,command.flag);
         return;
       case 'UI_CELL_CHANGE_DISPLAY':
         this.onCellDisplayChange(command.rowId, command.columnId, command.value);
@@ -570,6 +612,9 @@ export class UITableController {
 
       case 'ADD_EMPTY_ROW':
         this.addEmptyRow();
+        return;
+      case 'ADD_NEW_ROWS':
+        this.addNewRows(command);
         return;
 
       case 'DUPLICATE_ROW':
@@ -629,6 +674,9 @@ export class UITableController {
       case 'UI_ACTION_TABLE':
         this.setTableAction(command.action)
         return
+      case 'UI_CHANGE_TABLE_TYPE':
+        this.setTableType(command.tableType)
+        return
       default:
         const _exhaustive: never = command;
         return _exhaustive;
@@ -642,13 +690,13 @@ export class UITableController {
 
 //  validation: () => (callback: (result: ValidationCallbackResult) => void) => void = () => (callback) => {
 //   this.engine.validation(this.tableKey, (result) => {
-//     callback(result);   
+//     callback(result);
 //   });
 // }
-  // isValidCell(rowId: number, columnId: string):ValidCell {
-  //   try {
-  //     return //this.engine.isValidCell(this.tableKey, rowId, columnId);
-  //   } catch {
-  //     return null;
-  //   }
-  // }
+// isValidCell(rowId: number, columnId: string):ValidCell {
+//   try {
+//     return //this.engine.isValidCell(this.tableKey, rowId, columnId);
+//   } catch {
+//     return null;
+//   }
+// }

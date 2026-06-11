@@ -1,4 +1,5 @@
-import { IRequestConfig } from '@type/elementType';
+import { Level4TypeEnum } from "@components/molecules/dynamicLevelFields/enum";
+import { IRequestConfig } from "@type/elementType";
 
 interface FieldRule {
   required?: boolean;
@@ -8,7 +9,7 @@ interface FieldRule {
   pattern?: any;
 }
 
-interface FormField {
+export interface FormField {
   name: string;
   caption?: string;
   help?: string;
@@ -50,4 +51,11 @@ export interface IProps {
   handleClose: () => void;
   config: IChequeDynamicConfig;
   selectedRecords: any;
+  type?: string;
+}
+
+export interface ChequeDynamicConfigProps {
+  name: string;
+  config: IChequeDynamicConfig;
+  level4Type?: Level4TypeEnum;
 }

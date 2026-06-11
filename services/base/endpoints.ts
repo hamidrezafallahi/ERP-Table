@@ -209,5 +209,9 @@ export const endpoints = [
   "getBackToPreviousStep",
   "chequeHistory",
   "chequeInfo",
-  "voucherTypeCategoryReport"
+  "voucherTypeCategoryReport",
+  "voucherTypeDescriptions",
+  "accountDescription",
+  "checkAssignment",
+  "selectOption"
 ];

@@ -47,7 +47,7 @@ export const NewDatePicker = ({
   }, shallowEqual);
 
   const defaultClass = `dark:!bg-gray-gray95 dark:!text-white  
-    !h-[42px] lg:!h-[2.125rem] text-sm !bg-gray-gray3 px-2 rounded w-full ${className} !border-none ${
+    !h-[42px] lg:!h-[2.125rem] text-sm !bg-gray-gray3 px-2 !rounded-sm w-full ${className} !border-none ${
     disabled && "!bg-[#ECECEC] !text-[#b1b1b1] "
   } `;
 

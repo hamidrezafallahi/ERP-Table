@@ -2,7 +2,7 @@
 
 import { shallowEqual } from 'react-redux';
 
-import { Info } from '@components/atoms/iconComponents';
+import { InfoIcon } from '@components/atoms/iconComponents';
 import { useAppSelector } from '@hooks/custom/useAppSelector';
 import { useDarkMode } from '@hooks/custom/useDarkMode';
 
@@ -22,7 +22,7 @@ export default function ToastInfo({ title, message }) {
       <div className="-z-10 absolute -inset-10 bg-blue-blue005 dark:bg-blue-950"></div>
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Info
+          <InfoIcon
             config={{
               width: 24,
               height: 24,
@@ -43,7 +43,7 @@ export default function ToastInfo({ title, message }) {
       <div className="-z-10 absolute -inset-9 bg-blue-blue005 dark:bg-blue-950"></div>
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Info
+          <InfoIcon
             config={{
               width: 24,
               height: 24,
