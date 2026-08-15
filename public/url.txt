@@ -1,1 +1,0 @@
-      "ApiUrl":"https://bff.ariansystemdp.local",

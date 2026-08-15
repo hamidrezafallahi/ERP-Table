@@ -1,1 +1,0 @@
-export { PriceForm } from './form';
