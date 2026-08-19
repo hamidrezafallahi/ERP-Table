@@ -22,6 +22,7 @@ import {
   ResetTableCommandHandler,
 } from '../../application/handlers/tableCommandHandler';
 import { AuditLogger } from '../../application/ports/AuditLogger';
+import type { EventStore } from '../../application/ports/EventStore';
 import { TableRepository } from '../../application/ports/TableRepository';
 import { TableAppService } from '../../application/TableAppService';
 import { Cell } from '../../domain/entities/Cell';
@@ -381,7 +382,8 @@ export function createTableAppService(
   repo: TableRepository,
   audit: AuditLogger,
   permissionPolicy: PermissionPolicy,
-  { columnMeta, remoteApi }: { columnMeta: Map<string, ColumnSchema>; remoteApi: FetchRemoteApi }
+  { columnMeta, remoteApi }: { columnMeta: Map<string, ColumnSchema>; remoteApi: FetchRemoteApi },
+  eventStore?: EventStore
 ): TableAppService {
   const changeCellHandler = new ChangeCellValueHandler(repo, audit, permissionPolicy, { columnMeta, remoteApi });
   const applyDynamicProjection = new ApplyDynamicProjectionHandler(repo, audit, permissionPolicy, { columnMeta, remoteApi });
@@ -399,7 +401,7 @@ export function createTableAppService(
   const setPage = new ChangePageCommandHandler(repo, audit);
   const setActiveCollection = new SetActiveCollectionCommandHandler(repo, audit);
 
-  return new TableAppService(
+  const appService = new TableAppService(
     changeCellHandler,
     changeCellDisplayHandler,
     saveDescriptionHandler,
@@ -416,4 +418,10 @@ export function createTableAppService(
     resetTableHandler,
     applyDynamicProjection
   );
+
+  if (eventStore) {
+    appService.setEventStore(eventStore);
+  }
+
+  return appService;
 }

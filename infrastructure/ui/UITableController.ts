@@ -16,6 +16,16 @@ import type {
   ValidationCallbackResult,
   ValidCell,
 } from '../../engine/type';
+import type {
+  ChangelogEntry,
+  ChangelogQuery,
+} from '../projections/ChangelogProjection';
+import type { ChangelogProjection } from '../projections/ChangelogProjection';
+import type {
+  HistoryItem,
+  HistoryPanelViewModel,
+  HistoryQuery,
+} from '../history/HistoryPanelViewModel';
 import { UIRow } from '../../ui/type';
 import { UITableCommand } from './uiEvents';
 import { UITableKeyboardHandler } from './UITableKeyboardHandler';
@@ -28,6 +38,8 @@ export class UITableController {
     private readonly store: string,
     private readonly tableKey: string,
     private readonly audit: AuditLogger,
+    private readonly changelogProjection?: ChangelogProjection,
+    private readonly historyPanelViewModel?: HistoryPanelViewModel,
   ) {
     this.keyboard = new UITableKeyboardHandler(engine, store, tableKey, audit);
   }
@@ -199,6 +211,60 @@ export class UITableController {
 
   getCell(rowId: number, columnId: string) {
     return this.safe(() => this.engine.getCell(rowId, columnId), 'getCell');
+  }
+
+  getChangelog(filter: Omit<ChangelogQuery, 'tableId'> = {}): ChangelogEntry[] {
+    if (!this.changelogProjection) return [];
+    return this.safe(
+      () => this.changelogProjection!.query({ tableId: this.tableKey, ...filter }),
+      'getChangelog',
+    ) ?? [];
+  }
+
+  getChangelogCount(filter: Omit<ChangelogQuery, 'tableId'> = {}): number {
+    if (!this.changelogProjection) return 0;
+    return this.safe(
+      () => this.changelogProjection!.count({ tableId: this.tableKey, ...filter }),
+      'getChangelogCount',
+    ) ?? 0;
+  }
+
+  subscribeChangelog(
+    cb: (entries: ChangelogEntry[]) => void,
+    filter: Omit<ChangelogQuery, 'tableId'> = {},
+  ): () => void {
+    if (!this.changelogProjection) return () => {};
+    return this.safe(
+      () => this.changelogProjection!.subscribe(cb, { tableId: this.tableKey, ...filter }),
+      'subscribeChangelog',
+    ) ?? (() => {});
+  }
+
+  getHistoryItems(filter: Omit<HistoryQuery, 'tableId'> = {}): HistoryItem[] {
+    if (!this.historyPanelViewModel) return [];
+    return this.safe(
+      () => this.historyPanelViewModel!.query({ tableId: this.tableKey, ...filter }),
+      'getHistoryItems',
+    ) ?? [];
+  }
+
+  getHistoryItemCount(filter: Omit<HistoryQuery, 'tableId'> = {}): number {
+    if (!this.historyPanelViewModel) return 0;
+    return this.safe(
+      () => this.historyPanelViewModel!.count({ tableId: this.tableKey, ...filter }),
+      'getHistoryItemCount',
+    ) ?? 0;
+  }
+
+  subscribeHistoryItems(
+    cb: (items: HistoryItem[]) => void,
+    filter: Omit<HistoryQuery, 'tableId'> = {},
+  ): () => void {
+    if (!this.historyPanelViewModel) return () => {};
+    return this.safe(
+      () => this.historyPanelViewModel!.subscribe(cb, { tableId: this.tableKey, ...filter }),
+      'subscribeHistoryItems',
+    ) ?? (() => {});
   }
 
   getActiveRow() {

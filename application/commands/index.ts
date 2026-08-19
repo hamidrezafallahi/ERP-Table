@@ -273,14 +273,16 @@ export interface SetMobileEditorCommand {
 
 /* ---------- Union ---------- */
 
-export type TableCommand =
+export type EngineTableCommand =
   SelectActiveRowToLastCommand
   | SelectRangeCommand
   | ToggleRowExpandCommand
   | SelectRowCommand
+  | ColumnReorderedCommand
   | CollapseAllRowsCommand
   | RegisterTableCommand
   | DisposeTableCommand
+  | DeleteRowsCommand
   | ToggleRowSelectionCommand
   | SelectAllRowsCommand
   | SelectPageRowsCommand
@@ -291,6 +293,12 @@ export type TableCommand =
   | MoveVerticalSelectedRows
   | MoveVerticalActiveRow
   | ActiveFirstCellCommand
+  | ExpandRowCommand
+  | ChangeTableActionCommand
+  | SetGridSearchCommand
+  | SetMobileEditorCommand;
+
+export type ApplicationTableCommand =
   | ChangeCellValueCommand
   | SaveDescriptionCommand
   | ChangeCellDisplayValueCommand
@@ -298,17 +306,39 @@ export type TableCommand =
   | AddNewRowsCommand
   | DuplicateRowCommand
   | DeleteRowCommand
-  | DeleteRowsCommand
   | DeleteTableCommand
   | SetActiveCollectionCommand
   | ResetTableCommand
   | RowReorderedCommand
-  | ColumnReorderedCommand
   | ChangePageCommand
   | ChangePageSizeCommand
-  | ExpandRowCommand
   | ApplyDynamicProjectionCommand
-  | ChangeUnitLevelCommand
-  | ChangeTableActionCommand
-  | SetGridSearchCommand
-  | SetMobileEditorCommand;
+  | ChangeUnitLevelCommand;
+
+export type TableCommand =
+  | EngineTableCommand
+  | ApplicationTableCommand;
+
+const applicationCommandTypes = new Set<TableCommand['type']>([
+  'CHANGE_CELL_VALUE',
+  'SAVE_DESCRIPTION',
+  'CHANGE_CELL_DISPLAY_VALUE',
+  'ADD_EMPTY_ROW',
+  'ADD_NEW_ROWS',
+  'DUPLICATE_ROW',
+  'ROW_DELETED',
+  'TABLE_DELETED',
+  'SET_ACTIVE_COLLECTION',
+  'TABLE_RESET',
+  'ROW_REORDERED',
+  'CHANGE_PAGE',
+  'CHANGE_PAGE_SIZE',
+  'APPLY_DYNAMIC_PROJECTION',
+  'SET_UNIT_LEVEL',
+]);
+
+export function isApplicationTableCommand(
+  command: TableCommand
+): command is ApplicationTableCommand {
+  return applicationCommandTypes.has(command.type);
+}

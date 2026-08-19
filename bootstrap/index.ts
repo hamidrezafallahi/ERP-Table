@@ -13,6 +13,9 @@ import {
   ConsoleAuditLogger,
 } from '../infrastructure/Repositories/consoleAuditLogger';
 import { FetchRemoteApi } from '../infrastructure/Repositories/fetchRemoteApi';
+import { InMemoryEventStore } from '../infrastructure/eventStore/InMemoryEventStore';
+import { HistoryPanelViewModel } from '../infrastructure/history/HistoryPanelViewModel';
+import { ChangelogProjection } from '../infrastructure/projections/ChangelogProjection';
 import { UITableController } from '../infrastructure/ui/UITableController';
 import {
   buildCollections,
@@ -25,6 +28,7 @@ import {
 import {
   ColumnSchema,
   CreateERPTableConfig,
+  CreateERPTableResult,
   RowInput,
 } from './type';
 
@@ -45,12 +49,16 @@ function createInitialRows(
   return rows;
 }
 
-export async function createERPTable(config: CreateERPTableConfig) {
+export async function createERPTable(config: CreateERPTableConfig): Promise<CreateERPTableResult> {
  
   // ---------- infra ----------
   const repo = config.repo ?? new CachedTableRepository();
   const audit = config.audit ?? new ConsoleAuditLogger();
   const remoteApi = config.remoteApi ?? new FetchRemoteApi();
+  const eventStore = new InMemoryEventStore();
+  const changelogProjection = new ChangelogProjection(eventStore);
+  const historyPanelViewModel = new HistoryPanelViewModel(changelogProjection);
+  changelogProjection.start();
 
   // ---------- محاسبه pageSize دقیقاً مثل نسخه اولیه ----------
   const page = 1;
@@ -108,11 +116,27 @@ export async function createERPTable(config: CreateERPTableConfig) {
   }
   // ---------- policies & app ----------
   const permissionPolicy = createPermissionPolicy(config, columnMeta, table, repo, audit);
-  const app = createTableAppService(repo, audit, permissionPolicy, { columnMeta, remoteApi });
+  const app = createTableAppService(repo, audit, permissionPolicy, { columnMeta, remoteApi }, eventStore);
 
   // ---------- engine & controller ----------
   const engine = new TableEngine(app, repo, config.actor, audit);
-  const controller = new UITableController(engine, config.store, config.tableKey, audit);
+  const controller = new UITableController(
+    engine,
+    config.store,
+    config.tableKey,
+    audit,
+    changelogProjection,
+    historyPanelViewModel,
+  );
   await controller.dispatch({ type: 'TABLE_REGISTERED', storeName: config.store, table });
-  return { engine, controller, table, tableKey: config.tableKey, columnMeta };
+  return {
+    engine,
+    controller,
+    table,
+    tableKey: config.tableKey,
+    columnMeta,
+    eventStore,
+    changelogProjection,
+    historyPanelViewModel,
+  };
 }

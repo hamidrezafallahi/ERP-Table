@@ -1,6 +1,8 @@
 import {
   Actor,
   AddEmptyRowCommand,
+  ApplicationTableCommand,
+  isApplicationTableCommand,
   TableCommand,
 } from '../application/commands';
 import { TableRepository } from '../application/ports/TableRepository';
@@ -175,7 +177,7 @@ export class TableEngine {
    * Default case در dispatch:
    * command را به AppService می‌دهد و سپس repo را reload می‌کند.
    */
-  private async executeAppCommand(command: TableCommand): Promise<void> {
+  private async executeAppCommand(command: ApplicationTableCommand): Promise<void> {
     let result: unknown;
 
     try {
@@ -307,6 +309,13 @@ export class TableEngine {
 
       // ── Delegate to AppService ───────────────────────────────────────────────
       default:
+        if (!isApplicationTableCommand(command)) {
+          this.errHandler.handle(
+            new Error(`Unhandled engine command: ${command.type}`),
+            'TableEngine.dispatch'
+          );
+          return;
+        }
         await this.executeAppCommand(command);
     }
   }

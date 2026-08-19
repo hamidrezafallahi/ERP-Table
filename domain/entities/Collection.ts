@@ -1,4 +1,4 @@
-import { ColumnSchema } from '../../bootstrap/type';
+import type { ColumnSchema } from '../types/ColumnSchema';
 import { Row } from './Row';
 
 export class Collection {

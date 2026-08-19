@@ -9,6 +9,7 @@ export type {
   CollectionRowMap,
   ColumnSchema,
   CreateERPTableConfig,
+  CreateERPTableResult,
   FieldType,
   RowInput,
 } from './bootstrap/type';
