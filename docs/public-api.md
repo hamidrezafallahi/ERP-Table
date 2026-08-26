@@ -1,6 +1,19 @@
 # Public API
 
-Library entry: package root (`index.ts`).
+Library entry for consumers: package root built from `publish/entry.ts`.
+
+**Display name:** Event-driven ERP Grid · **npm:** `@fallahi/erp-table`
+
+## Local development modes
+
+Inspired by the Persian range-picker demo layout (`InitialComponent` / `DemoComponent`):
+
+| Script | `VITE_APP_MODE` | UI |
+|--------|-----------------|-----|
+| `npm run dev:docs` | `docs` | Landing / live docs (`demo/src/InitialComponent.tsx`) |
+| `npm run dev` / `dev:playground` | `dev` | QA playground (`demo/src/DemoComponent.tsx`) |
+
+The `demo/` Vite app is excluded from tsup publish (`files` still ships `docs/`).
 
 ## Composition
 

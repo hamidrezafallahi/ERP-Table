@@ -24,6 +24,9 @@
   ],
   "sideEffects": false,
   "scripts": {
+    "dev": "vite --config demo/vite.config.ts --mode playground",
+    "dev:docs": "vite --config demo/vite.config.ts",
+    "dev:playground": "vite --config demo/vite.config.ts --mode playground",
     "test": "vitest run domain/__tests__ application/__tests__ infrastructure/__tests__ bootstrap/__tests__ engine/__tests__ ui/virtual/__tests__ ui/desktop/__tests__ ui/gridSearch/__tests__ packages/plugins/excel/__tests__ packages/plugins/pdf/__tests__",
     "typecheck:publish": "tsc -p tsconfig.publish.json --noEmit",
     "typecheck:host-ui": "tsc -p tsconfig.json --noEmit",
@@ -41,9 +44,13 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react-swc": "^3.11.0",
     "react": "^19.0.0",
+    "react-dom": "^19.2.8",
     "tsup": "^8.5.0",
     "typescript": "^5.8.2",
+    "vite": "^5.4.21",
     "vitest": "^4.1.10"
   },
   "publishConfig": {
