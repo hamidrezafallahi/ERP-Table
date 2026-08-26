@@ -49,6 +49,7 @@ const HISTORY_CLASSIFICATIONS: Record<string, HistoryClassification> = {
   ACTIVE_COLLECTION_CHANGED: { category: 'structure', severity: 'info' },
   PAGE_CHANGED: { category: 'view', severity: 'info' },
   PAGE_SIZE_CHANGED: { category: 'view', severity: 'info' },
+  VIEWPORT_CHANGED: { category: 'view', severity: 'info' },
   ROWS_LOADED: { category: 'system', severity: 'info' },
   TABLE_RESET: { category: 'system', severity: 'warning' },
   TABLE_DELETED: { category: 'system', severity: 'warning' },
@@ -78,7 +79,10 @@ function describeEntry(entry: ChangelogEntry): Pick<HistoryItem, 'title' | 'desc
     case 'CELL_CHANGED':
       return {
         title: 'Cell changed',
-        description: `Row ${rowId}, column "${columnId}" changed to ${formatValue(payload?.newValue)}.`,
+        description:
+          payload?.previousValue !== undefined
+            ? `Row ${rowId}, column "${columnId}" changed from ${formatValue(payload?.previousValue)} to ${formatValue(payload?.newValue)}.`
+            : `Row ${rowId}, column "${columnId}" changed to ${formatValue(payload?.newValue)}.`,
       };
     case 'CELL_DISPLAY_CHANGED':
       return {
@@ -94,6 +98,11 @@ function describeEntry(entry: ChangelogEntry): Pick<HistoryItem, 'title' | 'desc
       return {
         title: 'Page size changed',
         description: `Page size changed to ${formatValue(payload?.pageSize)}.`,
+      };
+    case 'VIEWPORT_CHANGED':
+      return {
+        title: 'Viewport changed',
+        description: `Scroll offset ${formatValue(payload?.scrollOffset)}; visible [${formatValue(payload?.startIndex)}–${formatValue(payload?.endIndex)}).`,
       };
     case 'ROW_ADDED':
     case 'NEW_ROW_ADDED':

@@ -17,7 +17,7 @@ function evt(overrides: Partial<GridEvent> = {}): GridEvent {
     version: 0,
     occurredAt: Date.now(),
     actorId: 'user-1',
-    payload: { type: 'CELL_CHANGED', tableId: 't1', rowId: 1, columnId: 'name', newValue: 'beta' },
+    payload: { type: 'CELL_CHANGED', tableId: 't1', rowId: 1, columnId: 'name', newValue: 'beta', previousValue: 'alpha' },
     ...overrides,
   };
 }
@@ -27,10 +27,10 @@ describe('HistoryPanelViewModel', () => {
   let projection: ChangelogProjection;
   let viewModel: HistoryPanelViewModel;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     store = new InMemoryEventStore();
     projection = new ChangelogProjection(store);
-    projection.start();
+    await projection.start();
     viewModel = new HistoryPanelViewModel(projection);
   });
 
@@ -42,6 +42,8 @@ describe('HistoryPanelViewModel', () => {
     expect(items[0].title).toBe('Cell changed');
     expect(items[0].description).toContain('Row 1');
     expect(items[0].description).toContain('column "name"');
+    expect(items[0].description).toContain('from alpha');
+    expect(items[0].description).toContain('to beta');
     expect(items[0].category).toBe('data');
     expect(items[0].severity).toBe('info');
   });
@@ -162,6 +164,7 @@ describe('HistoryPanelViewModel', () => {
     ], -1);
     unsubscribe();
 
-    expect(types).toEqual([[], ['CELL_CHANGED']]);
+    // One notification per projected event; PAGE_CHANGED is filtered out of data category.
+    expect(types).toEqual([[], ['CELL_CHANGED'], ['CELL_CHANGED']]);
   });
 });

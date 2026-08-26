@@ -120,6 +120,7 @@ describe('table domain behavior', () => {
 
     expect(event?.type).toBe('CELL_CHANGED');
     expect(event?.newValue).toBe('beta');
+    expect(event?.previousValue).toBe('alpha');
     expect(row.getCell('name')?.getValue()).toBe('beta');
     expect(row.getChangeFields()).toEqual(['name']);
     expect(row.rowState.value).toBe(RowStateEnum.Modified);
@@ -196,5 +197,31 @@ describe('table domain behavior', () => {
     expect(event?.type).toBe('ROW_RESTORED');
     expect(row.rowState.value).toBe(RowStateEnum.Modified);
     expect(row.getChangeFields()).toEqual(['name']);
+  });
+
+  it('restoreAddedRow re-inserts the same row identity and cell values', () => {
+    const table = createTable([
+      createRow({ rowId: 1, index: 1, name: 'seed', rowState: RowStateEnum.Added }),
+      createRow({ rowId: 99, index: 2, name: 'draft', rowState: RowStateEnum.Added }),
+    ]);
+
+    table.deleteRow(new RowId(99));
+    expect(table.getRow(99)).toBeUndefined();
+
+    const event = table.restoreAddedRow({
+      rowId: 99,
+      cells: {
+        index: { value: 2, display: 2, originalValue: 2 },
+        name: { value: 'draft', display: 'draft', originalValue: 'draft' },
+      },
+      collection: 'default',
+    });
+
+    expect(event.type).toBe('ROW_ADDED');
+    const restored = table.getRow(99)!;
+    expect(restored.id.value).toBe(99);
+    expect(restored.rowState.value).toBe(RowStateEnum.Added);
+    expect(restored.getCell('name')?.getValue()).toBe('draft');
+    expect(restored.getCell('index')?.getValue()).toBe(2);
   });
 });

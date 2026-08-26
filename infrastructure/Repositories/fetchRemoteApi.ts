@@ -44,7 +44,7 @@ export class FetchRemoteApi implements RemoteApi {
       } as any;
       const res = await baseQueryByToken(args, api, {});
       if (!res) {
-        this.err.handle(
+        this.err?.handle(
           'RemoteApi request failed: empty response'
         );
         throw new Error(
@@ -53,7 +53,7 @@ export class FetchRemoteApi implements RemoteApi {
       }
       return res.data as TResponse;
     } catch (error) {
-      this.err.handle(
+      this.err?.handle(
         error,
         'FetchRemoteApi.request'
       );

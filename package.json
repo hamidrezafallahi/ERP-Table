@@ -1,0 +1,63 @@
+{
+  "name": "@fallahi/erp-table",
+  "version": "0.5.0",
+  "description": "ERP grid core — event-driven table bounded context with React virtual adapter",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "ARCHITECTURE.md",
+    "EXECUTION_PLAN.md",
+    "WORKLOG.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "vitest run domain/__tests__ application/__tests__ infrastructure/__tests__ bootstrap/__tests__ engine/__tests__ ui/virtual/__tests__ ui/desktop/__tests__ ui/gridSearch/__tests__ packages/plugins/excel/__tests__ packages/plugins/pdf/__tests__",
+    "typecheck:publish": "tsc -p tsconfig.publish.json --noEmit",
+    "typecheck:host-ui": "tsc -p tsconfig.json --noEmit",
+    "build": "tsup --config tsup.config.ts",
+    "verify:dist": "node ./scripts/verify-dist.mjs",
+    "prepublishOnly": "npm run typecheck:publish && npm run typecheck:host-ui && npm run build && npm run verify:dist && npm test"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "react": "^19.0.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.2",
+    "vitest": "^4.1.10"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fallahi/erp-table.git"
+  },
+  "keywords": [
+    "erp",
+    "grid",
+    "event-sourcing",
+    "ddd",
+    "react"
+  ]
+}

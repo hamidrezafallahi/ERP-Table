@@ -44,6 +44,14 @@ export interface RowDescriptionSavedPayload {
 
 export interface PageChangedPayload { readonly page: number; }
 export interface PageSizeChangedPayload { readonly pageSize: number; }
+export interface ViewportChangedPayload {
+  readonly scrollOffset: number;
+  readonly viewportSize: number;
+  readonly rowHeight: number;
+  readonly overscan: number;
+  readonly startIndex: number;
+  readonly endIndex: number;
+}
 export interface TableDeletedPayload {}
 export interface TableResetPayload {}
 export interface ActiveCollectionChangedPayload {}
@@ -56,15 +64,39 @@ export interface DynamicProjectionPayload {
   readonly columnId: string;
 }
 
+/* ── Plugin / export payloads ───────────────────────── */
+
+export interface ExportRequestedPayload {
+  readonly format: 'xlsx' | 'pdf';
+  readonly collectionScope: 'active' | 'all' | string[];
+  readonly fileName?: string;
+  readonly sheetName?: string;
+  readonly direction?: 'rtl' | 'ltr';
+}
+
+export interface ExportCompletedPayload {
+  readonly format: 'xlsx' | 'pdf';
+  readonly rowCount: number;
+  readonly columnCount?: number;
+  readonly blobId?: string;
+}
+
+export interface ExportFailedPayload {
+  readonly format: 'xlsx' | 'pdf';
+  readonly code: string;
+  readonly message: string;
+}
+
 /* ── Typed aliases ──────────────────────────────────── */
 
 export type CellChangedGridEvent = GridEvent<'CELL_CHANGED', CellChangedPayload>;
 export type CellDisplayChangedGridEvent = GridEvent<'CELL_DISPLAY_CHANGED', CellDisplayChangedPayload>;
 export type RowAddedGridEvent = GridEvent<'ROW_ADDED' | 'NEW_ROW_ADDED', RowAddedPayload>;
-export type RowDeletedGridEvent = GridEvent<'ROW_DELETED', RowDeletedPayload>;
+export type RowDeletedGridEvent = GridEvent<'ROW_DELETED' | 'NEW_ROW_REMOVED', RowDeletedPayload>;
 export type RowRestoredGridEvent = GridEvent<'ROW_RESTORED', RowRestoredPayload>;
 export type RowReorderedGridEvent = GridEvent<'ROW_REORDERED', RowReorderedPayload>;
 export type PageChangedGridEvent = GridEvent<'PAGE_CHANGED', PageChangedPayload>;
 export type PageSizeChangedGridEvent = GridEvent<'PAGE_SIZE_CHANGED', PageSizeChangedPayload>;
+export type ViewportChangedGridEvent = GridEvent<'VIEWPORT_CHANGED', ViewportChangedPayload>;
 export type TableDeletedGridEvent = GridEvent<'TABLE_DELETED', TableDeletedPayload>;
 export type TableResetGridEvent = GridEvent<'TABLE_RESET', TableResetPayload>;

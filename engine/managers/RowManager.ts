@@ -3,7 +3,6 @@
 import {
   CellValue,
   ColumnId,
-  RowStateEnum,
   TableActions,
 } from '../../domain/value-objects';
 import { EngineErrorHandler } from '../EngineErrorHandler';
@@ -201,20 +200,12 @@ export class RowManager {
 
     setTableAction(
         cmd: { tableKey: string; action: TableActions },
-        activeRowId: number | undefined,
+        _activeRowId: number | undefined,
     ): void {
         const store = this.getStore(cmd.tableKey);
         if (!store) return;
 
-        const { table, selectedRows } = store.getState();
-
-        const nonDeletedRows = table
-            .getRows()
-            .filter(r => r.rowState.value !== RowStateEnum.Deleted);
-
-        const filteredRows = nonDeletedRows.filter(
-            row => selectedRows[row.id?.value] === true,
-        );
+        const { table } = store.getState();
 
         switch (cmd.action) {
             case 'copy':
@@ -225,29 +216,7 @@ export class RowManager {
 
             case 'paste':
             case 'pasteInsert':
-                filteredRows
-                    .sort((a, b) => {
-                        const aIndex = Number(
-                            a.getCells().get('index')?.getValue() ?? 0,
-                        );
-                        const bIndex = Number(
-                            b.getCells().get('index')?.getValue() ?? 0,
-                        );
-                        return bIndex - aIndex;
-                    })
-                    .forEach(row => {
-                        table.addRow(
-                            row.id.value,
-                            cmd.action === 'pasteInsert' ? activeRowId : undefined,
-                        );
-                    });
-
-                if (table.getTableAction() === 'cut') {
-                    filteredRows.forEach(row => { table.deleteRow(row.id); });
-                    store.setState(prev => ({ ...prev, selectedRows: {} }));
-                }
-                table.setTableAction(null);
-
+                // Paste is handled by TableEngine.executePasteAction → AppService.
                 break;
 
             default:

@@ -512,6 +512,77 @@ export class Table {
 
   // ─── Delete / restore ─────────────────────────────────────────────────────
 
+  /**
+   * Re-inserts a previously Added row after hard-remove (undo of ADD → redo).
+   * Preserves rowId and cell values; no-ops if the id already exists.
+   */
+  restoreAddedRow(params: {
+    rowId: number;
+    cells: Readonly<
+      Record<
+        string,
+        {
+          readonly value: unknown;
+          readonly display?: unknown;
+          readonly originalValue?: unknown;
+        }
+      >
+    >;
+    collection?: string;
+    isSaveDescription?: boolean;
+  }): RowAdded {
+    const col = this.getActiveCollection();
+    const existing = col.getRows().get(params.rowId);
+    if (existing) {
+      return new RowAdded(existing.id);
+    }
+
+    const rowId = new RowId(params.rowId);
+    const cells = new Map<string, Cell>();
+
+    for (const [columnId, snap] of Object.entries(params.cells)) {
+      const value = new CellValue(snap.value);
+      const original = new CellValue(
+        snap.originalValue !== undefined ? snap.originalValue : snap.value,
+      );
+      const display = new CellDisplay(
+        snap.display !== undefined ? snap.display : snap.value,
+      );
+      cells.set(
+        columnId,
+        new Cell(rowId, new ColumnId(columnId), value, original, display),
+      );
+    }
+
+    for (const column of this.getColumns()) {
+      if (cells.has(column.fieldName)) continue;
+      const empty = new CellValue(null);
+      cells.set(
+        column.fieldName,
+        new Cell(
+          rowId,
+          new ColumnId(column.fieldName),
+          empty,
+          empty,
+          new CellDisplay(null),
+        ),
+      );
+    }
+
+    const newRow = new Row(
+      rowId,
+      cells,
+      new RowState(RowStateEnum.Added),
+      new Set(),
+      {} as Record<string, boolean>,
+      params.collection ?? this.activeCollection,
+      params.isSaveDescription ?? false,
+    );
+
+    col.getRows().set(rowId.value, newRow);
+    return new RowAdded(rowId);
+  }
+
   deleteRow(
     rowId: RowId
   ): RowDeleted | RowRestored | RowRemoved | MinimumRowConstraintViolated | null {

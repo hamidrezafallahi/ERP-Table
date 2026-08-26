@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": true,
+    "rootDir": ".",
+    "baseUrl": "."
+  },
+  "include": [
+    "publish/**/*.ts",
+    "publish/**/*.tsx",
+    "application/**/*.ts",
+    "bootstrap/**/*.ts",
+    "domain/**/*.ts",
+    "engine/**/*.ts",
+    "infrastructure/**/*.ts",
+    "packages/plugins/**/*.ts",
+    "types/**/*.d.ts",
+    "ui/**/*.ts",
+    "ui/**/*.tsx",
+    "index.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/__tests__/**"
+  ]
+}

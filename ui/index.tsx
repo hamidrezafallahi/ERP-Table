@@ -22,6 +22,8 @@ export interface ERPTableProps extends CreateERPTableConfig {
   tableHeight?: number;
   multiSelectConfig: IMultiSelectConfig;
   moreDetailComponent?: React.ComponentType<{data: unknown}>;
+  /** Desktop virtual scroll; default on when session exists. Pass false for pagination. */
+  virtualization?: boolean;
 }
 
 export function ERPTable(props: ERPTableProps) {
@@ -41,6 +43,7 @@ export function ERPTable(props: ERPTableProps) {
     recordPerPage,
     multiSelectConfig,
     moreDetailComponent,
+    virtualization,
   } = props;
 
   const result = useERPTable({
@@ -89,7 +92,7 @@ export function ERPTable(props: ERPTableProps) {
         ctx: {
           activeRowId: activeRow,
           tableKey,
-          activeColumnId: activeCell?.columnId,
+          activeColumnId: activeCell?.columnId ?? null,
         },
       });
     };
@@ -131,6 +134,8 @@ export function ERPTable(props: ERPTableProps) {
       tableHeight={tableHeight}
       moreDetailComponent={moreDetailComponent}
       ready={result.ready}
+      virtualization={virtualization}
+      session={result.session}
     />
   );
 }

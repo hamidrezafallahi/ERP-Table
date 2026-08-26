@@ -5,6 +5,7 @@ type Listener = (event: GridEvent) => void;
 
 export class InMemoryEventStore implements EventStore {
   private streams = new Map<string, GridEvent[]>();
+  private globalLog: GridEvent[] = [];
   private listeners = new Map<string, Set<Listener>>();
   private globalListeners = new Set<Listener>();
 
@@ -20,13 +21,21 @@ export class InMemoryEventStore implements EventStore {
       return { ok: false, conflict: { expectedVersion, actualVersion } };
     }
 
+    const stamped: GridEvent[] = [];
     for (const event of events) {
-      stream.push(event);
+      const versioned: GridEvent = {
+        ...event,
+        streamId,
+        version: stream.length + stamped.length + 1,
+      };
+      stamped.push(versioned);
+      stream.push(versioned);
+      this.globalLog.push(versioned);
     }
     this.streams.set(streamId, stream);
 
     const subs = this.listeners.get(streamId);
-    for (const event of events) {
+    for (const event of stamped) {
       if (subs) {
         for (const listener of subs) { listener(event); }
       }
@@ -39,6 +48,10 @@ export class InMemoryEventStore implements EventStore {
   async read(streamId: string, fromVersion: number = 0): Promise<GridEvent[]> {
     const stream = this.streams.get(streamId) ?? [];
     return stream.slice(fromVersion);
+  }
+
+  async readAll(fromPosition: number = 0): Promise<GridEvent[]> {
+    return this.globalLog.slice(fromPosition);
   }
 
   subscribe(streamId: string, onEvent: Listener): Unsubscribe {
@@ -57,5 +70,9 @@ export class InMemoryEventStore implements EventStore {
 
   getStreamVersion(streamId: string): number {
     return (this.streams.get(streamId) ?? []).length;
+  }
+
+  getGlobalPosition(): number {
+    return this.globalLog.length;
   }
 }

@@ -26,10 +26,10 @@ export default function ERPTablePagination({
   const direction = locale === "fa" ? "rtl" : "ltr";
   if (!table) return null;
   const { page, pageSize, totalPages, totalRows } = table.pagination;
-  const handlePageChange = (e) => {
+  const handlePageChange = (e: number) => {
     controller.dispatch({ type: "CHANGE_PAGE", page: e });
   };
-  const handlePageSizeChange = (page, pageSize) => {
+  const handlePageSizeChange = (_page: number, pageSize: number) => {
     controller.dispatch({ type: "CHANGE_PAGE_SIZE", pageSize: pageSize });
   };
 
@@ -65,7 +65,7 @@ export default function ERPTablePagination({
         pageSizeOptions={["10", "20", "50", "100"]}
         // hideOnSinglePage
         locale={{ items_per_page: "" }}
-        showTotal={(total) => (
+        showTotal={(total: number) => (
           <div className="flex items-center gap-1 h-full font-light text-gray-gray10 text-xs">
             <span>{total.toLocaleString("fa-IR")}</span>
             <span>سطر در</span>

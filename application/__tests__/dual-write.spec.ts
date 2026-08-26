@@ -8,7 +8,7 @@ function makeMockHandler(returnValue: any) {
 }
 
 function createServiceWithStore() {
-  const cellChangedEvent = [{ type: 'CELL_CHANGED', tableId: 't1', rowId: 1, columnId: 'name', newValue: 'b' }];
+  const cellChangedEvent = [{ type: 'CELL_CHANGED', tableId: 't1', rowId: 1, columnId: 'name', newValue: 'b', previousValue: 'a' }];
   const pageChangedEvent = [{ type: 'PAGE_CHANGED', tableId: 't1', page: 2 }];
 
   const handlers = {
@@ -66,6 +66,35 @@ describe('TableAppService dual-write', () => {
     expect(events).toHaveLength(1);
     expect(events[0].type).toBe('CELL_CHANGED');
     expect(events[0].tableId).toBe('t1');
+    expect((events[0].payload as { previousValue: unknown; newValue: unknown }).previousValue).toBe('a');
+    expect((events[0].payload as { previousValue: unknown; newValue: unknown }).newValue).toBe('b');
+    expect(typeof events[0].correlationId).toBe('string');
+    expect(events[0].correlationId!.length).toBeGreaterThan(0);
+  });
+
+  it('stamps shared correlationId from the command onto all events', async () => {
+    const { service, store, handlers } = createServiceWithStore();
+    handlers.changeCellValue.execute.mockResolvedValue([
+      { type: 'CELL_CHANGED', tableId: 't1', rowId: 1, columnId: 'a', newValue: '1', previousValue: '0' },
+      { type: 'CELL_CHANGED', tableId: 't1', rowId: 1, columnId: 'b', newValue: '2', previousValue: '0' },
+    ]);
+
+    await service.execute(
+      {
+        type: 'CHANGE_CELL_VALUE',
+        store: 's1',
+        tableKey: 't1',
+        rowId: 1,
+        columnId: 'a',
+        newValue: '1',
+        correlationId: 'paste-xyz',
+      } as any,
+      {} as any,
+    );
+
+    const events = await store.read('table:t1');
+    expect(events).toHaveLength(2);
+    expect(events.every((e) => e.correlationId === 'paste-xyz')).toBe(true);
   });
 
   it('writes PAGE_CHANGED to EventStore', async () => {

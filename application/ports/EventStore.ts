@@ -15,6 +15,9 @@ export interface EventStore {
 
   read(streamId: string, fromVersion?: number): Promise<GridEvent[]>;
 
+  /** Ordered global stream for catch-up of cross-stream projections. */
+  readAll(fromPosition?: number): Promise<GridEvent[]>;
+
   subscribe(
     streamId: string,
     onEvent: (event: GridEvent) => void

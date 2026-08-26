@@ -37,18 +37,103 @@ export function findColumnMatches(
   return matches;
 }
 
+function sortRowsByIndex(rows: readonly Row[]): Row[] {
+  return [...rows].sort(
+    (a, b) =>
+      (Number(a.getCell('index')?.getValue()) || 0) -
+      (Number(b.getCell('index')?.getValue()) || 0),
+  );
+}
+
+/** 0-based index in the same order as Desktop virtual body. */
+export function getSortedRowAbsoluteIndex(
+  controller: UITableController,
+  rowId: number,
+): number {
+  const sorted = sortRowsByIndex(controller.getAllRows() ?? []);
+  return sorted.findIndex((row) => row.id.value === rowId);
+}
+
+export function computeVirtualScrollOffset(
+  absoluteIndex: number,
+  rowHeight: number,
+  viewportSize: number,
+): number {
+  if (absoluteIndex < 0) return 0;
+  const lead = Math.min(Math.floor(viewportSize / 3), rowHeight * 2);
+  return Math.max(0, absoluteIndex * rowHeight - lead);
+}
+
+export function findTableScrollRoot(
+  tableKey: string,
+): HTMLElement | null {
+  if (typeof document === 'undefined') return null;
+  const safeKey = tableKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return document.querySelector(
+    `[data-erp-table-scroll][data-erp-table-key="${safeKey}"]`,
+  );
+}
+
+export function isVirtualScrollRoot(el: HTMLElement | null): boolean {
+  return el?.dataset.erpVirtualization === 'on';
+}
+
 function getTargetPage(
   controller: UITableController,
   rowId: number,
 ): number | null {
-  const allRows = controller.getAllRows() ?? [];
+  const absoluteIndex = getSortedRowAbsoluteIndex(controller, rowId);
   const table = controller.getViewState();
-  if (!table) return null;
+  if (!table || absoluteIndex < 0) return null;
 
-  const rowIndex = allRows.findIndex((row: Row) => row.id.value === rowId);
-  if (rowIndex === -1) return null;
+  return Math.ceil((absoluteIndex + 1) / table.pagination.pageSize);
+}
 
-  return Math.ceil((rowIndex + 1) / table.pagination.pageSize);
+/**
+ * Brings a row into view (pagination page change OR virtual viewport scroll).
+ */
+export async function revealRow(
+  controller: UITableController,
+  rowId: number,
+): Promise<void> {
+  const table = controller.getViewState();
+  if (!table) return;
+
+  const tableKey = controller.getTableKey();
+  const scrollRoot = findTableScrollRoot(tableKey);
+  const session = controller.getSession();
+
+  if (isVirtualScrollRoot(scrollRoot) && session) {
+    const absoluteIndex = getSortedRowAbsoluteIndex(controller, rowId);
+    if (absoluteIndex < 0) return;
+
+    const viewport = session.getViewport();
+    const scrollOffset = computeVirtualScrollOffset(
+      absoluteIndex,
+      viewport.rowHeight,
+      viewport.viewportSize,
+    );
+
+    await session.dispatchViewIntent({
+      type: 'CHANGE_VIEWPORT',
+      scrollOffset,
+      viewportSize: viewport.viewportSize,
+      rowHeight: viewport.rowHeight,
+      overscan: viewport.overscan,
+    });
+
+    if (scrollRoot) {
+      scrollRoot.scrollTop = scrollOffset;
+    }
+    return;
+  }
+
+  const targetPage = getTargetPage(controller, rowId);
+  if (!targetPage) return;
+
+  if (table.pagination.page !== targetPage) {
+    await controller.dispatch({ type: 'CHANGE_PAGE', page: targetPage });
+  }
 }
 
 export async function navigateToMatch(
@@ -58,12 +143,6 @@ export async function navigateToMatch(
   const table = controller.getViewState();
   if (!table) return;
 
-  const targetPage = getTargetPage(controller, match.rowId);
-  if (!targetPage) return;
-
-  if (table.pagination.page !== targetPage) {
-    await controller.dispatch({ type: 'CHANGE_PAGE', page: targetPage });
-  }
-
+  await revealRow(controller, match.rowId);
   await controller.dispatch({ type: 'UI_ACTIVE_ROW', rowId: match.rowId });
 }

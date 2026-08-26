@@ -1,0 +1,37 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": [
+    "publish/**/*.ts",
+    "application/**/*.ts",
+    "bootstrap/**/*.ts",
+    "domain/**/*.ts",
+    "engine/**/*.ts",
+    "infrastructure/columns/**/*.ts",
+    "infrastructure/eventStore/**/*.ts",
+    "infrastructure/snapshot/**/*.ts",
+    "infrastructure/perf/**/*.ts",
+    "infrastructure/Repositories/noopRemoteApi.ts",
+    "packages/plugins/**/*.ts",
+    "ui/virtual/**/*.ts",
+    "ui/virtual/**/*.tsx",
+    "ui/hostTypes.ts",
+    "ui/type.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/__tests__/**",
+    "infrastructure/Repositories/fetchRemoteApi.ts",
+    "ui/cellRenderer/**",
+    "ui/desktop/**",
+    "ui/mobile/**",
+    "ui/gridSearch/**",
+    "ui/index.tsx"
+  ]
+}

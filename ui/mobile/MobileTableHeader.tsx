@@ -40,17 +40,17 @@ export function MobileTableHeader({
     controller.dispatch({ type: "TOGGLE_PAGE_ROW_SELECTED" });
   };
 
-  const allRows = controller.getAllRows();
+  const allRows = controller.getAllRows() ?? [];
   const handleNavigateToError = (rowId: number) => {
     const currentTable = controller.getViewState();
-    if (!currentTable) return;
+    if (!currentTable || allRows.length === 0) return;
     const rowIndex = allRows.findIndex((r) => r.id.value == rowId) + 1;
     const { pageSize } = currentTable.pagination;
     const targetPage = Math.ceil(rowIndex / pageSize);
     controller.dispatch({ type: "CHANGE_PAGE", page: targetPage });
   };
 
-  const items = Array.from(validationResult.errors.entries()).map(
+  const items = Array.from((validationResult.errors ?? new Map()).entries()).map(
     ([key, value], errorIndex) => {
       const Index = allRows.findIndex((r) => r.id.value == value.rowId) + 1;
 

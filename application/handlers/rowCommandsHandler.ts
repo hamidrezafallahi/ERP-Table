@@ -11,6 +11,8 @@ import {
   AddNewRowsCommand,
   DeleteRowCommand,
   DuplicateRowCommand,
+  PasteRowCommand,
+  RestoreAddedRowCommand,
   RowReorderedCommand,
 } from '../commands';
 import { AuditLogger } from '../ports/AuditLogger';
@@ -115,6 +117,54 @@ await this.repo.save(command.store, table);
 
 
 /* ======================================================
+   Paste Row (clipboard clone via AppService)
+   ====================================================== */
+
+export class PasteRowCommandHandler {
+  constructor(
+    private readonly repo: TableRepository,
+    private readonly audit: AuditLogger,
+    private readonly permission: PermissionPolicy
+  ) {}
+
+  async execute(command: PasteRowCommand, actor: Actor) {
+    try {
+      const table = await this.repo.getById(command.store, command.tableKey);
+      if (!this.permission.canAddRow?.({ actor })) {
+        throw new DomainError(
+          'FORBIDDEN',
+          'Actor is not allowed to paste a row',
+          { actor }
+        );
+      }
+      const event = table.addRow(command.sourceRowId, command.placeAtRowId);
+      await this.repo.save(command.store, table);
+      this.audit.log({
+        type: 'INFORMATION',
+        message: event.type,
+        payload: event.rowId,
+      });
+      return event;
+    } catch (error) {
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details,
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error },
+        });
+      }
+      return null;
+    }
+  }
+}
+
+/* ======================================================
    Duplicate Row
    ====================================================== */
 
@@ -212,6 +262,59 @@ export class DeleteRowCommandHandler {
     }
   }
 }
+/* ======================================================
+   Restore Added Row (redo identity)
+   ====================================================== */
+
+export class RestoreAddedRowCommandHandler {
+  constructor(
+    private readonly repo: TableRepository,
+    private readonly audit: AuditLogger,
+    private readonly permission: PermissionPolicy
+  ) {}
+
+  async execute(command: RestoreAddedRowCommand, actor: Actor) {
+    try {
+      const table = await this.repo.getById(command.store, command.tableKey);
+      if (!this.permission.canAddRow?.({ actor })) {
+        throw new DomainError(
+          'FORBIDDEN',
+          'Actor is not allowed to restore an added row',
+          { actor }
+        );
+      }
+      const event = table.restoreAddedRow({
+        rowId: command.rowId,
+        cells: command.cells,
+        collection: command.collection,
+        isSaveDescription: command.isSaveDescription,
+      });
+      await this.repo.save(command.store, table);
+      this.audit.log({
+        type: 'INFORMATION',
+        message: event.type,
+        payload: event.rowId,
+      });
+      return event;
+    } catch (error) {
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details,
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error },
+        });
+      }
+      return null;
+    }
+  }
+}
+
 /* ======================================================
    Reorder Row
    ====================================================== */

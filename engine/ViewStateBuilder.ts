@@ -150,6 +150,27 @@ export class ViewStateBuilder {
       return undefined;
     }
   }
+
+  /**
+   * All active-collection UI rows (no pagination slice) for virtual scroll.
+   */
+  getAllUIRows(): UIRow[] | null {
+    try {
+      const storeRef = this.getStore();
+      if (!storeRef) return null;
+      const { table, expandedRows } = storeRef.getState();
+      const columns = table.getActiveCollectionColumns();
+      const activeName = table.getActiveCollectionName();
+      const activeRows = table
+        .getRows()
+        .filter((r) => r.collection === activeName);
+      return this.mapRowsToUIRows(activeRows, columns, expandedRows);
+    } catch (error) {
+      this.err.handle(error, 'ViewStateBuilder.getAllUIRows');
+      return null;
+    }
+  }
+
   // ViewBuilder
   getAllRows(collectionScope: CollectionScope = 'active'): Row[] | null {
     const storeRef = this.getStore();

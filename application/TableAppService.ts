@@ -4,7 +4,7 @@ import {
   Actor,
   ApplicationTableCommand,
 } from './commands';
-import { TableEvent } from './events';
+import { CellChangedEvent, TableEvent } from './events';
 import {
   ApplyDynamicProjectionHandler,
   ChangeCellDisplayValueHandler,
@@ -16,7 +16,9 @@ import {
   AddNewRowsCommandHandler,
   DeleteRowCommandHandler,
   DuplicateRowCommandHandler,
+  PasteRowCommandHandler,
   ReorderRowCommandHandler,
+  RestoreAddedRowCommandHandler,
 } from './handlers/rowCommandsHandler';
 import {
   ChangePageCommandHandler,
@@ -27,10 +29,14 @@ import {
   ResetTableCommandHandler,
 } from './handlers/tableCommandHandler';
 import type { EventStore } from './ports/EventStore';
+import type { TableRepository } from './ports/TableRepository';
 import type { GridEvent } from '../domain/types/GridEvent';
+import type { CellUndoStack, RowCellSnapshot } from './undo/CellUndoStack';
 
 export class TableAppService {
   private eventStore?: EventStore;
+  private undoStack?: CellUndoStack;
+  private repo?: TableRepository;
 
   constructor(
     private readonly changeCellValue: ChangeCellValueHandler,
@@ -48,16 +54,47 @@ export class TableAppService {
     private readonly deleteTable: DeleteTableCommandHandler,
     private readonly resetTable: ResetTableCommandHandler,
     private readonly applyDynamicProjection: ApplyDynamicProjectionHandler,
+    private readonly restoreAddedRow?: RestoreAddedRowCommandHandler,
+    private readonly pasteRow?: PasteRowCommandHandler,
   ) {}
 
   setEventStore(eventStore: EventStore): void {
     this.eventStore = eventStore;
   }
 
+  setUndoStack(undoStack: CellUndoStack): void {
+    this.undoStack = undoStack;
+  }
+
+  setRepository(repo: TableRepository): void {
+    this.repo = repo;
+  }
+
   async execute(command: ApplicationTableCommand, actor: Actor) {
+    const correlationId =
+      (command as { correlationId?: string }).correlationId ??
+      this.createCorrelationId();
+
+    const preDeleteSnapshot =
+      command.type === 'ROW_DELETED'
+        ? await this.captureRowSnapshot(
+            command.store,
+            command.tableKey,
+            command.rowId,
+          )
+        : undefined;
+
     const result = await this.dispatch(command, actor);
+    if (result) {
+      await this.recordUndoableEvents(
+        command,
+        result,
+        correlationId,
+        preDeleteSnapshot,
+      );
+    }
     if (this.eventStore && result) {
-      this.appendToEventStore(command, result).catch(() => {});
+      await this.appendToEventStore(command, result, correlationId);
     }
     return result;
   }
@@ -78,8 +115,18 @@ export class TableAppService {
         return this.addNewRows.execute(command, actor);
       case 'DUPLICATE_ROW':
         return this.duplicateRow.execute(command, actor);
+      case 'PASTE_ROW':
+        if (!this.pasteRow) {
+          throw new Error('PASTE_ROW handler is not configured');
+        }
+        return this.pasteRow.execute(command, actor);
       case 'ROW_DELETED':
         return this.deleteRow.execute(command, actor);
+      case 'RESTORE_ADDED_ROW':
+        if (!this.restoreAddedRow) {
+          throw new Error('RESTORE_ADDED_ROW handler is not configured');
+        }
+        return this.restoreAddedRow.execute(command, actor);
       case 'TABLE_RESET':
         return this.resetTable.execute(command, actor);
       case 'TABLE_DELETED':
@@ -99,9 +146,114 @@ export class TableAppService {
     }
   }
 
+  private async recordUndoableEvents(
+    command: ApplicationTableCommand,
+    result: TableEvent[] | TableEvent | null | unknown,
+    correlationId: string,
+    preDeleteSnapshot?: {
+      cells: Record<string, RowCellSnapshot>;
+      collection: string;
+      isSaveDescription: boolean;
+    },
+  ): Promise<void> {
+    if (!this.undoStack) return;
+
+    const events = this.normalizeResult(result);
+    if (events.length === 0) return;
+
+    const fallbackTableId = (command as { tableKey?: string }).tableKey ?? '';
+    const store = (command as { store?: string }).store ?? '';
+
+    for (const evt of events) {
+      if (evt.type === 'CELL_CHANGED' && 'previousValue' in evt) {
+        const cellEvt = evt as CellChangedEvent;
+        this.undoStack.record(
+          {
+            ...cellEvt,
+            tableId: cellEvt.tableId || fallbackTableId,
+          },
+          correlationId,
+        );
+        continue;
+      }
+
+      if (evt.type === 'ROW_ADDED' || evt.type === 'NEW_ROW_ADDED') {
+        const rowId = this.resolveRowId((evt as { rowId?: unknown }).rowId);
+        const tableId = evt.tableId || fallbackTableId;
+        if (rowId == null || !tableId) continue;
+        const snapshot = await this.captureRowSnapshot(store, tableId, rowId);
+        this.undoStack.recordRowAdded(
+          {
+            tableId,
+            rowId,
+            cells: snapshot?.cells,
+            collection: snapshot?.collection,
+            isSaveDescription: snapshot?.isSaveDescription,
+          },
+          correlationId,
+        );
+        continue;
+      }
+
+      if (evt.type === 'ROW_DELETED' || evt.type === 'NEW_ROW_REMOVED') {
+        const rowId = this.resolveRowId((evt as { rowId?: unknown }).rowId);
+        const tableId = evt.tableId || fallbackTableId;
+        if (rowId == null || !tableId) continue;
+        const mode = evt.type === 'NEW_ROW_REMOVED' ? 'hard' : 'soft';
+        this.undoStack.recordRowDeleted(
+          {
+            tableId,
+            rowId,
+            mode,
+            cells: preDeleteSnapshot?.cells,
+            collection: preDeleteSnapshot?.collection,
+            isSaveDescription: preDeleteSnapshot?.isSaveDescription,
+          },
+          correlationId,
+        );
+      }
+    }
+  }
+
+  private async captureRowSnapshot(
+    store: string,
+    tableId: string,
+    rowId: number,
+  ): Promise<
+    | {
+        cells: Record<string, RowCellSnapshot>;
+        collection: string;
+        isSaveDescription: boolean;
+      }
+    | undefined
+  > {
+    if (!this.repo || !store) return undefined;
+    try {
+      const table = await this.repo.getById(store, tableId);
+      const row = table.getRow(rowId);
+      if (!row) return undefined;
+      const cells: Record<string, RowCellSnapshot> = {};
+      for (const [key, cell] of row.getCells().entries()) {
+        cells[key] = {
+          value: cell.getValue(),
+          display: cell.getDisplay(),
+          originalValue: cell.getOriginalValue().value,
+        };
+      }
+      return {
+        cells,
+        collection: row.getCollection(),
+        isSaveDescription: row.isSaveDescription,
+      };
+    } catch {
+      return undefined;
+    }
+  }
+
   private async appendToEventStore(
     command: ApplicationTableCommand,
     result: TableEvent[] | TableEvent | null | unknown,
+    correlationId: string,
   ): Promise<void> {
     if (!this.eventStore) return;
 
@@ -119,7 +271,8 @@ export class TableAppService {
       version: 0,
       occurredAt: Date.now(),
       actorId: 'system',
-      payload: evt,
+      correlationId,
+      payload: this.toGridPayload(evt, tableId),
     }));
 
     await this.eventStore.append(streamId, gridEvents, -1);
@@ -132,5 +285,38 @@ export class TableAppService {
       return [result as TableEvent];
     }
     return [];
+  }
+
+  private resolveRowId(rowId: unknown): number | null {
+    if (typeof rowId === 'number' && Number.isFinite(rowId)) return rowId;
+    if (typeof rowId === 'string' && rowId.trim() !== '') {
+      const parsed = Number(rowId);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    if (
+      typeof rowId === 'object' &&
+      rowId !== null &&
+      'value' in rowId &&
+      typeof (rowId as { value: unknown }).value === 'number'
+    ) {
+      return (rowId as { value: number }).value;
+    }
+    return null;
+  }
+
+  private toGridPayload(evt: TableEvent, fallbackTableId: string): unknown {
+    if (evt.type === 'ROW_ADDED' || evt.type === 'NEW_ROW_ADDED') {
+      const rowId = this.resolveRowId((evt as { rowId?: unknown }).rowId);
+      return {
+        type: evt.type,
+        tableId: evt.tableId ?? fallbackTableId,
+        rowId: rowId ?? String((evt as { rowId?: unknown }).rowId ?? ''),
+      };
+    }
+    return evt;
+  }
+
+  private createCorrelationId(): string {
+    return `cmd-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   }
 }

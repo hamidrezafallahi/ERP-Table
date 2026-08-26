@@ -21,10 +21,10 @@ describe('ChangelogProjection', () => {
   let store: InMemoryEventStore;
   let projection: ChangelogProjection;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     store = new InMemoryEventStore();
     projection = new ChangelogProjection(store);
-    projection.start();
+    await projection.start();
   });
 
   it('captures events appended after start', async () => {
@@ -100,6 +100,17 @@ describe('ChangelogProjection', () => {
     await store.append('table:t1', [evt()], -1);
     projection.clear();
     expect(projection.count()).toBe(0);
+  });
+
+  it('hydrates from readAll when started after events already exist', async () => {
+    await store.append('table:t1', [evt({ eventId: 'past-1' })], -1);
+    await store.append('table:t2', [evt({ eventId: 'past-2', tableId: 't2' })], -1);
+
+    const lateProjection = new ChangelogProjection(store);
+    await lateProjection.start();
+
+    expect(lateProjection.count()).toBe(2);
+    expect(lateProjection.query({ tableId: 't1' })).toHaveLength(1);
   });
 
   it('combines multiple filters', async () => {

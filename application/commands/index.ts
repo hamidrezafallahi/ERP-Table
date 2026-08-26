@@ -10,6 +10,8 @@ import type {
 export interface BaseTableCommand {
   readonly store: string;
   readonly tableKey: string;
+  /** When set, undoable events from separate executes merge into one undo unit. */
+  readonly correlationId?: string;
 }
 
 export type Actor = {
@@ -115,11 +117,41 @@ export interface DuplicateRowCommand extends BaseTableCommand {
   readonly rowId: number;
 }
 
+/**
+ * Clone one source row (clipboard paste). Engine batches these with a shared
+ * correlationId so undo reverses the whole paste unit.
+ */
+export interface PasteRowCommand extends BaseTableCommand {
+  readonly type: 'PASTE_ROW';
+  readonly sourceRowId: number;
+  /** When set (pasteInsert), place the clone relative to this row. */
+  readonly placeAtRowId?: number;
+}
+
 export interface DeleteRowCommand extends BaseTableCommand {
   readonly type: 'ROW_DELETED';
   readonly rowId: number;
 
 }
+
+/** Undo-stack redo: re-insert a previously added row with original identity/values. */
+export interface RestoreAddedRowCommand extends BaseTableCommand {
+  readonly type: 'RESTORE_ADDED_ROW';
+  readonly rowId: number;
+  readonly cells: Readonly<
+    Record<
+      string,
+      {
+        readonly value: unknown;
+        readonly display?: unknown;
+        readonly originalValue?: unknown;
+      }
+    >
+  >;
+  readonly collection?: string;
+  readonly isSaveDescription?: boolean;
+}
+
 export interface DeleteRowsCommand extends BaseTableCommand {
   readonly type: 'ROWS_DELETED';
 }
@@ -305,7 +337,9 @@ export type ApplicationTableCommand =
   | AddEmptyRowCommand
   | AddNewRowsCommand
   | DuplicateRowCommand
+  | PasteRowCommand
   | DeleteRowCommand
+  | RestoreAddedRowCommand
   | DeleteTableCommand
   | SetActiveCollectionCommand
   | ResetTableCommand
@@ -326,7 +360,9 @@ const applicationCommandTypes = new Set<TableCommand['type']>([
   'ADD_EMPTY_ROW',
   'ADD_NEW_ROWS',
   'DUPLICATE_ROW',
+  'PASTE_ROW',
   'ROW_DELETED',
+  'RESTORE_ADDED_ROW',
   'TABLE_DELETED',
   'SET_ACTIVE_COLLECTION',
   'TABLE_RESET',

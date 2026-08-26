@@ -18,6 +18,8 @@ type UseERPTableLayoutOptions = {
   controller: UITableController | null;
   tableHeight?: number;
   ready?: boolean;
+  /** When false, skip CHANGE_PAGE_SIZE sync (virtual scroll mode). */
+  syncPageSize?: boolean;
 };
 
 export function useERPTableLayout({
@@ -26,6 +28,7 @@ export function useERPTableLayout({
   controller,
   tableHeight,
   ready = false,
+  syncPageSize = true,
 }: UseERPTableLayoutOptions) {
   const [autoHeight, setAutoHeight] = useState<number | null>(null);
 
@@ -61,9 +64,10 @@ export function useERPTableLayout({
   }, [measureRootHeight, tableHeight, ready]);
 
   useEffect(() => {
+    if (!syncPageSize) return;
     if (!controller) return;
 
-    const syncPageSize = (height: number) => {
+    const syncPageSizeToHeight = (height: number) => {
       if (height < RECORD_HEIGHT * 2) return;
 
       const rowsArea = Math.max(0, height - TABLE_HEADER_HEIGHT);
@@ -76,14 +80,14 @@ export function useERPTableLayout({
     };
 
     if (tableHeight != null) {
-      syncPageSize(tableHeight);
+      syncPageSizeToHeight(tableHeight);
       return;
     }
 
     if (!bodyRef.current) return;
 
     const updatePageSize = () => {
-      syncPageSize(bodyRef.current?.clientHeight ?? 0);
+      syncPageSizeToHeight(bodyRef.current?.clientHeight ?? 0);
     };
 
     updatePageSize();
@@ -91,7 +95,7 @@ export function useERPTableLayout({
     observer.observe(bodyRef.current);
 
     return () => observer.disconnect();
-  }, [controller, bodyRef, tableHeight, autoHeight]);
+  }, [controller, bodyRef, tableHeight, autoHeight, syncPageSize]);
 
   return {
     bodyHeight: tableHeight ?? autoHeight,

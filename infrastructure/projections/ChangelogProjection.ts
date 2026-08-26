@@ -28,17 +28,37 @@ export class ChangelogProjection {
   private entries: ChangelogEntry[] = [];
   private unsubscribe: Unsubscribe | null = null;
   private subscribers = new Set<ChangelogSubscriber>();
+  private seenEventIds = new Set<string>();
+  private started = false;
 
   constructor(private readonly eventStore: EventStore) {}
 
-  start(): void {
-    if (this.unsubscribe) return;
-    this.unsubscribe = this.eventStore.subscribeAll((event) => this.project(event));
+  /**
+   * Catch up via readAll, then subscribe for live events.
+   * Dedupes by eventId so subscribe-before-replay races are safe.
+   */
+  async start(): Promise<void> {
+    if (this.started) return;
+    this.started = true;
+
+    const projectOnce = (event: GridEvent) => {
+      if (this.seenEventIds.has(event.eventId)) return;
+      this.seenEventIds.add(event.eventId);
+      this.project(event);
+    };
+
+    this.unsubscribe = this.eventStore.subscribeAll(projectOnce);
+
+    const past = await this.eventStore.readAll(0);
+    for (const event of past) {
+      projectOnce(event);
+    }
   }
 
   stop(): void {
     this.unsubscribe?.();
     this.unsubscribe = null;
+    this.started = false;
   }
 
   query(filter: ChangelogQuery = {}): ChangelogEntry[] {
@@ -94,6 +114,7 @@ export class ChangelogProjection {
 
   clear(): void {
     this.entries = [];
+    this.seenEventIds.clear();
     this.notifySubscribers();
   }
 

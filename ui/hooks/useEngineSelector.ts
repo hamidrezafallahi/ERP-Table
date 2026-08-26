@@ -30,7 +30,7 @@ export function useControllerSelector<T>(
 
 export function useEngineSelector<T>(
   controller: UITableController,
-  selector: (view: TableViewState | undefined) => T,
+  selector: (view: TableViewState | null | undefined) => T,
   isEqual: (previous: T, next: T) => boolean = Object.is,
 ): T {
   return useControllerSelector(

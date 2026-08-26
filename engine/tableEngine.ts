@@ -215,6 +215,83 @@ export class TableEngine {
     }
   }
 
+  /**
+   * Paste goes through AppService (PASTE_ROW + optional ROW_DELETED for cut)
+   * with one correlationId so undo reverses the whole unit.
+   */
+  private async executePasteAction(command: {
+    store: string;
+    tableKey: string;
+    action: 'paste' | 'pasteInsert';
+    correlationId?: string;
+  }): Promise<void> {
+    const store = this.getStore(command.tableKey);
+    if (!store) return;
+
+    const { table, selectedRows, activeRowId } = store.getState();
+    const wasCut = table.getTableAction() === 'cut';
+    const correlationId =
+      command.correlationId ??
+      `paste-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+    const sources = table
+      .getRows()
+      .filter((r) => r.rowState.value !== RowStateEnum.Deleted)
+      .filter((row) => selectedRows[row.id.value] === true)
+      .sort((a, b) => {
+        const aIndex = Number(a.getCells().get('index')?.getValue() ?? 0);
+        const bIndex = Number(b.getCells().get('index')?.getValue() ?? 0);
+        return bIndex - aIndex;
+      });
+
+    if (sources.length === 0) {
+      table.setTableAction(null);
+      store.setState((prev) => ({ ...prev, table }));
+      return;
+    }
+
+    const placeAtRowId =
+      command.action === 'pasteInsert' ? activeRowId : undefined;
+
+    for (const row of sources) {
+      await this.executeAppCommand({
+        type: 'PASTE_ROW',
+        store: command.store,
+        tableKey: command.tableKey,
+        sourceRowId: row.id.value,
+        placeAtRowId,
+        correlationId,
+      });
+    }
+
+    if (wasCut) {
+      for (const row of sources) {
+        await this.executeAppCommand({
+          type: 'ROW_DELETED',
+          store: command.store,
+          tableKey: command.tableKey,
+          rowId: row.id.value,
+          correlationId,
+        });
+      }
+      const afterCut = this.getStore(command.tableKey);
+      afterCut?.setState((prev) => ({ ...prev, selectedRows: {} }));
+    }
+
+    try {
+      const updated = await this.repo.getById(command.store, command.tableKey);
+      updated.setTableAction(null);
+      await this.repo.save(command.store, updated);
+      const live = this.getStore(command.tableKey);
+      if (live) {
+        const prev = live.getState();
+        live.setState(() => ({ ...prev, table: updated }));
+      }
+    } catch (e) {
+      this.errHandler.handle(e, 'TableEngine.executePasteAction.clearAction');
+    }
+  }
+
   // ─── public dispatch ────────────────────────────────────────────────────────
 
   async dispatch(command: TableCommand): Promise<void> {
@@ -294,6 +371,16 @@ export class TableEngine {
 
       // ── Table action (copy/cut/paste) ────────────────────────────────────────
       case 'SET_TABLE_ACTION': {
+        const pasteAction = command.action;
+        if (pasteAction === 'paste' || pasteAction === 'pasteInsert') {
+          await this.executePasteAction({
+            store: command.store,
+            tableKey: command.tableKey,
+            action: pasteAction,
+            correlationId: command.correlationId,
+          });
+          return;
+        }
         const activeRowId = this.getStore(command.tableKey)?.getState().activeRowId;
         this.rowMgr.setTableAction(command, activeRowId);
         return;
@@ -354,6 +441,10 @@ export class TableEngine {
     return this.viewBuilder.getAllRows();
   }
 
+  getAllUIRows(): UIRow[] | null {
+    return this.viewBuilder.getAllUIRows();
+  }
+
   getMobileViewState(): MobileTableViewState | undefined {
     return this.viewBuilder.getMobileViewState();
   }
@@ -385,10 +476,10 @@ export class TableEngine {
   getCell(rowId: number, columnId: string): Cell | undefined {
     return this.viewBuilder.getCell(rowId, columnId);
   }
-  getMobileEditor():TableState['mobileEditor']{
-     const store = this.getStore();
-    if (!store) return;
-    return store.getState().mobileEditor
+  getMobileEditor(): TableState['mobileEditor'] | undefined {
+    const store = this.getStore();
+    if (!store) return undefined;
+    return store.getState().mobileEditor;
   }
 
   isActiveCell(rowId: number, columnId: string): boolean {
@@ -610,6 +701,32 @@ export class TableEngine {
       return store.subscribe(cb);
     } catch (e) {
       this.errHandler.handle(e, 'TableEngine.subscribe');
+      return null;
+    }
+  }
+
+  /**
+   * Selector-based subscription over engine-derived view data.
+   * `selector` closes over engine getters (snapshot, activeCell, …).
+   */
+  subscribeSelected<TSelected>(
+    selector: () => TSelected,
+    listener: (selected: TSelected) => void,
+    isEqual: (a: TSelected, b: TSelected) => boolean = Object.is,
+  ): (() => void) | null {
+    const store = this.getStore();
+    if (!store) return null;
+    try {
+      let current = selector();
+      return store.subscribe(() => {
+        const next = selector();
+        if (!isEqual(current, next)) {
+          current = next;
+          listener(next);
+        }
+      });
+    } catch (e) {
+      this.errHandler.handle(e, 'TableEngine.subscribeSelected');
       return null;
     }
   }

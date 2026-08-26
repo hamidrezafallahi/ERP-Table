@@ -180,8 +180,8 @@ export function GridSearchPanel({
         value={columnId || undefined}
         options={columnOptions}
         placeholder={t('general.choice')}
-        getPopupContainer={trigger => trigger.parentElement ?? document.body}
-        onChange={value => {
+        getPopupContainer={(trigger: HTMLElement) => trigger.parentElement ?? document.body}
+        onChange={(value: string) => {
           setColumnId(value);
           setHasSearched(false);
         }}

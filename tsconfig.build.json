@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "lib": ["ES2022", "DOM"],
+    "skipLibCheck": true,
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true
+  }
+}

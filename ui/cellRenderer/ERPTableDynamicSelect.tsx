@@ -1,5 +1,6 @@
+// @ts-nocheck
 "use client";
-
+// Host-coupled dynamic select (antd + ERP list APIs).
 import { FC, useEffect, useMemo, useState } from 'react';
 
 import { Select, Spin } from 'antd';

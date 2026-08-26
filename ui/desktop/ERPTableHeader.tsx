@@ -10,6 +10,7 @@ import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
 import { ColumnSchema } from '../../bootstrap/type';
 import { ValidationCallbackResult } from '../../engine/type';
 import { UITableController } from '../../infrastructure/ui/UITableController';
+import { revealRow } from '../gridSearch/utils';
 
 interface Props {
   controller: UITableController;
@@ -42,16 +43,11 @@ export function ERPTableHeader({controller, tableKey, header}: Props) {
   const handleSelectActivePageRows = () => {
     controller.dispatch({type: "TOGGLE_PAGE_ROW_SELECTED"});
   };
-  const allRows = controller.getAllRows();
+  const allRows = controller.getAllRows() ?? [];
   const handleNavigateToError = (rowId: number) => {
-    const currentTable = controller.getViewState();
-    if (!currentTable) return null;
-    const rowIndex = allRows.findIndex((r) => r.id.value == rowId) + 1;
-    const {pageSize} = currentTable.pagination;
-    const targetPage = Math.ceil(rowIndex / pageSize);
-    controller.dispatch({type: "CHANGE_PAGE", page: targetPage});
+    void revealRow(controller, rowId);
   };
-  const items = Array.from(validationResult.errors.entries()).map(
+  const items = Array.from((validationResult.errors ?? new Map()).entries()).map(
     ([key, value], errorIndex) => {
       const Index = allRows.findIndex((r) => r.id.value == value.rowId) + 1;
 

@@ -4,33 +4,36 @@ import {
   useState,
 } from 'react';
 
-import { createERPTable } from '@components/organisms/erp-table/bootstrap';
-import {
-  CreateERPTableConfig,
-} from '@components/organisms/erp-table/bootstrap/type';
-import { TableSnapShot } from '@components/organisms/erp-table/engine/type';
-import type {
-  ChangelogEntry,
-  ChangelogQuery,
-} from '@components/organisms/erp-table/infrastructure/projections/ChangelogProjection';
+import type { GridSession } from '../application/session/GridSession';
+import { createERPTable } from '../bootstrap';
+import type { CreateERPTableConfig } from '../bootstrap/type';
+import { structuralEqual } from '../engine/equality';
+import type { TableSnapShot } from '../engine/type';
 import type {
   HistoryItem,
   HistoryQuery,
-} from '@components/organisms/erp-table/infrastructure/history/HistoryPanelViewModel';
+} from '../infrastructure/history/HistoryPanelViewModel';
+import type {
+  ChangelogEntry,
+  ChangelogQuery,
+} from '../infrastructure/projections/ChangelogProjection';
 import {
   UITableController,
-} from '@components/organisms/erp-table/infrastructure/ui/UITableController';
+} from '../infrastructure/ui/UITableController';
 
 export type UseERPTableResult =
   | { ready: false }
   | {
     ready: true;
     controller: UITableController;
+    session: GridSession;
     rows: TableSnapShot;
     changelog: ChangelogEntry[];
     changelogCount: number;
     historyItems: HistoryItem[];
     historyItemCount: number;
+    canUndo: boolean;
+    canRedo: boolean;
     getChangelog: (
       filter?: Omit<ChangelogQuery, 'tableId'>
     ) => ChangelogEntry[];
@@ -45,24 +48,43 @@ export type UseERPTableResult =
       cb: (items: HistoryItem[]) => void,
       filter?: Omit<HistoryQuery, 'tableId'>
     ) => () => void;
+    subscribeSelected: GridSession['subscribeSelected'];
+    getViewport: GridSession['getViewport'];
+    getVisibleRange: GridSession['getVisibleRange'];
+    projectVisibleRows: GridSession['projectVisibleRows'];
+    changeViewport: (input: {
+      scrollOffset: number;
+      viewportSize?: number;
+      rowHeight?: number;
+      overscan?: number;
+    }) => Promise<void>;
+    undo: () => Promise<boolean>;
+    redo: () => Promise<boolean>;
   };
 
 export function useERPTable(
   config: CreateERPTableConfig
 ): UseERPTableResult {
   const [controller, setController] =
-  useState<UITableController | null>(null);
+    useState<UITableController | null>(null);
+  const [session, setSession] = useState<GridSession | null>(null);
   const [rows, setRows] = useState<TableSnapShot | null>(null);
-  const [, setViewVersion] = useState(0);
+  const [undoFlags, setUndoFlags] = useState({ canUndo: false, canRedo: false });
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [changelog, setChangelog] = useState<ChangelogEntry[]>([]);
 
   // ---------- bootstrap ----------
   useEffect(() => {
     let cancelled = false;
     setController(null);
+    setSession(null);
     setRows(null);
 
-    createERPTable(config).then(({ controller: nextController }) => {
-      if (!cancelled) setController(nextController);
+    createERPTable(config).then((result: Awaited<ReturnType<typeof createERPTable>>) => {
+      if (!cancelled) {
+        setController(result.controller);
+        setSession(result.session);
+      }
     });
 
     return () => {
@@ -70,59 +92,97 @@ export function useERPTable(
     };
   }, [config.tableKey, config.columns]);
 
-  // ---------- subscribe ----------
+  // ---------- selector: rows only when snapshot structurally changes ----------
   useEffect(() => {
     if (!controller) return;
 
     let cancelled = false;
-
-    const syncView = () => {
-      if (cancelled) return;
-      const snapshot = controller.getSnapShot('active');
-      if (snapshot) setRows(snapshot);
-      setViewVersion((v) => v + 1);
+    const syncRows = (snapshot: TableSnapShot | null) => {
+      if (cancelled || !snapshot) return;
+      setRows(snapshot);
     };
 
-    syncView();
+    syncRows(controller.getSnapShot('active'));
 
-    const unsubscribe = controller.subscribe(syncView);
-
-    if (!unsubscribe) {
-      const retryTimer = window.setTimeout(syncView, 0);
-      return () => {
-        cancelled = true;
-        window.clearTimeout(retryTimer);
-      };
-    }
+    const unsubscribe = controller.subscribeSelected(
+      () => controller.getSnapShot('active'),
+      syncRows,
+      structuralEqual,
+    );
 
     return () => {
       cancelled = true;
       unsubscribe();
     };
-  }, [controller, config.store, config.tableKey]);
+  }, [controller]);
 
-  if (!controller || !controller.getViewState()) {
+  // ---------- selector: undo flags (independent of row snapshot) ----------
+  useEffect(() => {
+    if (!controller) return;
+
+    const readFlags = () => ({
+      canUndo: controller.canUndo(),
+      canRedo: controller.canRedo(),
+    });
+
+    setUndoFlags(readFlags());
+
+    return controller.subscribeSelected(
+      readFlags,
+      setUndoFlags,
+      (a: { canUndo: boolean; canRedo: boolean }, b: { canUndo: boolean; canRedo: boolean }) =>
+        a.canUndo === b.canUndo && a.canRedo === b.canRedo,
+    );
+  }, [controller]);
+
+  // ---------- history / changelog: dedicated projection subscriptions ----------
+  useEffect(() => {
+    if (!controller) return;
+    setHistoryItems(controller.getHistoryItems());
+    setChangelog(controller.getChangelog());
+    const unsubHistory = controller.subscribeHistoryItems(setHistoryItems);
+    const unsubChangelog = controller.subscribeChangelog(setChangelog);
+    return () => {
+      unsubHistory();
+      unsubChangelog();
+    };
+  }, [controller]);
+
+  if (!controller || !session || !controller.getViewState()) {
     return { ready: false };
   }
-
-  const resolvedRows =
-    rows ?? controller.getSnapShot('active') ?? { rows: [] };
-  const changelog = controller.getChangelog();
-  const changelogCount = controller.getChangelogCount();
-  const historyItems = controller.getHistoryItems();
-  const historyItemCount = controller.getHistoryItemCount();
 
   return {
     ready: true,
     controller,
-    rows: resolvedRows,
+    session,
+    rows: rows ?? (controller.getSnapShot('active') as TableSnapShot),
     changelog,
-    changelogCount,
+    changelogCount: changelog.length,
     historyItems,
-    historyItemCount,
-    getChangelog: (filter = {}) => controller.getChangelog(filter),
-    getHistoryItems: (filter = {}) => controller.getHistoryItems(filter),
-    subscribeChangelog: (cb, filter = {}) => controller.subscribeChangelog(cb, filter),
-    subscribeHistoryItems: (cb, filter = {}) => controller.subscribeHistoryItems(cb, filter),
+    historyItemCount: historyItems.length,
+    canUndo: undoFlags.canUndo,
+    canRedo: undoFlags.canRedo,
+    getChangelog: (filter) => controller.getChangelog(filter),
+    getHistoryItems: (filter) => controller.getHistoryItems(filter),
+    subscribeChangelog: (cb, filter) =>
+      controller.subscribeChangelog(cb, filter),
+    subscribeHistoryItems: (cb, filter) =>
+      controller.subscribeHistoryItems(cb, filter),
+    subscribeSelected: ((selector, listener, isEqual) =>
+      controller.subscribeSelected(selector, listener, isEqual)) as GridSession['subscribeSelected'],
+    getViewport: () => session.getViewport(),
+    getVisibleRange: (totalRows: number) => session.getVisibleRange(totalRows),
+    projectVisibleRows: <T,>(rows: T[], totalRows?: number) =>
+      session.projectVisibleRows(rows, totalRows),
+    changeViewport: (input: {
+      scrollOffset: number;
+      viewportSize?: number;
+      rowHeight?: number;
+      overscan?: number;
+    }) =>
+      session.dispatchViewIntent({ type: 'CHANGE_VIEWPORT', ...input }),
+    undo: () => controller.undo(),
+    redo: () => controller.redo(),
   };
 }

@@ -11,7 +11,9 @@ import {
   AddNewRowsCommandHandler,
   DeleteRowCommandHandler,
   DuplicateRowCommandHandler,
+  PasteRowCommandHandler,
   ReorderRowCommandHandler,
+  RestoreAddedRowCommandHandler,
 } from '../../application/handlers/rowCommandsHandler';
 import {
   ChangePageCommandHandler,
@@ -23,6 +25,7 @@ import {
 } from '../../application/handlers/tableCommandHandler';
 import { AuditLogger } from '../../application/ports/AuditLogger';
 import type { EventStore } from '../../application/ports/EventStore';
+import type { RemoteApi } from '../../application/ports/RemoteApi';
 import { TableRepository } from '../../application/ports/TableRepository';
 import { TableAppService } from '../../application/TableAppService';
 import { Cell } from '../../domain/entities/Cell';
@@ -41,9 +44,6 @@ import {
   RowState,
   RowStateEnum,
 } from '../../domain/value-objects';
-import {
-  FetchRemoteApi,
-} from '../../infrastructure/Repositories/fetchRemoteApi'; // اگر نیاز باشد
 import {
   ColumnSchema,
   CreateERPTableConfig,
@@ -164,7 +164,7 @@ export async function buildRows(  collectionColumns: Map<string, Map<string, Col
   repo: TableRepository,
   store: string,
   tableKey: string,
-  remoteApi: FetchRemoteApi,
+  remoteApi: RemoteApi,
 ): Promise<{ rows: Map<number, Row>; table?: Table }> {
   let rowMap = new Map<number, Row>();
   // ---------- rows: ابتدا IndexedDB, fallback به ورودی ----------
@@ -216,10 +216,12 @@ export async function buildRows(  collectionColumns: Map<string, Map<string, Col
 
         // 6. computed override
         if (meta?.computed?.dependsOn) {
-          value = (await meta.computed.compute(values, remoteApi)) as unknown as {} | null;
+          value = (await meta.computed.compute(values, remoteApi)) as unknown as
+            | {}
+            | null;
           display = value;
         } else if (incoming != null && schema.displayFormat) {
-          display = schema.displayFormat(incoming);
+          display = schema.displayFormat(incoming) as {} | null;
         }
         // 7. final cell creation
         cells.set(
@@ -234,7 +236,9 @@ export async function buildRows(  collectionColumns: Map<string, Map<string, Col
         );
       }
       const visibilityCondition = new Object() as Record<string, boolean>;
-      const rowState = (r.values["RowState"] as RowStateEnum | undefined) ?? RowStateEnum.Unchanged;
+      const rowState =
+        ((r.values ?? {})["RowState"] as RowStateEnum | undefined) ??
+        RowStateEnum.Unchanged;
       const uniqueId = new RowId(Math.floor((1 + Math.random()) * 0x10000000000000000));
       rowMap.set(
         uniqueId.value,
@@ -382,7 +386,7 @@ export function createTableAppService(
   repo: TableRepository,
   audit: AuditLogger,
   permissionPolicy: PermissionPolicy,
-  { columnMeta, remoteApi }: { columnMeta: Map<string, ColumnSchema>; remoteApi: FetchRemoteApi },
+  { columnMeta, remoteApi }: { columnMeta: Map<string, ColumnSchema>; remoteApi: RemoteApi },
   eventStore?: EventStore
 ): TableAppService {
   const changeCellHandler = new ChangeCellValueHandler(repo, audit, permissionPolicy, { columnMeta, remoteApi });
@@ -392,7 +396,13 @@ export function createTableAppService(
   const addNewRowHandler = new AddNewRowCommandHandler(repo, audit, permissionPolicy);
   const addNewRowsHandler = new AddNewRowsCommandHandler(repo, audit, permissionPolicy);
   const duplicateRowHandler = new DuplicateRowCommandHandler(repo, audit, permissionPolicy);
+  const pasteRowHandler = new PasteRowCommandHandler(repo, audit, permissionPolicy);
   const deleteRowHandler = new DeleteRowCommandHandler(repo, audit, permissionPolicy);
+  const restoreAddedRowHandler = new RestoreAddedRowCommandHandler(
+    repo,
+    audit,
+    permissionPolicy,
+  );
   const deleteTableHandler = new DeleteTableCommandHandler(repo, audit, permissionPolicy);
   const resetTableHandler = new ResetTableCommandHandler(repo, audit, permissionPolicy);
   const reorderRowHandler = new ReorderRowCommandHandler(repo, audit, permissionPolicy);
@@ -416,8 +426,12 @@ export function createTableAppService(
     setActiveCollection,
     deleteTableHandler,
     resetTableHandler,
-    applyDynamicProjection
+    applyDynamicProjection,
+    restoreAddedRowHandler,
+    pasteRowHandler,
   );
+
+  appService.setRepository(repo);
 
   if (eventStore) {
     appService.setEventStore(eventStore);

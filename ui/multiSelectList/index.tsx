@@ -109,15 +109,17 @@ skip: dependOn ? !hasDependValue(dependOn) : false,  });
   };
 
   const toggleSelectAll = () => {
-    const allSelected = rows.every((r) => selectedRows.has(r[fieldKey]));
+    const allSelected = rows.every((r: Record<string, unknown>) =>
+      selectedRows.has(r[fieldKey]),
+    );
 
     setSelectedRows((prev) => {
       const newMap = new Map(prev);
 
       if (allSelected) {
-        rows.forEach((r) => newMap.delete(r[fieldKey]));
+        rows.forEach((r: Record<string, unknown>) => newMap.delete(r[fieldKey]));
       } else {
-        rows.forEach((r) => newMap.set(r[fieldKey], r));
+        rows.forEach((r: Record<string, unknown>) => newMap.set(r[fieldKey], r));
       }
 
       return newMap;
@@ -169,7 +171,7 @@ skip: dependOn ? !hasDependValue(dependOn) : false,  });
       <div className="flex flex-col gap-2">
         <InputText
           value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
+          onChange={(e: { target: { value: string } }) => setSearchInput(e.target.value)}
           placeholder="جستجو..."
           className=" "
         />

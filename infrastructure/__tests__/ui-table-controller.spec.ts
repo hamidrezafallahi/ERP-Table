@@ -18,6 +18,7 @@ const engineStub = {
   isSelectedRow: () => false,
   isCutRow: () => false,
   subscribe: () => () => {},
+  subscribeSelected: () => () => {},
   subscribeColumn: () => () => {},
   validation: () => {},
   isValidCell: () => null,
@@ -44,6 +45,8 @@ describe('UITableController changelog API', () => {
     expect(controller.getChangelogCount()).toBe(0);
     expect(controller.getHistoryItems()).toEqual([]);
     expect(controller.getHistoryItemCount()).toBe(0);
+    expect(controller.canUndo()).toBe(false);
+    expect(controller.canRedo()).toBe(false);
     expect(typeof controller.subscribeChangelog(() => {})).toBe('function');
     expect(typeof controller.subscribeHistoryItems(() => {})).toBe('function');
   });

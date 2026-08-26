@@ -18,6 +18,7 @@ export interface CellChangedEvent extends BaseTableEvent {
   rowId: number;
   columnId: string;
   newValue: unknown;
+  previousValue: unknown;
 }
 export interface DynamicProjectionEvent extends BaseTableEvent {
   type: 'DYNAMIC_PROJECTION_DONE';
@@ -48,6 +49,11 @@ export interface NewRowAddedEvent extends BaseTableEvent {
 
 export interface RowDeletedEvent extends BaseTableEvent {
   type: 'ROW_DELETED';
+  rowId: string;
+}
+
+export interface NewRowRemovedEvent extends BaseTableEvent {
+  type: 'NEW_ROW_REMOVED';
   rowId: string;
 }
 
@@ -146,6 +152,7 @@ export type TableEvent =
   | RowAddedEvent
   | NewRowAddedEvent
   | RowDeletedEvent
+  | NewRowRemovedEvent
   | RowRestoredEvent
   | RowReorderedEvent
   | RowDescriptionSaved

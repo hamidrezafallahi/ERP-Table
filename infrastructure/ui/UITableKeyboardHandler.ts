@@ -1,6 +1,7 @@
 // adapters/ui/UITableKeyboardHandler.ts
 
 import { AuditLogger } from '../../application/ports/AuditLogger';
+import type { ViewIntentDispatcher } from '../../application/session/ViewIntent';
 import { TableEngine } from '../../engine/tableEngine';
 
 type KeydownCtx = {
@@ -9,15 +10,14 @@ type KeydownCtx = {
 };
 
 /**
- * تمام منطق keyboard shortcut از UITableController اینجا مستقر شده.
- * دسترسی مستقیم به engine دارد تا نیازی به callback chains نباشد.
+ * Keyboard shortcuts emit ViewIntent through the session dispatcher.
+ * Reads (pagination / selection) still come from Engine view state.
  */
 export class UITableKeyboardHandler {
   constructor(
     private readonly engine: TableEngine,
-    private readonly store: string,
-    private readonly tableKey: string,
     private readonly audit: AuditLogger,
+    private readonly dispatchIntent: ViewIntentDispatcher,
   ) {}
 
   async handle(e: KeyboardEvent, ctx: KeydownCtx): Promise<void> {
@@ -45,7 +45,7 @@ export class UITableKeyboardHandler {
       case 'KeyN': {
         if (altKey) {
           e.preventDefault();
-          this.engine.dispatch({ type: 'ADD_EMPTY_ROW', store: this.store, tableKey: this.tableKey, autoActivate: true });
+          await this.dispatchIntent({ type: 'ADD_EMPTY_ROW', autoActivate: true });
         }
         return;
       }
@@ -53,7 +53,7 @@ export class UITableKeyboardHandler {
       case 'KeyD': {
         if (altKey && activeRowId != null) {
           e.preventDefault();
-          this.engine.dispatch({ type: 'DUPLICATE_ROW', store: this.store, tableKey: this.tableKey, rowId: activeRowId });
+          await this.dispatchIntent({ type: 'DUPLICATE_ROW', rowId: activeRowId });
         }
         return;
       }
@@ -61,7 +61,7 @@ export class UITableKeyboardHandler {
       case 'Delete': {
         if (altKey && activeRowId) {
           e.preventDefault();
-          this.engine.dispatch({ type: 'ROW_DELETED', store: this.store, tableKey: this.tableKey, rowId: activeRowId });
+          await this.dispatchIntent({ type: 'DELETE_ROW', rowId: activeRowId });
         }
         return;
       }
@@ -69,12 +69,18 @@ export class UITableKeyboardHandler {
       case 'End': {
         if (shiftKey && ctrlKey && activeRowId != null) {
           e.preventDefault();
-          this.engine.dispatch({ type: 'SELECT_FROM_ACTIVE_TO_LAST', tableKey: this.tableKey, anchorRowId: activeRowId });
+          await this.dispatchIntent({
+            type: 'SELECT_FROM_ACTIVE_TO_LAST',
+            anchorRowId: activeRowId,
+          });
           return;
         }
         if (shiftKey && activeRowId != null) {
           e.preventDefault();
-          this.engine.dispatch({ type: 'ROW_SELECTION_TOGGLED', tableKey: this.tableKey, rowId: activeRowId });
+          await this.dispatchIntent({
+            type: 'TOGGLE_ROW_SELECTION',
+            rowId: activeRowId,
+          });
         }
         return;
       }
@@ -82,7 +88,10 @@ export class UITableKeyboardHandler {
       case 'Space': {
         if (activeRowId != null && ctrlKey) {
           e.preventDefault();
-          this.engine.dispatch({ type: 'ROW_SELECTION_TOGGLED', tableKey: this.tableKey, rowId: activeRowId });
+          await this.dispatchIntent({
+            type: 'TOGGLE_ROW_SELECTION',
+            rowId: activeRowId,
+          });
         }
         return;
       }
@@ -92,12 +101,13 @@ export class UITableKeyboardHandler {
         e.preventDefault();
         if (activeRowId) {
           if (!activeColumnId) {
-            this.engine.dispatch({ type: 'ACTIVATE_FIRST_CELL', tableKey: this.tableKey, rowId: activeRowId });
+            await this.dispatchIntent({
+              type: 'ACTIVATE_FIRST_CELL',
+              rowId: activeRowId,
+            });
           } else {
-            this.engine.dispatch({
+            await this.dispatchIntent({
               type: 'MOVE_ACTIVE_CELL',
-              store: this.store,
-              tableKey: this.tableKey,
               rowId: activeRowId,
               columnId: activeColumnId,
               direction: shiftKey ? 'prev' : 'next',
@@ -110,10 +120,8 @@ export class UITableKeyboardHandler {
       case 'Tab': {
         if (activeRowId && activeColumnId) {
           e.preventDefault();
-          this.engine.dispatch({
+          await this.dispatchIntent({
             type: 'MOVE_ACTIVE_CELL',
-            store: this.store,
-            tableKey: this.tableKey,
             rowId: activeRowId,
             columnId: activeColumnId,
             direction: shiftKey ? 'prev' : 'next',
@@ -125,15 +133,13 @@ export class UITableKeyboardHandler {
       case 'ArrowLeft': {
         if (altKey) {
           e.preventDefault();
-          await this.engine.dispatch({ type: 'COLLAPSE_ALL_ROWS', tableKey: this.tableKey });
+          await this.dispatchIntent({ type: 'COLLAPSE_ALL_ROWS' });
           return;
         }
         if (!activeRowId || !activeColumnId) return;
         e.preventDefault();
-        this.engine.dispatch({
+        await this.dispatchIntent({
           type: 'MOVE_ACTIVE_CELL',
-          store: this.store,
-          tableKey: this.tableKey,
           rowId: activeRowId,
           columnId: activeColumnId,
           direction: 'next',
@@ -144,10 +150,8 @@ export class UITableKeyboardHandler {
       case 'ArrowRight': {
         if (!activeRowId || !activeColumnId) return;
         e.preventDefault();
-        this.engine.dispatch({
+        await this.dispatchIntent({
           type: 'MOVE_ACTIVE_CELL',
-          store: this.store,
-          tableKey: this.tableKey,
           rowId: activeRowId,
           columnId: activeColumnId,
           direction: 'prev',
@@ -158,21 +162,25 @@ export class UITableKeyboardHandler {
       case 'ArrowDown': {
         if (altKey && selectedRows) {
           e.preventDefault();
-          this.engine.dispatch({ type: 'MOVE_VERTICAL_SELECTED_ROWS', tableKey: this.tableKey, direction: 'down' });
+          await this.dispatchIntent({
+            type: 'MOVE_VERTICAL_SELECTED_ROWS',
+            direction: 'down',
+          });
           return;
         }
         if (ctrlKey && activeRowId) {
           e.preventDefault();
-          this.engine.dispatch({ type: 'MOVE_VERTICAL_ACTIVE_ROW', tableKey: this.tableKey, direction: 'down' });
+          await this.dispatchIntent({
+            type: 'MOVE_VERTICAL_ACTIVE_ROW',
+            direction: 'down',
+          });
           return;
         }
-        if (!activeRowId)  return;
-        if (!activeColumnId)  return;
+        if (!activeRowId) return;
+        if (!activeColumnId) return;
         e.preventDefault();
-        this.engine.dispatch({
+        await this.dispatchIntent({
           type: 'MOVE_ACTIVE_CELL_VERTICAL',
-          store: this.store,
-          tableKey: this.tableKey,
           rowId: activeRowId,
           columnId: activeColumnId,
           direction: 'down',
@@ -183,21 +191,25 @@ export class UITableKeyboardHandler {
       case 'ArrowUp': {
         if (altKey && selectedRows) {
           e.preventDefault();
-          this.engine.dispatch({ type: 'MOVE_VERTICAL_SELECTED_ROWS', tableKey: this.tableKey, direction: 'up' });
+          await this.dispatchIntent({
+            type: 'MOVE_VERTICAL_SELECTED_ROWS',
+            direction: 'up',
+          });
           return;
         }
         if (ctrlKey && activeRowId) {
           e.preventDefault();
-          this.engine.dispatch({ type: 'MOVE_VERTICAL_ACTIVE_ROW', tableKey: this.tableKey, direction: 'up' });
+          await this.dispatchIntent({
+            type: 'MOVE_VERTICAL_ACTIVE_ROW',
+            direction: 'up',
+          });
           return;
         }
         if (!activeRowId) return;
         if (!activeColumnId) return;
         e.preventDefault();
-        this.engine.dispatch({
+        await this.dispatchIntent({
           type: 'MOVE_ACTIVE_CELL_VERTICAL',
-          store: this.store,
-          tableKey: this.tableKey,
           rowId: activeRowId,
           columnId: activeColumnId,
           direction: 'up',
@@ -208,21 +220,21 @@ export class UITableKeyboardHandler {
       case 'PageUp': {
         if (!canPrev) return;
         e.preventDefault();
-        this.engine.dispatch({ type: 'CHANGE_PAGE', tableKey: this.tableKey, page: page - 1, store: this.store });
+        await this.dispatchIntent({ type: 'CHANGE_PAGE', page: page - 1 });
         return;
       }
 
       case 'PageDown': {
         if (!canNext) return;
         e.preventDefault();
-        this.engine.dispatch({ type: 'CHANGE_PAGE', tableKey: this.tableKey, page: page + 1, store: this.store });
+        await this.dispatchIntent({ type: 'CHANGE_PAGE', page: page + 1 });
         return;
       }
 
       case 'KeyC': {
         if (altKey) {
           e.preventDefault();
-          this.engine.dispatch({ type: 'SET_TABLE_ACTION', store: this.store, tableKey: this.tableKey, action: 'copy' });
+          await this.dispatchIntent({ type: 'SET_TABLE_ACTION', action: 'copy' });
         }
         return;
       }
@@ -230,7 +242,7 @@ export class UITableKeyboardHandler {
       case 'KeyX': {
         if (altKey) {
           e.preventDefault();
-          this.engine.dispatch({ type: 'SET_TABLE_ACTION', store: this.store, tableKey: this.tableKey, action: 'cut' });
+          await this.dispatchIntent({ type: 'SET_TABLE_ACTION', action: 'cut' });
         }
         return;
       }
@@ -238,7 +250,7 @@ export class UITableKeyboardHandler {
       case 'KeyV': {
         if (altKey) {
           e.preventDefault();
-          this.engine.dispatch({ type: 'SET_TABLE_ACTION', store: this.store, tableKey: this.tableKey, action: 'paste' });
+          await this.dispatchIntent({ type: 'SET_TABLE_ACTION', action: 'paste' });
         }
         return;
       }
@@ -246,14 +258,38 @@ export class UITableKeyboardHandler {
       case 'KeyB': {
         if (altKey) {
           e.preventDefault();
-          this.engine.dispatch({ type: 'SET_TABLE_ACTION', store: this.store, tableKey: this.tableKey, action: 'pasteInsert' });
+          await this.dispatchIntent({
+            type: 'SET_TABLE_ACTION',
+            action: 'pasteInsert',
+          });
         }
         return;
       }
 
       case 'Escape': {
         e.preventDefault();
-        this.engine.dispatch({ type: 'SET_TABLE_ACTION', store: this.store, tableKey: this.tableKey, action: null });
+        await this.dispatchIntent({ type: 'SET_TABLE_ACTION', action: null });
+        return;
+      }
+
+      case 'KeyZ': {
+        if (ctrlKey && !shiftKey) {
+          e.preventDefault();
+          await this.dispatchIntent({ type: 'UNDO' });
+          return;
+        }
+        if (ctrlKey && shiftKey) {
+          e.preventDefault();
+          await this.dispatchIntent({ type: 'REDO' });
+        }
+        return;
+      }
+
+      case 'KeyY': {
+        if (ctrlKey) {
+          e.preventDefault();
+          await this.dispatchIntent({ type: 'REDO' });
+        }
         return;
       }
 

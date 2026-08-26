@@ -4,7 +4,7 @@ import { GridSearchMatch } from './types';
 const SCROLL_EDGE_PADDING = 12;
 
 export function buildSearchScrollKey(
-  search: GridSearchState,
+  search: NonNullable<GridSearchState>,
   match: GridSearchMatch,
 ): string {
   return `${search.columnId}:${search.query}:${search.currentIndex}:${match.rowId}:${match.columnId}`;

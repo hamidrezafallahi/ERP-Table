@@ -127,13 +127,16 @@ export class NavigationManager {
     columns
       .filter(
         col =>
-          col.dynamicSource?.dependsOn && col.dynamicSource.dependsOn.length > 0,
+          !!col.dynamicSource?.dependsOn &&
+          col.dynamicSource.dependsOn.length > 0,
       )
-      .forEach(col =>
-        col.dynamicSource?.dependsOn.forEach((dep: string) =>
-          cellDependency.add(dep),
-        ),
-      );
+      .forEach(col => {
+        const deps = col.dynamicSource?.dependsOn;
+        if (!deps) return;
+        for (const dep of deps) {
+          cellDependency.add(dep);
+        }
+      });
 
     for (const col of cellDependency) {
       const cell = row.getCell(col);

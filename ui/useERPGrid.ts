@@ -1,3 +1,5 @@
+// @ts-nocheck
+// Host page glue for ERP grids (Next.js / redux slices). Outside package core.
 import {
   useCallback,
   useEffect,

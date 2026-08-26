@@ -1,6 +1,8 @@
 export { DesktopTable } from './DesktopTable';
 export type { DesktopTableProps } from './DesktopTable';
+export { resolveDesktopVirtualization } from './resolveDesktopVirtualization';
 export { ERPTableBody } from './ERPTableBody';
+export { ERPTableVirtualBody } from './ERPTableVirtualBody';
 export { ERPTableFooter } from './ERPTableFooter';
 export { ERPTableHeader } from './ERPTableHeader';
 export { ERPTableRow } from './eRPTableRow';

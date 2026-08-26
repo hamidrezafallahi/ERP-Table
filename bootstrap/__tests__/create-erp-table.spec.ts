@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { TableRepository } from '../../application/ports/TableRepository';
 import type { Table } from '../../domain/entities/Table';
 import type { AuditLogger } from '../../application/ports/AuditLogger';
+import { RowStateEnum } from '../../domain/value-objects';
 
 vi.mock('@services/customBaseQuery', () => ({
   baseQueryByToken: async () => ({ data: null }),
@@ -114,6 +115,426 @@ describe('createERPTable runtime wiring', () => {
     expect(historyItems[0].title).toBe('Page changed');
     expect(historyItems[0].category).toBe('view');
     expect(historyItems[0].severity).toBe('info');
+  });
+
+  it('records previousValue on CELL_CHANGED and supports undo/redo', async () => {
+    const { createERPTable } = await import('../index');
+    const repo = new MemoryTableRepository();
+    const audit = new SilentAuditLogger();
+    const remoteApi = {
+      request: async () => null,
+    } as any;
+
+    const result = await createERPTable({
+      store: 'store-undo',
+      tableKey: 'table-undo',
+      actor: { userId: 'user-1', roles: ['admin'] },
+      tableType: 'default',
+      activeCollection: 'default',
+      repo,
+      audit,
+      remoteApi,
+      columns: [
+        {
+          fieldName: 'name',
+          fieldCaption: 'Name',
+          fieldType: 'text',
+          fieldCollection: 'default',
+          visibility: { kind: 'always' },
+        },
+      ],
+      rows: [
+        {
+          id: 1,
+          collection: 'default',
+          values: { name: 'alpha' },
+        },
+      ],
+    });
+
+    await result.engine.dispatch({
+      type: 'CHANGE_CELL_VALUE',
+      store: 'store-undo',
+      tableKey: 'table-undo',
+      rowId: 1,
+      columnId: 'name',
+      newValue: 'beta',
+    });
+
+    const history = result.controller.getHistoryItems({ type: 'CELL_CHANGED' });
+    expect(history).toHaveLength(1);
+    expect(history[0].description).toContain('from alpha');
+    expect(history[0].description).toContain('to beta');
+
+    const stored = await result.eventStore.read('table:table-undo');
+    const cellEvent = stored.find((e) => e.type === 'CELL_CHANGED');
+    expect((cellEvent?.payload as { previousValue: unknown }).previousValue).toBe('alpha');
+    expect((cellEvent?.payload as { newValue: unknown }).newValue).toBe('beta');
+
+    expect(result.controller.canUndo()).toBe(true);
+    await result.controller.undo();
+    expect(result.table.getRow(1)?.getCell('name')?.getValue()).toBe('alpha');
+    expect(result.controller.canRedo()).toBe(true);
+
+    await result.controller.redo();
+    expect(result.table.getRow(1)?.getCell('name')?.getValue()).toBe('beta');
+  });
+
+  it('supports undo of ROW_ADDED via compensating delete', async () => {
+    const { createERPTable } = await import('../index');
+    const repo = new MemoryTableRepository();
+    const audit = new SilentAuditLogger();
+    const remoteApi = {
+      request: async () => null,
+    } as any;
+
+    const result = await createERPTable({
+      store: 'store-row-undo',
+      tableKey: 'table-row-undo',
+      actor: { userId: 'user-1', roles: ['admin'] },
+      tableType: 'default',
+      activeCollection: 'default',
+      repo,
+      audit,
+      remoteApi,
+      columns: [
+        {
+          fieldName: 'name',
+          fieldCaption: 'Name',
+          fieldType: 'text',
+          fieldCollection: 'default',
+          visibility: { kind: 'always' },
+        },
+      ],
+      rows: [
+        {
+          id: 1,
+          collection: 'default',
+          values: { name: 'seed' },
+        },
+      ],
+    });
+
+    const beforeCount = result.table.getRows().length;
+    await result.engine.dispatch({
+      type: 'ADD_EMPTY_ROW',
+      store: 'store-row-undo',
+      tableKey: 'table-row-undo',
+      autoActivate: false,
+    });
+
+    expect(result.table.getRows().length).toBe(beforeCount + 1);
+    expect(result.controller.canUndo()).toBe(true);
+
+    const added = result.table
+      .getRows()
+      .find((r) => r.id.value !== 1);
+    expect(added).toBeTruthy();
+
+    await result.controller.undo();
+    expect(result.table.getRow(added!.id.value)).toBeUndefined();
+    expect(result.table.getRows().length).toBe(beforeCount);
+  });
+
+  it('paste goes through AppService with shared correlationId and undo', async () => {
+    const { createERPTable } = await import('../index');
+    const repo = new MemoryTableRepository();
+    const audit = new SilentAuditLogger();
+    const remoteApi = {
+      request: async () => null,
+    } as any;
+
+    const result = await createERPTable({
+      store: 'store-paste',
+      tableKey: 'table-paste',
+      actor: { userId: 'user-1', roles: ['admin'] },
+      tableType: 'default',
+      activeCollection: 'default',
+      repo,
+      audit,
+      remoteApi,
+      columns: [
+        {
+          fieldName: 'name',
+          fieldCaption: 'Name',
+          fieldType: 'text',
+          fieldCollection: 'default',
+          visibility: { kind: 'always' },
+        },
+      ],
+      rows: [
+        {
+          id: 1,
+          collection: 'default',
+          values: { name: 'alpha' },
+        },
+        {
+          id: 2,
+          collection: 'default',
+          values: { name: 'beta' },
+        },
+      ],
+    });
+
+    await result.engine.dispatch({
+      type: 'ROW_SELECTION_TOGGLED',
+      tableKey: 'table-paste',
+      rowId: 1,
+    });
+    await result.engine.dispatch({
+      type: 'ROW_SELECTION_TOGGLED',
+      tableKey: 'table-paste',
+      rowId: 2,
+    });
+    await result.engine.dispatch({
+      type: 'SET_TABLE_ACTION',
+      store: 'store-paste',
+      tableKey: 'table-paste',
+      action: 'copy',
+    });
+
+    const beforeCount = result.table.getRows().length;
+    await result.engine.dispatch({
+      type: 'SET_TABLE_ACTION',
+      store: 'store-paste',
+      tableKey: 'table-paste',
+      action: 'paste',
+      correlationId: 'paste-unit-1',
+    });
+
+    expect(result.table.getRows().length).toBe(beforeCount + 2);
+    expect(result.cellUndoStack.undoDepth()).toBe(1);
+
+    const stored = await result.eventStore.read('table:table-paste');
+    const pasteEvents = stored.filter((e) => e.type === 'ROW_ADDED');
+    expect(pasteEvents.length).toBeGreaterThanOrEqual(2);
+    expect(pasteEvents.every((e) => e.correlationId === 'paste-unit-1')).toBe(
+      true,
+    );
+
+    await result.controller.undo();
+    expect(result.table.getRows().length).toBe(beforeCount);
+    expect(result.table.getRow(1)?.getCell('name')?.getValue()).toBe('alpha');
+    expect(result.table.getRow(2)?.getCell('name')?.getValue()).toBe('beta');
+  });
+
+  it('cut+paste undo restores soft-deleted sources and removes clones', async () => {
+    const { createERPTable } = await import('../index');
+    const repo = new MemoryTableRepository();
+    const audit = new SilentAuditLogger();
+    const remoteApi = {
+      request: async () => null,
+    } as any;
+
+    const result = await createERPTable({
+      store: 'store-cut-paste',
+      tableKey: 'table-cut-paste',
+      actor: { userId: 'user-1', roles: ['admin'] },
+      tableType: 'default',
+      activeCollection: 'default',
+      repo,
+      audit,
+      remoteApi,
+      columns: [
+        {
+          fieldName: 'name',
+          fieldCaption: 'Name',
+          fieldType: 'text',
+          fieldCollection: 'default',
+          visibility: { kind: 'always' },
+        },
+      ],
+      rows: [
+        {
+          id: 1,
+          collection: 'default',
+          values: { name: 'alpha' },
+        },
+        {
+          id: 2,
+          collection: 'default',
+          values: { name: 'beta' },
+        },
+      ],
+    });
+
+    await result.engine.dispatch({
+      type: 'ROW_SELECTION_TOGGLED',
+      tableKey: 'table-cut-paste',
+      rowId: 1,
+    });
+    await result.engine.dispatch({
+      type: 'SET_TABLE_ACTION',
+      store: 'store-cut-paste',
+      tableKey: 'table-cut-paste',
+      action: 'cut',
+    });
+    await result.engine.dispatch({
+      type: 'SET_TABLE_ACTION',
+      store: 'store-cut-paste',
+      tableKey: 'table-cut-paste',
+      action: 'paste',
+      correlationId: 'cut-paste-1',
+    });
+
+    expect(result.table.getRow(1)?.rowState.value).toBe(RowStateEnum.Deleted);
+    const clones = result.table
+      .getRows()
+      .filter((r) => r.id.value !== 1 && r.rowState.value !== RowStateEnum.Deleted);
+    expect(clones.length).toBeGreaterThanOrEqual(1);
+    expect(result.cellUndoStack.undoDepth()).toBe(1);
+
+    await result.controller.undo();
+
+    expect(result.table.getRow(1)?.rowState.value).toBe(RowStateEnum.Unchanged);
+    expect(result.table.getRow(1)?.getCell('name')?.getValue()).toBe('alpha');
+    expect(
+      result.table
+        .getRows()
+        .filter((r) => r.rowState.value !== RowStateEnum.Deleted),
+    ).toHaveLength(2);
+  });
+
+  it('redo of ROW_ADDED restores the same rowId and cell snapshot', async () => {
+    const { createERPTable } = await import('../index');
+    const repo = new MemoryTableRepository();
+    const audit = new SilentAuditLogger();
+    const remoteApi = {
+      request: async () => null,
+    } as any;
+
+    const result = await createERPTable({
+      store: 'store-row-redo',
+      tableKey: 'table-row-redo',
+      actor: { userId: 'user-1', roles: ['admin'] },
+      tableType: 'default',
+      activeCollection: 'default',
+      repo,
+      audit,
+      remoteApi,
+      columns: [
+        {
+          fieldName: 'name',
+          fieldCaption: 'Name',
+          fieldType: 'text',
+          fieldCollection: 'default',
+          visibility: { kind: 'always' },
+        },
+      ],
+      rows: [
+        {
+          id: 1,
+          collection: 'default',
+          values: { name: 'seed' },
+        },
+      ],
+    });
+
+    await result.engine.dispatch({
+      type: 'ADD_EMPTY_ROW',
+      store: 'store-row-redo',
+      tableKey: 'table-row-redo',
+      autoActivate: false,
+    });
+
+    const added = result.table.getRows().find((r) => r.id.value !== 1)!;
+    const addedId = added.id.value;
+    await result.engine.dispatch({
+      type: 'CHANGE_CELL_VALUE',
+      store: 'store-row-redo',
+      tableKey: 'table-row-redo',
+      rowId: addedId,
+      columnId: 'name',
+      newValue: 'edited-on-new-row',
+    });
+
+    // Undo cell edit + undo add (two units) — or we only care about row unit.
+    // Stack top is CELL_CHANGED; undo that first, then ROW_ADDED.
+    await result.controller.undo();
+    expect(result.table.getRow(addedId)?.getCell('name')?.getValue()).not.toBe(
+      'edited-on-new-row',
+    );
+
+    await result.controller.undo();
+    expect(result.table.getRow(addedId)).toBeUndefined();
+    expect(result.controller.canRedo()).toBe(true);
+
+    await result.controller.redo();
+    const restored = result.table.getRow(addedId);
+    expect(restored).toBeTruthy();
+    expect(restored!.id.value).toBe(addedId);
+    expect(restored!.rowState.value).toBe(RowStateEnum.Added);
+  });
+
+  it('batches CELL_CHANGED with shared correlationId into one undo', async () => {
+    const { createERPTable } = await import('../index');
+    const repo = new MemoryTableRepository();
+    const audit = new SilentAuditLogger();
+    const remoteApi = {
+      request: async () => null,
+    } as any;
+
+    const result = await createERPTable({
+      store: 'store-batch-undo',
+      tableKey: 'table-batch-undo',
+      actor: { userId: 'user-1', roles: ['admin'] },
+      tableType: 'default',
+      activeCollection: 'default',
+      repo,
+      audit,
+      remoteApi,
+      columns: [
+        {
+          fieldName: 'name',
+          fieldCaption: 'Name',
+          fieldType: 'text',
+          fieldCollection: 'default',
+          visibility: { kind: 'always' },
+        },
+        {
+          fieldName: 'code',
+          fieldCaption: 'Code',
+          fieldType: 'text',
+          fieldCollection: 'default',
+          visibility: { kind: 'always' },
+        },
+      ],
+      rows: [
+        {
+          id: 1,
+          collection: 'default',
+          values: { name: 'alpha', code: 'A1' },
+        },
+      ],
+    });
+
+    const correlationId = 'paste-batch-1';
+    await result.engine.dispatch({
+      type: 'CHANGE_CELL_VALUE',
+      store: 'store-batch-undo',
+      tableKey: 'table-batch-undo',
+      rowId: 1,
+      columnId: 'name',
+      newValue: 'beta',
+      correlationId,
+    });
+    await result.engine.dispatch({
+      type: 'CHANGE_CELL_VALUE',
+      store: 'store-batch-undo',
+      tableKey: 'table-batch-undo',
+      rowId: 1,
+      columnId: 'code',
+      newValue: 'B2',
+      correlationId,
+    });
+
+    expect(result.cellUndoStack.undoDepth()).toBe(1);
+    expect(result.controller.canUndo()).toBe(true);
+
+    await result.controller.undo();
+    expect(result.table.getRow(1)?.getCell('name')?.getValue()).toBe('alpha');
+    expect(result.table.getRow(1)?.getCell('code')?.getValue()).toBe('A1');
+    expect(result.controller.canUndo()).toBe(false);
   });
 
   it('streams changelog updates through controller.subscribeChangelog', async () => {

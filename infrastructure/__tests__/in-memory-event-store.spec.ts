@@ -73,4 +73,19 @@ describe('InMemoryEventStore', () => {
     const events = await store.read('nonexistent');
     expect(events).toEqual([]);
   });
+
+  it('readAll returns a global ordered log across streams', async () => {
+    const store = new InMemoryEventStore();
+    await store.append('stream-a', [makeEvent({ eventId: 'a1', streamId: 'stream-a' })], 0);
+    await store.append('stream-b', [makeEvent({ eventId: 'b1', streamId: 'stream-b', tableId: 'table-2' })], 0);
+    await store.append('stream-a', [makeEvent({ eventId: 'a2', streamId: 'stream-a' })], 1);
+
+    const all = await store.readAll();
+    expect(all.map((e) => e.eventId)).toEqual(['a1', 'b1', 'a2']);
+    expect(all[0].version).toBe(1);
+    expect(all[2].version).toBe(2);
+
+    const fromOne = await store.readAll(1);
+    expect(fromOne.map((e) => e.eventId)).toEqual(['b1', 'a2']);
+  });
 });

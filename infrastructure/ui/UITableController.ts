@@ -26,13 +26,13 @@ import type {
   HistoryPanelViewModel,
   HistoryQuery,
 } from '../history/HistoryPanelViewModel';
+import type { CellUndoStack } from '../../application/undo/CellUndoStack';
+import type { GridSession } from '../../application/session/GridSession';
 import { UIRow } from '../../ui/type';
 import { UITableCommand } from './uiEvents';
-import { UITableKeyboardHandler } from './UITableKeyboardHandler';
 
 export class UITableController {
   private disposed = false;
-  private readonly keyboard: UITableKeyboardHandler;
   constructor(
     private readonly engine: TableEngine,
     private readonly store: string,
@@ -40,9 +40,9 @@ export class UITableController {
     private readonly audit: AuditLogger,
     private readonly changelogProjection?: ChangelogProjection,
     private readonly historyPanelViewModel?: HistoryPanelViewModel,
-  ) {
-    this.keyboard = new UITableKeyboardHandler(engine, store, tableKey, audit);
-  }
+    private readonly cellUndoStack?: CellUndoStack,
+    private readonly session?: GridSession,
+  ) {}
 
   // ─── private dispatch helpers ───────────────────────────────────────
 
@@ -190,7 +190,7 @@ export class UITableController {
     return this.safe(() => this.engine.getViewState(), 'getViewState');
   }
 
-  getMobileViewState(): MobileTableViewState | null {
+  getMobileViewState(): MobileTableViewState | null | undefined {
     return this.safe(
       () => this.engine.getMobileViewState(),
       'getMobileViewState',
@@ -203,6 +203,10 @@ export class UITableController {
 
   getAllRows(): Row[] | null {
     return this.safe(() => this.engine.getAllRows(), 'getAllRows');
+  }
+
+  getAllUIRows() {
+    return this.safe(() => this.engine.getAllUIRows(), 'getAllUIRows');
   }
 
   getSnapShot(collectionScope?: CollectionScope) {
@@ -267,11 +271,51 @@ export class UITableController {
     ) ?? (() => {});
   }
 
+  canUndo(): boolean {
+    return this.cellUndoStack?.canUndo() ?? false;
+  }
+
+  canRedo(): boolean {
+    return this.cellUndoStack?.canRedo() ?? false;
+  }
+
+  async undo(): Promise<boolean> {
+    if (!this.cellUndoStack) return false;
+    try {
+      return await this.cellUndoStack.undo(this.store, (command) =>
+        this.engine.dispatch(command),
+      );
+    } catch (error) {
+      this.audit.log({
+        type: 'ERROR',
+        message: 'UITableController.undo failed',
+        payload: { error, tableKey: this.tableKey },
+      });
+      return false;
+    }
+  }
+
+  async redo(): Promise<boolean> {
+    if (!this.cellUndoStack) return false;
+    try {
+      return await this.cellUndoStack.redo(this.store, (command) =>
+        this.engine.dispatch(command),
+      );
+    } catch (error) {
+      this.audit.log({
+        type: 'ERROR',
+        message: 'UITableController.redo failed',
+        payload: { error, tableKey: this.tableKey },
+      });
+      return false;
+    }
+  }
+
   getActiveRow() {
     return this.safe(() => this.engine.getActiveRow(), 'getActiveRow');
   }
 
-  getSelectedRows(): Record<number, boolean> | null {
+  getSelectedRows(): Record<number, boolean> | null | undefined {
     return this.safe(() => this.engine.getSelectedRows(), 'getSelectedRows');
   }
 
@@ -327,6 +371,30 @@ export class UITableController {
     return this.safe(() => this.engine.subscribe(cb), 'subscribe');
   }
 
+  subscribeSelected<TSelected>(
+    selector: () => TSelected,
+    listener: (selected: TSelected) => void,
+    isEqual: (a: TSelected, b: TSelected) => boolean = Object.is,
+  ): () => void {
+    if (this.session) {
+      return this.session.subscribeSelected(selector, listener, isEqual);
+    }
+    return (
+      this.safe(
+        () => this.engine.subscribeSelected(selector, listener, isEqual),
+        'subscribeSelected',
+      ) ?? (() => {})
+    );
+  }
+
+  getSession(): GridSession | undefined {
+    return this.session;
+  }
+
+  getTableKey(): string {
+    return this.tableKey;
+  }
+
   subscribeColumn<T>(columnId: string, collections: CollectionScope, cb: (values: T[]) => void) {
     return this.engine.subscribeColumn(columnId, collections, cb as (values: unknown[]) => void);
   }
@@ -335,7 +403,7 @@ export class UITableController {
       callback(result);
     });
   }
-  isValidCell(rowId: number, columnId: string): ValidCell {
+  isValidCell(rowId: number, columnId: string): ValidCell | null {
     try {
       return this.engine.isValidCell(rowId, columnId);
     } catch {
@@ -441,7 +509,9 @@ export class UITableController {
         this.setActiveRow(command.rowId);
         return;
       case 'KEY_DOWN':
-        await this.keyboard.handle(command.event, command.ctx);
+        if (this.session) {
+          await this.session.handleKeydown(command.event, command.ctx);
+        }
         return;
       case 'TOGGLE_ROW_SELECTED':
         await this.toggleRowSelect();

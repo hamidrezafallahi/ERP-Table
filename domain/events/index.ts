@@ -18,7 +18,8 @@ export class CellChanged {
   constructor(
     public readonly rowId: RowId,
     public readonly columnId: ColumnId,
-    public readonly newValue: unknown
+    public readonly newValue: unknown,
+    public readonly previousValue: unknown,
   ) { }
 }
 export class DisplayChanged {

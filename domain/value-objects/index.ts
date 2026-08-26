@@ -88,6 +88,8 @@ export enum RowOriginEnum {
 }
 export type TableActions = "copy" | "cut" | "paste" | "pasteInsert" | null
 
+export { Viewport } from './Viewport';
+export type { VisibleRange } from './Viewport';
 
 export class Pagination {
   public readonly totalRows: number;

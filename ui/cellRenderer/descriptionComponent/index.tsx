@@ -1,4 +1,6 @@
+// @ts-nocheck
 "use client";
+// Host-coupled description menu (ERP voucher APIs).
 import React, {
   forwardRef,
   Ref,
@@ -15,10 +17,10 @@ import {
   Dots,
   SavePlus,
 } from '@components/atoms/iconComponents';
-import { ColumnSchema } from '@components/organisms/erp-table/bootstrap/type';
+import { ColumnSchema } from '../../../bootstrap/type';
 import {
   UITableController,
-} from '@components/organisms/erp-table/infrastructure/ui/UITableController';
+} from '../../../infrastructure/ui/UITableController';
 import { useGetData } from '@services/base';
 import { IDependOn } from '@type/elementType';
 

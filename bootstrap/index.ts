@@ -12,11 +12,16 @@ import {
 import {
   ConsoleAuditLogger,
 } from '../infrastructure/Repositories/consoleAuditLogger';
-import { FetchRemoteApi } from '../infrastructure/Repositories/fetchRemoteApi';
+import { NoopRemoteApi } from '../infrastructure/Repositories/noopRemoteApi';
 import { InMemoryEventStore } from '../infrastructure/eventStore/InMemoryEventStore';
 import { HistoryPanelViewModel } from '../infrastructure/history/HistoryPanelViewModel';
 import { ChangelogProjection } from '../infrastructure/projections/ChangelogProjection';
 import { UITableController } from '../infrastructure/ui/UITableController';
+import { CellUndoStack } from '../application/undo/CellUndoStack';
+import { createEngineGridQuery } from '../application/plugins/createEngineGridQuery';
+import { PluginHost } from '../application/plugins/PluginHost';
+import { DefaultGridSession } from '../infrastructure/session/DefaultGridSession';
+import { mapColumnSchemas } from '../infrastructure/columns/mapColumnSchema';
 import {
   buildCollections,
   buildColumns,
@@ -54,11 +59,12 @@ export async function createERPTable(config: CreateERPTableConfig): Promise<Crea
   // ---------- infra ----------
   const repo = config.repo ?? new CachedTableRepository();
   const audit = config.audit ?? new ConsoleAuditLogger();
-  const remoteApi = config.remoteApi ?? new FetchRemoteApi();
-  const eventStore = new InMemoryEventStore();
+  const remoteApi = config.remoteApi ?? new NoopRemoteApi();
+  const eventStore = config.eventStore ?? new InMemoryEventStore();
   const changelogProjection = new ChangelogProjection(eventStore);
   const historyPanelViewModel = new HistoryPanelViewModel(changelogProjection);
-  changelogProjection.start();
+  const cellUndoStack = new CellUndoStack();
+  await changelogProjection.start();
 
   // ---------- محاسبه pageSize دقیقاً مثل نسخه اولیه ----------
   const page = 1;
@@ -117,9 +123,19 @@ export async function createERPTable(config: CreateERPTableConfig): Promise<Crea
   // ---------- policies & app ----------
   const permissionPolicy = createPermissionPolicy(config, columnMeta, table, repo, audit);
   const app = createTableAppService(repo, audit, permissionPolicy, { columnMeta, remoteApi }, eventStore);
+  app.setUndoStack(cellUndoStack);
 
-  // ---------- engine & controller ----------
+  // ---------- engine & session & controller ----------
   const engine = new TableEngine(app, repo, config.actor, audit);
+  const session = new DefaultGridSession({
+    engine,
+    store: config.store,
+    tableKey: config.tableKey,
+    audit,
+    changelogProjection,
+    historyPanelViewModel,
+    cellUndoStack,
+  });
   const controller = new UITableController(
     engine,
     config.store,
@@ -127,16 +143,37 @@ export async function createERPTable(config: CreateERPTableConfig): Promise<Crea
     audit,
     changelogProjection,
     historyPanelViewModel,
+    cellUndoStack,
+    session,
   );
+  const { definitions: columnDefinitions, bindings: columnBindings } =
+    mapColumnSchemas(config.columns);
   await controller.dispatch({ type: 'TABLE_REGISTERED', storeName: config.store, table });
+
+  const pluginHost = new PluginHost({
+    tableId: config.tableKey,
+    actorId: config.actor.userId,
+    eventStore,
+    session,
+    query: createEngineGridQuery(engine),
+  });
+  if (config.plugins?.length) {
+    pluginHost.register(config.plugins);
+  }
+
   return {
     engine,
     controller,
+    session,
     table,
     tableKey: config.tableKey,
     columnMeta,
+    columnDefinitions,
+    columnBindings,
     eventStore,
     changelogProjection,
     historyPanelViewModel,
+    cellUndoStack,
+    pluginHost,
   };
 }

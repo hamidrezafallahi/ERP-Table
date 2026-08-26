@@ -20,8 +20,9 @@ export class Cell {
   ) { }
   changeValue(newValue: unknown): CellChanged | null {
     // if (this.value.equals(newValue)) return null;
+    const previousValue = this.value.value;
     this.value = new CellValue(newValue);
-    return new CellChanged(this.rowId, this.columnId, newValue);
+    return new CellChanged(this.rowId, this.columnId, newValue, previousValue);
   }
   changeDisplay(newValue: unknown): DisplayChanged | null {
     if (this.display.value===newValue) return null;
@@ -31,8 +32,9 @@ export class Cell {
 
   changeOriginalValue(newValue: unknown): CellChanged | null {
     if (this.originalValue.value ===newValue) return null;
+    const previousValue = this.originalValue.value;
     this.originalValue = new CellValue(newValue);
-    return new CellChanged(this.rowId, this.columnId, newValue);
+    return new CellChanged(this.rowId, this.columnId, newValue, previousValue);
   }
 
   getValue(): unknown {

@@ -161,6 +161,7 @@ export class ChangeCellValueHandler {
         rowId: domainEvent.rowId.value,
         columnId: domainEvent.columnId.value,
         newValue: domainEvent.newValue,
+        previousValue: domainEvent.previousValue,
       };
       this.audit.log({ type: 'CELL_CHANGED', message: out.type, payload: out });
       return [out];
@@ -391,27 +392,30 @@ export class ChangeCellValueHandler {
 
       const depends = colMeta.dynamicSource?.dependsOn;
       if (depends?.includes(changedColumnId.value)) {
-        const { dynamicSource, ...rest } = colMeta;
+        const { dynamicSource } = colMeta;
         const { endpoint, dependsOn, ...restDynamic } = dynamicSource ?? {};
-        table.setColumnSchema(new ColumnId(rest.fieldName), {
-          fieldName: rest.fieldName,
-          fieldCaption: rest.fieldCaption,
-          fieldType: rest.fieldType,
-          ...col,
-          dynamicSelectFilterOption: col?.dynamicSelectFilterOption ?? (() => true),
+        const base = col ?? colMeta;
+        table.setColumnSchema(new ColumnId(base.fieldName), {
+          ...base,
+          dynamicSelectFilterOption:
+            base.dynamicSelectFilterOption ?? (() => true),
           dynamicSource: {
-            endpoint,
+            endpoint: endpoint ?? '',
             ...restDynamic,
-            dependOn: { fieldName: changedColumnId.value, value: validatedValue },
+            dependOn: {
+              fieldName: changedColumnId.value,
+              value: validatedValue,
+            },
           },
         });
       }
 
       if (
         colMeta.visibility?.kind === 'whenFieldTruthy' &&
-        colMeta.visibility.fieldName === changedColumnId.value
+        colMeta.visibility.fieldName === changedColumnId.value &&
+        col
       ) {
-        table.setColumnSchema(new ColumnId(colMeta.fieldName), { ...col });
+        table.setColumnSchema(new ColumnId(colMeta.fieldName), col);
       }
     });
   }
@@ -571,6 +575,7 @@ export class ApplyDynamicProjectionHandler {
       }
 
       const colValue = cell.getValue();
+      const previousValue = colValue;
       const newRowId = new RowId(rowId);
       const newColumnId = new ColumnId(columnId);
 
@@ -617,6 +622,7 @@ export class ApplyDynamicProjectionHandler {
         rowId: newRowId.value,
         columnId: newColumnId.value,
         newValue: colValue,
+        previousValue,
       };
       this.audit.log({ type: 'CELL_CHANGED', message: out.type, payload: out });
       return [out];
@@ -839,27 +845,30 @@ export class ApplyDynamicProjectionHandler {
 
       const depends = colMeta.dynamicSource?.dependsOn;
       if (depends?.includes(changedColumnId.value)) {
-        const { dynamicSource, ...rest } = colMeta;
+        const { dynamicSource } = colMeta;
         const { endpoint, dependsOn, ...restDynamic } = dynamicSource ?? {};
-        table.setColumnSchema(new ColumnId(rest.fieldName), {
-          fieldName: rest.fieldName,
-          fieldCaption: rest.fieldCaption,
-          fieldType: rest.fieldType,
-          ...col,
-          dynamicSelectFilterOption: col?.dynamicSelectFilterOption ?? (() => true),
+        const base = col ?? colMeta;
+        table.setColumnSchema(new ColumnId(base.fieldName), {
+          ...base,
+          dynamicSelectFilterOption:
+            base.dynamicSelectFilterOption ?? (() => true),
           dynamicSource: {
-            endpoint,
+            endpoint: endpoint ?? '',
             ...restDynamic,
-            dependOn: { fieldName: changedColumnId.value, value: validatedValue },
+            dependOn: {
+              fieldName: changedColumnId.value,
+              value: validatedValue,
+            },
           },
         });
       }
 
       if (
         colMeta.visibility?.kind === 'whenFieldTruthy' &&
-        colMeta.visibility.fieldName === changedColumnId.value
+        colMeta.visibility.fieldName === changedColumnId.value &&
+        col
       ) {
-        table.setColumnSchema(new ColumnId(colMeta.fieldName), { ...col});
+        table.setColumnSchema(new ColumnId(colMeta.fieldName), col);
       }
     });
   }
