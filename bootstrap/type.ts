@@ -66,9 +66,12 @@ export type CreateERPTableConfig = {
   tableHeight?: number;
   recordPerPage?: number;
   remoteApi?: RemoteApi;
-  /** Override default InMemoryEventStore (e.g. IndexedDbEventStore). */
+  /**
+   * Override event store. Default: IndexedDbEventStore in the browser,
+   * InMemoryEventStore in Node/tests.
+   */
   eventStore?: EventStore;
-  /** Optional plugins (Excel/PDF export, …) registered at composition root. */
+  /** Optional plugins (Excel/PDF export+import, …) registered at composition root. */
   plugins?: readonly GridPlugin[];
 };
 

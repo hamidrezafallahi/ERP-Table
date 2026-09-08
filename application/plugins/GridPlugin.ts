@@ -46,6 +46,11 @@ export interface GridPluginContext {
   readonly session: GridSession;
   readonly query: GridQueryPort;
   readonly eventStore: EventStore;
+  /**
+   * Out-of-band binary for IMPORT_REQUESTED (not stored on the event bus /
+   * IndexedDB payload — only correlationId is published).
+   */
+  resolveImportData?: (correlationId: string) => Uint8Array | undefined;
 }
 
 export interface GridPlugin {

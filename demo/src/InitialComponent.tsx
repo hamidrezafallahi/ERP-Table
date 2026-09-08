@@ -224,10 +224,9 @@ const COPY = {
 } as const;
 
 export function InitialComponent() {
-  const [lang, setLang] = useState<'fa' | 'en'>('fa');
   const [active, setActive] = useState<SectionKey>('intro');
   const [copied, setCopied] = useState(false);
-  const t = COPY[lang];
+  const t = COPY.en;
   const section = t.sections[active];
 
   const previewSnippet = useMemo(
@@ -247,9 +246,9 @@ export function InitialComponent() {
   };
 
   return (
-    <div className={`${styles.page} ${lang === 'fa' ? styles.pageFa : ''}`} dir={lang === 'fa' ? 'rtl' : 'ltr'}>
+    <div className={`${styles.page} ${styles.pageEn}`} dir="ltr">
       <a className={styles.srOnly} href="#main-docs">
-        {lang === 'fa' ? 'پرش به محتوا' : 'Skip to content'}
+        Skip to content
       </a>
       <div className={styles.shell}>
         <header className={styles.topbar}>
@@ -264,13 +263,6 @@ export function InitialComponent() {
             <a className={styles.linkBtn} href={DOCS_PUBLIC}>
               docs
             </a>
-            <button
-              type="button"
-              className={styles.langBtn}
-              onClick={() => setLang((p) => (p === 'fa' ? 'en' : 'fa'))}
-            >
-              {lang === 'fa' ? 'English' : 'فارسی'}
-            </button>
           </div>
         </header>
 
@@ -353,7 +345,7 @@ export function InitialComponent() {
             ))}
           </nav>
           <main id="main-docs">
-            <article className={styles.panel} key={`${lang}-${active}`}>
+            <article className={styles.panel} key={active}>
               <h2 className={styles.sectionTitle}>{section.title}</h2>
               <div className={styles.bodyCopy}>{section.body as ReactNode}</div>
             </article>

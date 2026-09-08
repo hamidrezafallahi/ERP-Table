@@ -87,6 +87,27 @@ export interface ExportFailedPayload {
   readonly message: string;
 }
 
+/* ── Plugin / import payloads ───────────────────────── */
+
+export interface ImportRequestedPayload {
+  readonly format: 'xlsx';
+  readonly collectionScope: 'active' | 'all' | string[];
+  readonly sheetName?: string;
+  readonly byteLength?: number;
+}
+
+export interface ImportCompletedPayload {
+  readonly format: 'xlsx';
+  readonly rowCount: number;
+  readonly columnCount?: number;
+}
+
+export interface ImportFailedPayload {
+  readonly format: 'xlsx';
+  readonly code: string;
+  readonly message: string;
+}
+
 /* ── Typed aliases ──────────────────────────────────── */
 
 export type CellChangedGridEvent = GridEvent<'CELL_CHANGED', CellChangedPayload>;

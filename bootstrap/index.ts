@@ -14,6 +14,7 @@ import {
 } from '../infrastructure/Repositories/consoleAuditLogger';
 import { NoopRemoteApi } from '../infrastructure/Repositories/noopRemoteApi';
 import { InMemoryEventStore } from '../infrastructure/eventStore/InMemoryEventStore';
+import { IndexedDbEventStore } from '../infrastructure/eventStore/IndexedDbEventStore';
 import { HistoryPanelViewModel } from '../infrastructure/history/HistoryPanelViewModel';
 import { ChangelogProjection } from '../infrastructure/projections/ChangelogProjection';
 import { UITableController } from '../infrastructure/ui/UITableController';
@@ -22,6 +23,7 @@ import { createEngineGridQuery } from '../application/plugins/createEngineGridQu
 import { PluginHost } from '../application/plugins/PluginHost';
 import { DefaultGridSession } from '../infrastructure/session/DefaultGridSession';
 import { mapColumnSchemas } from '../infrastructure/columns/mapColumnSchema';
+import type { EventStore } from '../application/ports/EventStore';
 import {
   buildCollections,
   buildColumns,
@@ -36,6 +38,17 @@ import {
   CreateERPTableResult,
   RowInput,
 } from './type';
+
+async function resolveEventStore(
+  config: CreateERPTableConfig,
+): Promise<EventStore> {
+  if (config.eventStore) return config.eventStore;
+  // Browser: durable event log alongside CachedTableRepository → IndexedDB.
+  if (typeof indexedDB !== 'undefined') {
+    return IndexedDbEventStore.open(`erp-table-events:${config.store}`);
+  }
+  return new InMemoryEventStore();
+}
 
 function createInitialRows(
   collectionColumns: Map<string, Map<string, ColumnSchema>>
@@ -60,7 +73,7 @@ export async function createERPTable(config: CreateERPTableConfig): Promise<Crea
   const repo = config.repo ?? new CachedTableRepository();
   const audit = config.audit ?? new ConsoleAuditLogger();
   const remoteApi = config.remoteApi ?? new NoopRemoteApi();
-  const eventStore = config.eventStore ?? new InMemoryEventStore();
+  const eventStore = await resolveEventStore(config);
   const changelogProjection = new ChangelogProjection(eventStore);
   const historyPanelViewModel = new HistoryPanelViewModel(changelogProjection);
   const cellUndoStack = new CellUndoStack();

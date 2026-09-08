@@ -3,6 +3,7 @@ import type { GridSession } from '../session/GridSession';
 import type { GridEvent } from '../../domain/types/GridEvent';
 import type {
   ExportRequestedPayload,
+  ImportRequestedPayload,
 } from '../../domain/types/GridEvent';
 import type {
   GridPlugin,
@@ -20,6 +21,14 @@ export type RequestExportOptions = {
   direction?: 'rtl' | 'ltr';
 };
 
+export type RequestImportOptions = {
+  format: 'xlsx';
+  data: Blob | ArrayBuffer | Uint8Array;
+  collectionScope?: ImportRequestedPayload['collectionScope'];
+  correlationId?: string;
+  sheetName?: string;
+};
+
 export type PluginHostDeps = {
   tableId: string;
   actorId: string;
@@ -32,15 +41,28 @@ function createEventId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+async function toUint8Array(
+  data: Blob | ArrayBuffer | Uint8Array,
+): Promise<Uint8Array> {
+  if (data instanceof Uint8Array) return data;
+  if (data instanceof ArrayBuffer) return new Uint8Array(data);
+  return new Uint8Array(await data.arrayBuffer());
+}
+
 /**
  * Registers plugins and publishes plugin/view-stream events (e.g. EXPORT_REQUESTED).
  */
 export class PluginHost {
   private readonly plugins: GridPlugin[] = [];
   private readonly disposers: Array<() => void> = [];
+  private readonly importPayloads = new Map<string, Uint8Array>();
   private version = 0;
 
   constructor(private readonly deps: PluginHostDeps) {}
+
+  private takeImportPayload(correlationId: string): Uint8Array | undefined {
+    return this.importPayloads.get(correlationId);
+  }
 
   private createBus(): PluginEventBus {
     const { eventStore, tableId, actorId } = this.deps;
@@ -71,6 +93,7 @@ export class PluginHost {
       session: this.deps.session,
       query: this.deps.query,
       eventStore: this.deps.eventStore,
+      resolveImportData: (correlationId) => this.takeImportPayload(correlationId),
     };
 
     for (const plugin of plugins) {
@@ -109,9 +132,69 @@ export class PluginHost {
     });
   }
 
+  async requestImport(options: RequestImportOptions): Promise<void> {
+    if (options.format !== 'xlsx') {
+      throw new Error(`Unsupported import format: ${options.format}`);
+    }
+
+    const correlationId = options.correlationId ?? createEventId();
+    const bytes = await toUint8Array(options.data);
+    this.importPayloads.set(correlationId, bytes);
+
+    if (!this.plugins.some((p) => p.name === 'excel-import')) {
+      this.importPayloads.delete(correlationId);
+      throw new Error('NO_IMPORT_PLUGIN');
+    }
+
+    const bus = this.createBus();
+    const payload: ImportRequestedPayload = {
+      format: 'xlsx',
+      collectionScope: options.collectionScope ?? 'active',
+      sheetName: options.sheetName,
+      byteLength: bytes.byteLength,
+    };
+
+    const finished = new Promise<'ok' | string>((resolve) => {
+      const unsub = this.deps.eventStore.subscribeAll((event) => {
+        if (event.correlationId !== correlationId) return;
+        if (event.type === 'XLSX_IMPORT_COMPLETED') {
+          unsub();
+          resolve('ok');
+        }
+        if (event.type === 'XLSX_IMPORT_FAILED') {
+          unsub();
+          const msg =
+            (event.payload as { message?: string })?.message ?? 'IMPORT_FAILED';
+          resolve(msg);
+        }
+      });
+    });
+
+    try {
+      await bus.publish({
+        eventId: createEventId(),
+        type: 'IMPORT_REQUESTED',
+        tableId: this.deps.tableId,
+        streamId: `table/${this.deps.tableId}/view`,
+        version: 0,
+        occurredAt: Date.now(),
+        actorId: this.deps.actorId,
+        correlationId,
+        payload,
+      });
+      const outcome = await finished;
+      if (outcome !== 'ok') {
+        throw new Error(outcome);
+      }
+    } finally {
+      this.importPayloads.delete(correlationId);
+    }
+  }
+
   dispose(): void {
     for (const dispose of this.disposers) dispose();
     this.disposers.length = 0;
     this.plugins.length = 0;
+    this.importPayloads.clear();
   }
 }

@@ -8,14 +8,29 @@
 
 ## Current Snapshot
 
-- آخرین کار انجام‌شده: **PR-38 — پاک‌سازی type debt UI میزبان**
-- وضعیت کلی: **طرح اجرایی ۱۰۰٪ کامل** (Phase 1–5 / PR-1 … PR-38)
-- آخرین نتیجهٔ تست ثبت‌شده: **25 فایل تست / 104 تست / همه پاس**
-- وضعیت باقی‌مانده: فقط backlog اختیاری خارج از طرح (نه کار جا‌ماندهٔ فاز)
+- آخرین کار انجام‌شده: **Demo playground QA surface — overlap / Jalali mask / DnD / row actions / pagination / search**
+- وضعیت کلی: **طرح اجرایی ۱۰۰٪ کامل** (Phase 1–5 / PR-1 … PR-38) + توسعهٔ اختیاری دمو
+- آخرین نتیجهٔ تست ثبت‌شده: **25 فایل تست / 104 تست / همه پاس** (قبل از این کار دمو؛ تست‌های هسته تغییر نکرده‌اند)
+- وضعیت باقی‌مانده: backlog اختیاری (sticky overlap به‌عنوان API هسته، peer DatePicker، column DnD UI)
 
 ---
 
 ## Completed Work
+
+### Demo playground — سطح QA تعاملی (۲۰۲۶-۰۹-۰۸)
+
+- گزارش کامل: [`docs/demo-playground-report.md`](./docs/demo-playground-report.md)
+- هدف: قابل‌رؤیت کردن قابلیت‌هایی که در هسته/ViewIntent بودند ولی در playground دیده نمی‌شدند
+- انجام‌شده در دمو:
+  1. **روی‌هم‌افتادگی سلول** — sticky ID/Item + اسکرول افقی + دکمهٔ toggle
+  2. **DatePicker ماسک‌دار جلالی** — `react-persian-range-picker` با `showMask` روی ستون `date`
+  3. **Drag & drop ردیف** — `ROW_REORDERED` از دستهٔ ⋮⋮
+  4. **اکشن سمپل سطر** — کپی / حذف / افزودن (`DUPLICATE_ROW` / `DELETE_ROW` / `ADD_EMPTY_ROW`)
+  5. **صفحه‌بندی** — حالت Pagination مقابل VirtualList با `CHANGE_PAGE` / `CHANGE_PAGE_SIZE`
+  6. **جستجو** — نوار Find/Prev/Next + `SET_GRID_SEARCH`
+  7. رندر پویای ستون‌ها از `DEMO_COLUMNS` (رفع hard-code قبلی)
+- فایل‌های اصلی: `demo/src/DemoComponent.tsx`, `DemoDateCell.tsx`, `demoHelpers.ts`, `fixtures.ts`, `site.module.css`
+- وابستگی: `react-persian-range-picker` به‌عنوان `devDependency` (فقط playground)
 
 ### PR-1 — Characterization Tests
 
@@ -611,6 +626,8 @@
 
 - فایل‌های host-glue هنوز `@ts-nocheck` دارند تا peer deps واقعی (antd / atoms / redux) اضافه شوند — **اختیاری**
 - hostهای قدیمی که به pagination وابسته‌اند باید صریحاً `virtualization={false}` بگذارند — **اختیاری / مهاجرت محصول**
+- sticky cell-overlap هنوز chrome دمو است؛ API هسته برای merge/sticky نداريم — جزئیات در `docs/demo-playground-report.md`
+- DatePicker جلالی فقط در playground؛ هنوز peer/CellRenderer رسمی نیست
 
 ---
 
@@ -618,7 +635,11 @@
 
 > هیچ کار اجباری از EXECUTION_PLAN باقی نمانده است.
 
-Backlog اختیاری (Phase 6+ در صورت تصمیم جداگانه):
+Backlog اختیاری (Phase 6+ / ادامهٔ دمو در صورت تصمیم جداگانه):
 
 1. جایگزینی تدریجی `@ts-nocheck` host-glue با peer deps تایپی واقعی
 2. مهاجرت تدریجی hostهای قدیمی در صورت نیاز به pagination
+3. API sticky/overlap یا merge سلول در کتابخانه
+4. optional peer برای `react-persian-range-picker` در CellRenderer
+5. VirtualList reveal برای نتایج `SET_GRID_SEARCH`
+6. Column drag UI روی `COLUMN_REORDERED`

@@ -56,14 +56,21 @@ export type {
   ExportSource,
 } from './application/plugins/GridPlugin';
 export { PluginHost } from './application/plugins/PluginHost';
-export type { RequestExportOptions } from './application/plugins/PluginHost';
+export type {
+  RequestExportOptions,
+  RequestImportOptions,
+} from './application/plugins/PluginHost';
 export { createEngineGridQuery } from './application/plugins/createEngineGridQuery';
 export type { PdfRenderer } from './application/ports/PdfRenderer';
 export {
   ExcelExportPlugin,
+  ExcelImportPlugin,
   exportActiveCollectionToExcel,
   buildExportTable,
   buildXlsxBlob,
+  parseXlsxBlob,
+  mapImportedSheet,
+  applyImportedRows,
 } from './packages/plugins/excel/src';
 export {
   PdfExportPlugin,

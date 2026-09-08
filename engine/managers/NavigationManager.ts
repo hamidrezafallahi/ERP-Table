@@ -101,7 +101,14 @@ export class NavigationManager {
     const state = store.getState();
     const firstEditable = state.table
       .getColumns()
-      .find(c => c.editable && c.fieldName !== 'index' && !c.hidden);
+      .find(
+        c =>
+          c.editable !== false &&
+          c.fieldName !== 'index' &&
+          c.fieldType !== 'index' &&
+          c.fieldType !== 'static' &&
+          !c.hidden,
+      );
 
     if (!firstEditable) return;
 
@@ -202,13 +209,14 @@ export class NavigationManager {
       .map(([key]) => key);
 
     const columns = table
-      .getColumns()
+      .getActiveCollectionColumns()
       .filter(
         c =>
           !c.hidden &&
-          c.editable &&
+          c.editable !== false &&
           !disabledCols.includes(c.fieldName) &&
           c.fieldName !== 'index' &&
+          c.fieldType !== 'index' &&
           c.fieldType !== 'static',
       );
 
@@ -221,8 +229,9 @@ export class NavigationManager {
 
     // حرکت در همان سطر
     if (nextColumn !== undefined) {
-      store.setState(() => ({
-        ...state,
+      store.setState(prev => ({
+        ...prev,
+        activeRowId: cmd.rowId,
         activeCell: { rowId: cmd.rowId, columnId: nextColumn.fieldName },
       }));
       await this.repo.save(cmd.store, store.getState().table);
@@ -354,97 +363,48 @@ export class NavigationManager {
     const store = this.getStore(cmd.tableKey);
     if (!store) return;
 
-    const view = this.getViewState();
-    if (!view) return;
+    const { table } = store.getState();
+    if (!table) return;
 
-    const visibleRows = view.rows;
-    const currentIndex = visibleRows.findIndex(r => r.id === cmd.rowId);
-    const nextIndex =
-      cmd.direction === 'down' ? currentIndex + 1 : currentIndex - 1;
+    // Full row order (not paginated view.rows) so VirtualList can navigate.
+    const navigable = [...table.getRows()]
+      .filter(r => r.rowState.value !== 'Delete')
+      .sort(
+        (a, b) =>
+          (Number(a.getCell('index')?.getValue()) || 0) -
+          (Number(b.getCell('index')?.getValue()) || 0),
+      );
+    const curIdx = navigable.findIndex(r => r.id.value === cmd.rowId);
+    if (curIdx === -1) return;
 
-    // pre-fetch visibility برای سطر بعدی (قبل از setState)
-    if (nextIndex >= 0 && nextIndex < visibleRows.length) {
-      const nextRow = store
-        .getState()
-        .table.getRows()
-        .find(r => r.id.value === visibleRows[nextIndex].id);
-      if (nextRow) {
-        await this.fetchVisibilityCondition(cmd, nextRow);
-      }
-    }
-
-    store.setState(prev => {
-      const currentView = this.getViewState();
-      if (!currentView) return prev;
-
-      const rows = currentView.rows;
-      const curIdx = rows.findIndex(r => r.id === cmd.rowId);
-      if (curIdx === -1) return prev;
-
-      const nxtIdx =
-        cmd.direction === 'down' ? curIdx + 1 : curIdx - 1;
-
-      if (nxtIdx >= 0 && nxtIdx < rows.length) {
-        const nextRow = rows[nxtIdx];
-        return {
-          ...prev,
-          activeRowId: nextRow.id,
-          activeCell: { rowId: nextRow.id, columnId: cmd.columnId },
-        };
-      }
-
-      const isAtLastRow =
-        cmd.direction === 'down' && curIdx === rows.length - 1;
-      const isAtFirstRow = cmd.direction === 'up' && curIdx === 0;
-
-      if (
-        (isAtLastRow && currentView.pagination.canNext) ||
-        (isAtFirstRow && currentView.pagination.canPrev)
-      ) {
-        return { ...prev, activeCell: null };
-      }
-
-      return prev;
-    });
-
-    // تغییر صفحه بعد از setState
-    const currentView = this.getViewState();
-    if (!currentView) return;
-
-    const active = currentView.activeCell;
-
-    if (!active && cmd.direction === 'down' && currentView.pagination.canNext) {
-      this.dispatch({
-        type: 'CHANGE_PAGE',
-        tableKey: cmd.tableKey,
-        page: currentView.pagination.page + 1,
-        store: cmd.store,
-      }).then(() => {
-        const newView = this.getViewState();
-        if (!newView || newView.rows.length === 0) return;
-        this.setActiveCell({
+    const nxtIdx = cmd.direction === 'down' ? curIdx + 1 : curIdx - 1;
+    if (nxtIdx < 0 || nxtIdx >= navigable.length) {
+      const view = this.getViewState();
+      if (cmd.direction === 'down' && view?.pagination.canNext) {
+        void this.dispatch({
+          type: 'CHANGE_PAGE',
+          store: cmd.store,
           tableKey: cmd.tableKey,
-          rowId: newView.rows[0].id,
-          columnId: cmd.columnId,
+          page: view.pagination.page + 1,
         });
-      });
+      } else if (cmd.direction === 'up' && view?.pagination.canPrev) {
+        void this.dispatch({
+          type: 'CHANGE_PAGE',
+          store: cmd.store,
+          tableKey: cmd.tableKey,
+          page: view.pagination.page - 1,
+        });
+      }
+      return;
     }
 
-    if (!active && cmd.direction === 'up' && currentView.pagination.canPrev) {
-      this.dispatch({
-        type: 'CHANGE_PAGE',
-        tableKey: cmd.tableKey,
-        page: currentView.pagination.page - 1,
-        store: cmd.store,
-      }).then(() => {
-        const newView = this.getViewState();
-        if (!newView || newView.rows.length === 0) return;
-        this.setActiveCell({
-          tableKey: cmd.tableKey,
-          rowId: newView.rows[newView.rows.length - 1].id,
-          columnId: cmd.columnId,
-        });
-      });
-    }
+    const nextRow = navigable[nxtIdx];
+    await this.fetchVisibilityCondition(cmd, nextRow);
+
+    store.setState(prev => ({
+      ...prev,
+      activeRowId: nextRow.id.value,
+      activeCell: { rowId: nextRow.id.value, columnId: cmd.columnId },
+    }));
   }
 }

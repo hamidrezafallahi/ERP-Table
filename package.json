@@ -48,6 +48,7 @@
     "@vitejs/plugin-react-swc": "^3.11.0",
     "react": "^19.0.0",
     "react-dom": "^19.2.8",
+    "react-persian-range-picker": "^1.1.1",
     "tsup": "^8.5.0",
     "typescript": "^5.8.2",
     "vite": "^5.4.21",
@@ -66,5 +67,8 @@
     "event-sourcing",
     "ddd",
     "react"
-  ]
+  ],
+  "dependencies": {
+    "fflate": "^0.8.3"
+  }
 }

@@ -162,6 +162,24 @@ export const EVENT_CATALOG: readonly EventCatalogEntry[] = [
     undoable: false,
     description: 'PDF plugin failed to export.',
   },
+  {
+    type: 'IMPORT_REQUESTED',
+    category: 'plugin',
+    undoable: false,
+    description: 'Host/plugin requested import (xlsx); typically view stream.',
+  },
+  {
+    type: 'XLSX_IMPORT_COMPLETED',
+    category: 'plugin',
+    undoable: false,
+    description: 'Excel plugin finished importing rows into the table.',
+  },
+  {
+    type: 'XLSX_IMPORT_FAILED',
+    category: 'plugin',
+    undoable: false,
+    description: 'Excel plugin failed to import.',
+  },
 ] as const;
 
 export function getEventCatalogEntry(type: string): EventCatalogEntry | undefined {

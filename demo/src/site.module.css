@@ -36,6 +36,12 @@
   font-family: Tahoma, 'Outfit', 'Segoe UI', sans-serif;
 }
 
+.pageEn {
+  direction: ltr;
+  text-align: left;
+  font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif;
+}
+
 .shell {
   width: min(1180px, calc(100% - 2rem));
   margin: 0 auto;
@@ -564,9 +570,47 @@
   direction: ltr;
 }
 
+.gridShellOverlap {
+  box-shadow: inset 0 0 0 1px rgba(26, 107, 85, 0.12);
+}
+
+.gridScroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.gridUnified {
+  max-height: 420px;
+  overflow: auto;
+}
+
+.gridRow {
+  display: grid;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0 0.85rem;
+  height: 44px;
+  border-bottom: 1px solid rgba(26, 107, 85, 0.08);
+  font-size: 0.82rem;
+  min-width: 980px;
+  position: relative;
+  background: #fff;
+  isolation: isolate;
+}
+
+/* Clip cell content so it never paints over the previous column */
+.gridRow > *:not(.indexSticky),
+.gridHeader > *:not(.indexSticky) {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+  z-index: 0;
+  background: inherit;
+}
+
 .gridHeader {
   display: grid;
-  grid-template-columns: 64px 1fr 100px 120px;
   gap: 0.5rem;
   padding: 0.65rem 0.85rem;
   background: var(--mist);
@@ -574,25 +618,268 @@
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--moss);
+  min-width: 980px;
+  isolation: isolate;
 }
 
-.gridRow {
-  display: grid;
-  grid-template-columns: 64px 1fr 100px 120px;
-  gap: 0.5rem;
+.gridRowOverlap .stickyCell,
+.gridHeader.gridRowOverlap .stickyCell {
+  position: sticky;
+  z-index: 5;
+  background: #fff;
+  box-shadow: 6px 0 10px -6px rgba(15, 40, 32, 0.35);
+  overflow: visible;
+}
+
+.gridHeader.gridRowOverlap .stickyCell {
+  background: var(--mist);
+  z-index: 6;
+}
+
+.indexSticky {
+  left: 0;
+  min-width: 0;
+  z-index: 5;
+  overflow: visible;
+  background: #fff;
+}
+
+.gridHeader .indexSticky {
+  background: var(--mist);
+}
+
+.indexCol {
+  display: flex;
   align-items: center;
-  padding: 0 0.85rem;
-  height: 40px;
-  border-bottom: 1px solid rgba(26, 107, 85, 0.08);
-  font-size: 0.82rem;
+  justify-content: space-between;
+  gap: 0.35rem;
+  width: 100%;
+  height: 100%;
+  padding: 0 0.15rem;
+  direction: ltr;
 }
 
-.gridRow input {
+.indexColDeleted {
+  opacity: 0.55;
+}
+
+.indexColStart {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.indexCheck {
+  width: auto;
+  margin: 0;
+  accent-color: var(--leaf);
+}
+
+.indexNumber {
+  min-width: 1.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--moss);
+  font-weight: 700;
+}
+
+.indexIconBtn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0.15rem 0.25rem;
+  border-radius: 0.3rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--moss);
+}
+
+.indexIconBtn:hover:not(:disabled) {
+  background: rgba(26, 107, 85, 0.1);
+}
+
+.indexIconBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.indexMenuWrap {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.indexMenu {
+  position: fixed;
+  z-index: 10000;
+  margin: 0;
+  padding: 0.35rem 0;
+  list-style: none;
+  min-width: 220px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  box-shadow: 0 12px 32px rgba(15, 40, 32, 0.22);
+  direction: ltr;
+  text-align: left;
+}
+
+.indexMenuDivider {
+  height: 1px;
+  margin: 0.35rem 0;
+  background: var(--line);
+}
+
+.indexMenuItem {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: none;
+  background: transparent;
+  padding: 0.4rem 0.75rem;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  direction: ltr;
+}
+
+.indexMenuItem:hover:not(:disabled) {
+  background: var(--mist);
+}
+
+.indexMenuItem:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.indexMenuExtra {
+  font-size: 0.68rem;
+  color: var(--moss);
+  direction: ltr;
+}
+
+.gridCellActive {
+  outline: 2px solid var(--leaf);
+  outline-offset: -2px;
+  background: #e8f5f0 !important;
+  z-index: 1;
+}
+
+.gridRowMatch {
+  background: #fff7d6;
+}
+
+.gridRowMatch .stickyCell,
+.gridRowMatch .dragHandle,
+.gridRowMatch .indexCol {
+  background: #fff7d6;
+}
+
+.dropBefore::before,
+.dropAfter::after {
+  content: '';
+  position: absolute;
+  left: 0.85rem;
+  right: 0.85rem;
+  height: 2px;
+  background: var(--leaf);
+  z-index: 5;
+}
+
+.dropBefore::before {
+  top: 0;
+}
+
+.dropAfter::after {
+  bottom: 0;
+}
+
+.dragHandle {
+  cursor: grab;
+  border: none;
+  background: transparent;
+  color: var(--moss);
+  font-size: 0.9rem;
+  letter-spacing: -0.1em;
+  padding: 0.1rem 0.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.gridRow input,
+.demoSearchInput,
+.demoSelect {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 0.4rem;
   padding: 0.25rem 0.4rem;
   font: inherit;
+  background: #fff;
+}
+
+.staticCell {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.dateCell {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.dateCell :global(*) {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.gridRow input {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.demoHint {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  color: var(--moss);
+}
+
+.searchBar {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.demoSelect {
+  width: auto;
+  min-width: 7rem;
+}
+
+.demoSearchInput {
+  width: min(220px, 100%);
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.75rem 0.85rem;
+  border-top: 1px solid var(--line);
+  background: var(--mist);
 }
 
 .demoLog {

@@ -49,3 +49,4 @@ Demo app lives under `demo/` and is **not** part of the published tsup bundle.
 - [public-api.md](./public-api.md) — exports & publish
 - [components.md](./components.md) — VirtualList / session / plugins
 - [event-catalog.md](./event-catalog.md) — stable event tokens
+- [demo-playground-report.md](./demo-playground-report.md) — playground QA features (overlap, DnD, search, pagination, Jalali mask)
