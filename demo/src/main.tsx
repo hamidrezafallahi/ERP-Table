@@ -6,7 +6,7 @@ import { InitialComponent } from './InitialComponent';
 /**
  * VITE_APP_MODE:
  * - `docs` (default) → marketing / live docs landing
- * - `dev` → interactive QA playground
+ * - `dev` → interactive QA playground (chrome + ERP table preview)
  *
  * Scripts: `npm run dev:docs` | `npm run dev` / `npm run dev:playground`
  */

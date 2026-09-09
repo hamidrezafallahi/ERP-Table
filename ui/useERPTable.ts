@@ -7,7 +7,6 @@ import {
 import type { GridSession } from '../application/session/GridSession';
 import { createERPTable } from '../bootstrap';
 import type { CreateERPTableConfig } from '../bootstrap/type';
-import { structuralEqual } from '../engine/equality';
 import type { TableSnapShot } from '../engine/type';
 import type {
   HistoryItem,
@@ -69,6 +68,7 @@ export function useERPTable(
     useState<UITableController | null>(null);
   const [session, setSession] = useState<GridSession | null>(null);
   const [rows, setRows] = useState<TableSnapShot | null>(null);
+  const [, setViewVersion] = useState(0);
   const [undoFlags, setUndoFlags] = useState({ canUndo: false, canRedo: false });
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [changelog, setChangelog] = useState<ChangelogEntry[]>([]);
@@ -92,23 +92,30 @@ export function useERPTable(
     };
   }, [config.tableKey, config.columns]);
 
-  // ---------- selector: rows only when snapshot structurally changes ----------
+  // Snapshot equality skips selection / active-row / expand because those live
+  // on view state, not TableSnapShot. Bump viewVersion on every store tick so
+  // checkboxes and toolbar counts re-render (same as the ERP host hook).
   useEffect(() => {
     if (!controller) return;
 
     let cancelled = false;
-    const syncRows = (snapshot: TableSnapShot | null) => {
-      if (cancelled || !snapshot) return;
-      setRows(snapshot);
+    const syncView = () => {
+      if (cancelled) return;
+      const snapshot = controller.getSnapShot('active');
+      if (snapshot) setRows(snapshot);
+      setViewVersion((version) => version + 1);
     };
 
-    syncRows(controller.getSnapShot('active'));
+    syncView();
+    const unsubscribe = controller.subscribe(syncView);
 
-    const unsubscribe = controller.subscribeSelected(
-      () => controller.getSnapShot('active'),
-      syncRows,
-      structuralEqual,
-    );
+    if (!unsubscribe) {
+      const retryTimer = window.setTimeout(syncView, 0);
+      return () => {
+        cancelled = true;
+        window.clearTimeout(retryTimer);
+      };
+    }
 
     return () => {
       cancelled = true;

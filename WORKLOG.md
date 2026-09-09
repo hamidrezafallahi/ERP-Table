@@ -8,14 +8,26 @@
 
 ## Current Snapshot
 
-- آخرین کار انجام‌شده: **Demo playground QA surface — overlap / Jalali mask / DnD / row actions / pagination / search**
-- وضعیت کلی: **طرح اجرایی ۱۰۰٪ کامل** (Phase 1–5 / PR-1 … PR-38) + توسعهٔ اختیاری دمو
-- آخرین نتیجهٔ تست ثبت‌شده: **25 فایل تست / 104 تست / همه پاس** (قبل از این کار دمو؛ تست‌های هسته تغییر نکرده‌اند)
-- وضعیت باقی‌مانده: backlog اختیاری (sticky overlap به‌عنوان API هسته، peer DatePicker، column DnD UI)
+- آخرین کار انجام‌شده: **ERPTable published chrome — self-contained UI matching ERP host (pagination default, CSS tokens, FetchRemoteApi)**
+- وضعیت کلی: کتابخانه آمادهٔ `npm i @fallahi/erp-table` با همان ظاهر و منطق صفحات ERP (voucher / cheque / inventory / bank)
+- تغییرات فقط در `C:\fallahi\erp table`
 
 ---
 
 ## Completed Work
+
+### Publish ERPTable chrome as drop-in package (۲۰۲۶-۰۹-۰۹)
+
+- ERP host usages audited: voucherTemplate, inventoryVoucher, cheque organisms, bank withdrawal, issuance, receipt&deploy, bankedCheque.
+- Library UI no longer imports ERP atoms / antd / next-intl / RTK Query.
+- Injected CSS recreates ERP tokens (`gray-gray3`, `blue-blue11`, row `h-9`, pagination chrome).
+- Default `virtualization={false}` so pagination matches ERP pages.
+- Browser `FetchRemoteApi` (cookie `_auth` + `persist:arianERP`) is the default remote adapter.
+- `publish/entry.ts` now exports `ERPTable`, `UITableController`, `RowStateEnum`, `IMultiSelectConfig`, `TableSnapShot`, `ItemType`.
+- Playground: `demo/src/ERPTablePlayground.tsx`.
+- `useERPGrid` stays host-only (Next/Redux page glue).
+
+---
 
 ### Demo playground — سطح QA تعاملی (۲۰۲۶-۰۹-۰۸)
 

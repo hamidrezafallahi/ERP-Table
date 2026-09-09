@@ -38,6 +38,9 @@ export function ERPTableBody({
           tableKey={tableKey}
           draggedRowIdRef={dragRowId}
           moreDetailComponent={MoreDetailComponent}
+          isSelected={!!table.selectedRows?.[row.id]}
+          isActive={!!controller.isActiveRow(row.id)}
+          isCut={!!controller.isCutRow(row.id)}
         />
       ))}
     </tbody>

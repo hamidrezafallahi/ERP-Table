@@ -2,10 +2,8 @@
 
 import React, { useRef, useState } from 'react';
 
-import { useTranslations } from 'next-intl';
-
-import { CustomTooltip } from '@components/atoms/defaultElements';
-import { Magnifier } from '@components/atoms/iconComponents';
+import { useTranslations } from '../host';
+import { CustomTooltip, Magnifier } from '../primitives';
 
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { GridSearchPanel } from './GridSearchPanel';

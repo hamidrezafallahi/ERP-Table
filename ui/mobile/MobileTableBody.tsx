@@ -26,6 +26,9 @@ export function MobileTableBody({
           columns={columns}
           controller={controller}
           tableKey={tableKey}
+          isSelected={!!controller.isSelectedRow(row.id)}
+          isActive={!!controller.isActiveRow(row.id)}
+          isCut={!!controller.isCutRow(row.id)}
         />
       ))}
     </tbody>

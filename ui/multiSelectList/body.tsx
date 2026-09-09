@@ -1,9 +1,7 @@
 import React from 'react';
 
-import { useLocale } from 'next-intl';
-import { useTranslations } from 'use-intl';
-
-import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
+import { useLocale, useTranslations } from '../host';
+import { CustomCheckbox } from '../primitives';
 
 import { valueParser } from '../helper';
 import { IMultiSelectConfig } from '../type';

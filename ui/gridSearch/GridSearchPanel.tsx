@@ -9,11 +9,9 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Select } from 'antd';
-import { useTranslations } from 'next-intl';
-
-import { LeftChevron, RightChevron } from '@components/atoms/iconComponents';
-import { useMediaQuery } from '@hooks/custom';
+import { Select } from '../primitives';
+import { useMediaQuery, useTranslations } from '../host';
+import { LeftChevron, RightChevron } from '../primitives';
 
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { useGridSearchState } from '../hooks/useEngineSelector';
@@ -181,8 +179,8 @@ export function GridSearchPanel({
         options={columnOptions}
         placeholder={t('general.choice')}
         getPopupContainer={(trigger: HTMLElement) => trigger.parentElement ?? document.body}
-        onChange={(value: string) => {
-          setColumnId(value);
+        onChange={(value) => {
+          setColumnId(String(value ?? ''));
           setHasSearched(false);
         }}
       />

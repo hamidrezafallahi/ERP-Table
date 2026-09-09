@@ -1,11 +1,26 @@
 # @fallahi/erp-table
 
-Event-driven ERP grid core — DDD bounded context with React virtual adapter.
+Event-driven ERP grid with the same React table chrome as the ERP host (pagination, cells, toolbar, mobile).
 
 ## Install
 
 ```bash
 npm i @fallahi/erp-table
+```
+
+```tsx
+import { ERPTable } from '@fallahi/erp-table';
+
+<ERPTable
+  store="erp"
+  tableKey={pageId}
+  actor={actor}
+  columns={columnConfig}
+  rows={rows}
+  tableHeight={tableHeight}
+  multiSelectConfig={multiSelectConfig}
+  onReady={setController}
+/>
 ```
 
 ## Docs
@@ -21,7 +36,7 @@ npm i @fallahi/erp-table
 
 ```bash
 npm run dev:docs        # landing / live docs
-npm run dev             # QA playground (createERPTable + VirtualList)
+npm run dev             # ERPTable playground
 ```
 
 ## Build & publish

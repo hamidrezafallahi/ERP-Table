@@ -40,7 +40,7 @@ class SilentAuditLogger implements AuditLogger {
 }
 
 describe('DesktopTable virtualization path (core)', () => {
-  it('defaults virtualization on when session exists; opt-out keeps pagination mode', async () => {
+  it('defaults virtualization off so ERP pagination chrome stays; opt-in enables virtual mode', async () => {
     const { resolveDesktopVirtualization } = await import(
       '../resolveDesktopVirtualization'
     );
@@ -67,7 +67,7 @@ describe('DesktopTable virtualization path (core)', () => {
       rows: [{ id: 1, collection: 'default', values: { name: 'a' } }],
     });
 
-    expect(resolveDesktopVirtualization(undefined, result.session)).toBe(true);
+    expect(resolveDesktopVirtualization(undefined, result.session)).toBe(false);
     expect(resolveDesktopVirtualization(true, result.session)).toBe(true);
     expect(resolveDesktopVirtualization(false, result.session)).toBe(false);
     expect(resolveDesktopVirtualization(undefined, null)).toBe(false);

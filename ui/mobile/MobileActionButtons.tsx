@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
 
-import { useTranslations } from 'next-intl';
-
+import { useTranslations } from '../host';
 import {
   CustomModal,
   CustomTooltip,
-} from '@components/atoms/defaultElements';
-import {
   ClipboardCheck,
   PlusIcon,
   TrashBin,
-} from '@components/atoms/iconComponents';
+} from '../primitives';
 
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { GridSearchControl } from '../gridSearch/GridSearchControl';

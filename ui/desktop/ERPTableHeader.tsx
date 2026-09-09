@@ -4,8 +4,7 @@ import React, {
   useState,
 } from 'react';
 
-import { CustomDropdownButton } from '@components/atoms/defaultElements';
-import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
+import { CustomDropdownButton, CustomCheckbox } from '../primitives';
 
 import { ColumnSchema } from '../../bootstrap/type';
 import { ValidationCallbackResult } from '../../engine/type';
@@ -95,15 +94,17 @@ export function ERPTableHeader({controller, tableKey, header}: Props) {
             return (
               <th
                 key={col.fieldName}
-                style={{...col.style, width: 120}}
+                style={{...col.style, width: 168, minWidth: 168}}
                 className={`  px-2 text-xs border  text-start whitespace-nowrap ${col.className || ""}`}
               >
-                <CustomCheckbox
-                  checked={isSelectedActivePageRows}
-                  onClick={handleSelectActivePageRows}
-                />
+                <div className="flex items-center gap-2">
+                  <CustomCheckbox
+                    checked={isSelectedActivePageRows}
+                    onClick={handleSelectActivePageRows}
+                  />
 
-                {col.fieldCaption}
+                  {col.fieldCaption}
+                </div>
               </th>
             );
           }

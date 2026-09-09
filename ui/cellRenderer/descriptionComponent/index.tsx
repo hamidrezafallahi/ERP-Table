@@ -1,33 +1,24 @@
-// @ts-nocheck
 "use client";
-// Host-coupled description menu (ERP voucher APIs).
 import React, {
   forwardRef,
   Ref,
   useMemo,
 } from 'react';
 
-import { useLocale } from 'next-intl';
-
-import {
-  CustomDropdownButton,
-  CustomTooltip,
-} from '@components/atoms/defaultElements';
-import {
-  Dots,
-  SavePlus,
-} from '@components/atoms/iconComponents';
 import { ColumnSchema } from '../../../bootstrap/type';
 import {
   UITableController,
 } from '../../../infrastructure/ui/UITableController';
-import { useGetData } from '@services/base';
-import { IDependOn } from '@type/elementType';
-
+import { useLocale, useRemoteQuery } from '../../host';
+import {
+  CustomDropdownButton,
+  CustomTooltip,
+  Dots,
+  SavePlus,
+} from '../../primitives';
 import { UIRow } from '../../type';
 import {
   VoucherTypeApiResponse,
-  voucherTypeReq,
 } from './type';
 
 export interface DescriptionComponentProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -74,45 +65,38 @@ export const DescriptionComponent = forwardRef<
     dispatchChangeValue,
     activeCell,
   } = props;
-  const { endpoint, dependOn } = meta.dynamicSource;
+  const { endpoint, dependOn } = meta.dynamicSource ?? {};
 
   const hasDependValue = (
-  dependOn: IDependOn | IDependOn[]
-) => {
-
-  if(Array.isArray(dependOn)){
-    return dependOn.every(
-      item => item.value !== null && item.value !== undefined
-    );
-  }
-
-  return dependOn.value !== null && dependOn.value !== undefined;
-};
-    const dependencyBody = Array.isArray(dependOn)
-  ? Object.fromEntries(
-      dependOn.map(item => [
-        item.fieldName,
-        item.value
-      ])
-    )
-  : dependOn
-    ? {
-        [dependOn.fieldName]: dependOn.value
-      }
-    : {};
-  const { data: menuData } = useGetData<VoucherTypeApiResponse, voucherTypeReq>(
-    {
-      url: endpoint,
-      body: {
-        ...dependencyBody,
-        PagingInfo: {
-          PageNumber: 1,
-          PageRecordCount: 10000,
-        },
+    dependOn:
+      | { fieldName: string; value: unknown }
+      | Array<{ fieldName: string; value: unknown }>,
+  ) => {
+    if (Array.isArray(dependOn)) {
+      return dependOn.every(
+        (item) => item.value !== null && item.value !== undefined,
+      );
+    }
+    return dependOn.value !== null && dependOn.value !== undefined;
+  };
+  const dependencyBody = Array.isArray(dependOn)
+    ? Object.fromEntries(
+        dependOn.map((item) => [item.fieldName, item.value]),
+      )
+    : dependOn
+      ? { [dependOn.fieldName]: dependOn.value }
+      : {};
+  const { data: menuData } = useRemoteQuery<VoucherTypeApiResponse>({
+    url: endpoint,
+    body: {
+      ...dependencyBody,
+      PagingInfo: {
+        PageNumber: 1,
+        PageRecordCount: 10000,
       },
-      skip: dependOn ? !hasDependValue(dependOn) : false,
     },
-  );
+    skip: dependOn ? !hasDependValue(dependOn) : false,
+  });
   const items = useMemo(
     () =>
       menuData?.Data?.map((item, index) => ({

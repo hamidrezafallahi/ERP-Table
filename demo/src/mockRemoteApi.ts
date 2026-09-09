@@ -84,13 +84,66 @@ export class DemoMockRemoteApi implements RemoteApi {
     ) {
       return {
         Data: Object.values(DEMO_PRODUCT_CATALOG).map((p) => ({
+          _SelectId: p.ProductId,
+          _SelectValue: p.ProductId,
+          _SelectDisplay: `${p.ProductId} — ${p.ProductName}`,
           selectValue: p.ProductId,
           selectDisplay: `${p.ProductId} — ${p.ProductName}`,
-          _SelectDisplay: `${p.ProductId} ${p.ProductName}`.toLowerCase(),
         })),
+        TotalCount: Object.keys(DEMO_PRODUCT_CATALOG).length,
+        ReturnCount: Object.keys(DEMO_PRODUCT_CATALOG).length,
       } as TResponse;
     }
 
-    return null as TResponse;
+    if (
+      endpoint === 'api/demo/select/account' ||
+      endpoint.endsWith('api/demo/select/account')
+    ) {
+      const accounts = [
+        { id: '1103', label: 'موجودی نزد بانکهای ریالی' },
+        { id: '2101', label: 'حسابهای پرداختنی تجاری' },
+        { id: '1108', label: 'اسناد دریافتنی' },
+      ];
+      return {
+        Data: accounts.map((a) => ({
+          _SelectId: a.id,
+          _SelectValue: a.id,
+          _SelectDisplay: a.label,
+          selectValue: a.id,
+          selectDisplay: a.label,
+        })),
+        TotalCount: accounts.length,
+        ReturnCount: accounts.length,
+      } as TResponse;
+    }
+
+    if (
+      endpoint === 'api/demo/select/tafsili' ||
+      endpoint.endsWith('api/demo/select/tafsili')
+    ) {
+      const items = [
+        {
+          id: 'parsian-sohrevardi',
+          label: 'بانک پارسیان-سهروردی - جاری - ۰۰۱۲۳۶۵۴۷۸۹',
+        },
+        {
+          id: 'mellat-valiasr',
+          label: 'بانک ملت-ولیعصر - جاری - ۰۰۹۸۷۶۵۴۳۲۱',
+        },
+      ];
+      return {
+        Data: items.map((a) => ({
+          _SelectId: a.id,
+          _SelectValue: a.id,
+          _SelectDisplay: a.label,
+          selectValue: a.id,
+          selectDisplay: a.label,
+        })),
+        TotalCount: items.length,
+        ReturnCount: items.length,
+      } as TResponse;
+    }
+
+    return { Data: [], TotalCount: 0, ReturnCount: 0 } as TResponse;
   }
 }

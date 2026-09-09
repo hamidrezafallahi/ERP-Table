@@ -2,9 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 
-import { useTranslations } from "next-intl";
-
-import { CustomButton, CustomModal } from "@components/atoms/defaultElements";
+import { useTranslations } from "../host";
+import { CustomButton, CustomModal } from "../primitives";
 
 import { ColumnSchema } from "../../bootstrap/type";
 import { RowStateEnum } from "../../domain/value-objects";

@@ -12,6 +12,7 @@ import {
 
 import { DemoDateCell } from './DemoDateCell';
 import { DemoIndexCol } from './DemoIndexCol';
+import { ERPTableChromePreview } from './ERPTablePlayground';
 import {
   buildGridTemplate,
   cellText,
@@ -741,6 +742,15 @@ export default function DemoComponent() {
               {error}
             </p>
           )}
+        </section>
+
+        <section className={styles.demoCard}>
+          <h2 className={styles.demoCardTitle}>ERP chrome · اقلام سند</h2>
+          <p className={styles.demoCardLead}>
+            Table appearance only (voucher items). Playground fields above and
+            below are the original demo chrome — not part of the published table.
+          </p>
+          <ERPTableChromePreview />
         </section>
 
         <section className={styles.demoCard}>

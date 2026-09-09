@@ -11,27 +11,18 @@
     "bootstrap/**/*.ts",
     "domain/**/*.ts",
     "engine/**/*.ts",
-    "infrastructure/columns/**/*.ts",
-    "infrastructure/eventStore/**/*.ts",
-    "infrastructure/snapshot/**/*.ts",
-    "infrastructure/perf/**/*.ts",
-    "infrastructure/Repositories/noopRemoteApi.ts",
+    "infrastructure/**/*.ts",
     "packages/plugins/**/*.ts",
-    "ui/virtual/**/*.ts",
-    "ui/virtual/**/*.tsx",
-    "ui/hostTypes.ts",
-    "ui/type.ts"
+    "ui/**/*.ts",
+    "ui/**/*.tsx",
+    "types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "**/*.spec.ts",
     "**/__tests__/**",
-    "infrastructure/Repositories/fetchRemoteApi.ts",
-    "ui/cellRenderer/**",
-    "ui/desktop/**",
-    "ui/mobile/**",
-    "ui/gridSearch/**",
-    "ui/index.tsx"
+    "ui/useERPGrid.ts",
+    "ui/cellRenderer/descriptionComponent/useVoucherDescription.tsx"
   ]
 }

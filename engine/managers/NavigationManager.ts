@@ -100,7 +100,7 @@ export class NavigationManager {
 
     const state = store.getState();
     const firstEditable = state.table
-      .getColumns()
+      .getActiveCollectionColumns()
       .find(
         c =>
           c.editable !== false &&

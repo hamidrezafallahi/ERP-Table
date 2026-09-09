@@ -4,17 +4,8 @@ import React, {
   useState,
 } from 'react';
 
-import { Pagination } from 'antd';
-import { useLocale } from 'next-intl';
-
-import { CustomButton } from '@components/atoms/defaultElements';
-import InputText from '@components/atoms/defaultElements/inputText';
-import {
-  LeftChevron,
-  RightChevron,
-} from '@components/atoms/iconComponents';
-import { useGetData } from '@services/base';
-import { IDependOn } from '@type/elementType';
+import { Pagination, CustomButton, InputText, LeftChevron, RightChevron } from '../primitives';
+import { useLocale, useRemoteQuery } from '../host';
 
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { IMultiSelectConfig } from '../type';
@@ -42,33 +33,27 @@ export default function MultiselectList({
   const [quickSearch, setQuickSearch] = useState("");
   const { endpoint, repoViewId, dependOn, ...bodyRequest } = dynamicValue;
   const hasDependValue = (
-  dependOn: IDependOn | IDependOn[]
-) => {
-
-  if(Array.isArray(dependOn)){
-    return dependOn.every(
-      item => item.value !== null && item.value !== undefined
-    );
-  }
-
-  return dependOn.value !== null && dependOn.value !== undefined;
-};
-    const dependencyBody = Array.isArray(dependOn)
-  ? Object.fromEntries(
-      dependOn.map(item => [
-        item.fieldName,
-        item.value
-      ])
-    )
-  : dependOn
-    ? {
-        [dependOn.fieldName]: dependOn.value
-      }
-    : {};
+    dependOn:
+      | { fieldName: string; value: unknown }
+      | Array<{ fieldName: string; value: unknown }>,
+  ) => {
+    if (Array.isArray(dependOn)) {
+      return dependOn.every(
+        (item) => item.value !== null && item.value !== undefined,
+      );
+    }
+    return dependOn.value !== null && dependOn.value !== undefined;
+  };
+  const dependencyBody = Array.isArray(dependOn)
+    ? Object.fromEntries(
+        dependOn.map((item) => [item.fieldName, item.value]),
+      )
+    : dependOn
+      ? { [dependOn.fieldName]: dependOn.value }
+      : {};
   const body = {
     ...bodyRequest,
-      ...dependencyBody,
-
+    ...dependencyBody,
     PagingInfo: {
       PageRecordCount: pageRecordCount,
       PageNumber: pageNumber,
@@ -77,12 +62,13 @@ export default function MultiselectList({
     RepoViewId: repoViewId,
   };
   const existBody = Object.fromEntries(
-    Object.entries(body).filter(([_, value]) => value !== null),
+    Object.entries(body).filter(([, value]) => value !== null),
   );
-  const { data } = useGetData<any, null>({
+  const { data } = useRemoteQuery<any[]>({
     url: endpoint,
     body: existBody,
-skip: dependOn ? !hasDependValue(dependOn) : false,  });
+    skip: dependOn ? !hasDependValue(dependOn) : false,
+  });
   // const processedData = useProcessedData({
   //   data: data?.Data,
   //   columnsConfig: ListConfig,

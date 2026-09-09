@@ -1,11 +1,10 @@
-import { useTranslations } from 'next-intl';
-
-import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
+import { useTranslations } from '../host';
 import {
+  CustomCheckbox,
   EditPencil,
   RedTrashBin,
   Undo,
-} from '@components/atoms/iconComponents';
+} from '../primitives';
 
 import { ColumnSchema } from '../../bootstrap/type';
 import { RowStateEnum } from '../../domain/value-objects';
@@ -50,11 +49,11 @@ export function MobileIndexCol({
         {!isDeleted && (
           <CustomCheckbox
             disabled={isDeleted}
-            checked={isSelectedRow}
+            checked={!!isSelectedRow}
             onClick={handleSelectRow}
           />
         )}
-        <div className="w-[20px] text-xs text-center">{idx + 1}</div>
+        <div className="w-[20px] text-xs text-center">{(idx + 1).toLocaleString('fa-IR')}</div>
 
         {!isDeleted && (
           <button

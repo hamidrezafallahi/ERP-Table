@@ -1,14 +1,13 @@
-import { useTranslations } from 'next-intl';
-
-import { CustomDropdownButton } from '@components/atoms/defaultElements';
-import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
+import { useLocale, useTranslations } from '../host';
 import {
+  CustomDropdownButton,
+  CustomCheckbox,
   Dots,
   DragIcon,
   Expand,
   RedTrashBin,
   Undo,
-} from '@components/atoms/iconComponents';
+} from '../primitives';
 
 import { ColumnSchema } from '../../bootstrap/type';
 import { RowStateEnum } from '../../domain/value-objects';
@@ -31,6 +30,7 @@ export const IndexCol: React.FC<IndexColProps> = ({
   meta,
 }) => {
   const t = useTranslations();
+  const locale = useLocale();
 
   const handleDeleteRow = () => {
     controller.dispatch({ type: "ROW_DELETED", rowId: row.id });
@@ -92,15 +92,17 @@ export const IndexCol: React.FC<IndexColProps> = ({
         {!isDeleted && (
           <CustomCheckbox
             disabled={isDeleted}
-            checked={isSelectedRow}
+            checked={!!isSelectedRow}
             onClick={handleSelectRow}
           />
         )}
-        <div className="w-[20px] text-xs text-center">{idx + 1}</div>
+        <div className="w-[20px] text-xs text-center">
+          {(idx + 1).toLocaleString(locale === 'fa' ? 'fa-IR' : 'en-US')}
+        </div>
 
         {meta.enableMoveButton && !isDeleted && (
           <div
-            className="flex justify-center items-center w-[16px] h-[16px] cursor-grab active:cursor-grabbing"
+            className="erp-table-index-btn cursor-grab active:cursor-grabbing"
             draggable={false}
             onMouseDown={(e) => {
               const tr = e.currentTarget.closest("tr");
@@ -118,7 +120,7 @@ export const IndexCol: React.FC<IndexColProps> = ({
               e.stopPropagation();
               handleDeleteRow();
             }}
-            className="hover:bg-red-100"
+            className="erp-table-index-btn hover:bg-red-100"
           >
             {!isDeleted ? (
               <RedTrashBin config={{ width: 18, height: 18 }} />
@@ -132,7 +134,7 @@ export const IndexCol: React.FC<IndexColProps> = ({
           <button
             type="button"
             onClick={handleExpandRow}
-            className={`z-20  ${
+            className={`erp-table-index-btn z-20  ${
               isDeleted ? "cursor-not-allowed " : "hover:bg-zinc-200"
             } `}
             disabled={isDeleted}

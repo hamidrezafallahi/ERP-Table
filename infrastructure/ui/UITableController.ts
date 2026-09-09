@@ -1,6 +1,7 @@
 // adapters/ui/UITableController.ts
 
 import { AuditLogger } from '../../application/ports/AuditLogger';
+import type { RemoteApi } from '../../application/ports/RemoteApi';
 import { Row } from '../../domain/entities/Row';
 import {
   CollectionScope,
@@ -42,7 +43,12 @@ export class UITableController {
     private readonly historyPanelViewModel?: HistoryPanelViewModel,
     private readonly cellUndoStack?: CellUndoStack,
     private readonly session?: GridSession,
+    private readonly remoteApi?: RemoteApi,
   ) {}
+
+  getRemoteApi(): RemoteApi | undefined {
+    return this.remoteApi;
+  }
 
   // ─── private dispatch helpers ───────────────────────────────────────
 

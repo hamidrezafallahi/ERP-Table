@@ -1,13 +1,12 @@
 import type { GridSession } from '../../application/session/GridSession';
 
 /**
- * Desktop virtualization is on by default when a GridSession exists.
- * Pass `virtualization={false}` to keep classic pagination.
+ * Desktop virtualization is off by default to match the ERP host
+ * (classic pagination chrome). Pass `virtualization={true}` to enable.
  */
 export function resolveDesktopVirtualization(
   virtualization: boolean | undefined,
   session: GridSession | null | undefined,
 ): boolean {
-  const enabled = virtualization !== false;
-  return enabled && !!session;
+  return virtualization === true && !!session;
 }

@@ -1,8 +1,18 @@
 /**
  * Package entry for `@fallahi/erp-table`.
- * Host-coupled React surfaces (ERPTable / CellRenderer / useERPTable) stay in
- * the monorepo `index.ts` and are not part of the published bundle.
+ * Includes the React ERPTable chrome so ERP can `npm i` and render
+ * the same table without host atoms / Tailwind scan.
  */
+import '../ui/styles/injectStyles';
+
+export { ERPTable } from '../ui';
+export type { ERPTableProps } from '../ui';
+export { CellRenderer } from '../ui/cellRenderer';
+export { useERPTable } from '../ui/useERPTable';
+export type { UseERPTableResult } from '../ui/useERPTable';
+export type { UIRow, IMultiSelectConfig } from '../ui/type';
+export { UITableController } from '../infrastructure/ui/UITableController';
+
 export { createERPTable } from '../bootstrap';
 export type {
   CollectionRowMap,
@@ -39,6 +49,7 @@ export type {
 export type { EventStore, AppendResult } from '../application/ports/EventStore';
 export type { RemoteApi } from '../application/ports/RemoteApi';
 export { NoopRemoteApi } from '../infrastructure/Repositories/noopRemoteApi';
+export { FetchRemoteApi } from '../infrastructure/Repositories/fetchRemoteApi';
 export {
   EVENT_CATALOG,
   getEventCatalogEntry,
@@ -60,6 +71,13 @@ export type { VisibleRange } from '../domain/value-objects/Viewport';
 export { ViewportCalculator } from '../engine/ViewportCalculator';
 export { SparseRowIndex } from '../engine/SparseRowIndex';
 export { TableEngine } from '../engine/tableEngine';
+export type {
+  ItemType,
+  TableSnapShot,
+  ValidCell,
+  TableViewState,
+} from '../engine/type';
+export { RowStateEnum } from '../domain/value-objects';
 export {
   VirtualList,
   useVirtualWindow,
@@ -97,3 +115,5 @@ export {
   PdfExportPlugin,
   TextPdfRenderer,
 } from '../packages/plugins/pdf/src';
+export { ERPTableHostProvider } from '../ui/host';
+export type { ERPTableHostValue, ERPTableLocale, ERPTableMessages } from '../ui/host';

@@ -21,7 +21,7 @@ if (esm.includes("export * from '../index.ts'")) {
   process.exit(1);
 }
 
-if (!/Viewport|EVENT_CATALOG|createERPTable|InMemoryEventStore/.test(esm)) {
+if (!/Viewport|EVENT_CATALOG|createERPTable|InMemoryEventStore|ERPTable/.test(esm)) {
   console.error('dist/index.js does not appear to contain package exports');
   process.exit(1);
 }
@@ -38,11 +38,14 @@ for (const file of ['index.js', 'index.cjs']) {
 const dts = readFileSync(join(dist, 'index.d.ts'), 'utf8');
 const expectedDts = [
   'createERPTable',
+  'ERPTable',
   'VirtualList',
   'EVENT_CATALOG',
   'PluginHost',
   'ExcelExportPlugin',
   'PdfExportPlugin',
+  'UITableController',
+  'RowStateEnum',
 ];
 const missingDts = expectedDts.filter((name) => !dts.includes(name));
 if (missingDts.length) {

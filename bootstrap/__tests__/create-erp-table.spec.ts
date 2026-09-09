@@ -596,4 +596,55 @@ describe('createERPTable runtime wiring', () => {
     expect(lengths).toEqual([0, 1]);
     expect(historyLengths).toEqual([0, 1]);
   });
+
+  it('notifies engine subscribers on row selection even when the cell snapshot is unchanged', async () => {
+    const { createERPTable } = await import('../index');
+    const { structuralEqual } = await import('../../engine/equality');
+    const repo = new MemoryTableRepository();
+    const audit = new SilentAuditLogger();
+    const remoteApi = {
+      request: async () => null,
+    } as any;
+
+    const result = await createERPTable({
+      store: 'store-row-select',
+      tableKey: 'table-row-select',
+      actor: { userId: 'user-1', roles: ['admin'] },
+      tableType: 'default',
+      activeCollection: 'default',
+      repo,
+      audit,
+      remoteApi,
+      columns: [
+        {
+          fieldName: 'name',
+          fieldCaption: 'Name',
+          fieldType: 'text',
+          fieldCollection: 'default',
+          visibility: { kind: 'always' },
+        },
+      ],
+      rows: [
+        {
+          id: 1,
+          collection: 'default',
+          values: { name: 'alpha' },
+        },
+      ],
+    });
+
+    const snapshotBefore = result.controller.getSnapShot('active');
+    const listener = vi.fn();
+    const unsubscribe = result.controller.subscribe(listener);
+
+    result.controller.onRowSelect(1);
+
+    expect(result.controller.isSelectedRow(1)).toBe(true);
+    expect(result.controller.getViewState()?.selectedRows[1]).toBe(true);
+    expect(
+      structuralEqual(snapshotBefore, result.controller.getSnapShot('active')),
+    ).toBe(true);
+    expect(listener).toHaveBeenCalled();
+    unsubscribe?.();
+  });
 });

@@ -1,62 +1,92 @@
-// adapters/infra
-
-import { baseQueryByToken } from '@services/customBaseQuery';
-
-import { RemoteApi } from '../../application/ports/RemoteApi';
 import { EngineErrorHandler } from '../../engine/EngineErrorHandler';
+import { RemoteApi } from '../../application/ports/RemoteApi';
 
+type ErpDefaults = {
+  PlaceId?: { id?: number };
+  YearId?: { id?: number };
+  LanguageId?: { id?: number };
+  CashierId?: { id?: number };
+  CurrencyId?: { id?: number };
+};
+
+function readCookie(name: string): string {
+  if (typeof document === 'undefined') return '';
+  const cookies = document.cookie.split(';');
+  const cookie = cookies.find((item) => item.trim().startsWith(`${name}=`));
+  if (!cookie) return '';
+  return cookie.trim().slice(name.length + 1);
+}
+
+function readErpDefaults(): ErpDefaults {
+  if (typeof window === 'undefined') return {};
+  try {
+    const storage = localStorage.getItem('persist:arianERP');
+    const parsedStorage = JSON.parse(storage ?? '{}');
+    const parsedConfig = JSON.parse(parsedStorage.config ?? '{}');
+    return parsedConfig.defaultConfigs ?? {};
+  } catch {
+    return {};
+  }
+}
+
+function joinUrl(baseUrl: string, endpoint: string): string {
+  if (/^https?:\/\//i.test(endpoint)) return endpoint;
+  const base = baseUrl.replace(/\/$/, '');
+  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${base}${path}`;
+}
+
+/**
+ * Browser RemoteApi used by ERP after npm install.
+ * Reads auth cookie `_auth` and redux-persist `persist:arianERP` the same way
+ * the ERP FetchRemoteApi did, then POSTs JSON (relative URLs work on the ERP host).
+ */
 export class FetchRemoteApi implements RemoteApi {
   constructor(
     private readonly err?: EngineErrorHandler,
-  ) { }
+    private readonly options: { baseUrl?: string } = {},
+  ) {}
+
   async request<TResponse = any>(input: {
     endpoint: string;
     params?: Record<string, any>;
     method?: 'GET' | 'POST';
   }): Promise<TResponse> {
     try {
-      let storage: string | null = null;
-      if (typeof window !== 'undefined') {
-        storage = localStorage.getItem('persist:arianERP');
-      }
-      const parsedStorage = JSON.parse(storage ?? '{}');
-      // fix TS: null قابل JSON.parse نیست
-      const parsedConfig = JSON.parse(
-        parsedStorage.config ?? '{}'
-      );
-      // fix TS: config ممکن است undefined باشد
-      const args = {
-        url: input.endpoint,
-        method: input.method ?? 'POST',
-        body: input.params ?? {},
+      const defaults = readErpDefaults();
+      const token = readCookie('_auth');
+      const method = input.method ?? 'POST';
+      const url = joinUrl(this.options.baseUrl ?? '', input.endpoint);
+      const payload =
+        method === 'GET'
+          ? undefined
+          : {
+              ...(input.params ?? {}),
+              Defaults: {
+                CurrencyId: defaults.CurrencyId?.id,
+                CashierId: defaults.CashierId?.id,
+                PlaceId: defaults.PlaceId?.id,
+                YearId: defaults.YearId?.id,
+                LangId: defaults.LanguageId?.id,
+              },
+            };
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
       };
-      const api = {
-        getState: () => {
-          return {
-            withPersist: {
-              config: {
-                defaultConfigs: parsedConfig.defaultConfigs
-              }
-            }
-          };
-        },
-        dispatch: () => { },
-      } as any;
-      const res = await baseQueryByToken(args, api, {});
-      if (!res) {
-        this.err?.handle(
-          'RemoteApi request failed: empty response'
-        );
-        throw new Error(
-          'RemoteApi request failed: empty response'
-        );
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const res = await fetch(url, {
+        method,
+        headers,
+        body: payload ? JSON.stringify(payload) : undefined,
+      });
+      if (!res.ok) {
+        this.err?.handle(`RemoteApi request failed: ${res.status}`, 'FetchRemoteApi.request');
       }
-      return res.data as TResponse;
+      return (await res.json()) as TResponse;
     } catch (error) {
-      this.err?.handle(
-        error,
-        'FetchRemoteApi.request'
-      );
+      this.err?.handle(error, 'FetchRemoteApi.request');
       throw error;
     }
   }

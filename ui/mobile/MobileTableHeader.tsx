@@ -1,7 +1,6 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 
-import { CustomDropdownButton } from '@components/atoms/defaultElements';
-import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
+import { CustomDropdownButton, CustomCheckbox } from '../primitives';
 
 import { ValidationCallbackResult } from '../../engine/type';
 import { UITableController } from '../../infrastructure/ui/UITableController';

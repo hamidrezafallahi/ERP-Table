@@ -1,6 +1,6 @@
 import React from 'react';
 
-import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
+import { CustomCheckbox } from '../primitives';
 
 import { IMultiSelectConfig } from '../type';
 

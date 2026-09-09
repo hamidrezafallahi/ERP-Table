@@ -13,6 +13,9 @@ interface MobileTableRowProps {
   columns: ColumnSchema[];
   controller: UITableController;
   tableKey: string;
+  isSelected: boolean;
+  isActive: boolean;
+  isCut: boolean;
 }
 
 function MobileTableRowComponent({
@@ -21,14 +24,14 @@ function MobileTableRowComponent({
   columns,
   controller,
   tableKey,
+  isSelected: isSelectedRow,
+  isActive: isActiveRow,
+  isCut,
 }: MobileTableRowProps) {
   const visibleColumns = columns.filter(
     (c: ColumnSchema) => !c.hidden,
   );
   const isDeleted = row.rowState === RowStateEnum.Deleted;
-  const isActiveRow = controller.isActiveRow(row.id);
-  const isSelectedRow = controller.isSelectedRow(row.id);
-  const isCut = controller.isCutRow(row.id);
 
   const handleRowClick = (e: React.MouseEvent) => {
     controller.onRowClick(row.id, {
@@ -110,10 +113,9 @@ export const MobileTableRow = React.memo(
       prev.row === next.row &&
       prev.index === next.index &&
       prev.columns === next.columns &&
-      prev.controller.isSelectedRow(prev.row.id)
-        === next.controller.isSelectedRow(next.row.id) &&
-      prev.controller.isActiveRow(prev.row.id)
-        === next.controller.isActiveRow(next.row.id)
+      prev.isSelected === next.isSelected &&
+      prev.isActive === next.isActive &&
+      prev.isCut === next.isCut
     );
   },
 );

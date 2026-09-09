@@ -1,4 +1,4 @@
-import { CustomButton } from '@components/atoms/defaultElements';
+import { CustomButton } from '../primitives';
 
 interface Props {
   onClick: () => void;

@@ -6,12 +6,12 @@ Install (private / restricted registry as configured by your org):
 npm i @fallahi/erp-table
 ```
 
-Peer: `react` `>=18`.
+Peer: `react` / `react-dom` `>=17`.
 
 ## Quick start
 
 ```ts
-import { createERPTable, VirtualList } from '@fallahi/erp-table';
+import { ERPTable, createERPTable } from '@fallahi/erp-table';
 
 const grid = await createERPTable({
   store: 'erp',
@@ -29,9 +29,10 @@ const grid = await createERPTable({
   rows: [{ id: 1, collection: 'default', values: { item: 'SKU-1' } }],
 });
 
-// Prefer session over raw engine in adapters
 grid.session.getSnapShot('active');
 ```
+
+Date cells use `react-persian-range-picker`.
 
 ## Local demo (this repo)
 
@@ -40,7 +41,7 @@ Pattern mirrored from the Persian range-picker library playground:
 | Script | Mode | UI |
 |--------|------|-----|
 | `npm run dev:docs` | `VITE_APP_MODE=docs` | Landing / live docs |
-| `npm run dev` | `VITE_APP_MODE=dev` | QA playground |
+| `npm run dev` | `VITE_APP_MODE=dev` | QA playground (`DemoComponent`) |
 
 Demo app lives under `demo/` and is **not** part of the published tsup bundle.
 

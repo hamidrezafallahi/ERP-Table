@@ -1,25 +1,20 @@
 import React, { useState } from 'react';
 
-import { Spin } from 'antd';
-import { useTranslations } from 'next-intl';
-
-import {
-  CustomModal,
-  CustomTooltip,
-} from '@components/atoms/defaultElements';
+import { useDirection, useHostToast, useTranslations } from '../host';
 import {
   ClipboardCheck,
   ClipboardIcon,
+  CustomModal,
+  CustomTooltip,
   CutIcon,
   Excel,
   GuaranteeReceive,
   Layers,
   PlusIcon,
+  Spin,
   SpinIcon,
   TrashBin,
-} from '@components/atoms/iconComponents';
-import { useAppSelector } from '@hooks/custom/useAppSelector';
-import { showErrorToast, showSuccessToast } from '@utils/toast';
+} from '../primitives';
 
 import { TableActions } from '../../domain/value-objects';
 import { exportActiveCollectionToExcel } from '../../infrastructure/excel/exportActiveCollectionToExcel';
@@ -38,9 +33,8 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
   multiSelectConfig,
 }) => {
   const t = useTranslations();
-  const direction = useAppSelector(
-    (state) => state.withPersist.config.direction,
-  );
+  const direction = useDirection();
+  const { success, error } = useHostToast();
   const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -61,9 +55,9 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
         direction,
         rowHeaderLabel: t('general.row'),
       });
-      showSuccessToast(t("general.exportToExcelSuccess"));
+      success(t("general.exportToExcelSuccess"));
     } catch {
-      showErrorToast(t("general.exportToExcelError"));
+      error(t("general.exportToExcelError"));
     } finally {
       setIsExporting(false);
     }
@@ -207,7 +201,7 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
       <GridSearchControl controller={controller} />
 
       <span className="px-2 text-black-black6 text-xs">
-        {t("general.selected")} {count}
+        {t("general.selected")} {count.toLocaleString(direction === 'rtl' ? 'fa-IR' : 'en-US')}
       </span>
     </div>
   );

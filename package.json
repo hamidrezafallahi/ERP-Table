@@ -1,7 +1,7 @@
 {
   "name": "@fallahi/erp-table",
   "version": "0.5.0",
-  "description": "ERP grid core — event-driven table bounded context with React virtual adapter",
+  "description": "ERP grid with React ERPTable chrome — same look and behavior as the ERP host table",
   "license": "UNLICENSED",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -12,8 +12,7 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "files": [
     "dist",
@@ -22,7 +21,7 @@
     "EXECUTION_PLAN.md",
     "WORKLOG.md"
   ],
-  "sideEffects": false,
+  "sideEffects": true,
   "scripts": {
     "dev": "vite --config demo/vite.config.ts --mode playground",
     "dev:docs": "vite --config demo/vite.config.ts",
@@ -35,11 +34,15 @@
     "prepublishOnly": "npm run typecheck:publish && npm run typecheck:host-ui && npm run build && npm run verify:dist && npm test"
   },
   "peerDependencies": {
-    "react": ">=18"
+    "react": ">=17",
+    "react-dom": ">=17"
   },
   "peerDependenciesMeta": {
     "react": {
-      "optional": true
+      "optional": false
+    },
+    "react-dom": {
+      "optional": false
     }
   },
   "devDependencies": {
@@ -69,6 +72,7 @@
     "react"
   ],
   "dependencies": {
-    "fflate": "^0.8.3"
+    "fflate": "^0.8.3",
+    "react-persian-range-picker": "^1.1.1"
   }
 }

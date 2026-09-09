@@ -57,6 +57,12 @@
   margin-bottom: 1.35rem;
 }
 
+.meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
 .brandMark {
   display: inline-flex;
   align-items: center;
@@ -443,6 +449,29 @@
   margin: 0 0 0.75rem;
   font-size: clamp(1.35rem, 2.4vw, 1.85rem);
   color: var(--ink);
+}
+
+.voucherTitle {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #292929;
+  font-family: IRANSans, Tahoma, sans-serif;
+}
+
+.erpHost {
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 0.5rem;
+  padding: 0.85rem 0.9rem 0.5rem;
+  box-shadow: 0 8px 24px rgba(14, 14, 14, 0.06);
+  font-family: IRANSans, Tahoma, sans-serif;
+}
+
+.erpHostMeta {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
 }
 
 .bodyCopy {

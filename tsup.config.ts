@@ -13,6 +13,10 @@ export default defineConfig({
   treeshake: true,
   target: 'es2020',
   outDir: 'dist',
+  injectStyle: true,
+  loader: {
+    '.css': 'css',
+  },
   external: ['react', 'react-dom', 'react/jsx-runtime'],
   esbuildOptions(options) {
     options.jsx = 'automatic';

@@ -1,17 +1,15 @@
-// @ts-nocheck
 "use client";
-// Host-coupled cell UI (antd / atoms). Typed loosely until host peer packages ship.
 import React, { useEffect } from 'react';
 
-import { Tooltip } from 'antd';
-
+import { useLocale } from '../host';
 import {
-  CustomSelect,
-  DynamicSelect,
+  CustomCheckbox,
+  InfoIcon,
   NewDatePicker,
-} from '@components/atoms/defaultElements';
-import CustomCheckbox from '@components/atoms/defaultElements/checkbox';
-import { InfoIcon } from '@components/atoms/iconComponents';
+  Select,
+  Tooltip,
+} from '../primitives';
+import { ERPTableDynamicSelect as DynamicSelect } from './ERPTableDynamicSelect';
 
 import {
   ColumnSchema,
@@ -56,6 +54,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   mode = "cell",
 }) => {
   const dateHostRef = React.useRef<HTMLDivElement | null>(null);
+  const locale = useLocale();
   const searchState = useGridSearchState(controller);
   if (!meta) return null;
   const disable =
@@ -104,7 +103,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     searchState.matches[searchState.currentIndex]?.columnId === columnId;
 
   const renderCellContent = (cellText: unknown) => {
-    const parsed = valueParser(cellText, meta.fieldType);
+    const parsed = valueParser(cellText, meta.fieldType, locale);
     if (isCurrentSearchMatch && searchState?.query) {
       return highlightSearchText(parsed, searchState.query, true);
     }
@@ -139,7 +138,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     <span
       key={idx}
       className={`flex items-center px-2 w-full h-9 overflow-hidden text-xs text-ellipsis whitespace-nowrap ${meta.className}
-        ${meta.fieldType === "checkbox" ? "justify-center" : "justify-start"}
+        ${meta.fieldType === "checkbox" || meta.fieldType === "price" || meta.fieldType === "number" ? "justify-center" : "justify-start"}
         ${isCurrentSearchMatch ? "ring-2 ring-yellow-400" : ""}`}
     >
       <span className="truncate">{renderCellContent(cellText)}</span>
@@ -205,7 +204,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         >
           <div
             className={`flex items-center w-full min-w-36 max-w-72 h-full overflow-hidden text-xs text-ellipsis whitespace-nowrap 
-    ${meta.fieldType === "checkbox" ? "justify-center" : "justify-start"}`}
+    ${meta.fieldType === "checkbox" || meta.fieldType === "price" || meta.fieldType === "number" ? "justify-center" : "justify-start"}`}
           >
             <div className="truncate">
               {renderCellContent(display ?? value)}
@@ -299,7 +298,13 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
             className={`${meta.className}`}
             key={idx}
             disabled={isDeleted || !isEditable}
-            value={value ? new Date(value as string).valueOf() : undefined}
+            value={
+              value == null || value === ''
+                ? undefined
+                : typeof value === 'number'
+                  ? value
+                  : new Date(value as string).valueOf()
+            }
             onChange={(v) => {
               dispatchChangeValue(v);
             }}
@@ -321,7 +326,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
       );
     case "select":
       return (
-        <CustomSelect
+        <Select
           key={idx}
           options={(meta?.options ?? []).map((opt) => ({
             value: opt.value,
@@ -333,12 +338,11 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           onClick={() => activeCell()}
           onChange={(v, o) => {
             dispatchChangeValue(v);
-            if (!Array.isArray(o)) {
-              if (o?.label) {
-                dispatchChangeDisplay(o.label as string);
-              } else {
-                dispatchChangeDisplay(null);
-              }
+            const option = o as { label?: string } | undefined;
+            if (option?.label) {
+              dispatchChangeDisplay(option.label);
+            } else {
+              dispatchChangeDisplay('');
             }
             if (v) {
               controller.dispatch({
@@ -403,13 +407,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           onClick={() => activeCell()}
           onChange={(v, o) => {
             dispatchChangeValue(v, o as DefaultOptionType);
-            if (!Array.isArray(o)) {
-              if (o?.label) {
-                dispatchChangeDisplay(o.label as string);
-              } else {
-                dispatchChangeDisplay(null);
-              }
-            }
+            const option = o as { label?: string } | undefined;
+            dispatchChangeDisplay(option?.label ?? '');
             if (v) {
               controller.dispatch({
                 type: "UI_MOVE_ACTIVE_CELL",

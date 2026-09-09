@@ -68,7 +68,7 @@ export function DesktopTable({
   return (
     <div
       ref={rootRef}
-      className="flex flex-col w-full h-full transition-all duration-200"
+      className="flex flex-col w-full h-full transition-all duration-200 erp-table-desktop"
     >
       {tableTitle}
       <div
@@ -110,7 +110,7 @@ export function DesktopTable({
           )}
         </table>
       </div>
-      <div className="flex justify-between items-center gap-3 w-full shrink-0">
+      <div className="flex justify-between items-center gap-3 w-full shrink-0 erp-table-desktop__toolbar">
         <GroupActionButtons
           controller={controller}
           multiSelectConfig={multiSelectConfig}

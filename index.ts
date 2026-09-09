@@ -2,6 +2,12 @@
 
 export { ERPTable } from './ui';
 export { CellRenderer } from './ui/cellRenderer';
+export { UITableController } from './infrastructure/ui/UITableController';
+export type { UIRow, IMultiSelectConfig } from './ui/type';
+export type { ERPTableProps } from './ui';
+export type { ItemType, TableSnapShot } from './engine/type';
+export { RowStateEnum } from './domain/value-objects';
+export { FetchRemoteApi } from './infrastructure/Repositories/fetchRemoteApi';
 export { TableEngine } from './engine/tableEngine';
 export { VirtualList, useVirtualWindow, buildVirtualWindow } from './ui/virtual';
 export type { VirtualListProps, UseVirtualWindowResult, VirtualWindowModel } from './ui/virtual';

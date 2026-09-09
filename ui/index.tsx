@@ -4,10 +4,16 @@ import React, {
   useEffect,
 } from 'react';
 
-import { useMediaQuery } from '@hooks/custom';
-
+import { injectERPTableStyles } from './styles/injectStyles';
 import { CreateERPTableConfig } from '../bootstrap/type';
 import { UITableController } from '../infrastructure/ui/UITableController';
+import {
+  ERPTableHostProvider,
+  useMediaQuery,
+  type ERPTableLocale,
+  type ERPTableMessages,
+  type ERPTableToastKind,
+} from './host';
 import { DesktopTable } from './desktop/DesktopTable';
 import { MobileTable } from './mobile/MobileTable';
 import { IMultiSelectConfig } from './type';
@@ -15,18 +21,26 @@ import { useERPTable } from './useERPTable';
 
 export interface ERPTableProps extends CreateERPTableConfig {
   onReady?: (controller: UITableController) => void;
-  tableTitle?: string;
+  tableTitle?: ReactNode;
   header?: ReactNode;
   footer?: boolean | ReactNode;
   activeCollection?: string;
   tableHeight?: number;
   multiSelectConfig: IMultiSelectConfig;
   moreDetailComponent?: React.ComponentType<{data: unknown}>;
-  /** Desktop virtual scroll; default on when session exists. Pass false for pagination. */
+  /**
+   * Desktop virtual scroll. Default **false** to match ERP pagination.
+   * Pass true to enable GridSession virtualization.
+   */
   virtualization?: boolean;
+  locale?: ERPTableLocale;
+  direction?: 'rtl' | 'ltr';
+  messages?: Partial<ERPTableMessages>;
+  onToast?: (kind: ERPTableToastKind, message: string, detail?: unknown) => void;
 }
 
 export function ERPTable(props: ERPTableProps) {
+  injectERPTableStyles();
   const {
     columns,
     rowAccess,
@@ -44,6 +58,11 @@ export function ERPTable(props: ERPTableProps) {
     multiSelectConfig,
     moreDetailComponent,
     virtualization,
+    remoteApi,
+    locale = 'fa',
+    direction,
+    messages,
+    onToast,
   } = props;
 
   const result = useERPTable({
@@ -56,6 +75,7 @@ export function ERPTable(props: ERPTableProps) {
     rowAccess,
     tableHeight,
     recordPerPage,
+    remoteApi,
   });
 
   useEffect(() => {
@@ -76,13 +96,17 @@ export function ERPTable(props: ERPTableProps) {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (
-        target.closest(".ant-select") &&
-        (e.code === "ArrowUp" ||
+        target.closest(".ant-select") ||
+        target.closest(".erp-table-select")
+      ) {
+        if (
+          e.code === "ArrowUp" ||
           e.code === "ArrowDown" ||
           e.code === "Enter" ||
-          e.code === "NumpadEnter")
-      ) {
-        return;
+          e.code === "NumpadEnter"
+        ) {
+          return;
+        }
       }
       const activeRow = controller.getActiveRow();
       const activeCell = controller.getActiveCell();
@@ -125,7 +149,7 @@ export function ERPTable(props: ERPTableProps) {
     multiSelectConfig,
   };
 
-  return isMobile ? (
+  const table = isMobile ? (
     <MobileTable {...sharedProps} />
   ) : (
     <DesktopTable
@@ -137,5 +161,19 @@ export function ERPTable(props: ERPTableProps) {
       virtualization={virtualization}
       session={result.session}
     />
+  );
+
+  return (
+    <ERPTableHostProvider
+      locale={locale}
+      direction={direction ?? (locale === 'fa' ? 'rtl' : 'ltr')}
+      messages={messages}
+      onToast={onToast}
+      remoteApi={remoteApi ?? result.controller.getRemoteApi()}
+    >
+      <div className="erp-table" dir={direction ?? (locale === 'fa' ? 'rtl' : 'ltr')} data-erp-table>
+        {table}
+      </div>
+    </ERPTableHostProvider>
   );
 }

@@ -1,13 +1,8 @@
 // ui/pagination.tsx
 
-import { Pagination } from 'antd';
-import { useLocale } from 'next-intl';
-
-import { CustomButton } from '@components/atoms/defaultElements';
-import {
-  LeftChevron,
-  RightChevron,
-} from '@components/atoms/iconComponents';
+import { Pagination } from '../primitives';
+import { useLocale } from '../host';
+import { CustomButton, LeftChevron, RightChevron } from '../primitives';
 
 import { UITableController } from '../../infrastructure/ui/UITableController';
 
@@ -62,7 +57,7 @@ export default function ERPTablePagination({
         total={totalRows}
         showSizeChanger={true}
         onShowSizeChange={handlePageSizeChange}
-        pageSizeOptions={["10", "20", "50", "100"]}
+        pageSizeOptions={["9", "10", "20", "50", "100"]}
         // hideOnSinglePage
         locale={{ items_per_page: "" }}
         showTotal={(total: number) => (
@@ -74,7 +69,7 @@ export default function ERPTablePagination({
           </div>
         )}
         onChange={handlePageChange}
-        showTitle={false}
+        direction={direction}
       />
     </div>
   );

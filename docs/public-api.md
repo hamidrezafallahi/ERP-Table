@@ -11,29 +11,33 @@ Inspired by the Persian range-picker demo layout (`InitialComponent` / `DemoComp
 | Script | `VITE_APP_MODE` | UI |
 |--------|-----------------|-----|
 | `npm run dev:docs` | `docs` | Landing / live docs (`demo/src/InitialComponent.tsx`) |
-| `npm run dev` / `dev:playground` | `dev` | QA playground (`demo/src/DemoComponent.tsx`) |
+| `npm run dev` / `dev:playground` | `dev` | QA playground (`demo/src/DemoComponent.tsx`) + ERP table preview |
 
 The `demo/` Vite app is excluded from tsup publish (`files` still ships `docs/`).
 
 ## Composition
 
-```ts
-import { createERPTable, VirtualList } from '@fallahi/erp-table';
+```tsx
+import { ERPTable } from '@fallahi/erp-table';
 
-const grid = await createERPTable({
-  store: 'erp',
-  tableKey: 'voucher-1',
-  actor: { userId: 'u1', roles: ['admin'] },
-  columns: [/* ColumnSchema */],
-  rows: [/* RowInput */],
-  // Host injects real RemoteApi; package default is NoopRemoteApi
-  remoteApi: hostRemoteApi,
-});
+<ERPTable
+  store="erp"
+  tableKey={pageId}
+  actor={actor}
+  columns={columnConfig}
+  rows={rows}
+  tableHeight={tableHeight}
+  recordPerPage={recordsPerPage}
+  tableTitle={tableTitle}
+  activeCollection={activeCollection}
+  multiSelectConfig={multiSelectConfig}
+  onReady={setController}
+/>
 ```
 
-Published entry: `publish/entry.ts` (built by tsup with **strict automatic** `dist/index.d.ts`).  
-Host monorepo may still import local `index.ts` for `ERPTable` / `CellRenderer` (ERP-specific UI).
-Guards: `npm run typecheck:publish` (publish graph) and `npm run typecheck:host-ui` (full UI with host shims in `types/host-shims.d.ts`).
+Published entry: `publish/entry.ts` (built by tsup). CSS is injected (range-picker pattern). Optional `import '@fallahi/erp-table/styles.css'` if the bundler strips injected styles.
+
+Guards: `npm run typecheck:publish` and `npm run typecheck:host-ui`.
 
 ## Plugins (Excel / PDF)
 
@@ -105,20 +109,18 @@ Pass a custom store via bootstrap when host wiring supports it (see `CreateERPTa
 - Event type strings in `EVENT_CATALOG` are semver-stable.
 - Prefer `GridSession` over reaching into `TableEngine` from host apps.
 
-## Desktop virtualization (default on)
+## Desktop virtualization (default **off**)
 
 ```tsx
-<ERPTable
-  tableHeight={480}
-  /* virtualization defaults to on when session is ready */
-/>
+{/* ERP default: pagination chrome */}
+<ERPTable tableHeight={480} />
 
-{/* Classic pagination escape hatch */}
-<ERPTable virtualization={false} tableHeight={480} />
+{/* Opt-in virtual scroll */}
+<ERPTable virtualization tableHeight={480} />
 ```
 
-- Default is virtual scroll (`ERPTableVirtualBody` + session viewport) when `session` exists.
-- Pass `virtualization={false}` for classic pagination (ERP hosts that still need page controls).
+- Default is classic pagination (`ERPTableBody` + `ERPTablePagination`) to match ERP pages.
+- Pass `virtualization` / `virtualization={true}` for `ERPTableVirtualBody`.
 - Core helper: `controller.getAllUIRows()` (full active collection, no page slice).
 - Grid search / validation error navigation uses `revealRow`: virtual → `CHANGE_VIEWPORT`, else → `CHANGE_PAGE`.
 - Domain types must not import React.

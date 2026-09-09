@@ -1,6 +1,16 @@
 # Components & surfaces
 
-Published React surface is intentionally small. Host `ERPTable` / `CellRenderer` stay in the monorepo.
+Published React surface is the ERP table chrome used in the host app.
+
+## `ERPTable`
+
+Drop-in React table. Same props as the ERP host (`voucherTemplate`, cheque pages, inventory voucher, bank withdrawal):
+
+`actor`, `store`, `tableKey`, `rows`, `columns`, `recordPerPage`, `tableHeight`, `tableTitle`, `activeCollection`, `multiSelectConfig`, `onReady`, optional `footer` / `header` / `moreDetailComponent`.
+
+Default desktop chrome: paginated body + toolbar (add/copy/cut/paste/delete/excel/search) + numeric footer. CSS tokens match ERP Tailwind (`gray-gray3`, zebra `blue-blue11`, row height 36px).
+
+Browser `FetchRemoteApi` is the default `remoteApi` (cookie `_auth` + `persist:arianERP`). Host may still inject a custom `RemoteApi`.
 
 ## `createERPTable`
 
@@ -45,4 +55,4 @@ Events: see [event-catalog.md](./event-catalog.md).
 
 ## Host-only (not published)
 
-`ERPTable`, `useERPTable`, `CellRenderer`, desktop/mobile chrome — require ERP host shims (`types/host-shims.d.ts`). Use the monorepo `index.ts` barrel when embedding in the ERP app.
+`useERPGrid` is ERP page glue (Next/Redux/RTK Query) and stays in the host app. Import table types from `@fallahi/erp-table` instead of deep `@components/organisms/erp-table/...` paths.

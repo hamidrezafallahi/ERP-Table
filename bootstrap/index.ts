@@ -12,6 +12,7 @@ import {
 import {
   ConsoleAuditLogger,
 } from '../infrastructure/Repositories/consoleAuditLogger';
+import { FetchRemoteApi } from '../infrastructure/Repositories/fetchRemoteApi';
 import { NoopRemoteApi } from '../infrastructure/Repositories/noopRemoteApi';
 import { InMemoryEventStore } from '../infrastructure/eventStore/InMemoryEventStore';
 import { IndexedDbEventStore } from '../infrastructure/eventStore/IndexedDbEventStore';
@@ -72,7 +73,9 @@ export async function createERPTable(config: CreateERPTableConfig): Promise<Crea
   // ---------- infra ----------
   const repo = config.repo ?? new CachedTableRepository();
   const audit = config.audit ?? new ConsoleAuditLogger();
-  const remoteApi = config.remoteApi ?? new NoopRemoteApi();
+  const remoteApi =
+    config.remoteApi ??
+    (typeof window !== 'undefined' ? new FetchRemoteApi() : new NoopRemoteApi());
   const eventStore = await resolveEventStore(config);
   const changelogProjection = new ChangelogProjection(eventStore);
   const historyPanelViewModel = new HistoryPanelViewModel(changelogProjection);
@@ -109,12 +112,9 @@ export async function createERPTable(config: CreateERPTableConfig): Promise<Crea
     columns = new Map<string, ColumnSchema>();
     const rowList = Array.from(rows.values());
     const collectionName = activeCollection ?? 'default';
-    for (const col of config.columns) {
-      const fieldCollection = col.fieldCollection ?? 'default';
-      const columnKey = `${fieldCollection}_${col.fieldName}`;
+    for (const [columnKey, col] of buildResult.columns) {
       columns.set(columnKey, {
         ...col,
-        fieldCollection,
         hidden: isInitiallyHidden(col, rowList, collectionName),
       });
     }
@@ -158,6 +158,7 @@ export async function createERPTable(config: CreateERPTableConfig): Promise<Crea
     historyPanelViewModel,
     cellUndoStack,
     session,
+    remoteApi,
   );
   const { definitions: columnDefinitions, bindings: columnBindings } =
     mapColumnSchemas(config.columns);

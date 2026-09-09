@@ -5,6 +5,7 @@ import React, {
 } from 'react';
 
 import { UITableController } from '../../infrastructure/ui/UITableController';
+import { useLocale } from '../host';
 import { valueParser } from '../helper';
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function ERPTableFooter({controller, footer}: Props) {
+  const locale = useLocale();
   const [totals, setTotals] = useState<Record<string, number>>({});
   const table = controller.getViewState();
   const calculateTotals = () => {
@@ -82,7 +84,7 @@ export function ERPTableFooter({controller, footer}: Props) {
                 {c.fieldType === "price" ||
                 c.fieldType === "number" ||
                 c.fieldType === "static"
-                  ? valueParser(totals[c.fieldName], c.fieldType)
+                  ? valueParser(totals[c.fieldName], c.fieldType, locale)
                   : null}
               </td>
             ))}

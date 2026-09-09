@@ -397,7 +397,7 @@ export class Table {
         const shouldUnhide = existing.hidden === true;
         targetCollection.getColumns().set(key, {
           ...existing,
-          editable: incoming.editable,
+          editable: incoming.editable ?? existing.editable,
           hidden: shouldUnhide ? false : existing.hidden,
         });
         if (shouldUnhide) added.push(new ColumnId(incoming.fieldName));

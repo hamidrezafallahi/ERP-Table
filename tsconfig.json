@@ -35,6 +35,8 @@
     "node_modules",
     "dist",
     "**/*.spec.ts",
-    "**/__tests__/**"
+    "**/__tests__/**",
+    "ui/useERPGrid.ts",
+    "ui/cellRenderer/descriptionComponent/useVoucherDescription.tsx"
   ]
 }

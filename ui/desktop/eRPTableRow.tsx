@@ -3,9 +3,8 @@ import React, {
   useState,
 } from 'react';
 
-import { useTranslations } from 'next-intl';
-
-import { NoData } from '@components/atoms/iconComponents';
+import { useTranslations } from '../host';
+import { NoData } from '../primitives';
 
 import { ColumnSchema } from '../../bootstrap/type';
 import { RowStateEnum } from '../../domain/value-objects';
@@ -23,6 +22,9 @@ interface ERPTableRowProps {
   tableKey: string;
   draggedRowIdRef: React.MutableRefObject<number | null>;
   moreDetailComponent?: React.ComponentType<{data: unknown}>;
+  isSelected: boolean;
+  isActive: boolean;
+  isCut: boolean;
 }
 
 function ERPTableRowComponent({
@@ -34,16 +36,15 @@ function ERPTableRowComponent({
   tableKey,
   draggedRowIdRef,
   moreDetailComponent: MoreDetailComponent,
+  isSelected: isSelectedRow,
+  isActive: isActiveRow,
+  isCut,
 }: ERPTableRowProps) {
   const t = useTranslations();
   const visibleColumns = (table.columns ?? []).filter((c: ColumnSchema) => !c.hidden);
   const totalColSpan = visibleColumns.length;
-  const rowNum = row.cells["index"]?.value as number;
   const [dropZone, setDropZone] = useState<"before" | "after" | null>(null);
   const isDeleted = row.rowState === RowStateEnum.Deleted;
-  const isActiveRow = controller.isActiveRow(row.id);
-  const isSelectedRow = controller.isSelectedRow(row.id);
-  const isCut = controller.isCutRow(row.id);
 
   const handleRowClick = (e: React.MouseEvent) => {
     controller.onRowClick(row.id, {
@@ -59,7 +60,7 @@ function ERPTableRowComponent({
     if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
       e.preventDefault();
       e.stopPropagation();
-      controller.onRowSelect(rowNum);
+      controller.onRowSelect(row.id);
     }
   };
 
@@ -137,10 +138,10 @@ function ERPTableRowComponent({
           if (c.fieldName === "index" || c.fieldType === "index") {
             return (
               <td
-                className="p-0 h-full overflow-hidden"
+                className="p-0 h-full overflow-hidden border"
                 key={c.fieldName}
                 data-columnid={c.fieldName}
-                style={{ width: 120, maxWidth: 160 }}
+                style={{ width: 168, minWidth: 168, maxWidth: 200 }}
               >
                 <IndexCol
                   idx={index}
@@ -156,7 +157,7 @@ function ERPTableRowComponent({
           return (
             <td
               key={c.fieldName}
-              className="p-0 h-full overflow-hidden"
+              className="p-0 h-full overflow-hidden border"
               data-columnid={c.fieldName}
               style={{ minWidth: c.minWidth }}
             >
@@ -203,9 +204,8 @@ export const ERPTableRow = React.memo(ERPTableRowComponent, (prev, next) => {
     prev.index === next.index &&
     prev.stripeIndex === next.stripeIndex &&
     prev.table === next.table &&
-    prev.controller.isSelectedRow(prev.row.id)
-      === next.controller.isSelectedRow(next.row.id) &&
-    prev.controller.isActiveRow(prev.row.id)
-      === next.controller.isActiveRow(next.row.id)
+    prev.isSelected === next.isSelected &&
+    prev.isActive === next.isActive &&
+    prev.isCut === next.isCut
   );
 });
