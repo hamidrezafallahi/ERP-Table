@@ -2,7 +2,7 @@
 
 Library entry for consumers: package root built from `publish/entry.ts`.
 
-**Display name:** Event-driven ERP Grid · **npm:** `@fallahi/erp-table`
+**Display name:** Persian Data Grid · **npm:** `persian-data-grid`
 
 ## Local development modes
 
@@ -10,15 +10,16 @@ Inspired by the Persian range-picker demo layout (`InitialComponent` / `DemoComp
 
 | Script | `VITE_APP_MODE` | UI |
 |--------|-----------------|-----|
-| `npm run dev:docs` | `docs` | Landing / live docs (`demo/src/InitialComponent.tsx`) |
-| `npm run dev` / `dev:playground` | `dev` | QA playground (`demo/src/DemoComponent.tsx`) + ERP table preview |
+| `npm run dev:docs` | `docs` | Landing / live grid (`demo/src/InitialComponent.tsx`) |
+| `npm run dev` / `dev:playground` | `dev` | QA playground (`demo/src/DemoComponent.tsx`) + live ERPTable |
+| `npm run build:demo` | — | GitHub Pages bundle (`demo/dist`) |
 
 The `demo/` Vite app is excluded from tsup publish (`files` still ships `docs/`).
 
 ## Composition
 
 ```tsx
-import { ERPTable } from '@fallahi/erp-table';
+import { ERPTable } from 'persian-data-grid';
 
 <ERPTable
   store="erp"
@@ -35,7 +36,7 @@ import { ERPTable } from '@fallahi/erp-table';
 />
 ```
 
-Published entry: `publish/entry.ts` (built by tsup). CSS is injected (range-picker pattern). Optional `import '@fallahi/erp-table/styles.css'` if the bundler strips injected styles.
+Published entry: `publish/entry.ts` (built by tsup). CSS is injected (range-picker pattern). Optional `import 'persian-data-grid/styles.css'` if the bundler strips injected styles.
 
 Guards: `npm run typecheck:publish` and `npm run typecheck:host-ui`.
 
@@ -46,7 +47,7 @@ import {
   createERPTable,
   ExcelExportPlugin,
   PdfExportPlugin,
-} from '@fallahi/erp-table';
+} from 'persian-data-grid';
 
 const grid = await createERPTable({
   /* ... */
@@ -95,7 +96,7 @@ npm test
 ## Event stores
 
 ```ts
-import { IndexedDbEventStore, InMemoryEventStore } from '@fallahi/erp-table';
+import { IndexedDbEventStore, InMemoryEventStore } from 'persian-data-grid';
 
 const memory = new InMemoryEventStore();
 const durable = IndexedDbEventStore.inMemory(); // tests

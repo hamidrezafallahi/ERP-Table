@@ -9,7 +9,7 @@
 ## Current Snapshot
 
 - آخرین کار انجام‌شده: **ERPTable published chrome — self-contained UI matching ERP host (pagination default, CSS tokens, FetchRemoteApi)**
-- وضعیت کلی: کتابخانه آمادهٔ `npm i @fallahi/erp-table` با همان ظاهر و منطق صفحات ERP (voucher / cheque / inventory / bank)
+- وضعیت کلی: کتابخانه آمادهٔ `npm i persian-data-grid` با همان ظاهر و منطق صفحات ERP (voucher / cheque / inventory / bank)
 - تغییرات فقط در `C:\fallahi\erp table`
 
 ---

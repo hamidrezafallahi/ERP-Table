@@ -8,7 +8,7 @@ import {
   VirtualList,
   type ColumnSchema,
   type CreateERPTableResult,
-} from '@fallahi/erp-table';
+} from 'persian-data-grid';
 
 import { DemoDateCell } from './DemoDateCell';
 import { DemoIndexCol } from './DemoIndexCol';

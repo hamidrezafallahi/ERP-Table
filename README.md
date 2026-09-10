@@ -1,15 +1,57 @@
-# @fallahi/erp-table
+# Persian Data Grid
 
-Event-driven ERP grid with the same React table chrome as the ERP host (pagination, cells, toolbar, mobile).
+[![npm version](https://img.shields.io/npm/v/persian-data-grid.svg)](https://www.npmjs.com/package/persian-data-grid)
+[![npm downloads](https://img.shields.io/npm/dm/persian-data-grid.svg)](https://www.npmjs.com/package/persian-data-grid)
+[![license](https://img.shields.io/npm/l/persian-data-grid.svg)](https://github.com/hamidrezafallahi/ERP-Table/blob/main/LICENSE)
+[![React](https://img.shields.io/badge/React-17%20%7C%2018%20%7C%2019-61dafb)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-ready-3178c6)](https://www.typescriptlang.org/)
+
+**Persian / Jalali data grid for React** — event-sourced, IndexedDB storage, Excel/IDE keyboard navigation, RTL, and reactive cells that call your API.
+
+A real **Data Grid** for enterprise forms: voucher lines, money columns, Jalali date cells, row actions, virtual scroll, and Excel/PDF plugins.
+
+> npm package: [`persian-data-grid`](https://www.npmjs.com/package/persian-data-grid) · Author: [Hamidreza Fallahi](https://github.com/hamidrezafallahi) · Demo: [hamidrezafallahi.github.io/ERP-Table](https://hamidrezafallahi.github.io/ERP-Table/)
+
+---
+
+## Table of contents
+
+- [Features](#features)
+- [Install](#install)
+- [Quick start](#quick-start)
+- [API overview](#api-overview)
+- [Demo](#demo)
+- [فارسی](#فارسی)
+- [License](#license)
+
+---
+
+## Features
+
+- **Grid** — published React chrome (pagination, row index/actions, Jalali date cells)
+- **RTL-native** layout and Shamsi / Jalali date cells (`react-persian-range-picker`)
+- **Excel-like keyboard** — arrows, Tab, Enter between cells
+- **VirtualList** — render only visible rows for tens of thousands of lines
+- **Event-sourced session** with IndexedDB and cell undo
+- **Excel / PDF plugins** on the view stream (domain aggregates stay untouched)
+- **TypeScript**, React **17 / 18 / 19**
+
+---
 
 ## Install
 
 ```bash
-npm i @fallahi/erp-table
+npm i persian-data-grid
+# or
+yarn add persian-data-grid
+# or
+pnpm add persian-data-grid
 ```
 
+**Peer dependencies:** `react` and `react-dom` (`^17` / `^18` / `^19`).
+
 ```tsx
-import { ERPTable } from '@fallahi/erp-table';
+import { ERPTable } from 'persian-data-grid';
 
 <ERPTable
   store="erp"
@@ -23,29 +65,124 @@ import { ERPTable } from '@fallahi/erp-table';
 />
 ```
 
-## Docs
+---
 
-| Doc | Path |
-|-----|------|
-| Getting started | [docs/getting-started.md](./docs/getting-started.md) |
-| Public API | [docs/public-api.md](./docs/public-api.md) |
-| Components | [docs/components.md](./docs/components.md) |
-| Event catalog | [docs/event-catalog.md](./docs/event-catalog.md) |
+## Quick start
 
-## Local demo
+```tsx
+import { useState } from 'react';
+import { ERPTable, type UITableController } from 'persian-data-grid';
 
-```bash
-npm run dev:docs        # landing / live docs
-npm run dev             # ERPTable playground
+export function VoucherLines() {
+  const [controller, setController] = useState<UITableController | null>(null);
+
+  return (
+    <ERPTable
+      store="erp"
+      tableKey="voucher-1"
+      actor={{ userId: 'u1', roles: ['admin'] }}
+      columns={columns}
+      rows={rows}
+      tableHeight={420}
+      recordPerPage={10}
+      tableTitle="اقلام سند"
+      locale="fa"
+      multiSelectConfig={multiSelectConfig}
+      onReady={setController}
+    />
+  );
+}
 ```
 
-## Build & publish
+Headless composition (own UI + `VirtualList`):
 
-```bash
-npm run build
-npm run verify:dist
-npm test
-# npm publish  → runs prepublishOnly
+```ts
+import { createERPTable, VirtualList } from 'persian-data-grid';
+
+const grid = await createERPTable({
+  store: 'erp',
+  tableKey: 'voucher-1',
+  actor: { userId: 'u1', roles: ['admin'] },
+  columns,
+  rows,
+});
 ```
 
-Bundler: **tsup** (ESM + CJS + d.ts). See `tsup.config.ts` and `scripts/verify-dist.mjs`.
+---
+
+## API overview
+
+| Export | Purpose |
+|--------|---------|
+| Grid | Drop-in React **grid** |
+| Composition root | session, engine, plugins |
+| `VirtualList` | Virtualized row window |
+| `ExcelExportPlugin` / `ExcelImportPlugin` | xlsx |
+| `PdfExportPlugin` | pdf |
+| `UITableController` / `GridSession` | Imperative control |
+
+See [docs/public-api.md](./docs/public-api.md), [docs/getting-started.md](./docs/getting-started.md), [docs/components.md](./docs/components.md).
+
+---
+
+## Demo
+
+| Page | URL |
+|------|-----|
+| Live grid | https://hamidrezafallahi.github.io/ERP-Table/ |
+| Guide | https://hamidrezafallahi.github.io/ERP-Table/guide/ |
+
+```bash
+yarn install
+yarn dev:docs        # landing / live grid docs
+yarn dev             # live grid + VirtualList playground
+yarn build:demo      # static site → demo/dist
+yarn deploy:demo     # GitHub Pages
+```
+
+---
+
+## فارسی
+
+### معرفی
+
+`persian-data-grid` یک **Data Grid** برای فرم‌های سازمانی فارسی است: گرید با RTL، سلول تاریخ شمسی، ناوبری کیبورد شبیه Excel، اسکرول مجازی و خروجی Excel/PDF.
+
+### نصب
+
+```bash
+npm i persian-data-grid
+```
+
+وابستگی‌های peer: `react` و `react-dom` (نسخه ۱۷، ۱۸ یا ۱۹).
+
+### شروع سریع
+
+```tsx
+import { ERPTable } from 'persian-data-grid';
+
+<ERPTable
+  store="erp"
+  tableKey={pageId}
+  actor={actor}
+  columns={columns}
+  rows={rows}
+  tableHeight={420}
+  multiSelectConfig={multiSelectConfig}
+  onReady={setController}
+/>
+```
+
+### دمو زنده
+
+[https://hamidrezafallahi.github.io/ERP-Table/](https://hamidrezafallahi.github.io/ERP-Table/)
+
+---
+
+## License
+
+MIT © [Hamidreza Fallahi](https://github.com/hamidrezafallahi)
+
+Repository: [github.com/hamidrezafallahi/ERP-Table](https://github.com/hamidrezafallahi/ERP-Table)  
+Issues: [GitHub Issues](https://github.com/hamidrezafallahi/ERP-Table/issues)  
+npm: [persian-data-grid](https://www.npmjs.com/package/persian-data-grid)

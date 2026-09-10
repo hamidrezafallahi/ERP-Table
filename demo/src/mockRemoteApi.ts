@@ -1,4 +1,4 @@
-import type { RemoteApi } from '@fallahi/erp-table';
+import type { RemoteApi } from 'persian-data-grid';
 
 export type DemoProductResolveResponse = {
   Data: Array<{

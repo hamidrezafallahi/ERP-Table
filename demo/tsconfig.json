@@ -12,7 +12,7 @@
     "resolveJsonModule": true,
     "types": ["vite/client"],
     "paths": {
-      "@fallahi/erp-table": ["../publish/entry.ts"]
+      "persian-data-grid": ["../publish/entry.ts"]
     },
     "baseUrl": "."
   },

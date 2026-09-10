@@ -1,0 +1,30 @@
+# Persian Data Grid for React
+
+> RTL / Jalali data grid: Excel-like keyboard, virtual scroll, IndexedDB, Excel/PDF plugins.
+
+- Demo: https://hamidrezafallahi.github.io/ERP-Table/
+- Guide: https://hamidrezafallahi.github.io/ERP-Table/guide/
+- npm: https://www.npmjs.com/package/persian-data-grid
+- GitHub: https://github.com/hamidrezafallahi/ERP-Table
+
+## Install
+
+```bash
+npm i persian-data-grid
+```
+
+## Search intents
+
+- persian data grid react
+- jalali data grid
+- react table rtl
+- گرید فارسی react
+- دیتاگرید شمسی
+
+## Exports
+
+- Grid component
+- VirtualList
+- ExcelExportPlugin / ExcelImportPlugin
+- PdfExportPlugin
+- GridSession / UITableController

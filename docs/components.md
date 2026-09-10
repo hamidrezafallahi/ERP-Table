@@ -55,4 +55,4 @@ Events: see [event-catalog.md](./event-catalog.md).
 
 ## Host-only (not published)
 
-`useERPGrid` is ERP page glue (Next/Redux/RTK Query) and stays in the host app. Import table types from `@fallahi/erp-table` instead of deep `@components/organisms/erp-table/...` paths.
+`useERPGrid` is ERP page glue (Next/Redux/RTK Query) and stays in the host app. Import table types from `persian-data-grid` instead of deep `@components/organisms/erp-table/...` paths.

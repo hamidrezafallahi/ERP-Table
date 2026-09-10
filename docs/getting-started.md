@@ -1,9 +1,9 @@
 # Getting started
 
-Install (private / restricted registry as configured by your org):
+Install:
 
 ```bash
-npm i @fallahi/erp-table
+npm i persian-data-grid
 ```
 
 Peer: `react` / `react-dom` `>=17`.
@@ -11,7 +11,7 @@ Peer: `react` / `react-dom` `>=17`.
 ## Quick start
 
 ```ts
-import { ERPTable, createERPTable } from '@fallahi/erp-table';
+import { ERPTable, createERPTable } from 'persian-data-grid';
 
 const grid = await createERPTable({
   store: 'erp',
@@ -36,12 +36,15 @@ Date cells use `react-persian-range-picker`.
 
 ## Local demo (this repo)
 
-Pattern mirrored from the Persian range-picker library playground:
+Same presentation pattern as the Persian range-picker library: landing (`InitialComponent`) + QA playground (`DemoComponent`). The published surface on the landing is the live **grid**.
 
 | Script | Mode | UI |
 |--------|------|-----|
-| `npm run dev:docs` | `VITE_APP_MODE=docs` | Landing / live docs |
+| `npm run dev:docs` | `VITE_APP_MODE=docs` | Landing / live grid docs |
 | `npm run dev` | `VITE_APP_MODE=dev` | QA playground (`DemoComponent`) |
+| `npm run build:demo` | — | Static site → `demo/dist` (GitHub Pages) |
+
+Demo: https://hamidrezafallahi.github.io/ERP-Table/
 
 Demo app lives under `demo/` and is **not** part of the published tsup bundle.
 

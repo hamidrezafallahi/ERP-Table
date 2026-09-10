@@ -1,8 +1,8 @@
 {
-  "name": "@fallahi/erp-table-plugin-excel",
+  "name": "persian-data-grid-plugin-excel",
   "version": "0.5.0",
   "private": true,
-  "description": "Excel export/import plugins for @fallahi/erp-table (EXPORT_REQUESTED / IMPORT_REQUESTED)",
+  "description": "Excel export/import plugins for persian-data-grid (EXPORT_REQUESTED / IMPORT_REQUESTED)",
   "type": "module",
   "main": "./src/index.ts",
   "exports": {

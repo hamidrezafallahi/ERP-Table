@@ -1,4 +1,4 @@
-import type { ColumnSchema, RowInput } from '@fallahi/erp-table';
+import type { ColumnSchema, RowInput } from 'persian-data-grid';
 
 /** Always-on index column — same shape as voucherTemplate/config.ts */
 export const DEMO_INDEX_COLUMN: ColumnSchema = {
@@ -506,35 +506,42 @@ export const VOUCHER_FOLLOW_UP_DATE = new Date(
   '2026-09-09T12:00:00+03:30',
 ).valueOf();
 
-export function buildVoucherDemoRows(): RowInput[] {
-  return [
-    {
-      id: 1,
+export function buildVoucherDemoRows(count = 2): RowInput[] {
+  const debit: RowInput['values'] = {
+    AccountId: '1103',
+    TafsiliId: 'parsian-sohrevardi',
+    DetailDesc: '123',
+    Bed: 10000000,
+    Bes: '',
+    FollowUpNumber: '123124',
+    FollowUpDate: VOUCHER_FOLLOW_UP_DATE,
+  };
+  const credit: RowInput['values'] = {
+    AccountId: '1103',
+    TafsiliId: 'parsian-sohrevardi',
+    DetailDesc: '3321',
+    Bed: '',
+    Bes: 10000000,
+    FollowUpNumber: '123124',
+    FollowUpDate: VOUCHER_FOLLOW_UP_DATE,
+  };
+
+  const size = Math.max(1, count);
+  return Array.from({ length: size }, (_, i) => {
+    const isDebit = i % 2 === 0;
+    const base = isDebit ? debit : credit;
+    return {
+      id: i + 1,
       collection: 'default',
       values: {
-        AccountId: '1103',
-        TafsiliId: 'parsian-sohrevardi',
-        DetailDesc: '123',
-        Bed: 10000000,
-        Bes: '',
-        FollowUpNumber: '123124',
-        FollowUpDate: VOUCHER_FOLLOW_UP_DATE,
+        ...base,
+        DetailDesc: String(Number(base.DetailDesc ?? 100) + i),
+        FollowUpNumber: String(123124 + i),
+        Bed: isDebit ? 10_000_000 + i * 1_000 : '',
+        Bes: isDebit ? '' : 10_000_000 + i * 1_000,
       },
-    },
-    {
-      id: 2,
-      collection: 'default',
-      values: {
-        AccountId: '1103',
-        TafsiliId: 'parsian-sohrevardi',
-        DetailDesc: '3321',
-        Bed: '',
-        Bes: 10000000,
-        FollowUpNumber: '123124',
-        FollowUpDate: VOUCHER_FOLLOW_UP_DATE,
-      },
-    },
-  ];
+    };
+  });
 }
 
 export function buildDemoRows(count = 200): RowInput[] {

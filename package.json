@@ -1,12 +1,40 @@
 {
-  "name": "@fallahi/erp-table",
+  "name": "persian-data-grid",
   "version": "0.5.0",
-  "description": "ERP grid with React ERPTable chrome — same look and behavior as the ERP host table",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "author": "hamidreza fallahi",
+  "keywords": [
+    "persian-data-grid",
+    "data-grid",
+    "data grid",
+    "react-data-grid",
+    "react table",
+    "headless-data-grid",
+    "erp",
+    "erp grid",
+    "event-sourcing",
+    "cqrs",
+    "indexeddb",
+    "offline-first",
+    "excel-like",
+    "keyboard-navigation",
+    "virtual-scroll",
+    "rtl",
+    "persian",
+    "jalali",
+    "shamsi",
+    "ddd",
+    "typescript",
+    "react"
+  ],
+  "description": "Persian / Jalali data grid for React — event-sourced, IndexedDB storage, Excel/IDE keyboard navigation, RTL, reactive cells that call your API. TypeScript, virtual scroll, Excel/PDF plugins.",
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -14,18 +42,26 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": [
-    "dist",
-    "docs",
-    "ARCHITECTURE.md",
-    "EXECUTION_PLAN.md",
-    "WORKLOG.md"
-  ],
   "sideEffects": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hamidrezafallahi/ERP-Table.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hamidrezafallahi/ERP-Table/issues"
+  },
+  "homepage": "https://hamidrezafallahi.github.io/ERP-Table/",
+  "engines": {
+    "node": ">=16"
+  },
   "scripts": {
     "dev": "vite --config demo/vite.config.ts --mode playground",
     "dev:docs": "vite --config demo/vite.config.ts",
+    "dev:demo": "vite --config demo/vite.config.ts",
     "dev:playground": "vite --config demo/vite.config.ts --mode playground",
+    "build:demo": "vite build --config demo/vite.config.ts",
+    "preview:demo": "vite preview --config demo/vite.config.ts",
+    "deploy:demo": "gh-pages -d demo/dist",
     "test": "vitest run domain/__tests__ application/__tests__ infrastructure/__tests__ bootstrap/__tests__ engine/__tests__ ui/virtual/__tests__ ui/desktop/__tests__ ui/gridSearch/__tests__ packages/plugins/excel/__tests__ packages/plugins/pdf/__tests__",
     "typecheck:publish": "tsc -p tsconfig.publish.json --noEmit",
     "typecheck:host-ui": "tsc -p tsconfig.json --noEmit",
@@ -34,8 +70,8 @@
     "prepublishOnly": "npm run typecheck:publish && npm run typecheck:host-ui && npm run build && npm run verify:dist && npm test"
   },
   "peerDependencies": {
-    "react": ">=17",
-    "react-dom": ">=17"
+    "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -49,6 +85,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react-swc": "^3.11.0",
+    "gh-pages": "^5.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.2.8",
     "react-persian-range-picker": "^1.1.1",
@@ -58,19 +95,8 @@
     "vitest": "^4.1.10"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/fallahi/erp-table.git"
-  },
-  "keywords": [
-    "erp",
-    "grid",
-    "event-sourcing",
-    "ddd",
-    "react"
-  ],
   "dependencies": {
     "fflate": "^0.8.3",
     "react-persian-range-picker": "^1.1.1"

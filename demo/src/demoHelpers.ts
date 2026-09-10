@@ -1,4 +1,4 @@
-import type { ColumnSchema } from '@fallahi/erp-table';
+import type { ColumnSchema } from 'persian-data-grid';
 
 import { DEMO_INDEX_COLUMN, ensureDemoColumns } from './fixtures';
 

@@ -1,5 +1,5 @@
 /**
- * @deprecated Import from `packages/plugins/excel` (or `@fallahi/erp-table` when published).
+ * @deprecated Import from `packages/plugins/excel` (or `persian-data-grid` when published).
  * Kept as a stable path for existing ERP toolbar imports.
  */
 export {

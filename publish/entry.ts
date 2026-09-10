@@ -1,5 +1,5 @@
 /**
- * Package entry for `@fallahi/erp-table`.
+ * Package entry for `persian-data-grid`.
  * Includes the React ERPTable chrome so ERP can `npm i` and render
  * the same table without host atoms / Tailwind scan.
  */

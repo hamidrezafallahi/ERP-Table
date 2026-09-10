@@ -6,14 +6,17 @@ import react from '@vitejs/plugin-react-swc';
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(rootDir, '..');
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   root: rootDir,
+  // gh-pages needs the repo base path; local `yarn dev` / `dev:docs` must use `/`
+  base: command === 'build' ? '/ERP-Table/' : '/',
   plugins: [react()],
   resolve: {
     alias: {
-      '@fallahi/erp-table': path.resolve(repoRoot, 'publish/entry.ts'),
+      'persian-data-grid': path.resolve(repoRoot, 'publish/entry.ts'),
     },
   },
+  publicDir: path.resolve(rootDir, 'public'),
   build: {
     outDir: path.resolve(rootDir, 'dist'),
     emptyOutDir: true,
@@ -22,4 +25,4 @@ export default defineConfig({
     port: 5175,
     open: true,
   },
-});
+}));

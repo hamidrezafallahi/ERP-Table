@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
-import type { ColumnSchema, CreateERPTableResult } from '@fallahi/erp-table';
+import type { ColumnSchema, CreateERPTableResult } from 'persian-data-grid';
 
 import type { DisplayRow } from './demoHelpers';
 import { DEMO_INDEX_COLUMN } from './fixtures';
