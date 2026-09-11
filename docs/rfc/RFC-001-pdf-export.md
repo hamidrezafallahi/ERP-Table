@@ -26,7 +26,9 @@ This publishes `EXPORT_REQUESTED` on the **view stream** `table/{id}/view` (not 
 
 - Folder: `packages/plugins/pdf`
 - Port: `application/ports/PdfRenderer` (jsPDF stays out of Core)
-- Default renderer: `TextPdfRenderer` (minimal PDF; Host may inject jsPDF)
+- Default renderer (PR-66): `VazirmatnPdfRenderer` — CIDFontType2 + Vazirmatn OFL, RTL table, no 8×40 cap.
+- Legacy renderer: `TextPdfRenderer` (Helvetica; 8×40). Host may still inject it via `PdfExportPlugin({ renderer })`.
+- Product toolbar (PR-67): PDF button when `PdfExportPlugin` is registered on `ERPTable` / `createERPTable`.
 
 ## Out of scope
 

@@ -4,10 +4,11 @@ import React, { ReactNode, useRef } from 'react';
 
 import type { GridSession } from '../../application/session/GridSession';
 import { UITableController } from '../../infrastructure/ui/UITableController';
+import type { PluginHost } from '../../application/plugins/PluginHost';
 import { useScrollToSearchMatch } from '../hooks/useScrollToSearchMatch';
 import { IMultiSelectConfig } from '../type';
 import { useERPTableTheme } from '../host';
-import { ariaGridRowCount } from '../a11y/gridRoles';
+import { ariaGridRowCount, gridCellDomId } from '../a11y/gridRoles';
 import { ERPTableBody } from './ERPTableBody';
 import { ERPTableFooter } from './ERPTableFooter';
 import { ERPTableHeader } from './ERPTableHeader';
@@ -30,11 +31,13 @@ export interface DesktopTableProps {
   ready: boolean;
   /**
    * Desktop virtual scroll (GridSession viewport + visible window).
-   * Default true when `session` is present; pass false for classic pagination.
+   * Off by default — requires an explicit `virtualization={true}` **and** a `session`.
+   * Classic pagination is the default; D17 / PR-97 will flip the default on.
    */
   virtualization?: boolean;
-  /** Used when virtualization is enabled (default). */
+  /** Required when `virtualization={true}`; ignored when virtualization is off. */
   session?: GridSession;
+  pluginHost?: PluginHost;
 }
 
 export function DesktopTable({
@@ -50,6 +53,7 @@ export function DesktopTable({
   ready,
   virtualization,
   session,
+  pluginHost,
 }: DesktopTableProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -75,6 +79,9 @@ export function DesktopTable({
     ? session.getUiRowCount()
     : view?.pagination.totalRows ?? 0;
   const hasFooter = Boolean(footer);
+  const activeDescendant = view?.activeCell
+    ? gridCellDomId(tableKey, view.activeCell.rowId, view.activeCell.columnId)
+    : undefined;
 
   return (
     <div
@@ -99,6 +106,7 @@ export function DesktopTable({
           role="grid"
           aria-colcount={colCount || undefined}
           aria-rowcount={ariaGridRowCount(dataRowCount, hasFooter) || undefined}
+          aria-activedescendant={activeDescendant}
         >
           <ERPTableHeader
             controller={controller}
@@ -135,6 +143,7 @@ export function DesktopTable({
         <GroupActionButtons
           controller={controller}
           multiSelectConfig={multiSelectConfig}
+          pluginHost={pluginHost}
         />
         {!useVirtual ? (
           <ERPTablePagination

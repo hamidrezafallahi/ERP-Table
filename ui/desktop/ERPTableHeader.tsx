@@ -7,7 +7,7 @@ import { columnSizeStyle, isIndexColumn } from '../../engine/columnWidth';
 import { ValidationCallbackResult } from '../../engine/type';
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { revealRow } from '../gridSearch/utils';
-import { useDirection } from '../host';
+import { useDirection, useTranslations } from '../host';
 import {
   ARIA_HEADER_ROW_INDEX,
   ariaColIndex,
@@ -23,6 +23,7 @@ interface Props {
 
 export function ERPTableHeader({controller, tableKey, header}: Props) {
   const direction = useDirection();
+  const t = useTranslations();
   const table = controller.getViewState();
   const draggedFieldRef = useRef<string | null>(null);
   const [dropField, setDropField] = useState<string | null>(null);
@@ -173,6 +174,7 @@ export function ERPTableHeader({controller, tableKey, header}: Props) {
                   <CustomCheckbox
                     checked={isSelectedActivePageRows}
                     onClick={handleSelectActivePageRows}
+                    aria-label={t("general.toggle")}
                   />
 
                   {col.fieldCaption}
@@ -216,6 +218,7 @@ export function ERPTableHeader({controller, tableKey, header}: Props) {
                 <CustomCheckbox
                   checked={isSelectedActivePageRows}
                   onClick={handleSelectActivePageRows}
+                  aria-label={t("general.toggle")}
                 />
               )}
               {col.fieldCaption}

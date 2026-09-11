@@ -9,6 +9,7 @@ import {
   ARIA_HEADER_ROW_INDEX,
   ariaColIndex,
 } from '../a11y/gridRoles';
+import { useTranslations } from '../host';
 import { indexPinClassName, indexPinDataAttr } from '../columnPin';
 
 interface MobileTableHeaderProps {
@@ -20,6 +21,7 @@ export function MobileTableHeader({
   controller,
   header,
 }: MobileTableHeaderProps) {
+  const t = useTranslations();
   const table = controller.getViewState();
   const [validationResult, setValidationResult] =
     useState<ValidationCallbackResult>({
@@ -114,6 +116,7 @@ export function MobileTableHeader({
                 <CustomCheckbox
                   checked={isSelectedActivePageRows}
                   onClick={handleSelectActivePageRows}
+                  aria-label={t("general.toggle")}
                 />
                 {col.fieldCaption}
               </th>

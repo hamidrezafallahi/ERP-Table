@@ -13,6 +13,23 @@ export default defineConfig(({ command }) => ({
   plugins: [react()],
   resolve: {
     alias: {
+      'persian-data-grid/plugins/excel': path.resolve(
+        repoRoot,
+        'publish/plugins/excel.ts',
+      ),
+      'persian-data-grid/plugins/pdf': path.resolve(
+        repoRoot,
+        'publish/plugins/pdf.ts',
+      ),
+      'persian-data-grid/plugins/pdf/fonts/vazirmatn': path.resolve(
+        repoRoot,
+        'publish/plugins/pdf-fonts-vazirmatn.ts',
+      ),
+      'persian-data-grid/adapters/arian-erp': path.resolve(
+        repoRoot,
+        'publish/adapters/arian-erp.ts',
+      ),
+      'persian-data-grid/headless': path.resolve(repoRoot, 'publish/headless.ts'),
       'persian-data-grid': path.resolve(repoRoot, 'publish/entry.ts'),
     },
   },

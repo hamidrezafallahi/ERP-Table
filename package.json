@@ -31,7 +31,7 @@
     "typescript",
     "react"
   ],
-  "description": "Persian / Jalali data grid for React — event-sourced, IndexedDB storage, Excel/IDE keyboard navigation, RTL, reactive cells that call your API. TypeScript, virtual scroll, Excel/PDF plugins.",
+  "description": "Persian / Jalali data grid for React — event-sourced, IndexedDB storage, cell keyboard navigation, RTL, reactive cells via host-injected API. TypeScript, optional virtual scroll, Excel/PDF plugins.",
   "files": [
     "dist"
   ],
@@ -40,6 +40,41 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./headless": {
+      "types": "./dist/headless.d.ts",
+      "import": "./dist/headless.js",
+      "require": "./dist/headless.cjs"
+    },
+    "./plugins/excel": {
+      "types": "./dist/plugins/excel.d.ts",
+      "import": "./dist/plugins/excel.js",
+      "require": "./dist/plugins/excel.cjs"
+    },
+    "./plugins/pdf": {
+      "types": "./dist/plugins/pdf.d.ts",
+      "import": "./dist/plugins/pdf.js",
+      "require": "./dist/plugins/pdf.cjs"
+    },
+    "./plugins/pdf/fonts/vazirmatn": {
+      "types": "./dist/plugins/pdf/fonts/vazirmatn.d.ts",
+      "import": "./dist/plugins/pdf/fonts/vazirmatn.js",
+      "require": "./dist/plugins/pdf/fonts/vazirmatn.cjs"
+    },
+    "./adapters/arian-erp": {
+      "types": "./dist/adapters/arian-erp.d.ts",
+      "import": "./dist/adapters/arian-erp.js",
+      "require": "./dist/adapters/arian-erp.cjs"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "typesVersions": {
+    "*": {
+      "headless": ["dist/headless.d.ts"],
+      "plugins/excel": ["dist/plugins/excel.d.ts"],
+      "plugins/pdf": ["dist/plugins/pdf.d.ts"],
+      "plugins/pdf/fonts/vazirmatn": ["dist/plugins/pdf/fonts/vazirmatn.d.ts"],
+      "adapters/arian-erp": ["dist/adapters/arian-erp.d.ts"]
     }
   },
   "sideEffects": true,
@@ -67,7 +102,8 @@
     "typecheck:host-ui": "tsc -p tsconfig.json --noEmit",
     "build": "tsup --config tsup.config.ts",
     "verify:dist": "node ./scripts/verify-dist.mjs",
-    "prepublishOnly": "npm run typecheck:publish && npm run typecheck:host-ui && npm run build && npm run verify:dist && npm test"
+    "size": "size-limit",
+    "prepublishOnly": "npm run typecheck:publish && npm run typecheck:host-ui && npm run build && npm run verify:dist && npm run size && npm test"
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
@@ -82,6 +118,7 @@
     }
   },
   "devDependencies": {
+    "@size-limit/file": "^13.0.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react-swc": "^3.11.0",
@@ -89,6 +126,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.2.8",
     "react-persian-range-picker": "^1.1.1",
+    "size-limit": "^13.0.3",
     "tsup": "^8.5.0",
     "typescript": "^5.8.2",
     "vite": "^5.4.21",

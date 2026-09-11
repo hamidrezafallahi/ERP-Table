@@ -1,7 +1,7 @@
 /**
- * Package entry for `persian-data-grid`.
- * Includes the React ERPTable chrome so ERP can `npm i` and render
- * the same table without host atoms / Tailwind scan.
+ * Package entry for `persian-data-grid` (React grid chrome).
+ * Heavy optional surfaces live on subpaths (PR-76 / D15); root keeps
+ * deprecated re-exports so existing hosts keep compiling.
  */
 import '../ui/styles/injectStyles';
 
@@ -13,6 +13,10 @@ export { useERPTableTheme } from '../ui/host';
 export { CellRenderer, resolveCustomCellNode, resolveBoundCellNode, resolveRegisteredCellNode } from '../ui/cellRenderer';
 export type { CellRenderContext, CellComponent, CellComponentMap } from '../ui/cellRenderer';
 export { DEFAULT_CELL_COMPONENTS, mergeCellComponents, TextAreaCell } from '../ui/cellRenderer';
+export {
+  highlightIfCurrentSearch,
+  highlightSearchText,
+} from '../ui/gridSearch/highlightText';
 export { shouldSkipGridNavigation } from '../ui/keyboard/skipGridNavigation';
 export { useERPTable } from '../ui/useERPTable';
 export type { UseERPTableResult } from '../ui/useERPTable';
@@ -55,7 +59,6 @@ export type {
 export type { EventStore, AppendResult } from '../application/ports/EventStore';
 export type { RemoteApi } from '../application/ports/RemoteApi';
 export { NoopRemoteApi } from '../infrastructure/Repositories/noopRemoteApi';
-export { FetchRemoteApi } from '../infrastructure/Repositories/fetchRemoteApi';
 export {
   EVENT_CATALOG,
   getEventCatalogEntry,
@@ -107,6 +110,10 @@ export type {
 } from '../application/plugins/PluginHost';
 export { createEngineGridQuery } from '../application/plugins/createEngineGridQuery';
 export type { PdfRenderer } from '../application/ports/PdfRenderer';
+export { ERPTableHostProvider } from '../ui/host';
+export type { ERPTableHostValue, ERPTableLocale, ERPTableMessages } from '../ui/host';
+
+/** @deprecated Import from `persian-data-grid/plugins/excel` (PR-76). */
 export {
   ExcelExportPlugin,
   ExcelImportPlugin,
@@ -116,10 +123,17 @@ export {
   parseXlsxBlob,
   mapImportedSheet,
   applyImportedRows,
-} from '../packages/plugins/excel/src';
+} from './plugins/excel';
+
+/** @deprecated Import from `persian-data-grid/plugins/pdf` (PR-76). */
 export {
   PdfExportPlugin,
   TextPdfRenderer,
-} from '../packages/plugins/pdf/src';
-export { ERPTableHostProvider } from '../ui/host';
-export type { ERPTableHostValue, ERPTableLocale, ERPTableMessages } from '../ui/host';
+  VazirmatnPdfRenderer,
+} from './plugins/pdf';
+
+/**
+ * @deprecated Import from `persian-data-grid/adapters/arian-erp` (PR-76).
+ * Default remote remains `NoopRemoteApi`.
+ */
+export { FetchRemoteApi } from './adapters/arian-erp';

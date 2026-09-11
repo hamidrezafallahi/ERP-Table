@@ -3,9 +3,10 @@
 import React, { useRef, useState } from 'react';
 
 import { useTranslations } from '../host';
-import { CustomTooltip, Magnifier } from '../primitives';
+import { Magnifier } from '../primitives';
 
 import { UITableController } from '../../infrastructure/ui/UITableController';
+import { ToolbarIconButton } from '../a11y/ToolbarIconButton';
 import { GridSearchPanel } from './GridSearchPanel';
 
 interface GridSearchControlProps {
@@ -34,17 +35,13 @@ export function GridSearchControl({ controller }: GridSearchControlProps) {
 
   return (
     <div className="relative" ref={searchAnchorRef}>
-      <CustomTooltip title={t("general.search")}>
-        <button
-          type="button"
-          className={`flex justify-center items-center p-1 border rounded ${
-            searchOpen ? "bg-blue-blue11" : ""
-          }`}
-          onClick={toggleSearch}
-        >
-          <Magnifier config={{ width: 18, height: 18 }} />
-        </button>
-      </CustomTooltip>
+      <ToolbarIconButton
+        label={t("general.search")}
+        className={searchOpen ? "bg-blue-blue11" : ""}
+        onClick={toggleSearch}
+      >
+        <Magnifier config={{ width: 18, height: 18 }} />
+      </ToolbarIconButton>
       <GridSearchPanel
         controller={controller}
         isOpen={searchOpen}

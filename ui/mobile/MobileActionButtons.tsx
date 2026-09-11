@@ -3,13 +3,16 @@ import React, { useState } from 'react';
 import { useTranslations } from '../host';
 import {
   CustomModal,
-  CustomTooltip,
   ClipboardCheck,
   PlusIcon,
   TrashBin,
 } from '../primitives';
 
 import { UITableController } from '../../infrastructure/ui/UITableController';
+import type { PluginHost } from '../../application/plugins/PluginHost';
+import { ToolbarIconButton } from '../a11y/ToolbarIconButton';
+import { PdfExportToolbarButton } from '../export/PdfExportToolbarButton';
+import { ExcelImportToolbarButton } from '../export/ExcelImportToolbarButton';
 import { GridSearchControl } from '../gridSearch/GridSearchControl';
 import MultiselectList from '../multiSelectList';
 import { ThemeToggleButton } from '../theme/ThemeToggleButton';
@@ -18,11 +21,13 @@ import { IMultiSelectConfig } from '../type';
 interface MobileActionButtonsProps {
   controller: UITableController;
   multiSelectConfig?: IMultiSelectConfig;
+  pluginHost?: PluginHost;
 }
 
 export function MobileActionButtons({
   controller,
   multiSelectConfig,
+  pluginHost,
 }: MobileActionButtonsProps) {
   const t = useTranslations();
   const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -38,40 +43,32 @@ export function MobileActionButtons({
   };
 
   return (
-    <div className="flex items-center gap-2 justify-end">
-      <CustomTooltip title={t("general.addNewRow")}>
-        <button
-          type="button"
-          className="flex justify-center items-center p-1 border rounded"
-          onClick={handleAddRow}
-        >
-          <PlusIcon config={{ width: 18, height: 18 }} />
-        </button>
-      </CustomTooltip>
+    <div
+      className="flex items-center gap-2 justify-end"
+      role="toolbar"
+      aria-label={t("general.toolbar")}
+    >
+      <ToolbarIconButton label={t("general.addNewRow")} onClick={handleAddRow}>
+        <PlusIcon config={{ width: 18, height: 18 }} />
+      </ToolbarIconButton>
 
-      <CustomTooltip title={t("general.delete")}>
-        <button
-          type="button"
-          disabled={count == 0}
-          className={`flex justify-center items-center p-1 border rounded ${count == 0 && "opacity-40"}`}
-          onClick={handleDeleteSelectedRows}
-        >
-          <TrashBin config={{ width: 18, height: 18 }} />
-        </button>
-      </CustomTooltip>
+      <ToolbarIconButton
+        label={t("general.delete")}
+        disabled={count == 0}
+        onClick={handleDeleteSelectedRows}
+      >
+        <TrashBin config={{ width: 18, height: 18 }} />
+      </ToolbarIconButton>
 
       {multiSelectConfig && (
         <>
-          <CustomTooltip title={t("general.chooseFromList")}>
-            <button
-              type="button"
-              data-erp-multiselect
-              onClick={() => setModalIsOpen(true)}
-              className="flex justify-center items-center p-1 border rounded"
-            >
-              <ClipboardCheck config={{ width: 18, height: 18 }} />
-            </button>
-          </CustomTooltip>
+          <ToolbarIconButton
+            label={t("general.chooseFromList")}
+            data-erp-multiselect=""
+            onClick={() => setModalIsOpen(true)}
+          >
+            <ClipboardCheck config={{ width: 18, height: 18 }} />
+          </ToolbarIconButton>
           <CustomModal
             contentClassName={"w-[720px] !h-[480px]"}
             headerName={t("general.chooseFromList")}
@@ -88,6 +85,10 @@ export function MobileActionButtons({
           />
         </>
       )}
+
+      <ExcelImportToolbarButton pluginHost={pluginHost} />
+
+      <PdfExportToolbarButton pluginHost={pluginHost} />
 
       <GridSearchControl controller={controller} />
 

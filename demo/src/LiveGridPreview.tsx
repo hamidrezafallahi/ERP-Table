@@ -8,12 +8,16 @@ import {
   mapImportedSheet,
   parseXlsxBlob,
   RowStateEnum,
-  TextPdfRenderer,
+  ExcelImportPlugin,
   themeErp,
   type CellComponentMap,
   type IMultiSelectConfig,
   type UITableController,
 } from 'persian-data-grid';
+import {
+  createVazirmatnPdfExportPlugin,
+  createVazirmatnPdfRenderer,
+} from 'persian-data-grid/plugins/pdf/fonts/vazirmatn';
 
 import {
   buildVoucherDemoRows,
@@ -146,6 +150,10 @@ export function LiveGridPreview({
 
   const rows = useMemo(() => buildVoucherDemoRows(rowCount), [rowCount]);
   const columns = useMemo(() => VOUCHER_COLUMNS, []);
+  const plugins = useMemo(
+    () => [createVazirmatnPdfExportPlugin({ download: true }), new ExcelImportPlugin()],
+    [],
+  );
   const instanceKey = `${tableKey}-r${rowCount}-h${qaTallRows ? 48 : 40}`;
   const showLog = toolbar;
   const qaTheme = useMemo(() => {
@@ -506,8 +514,9 @@ export function LiveGridPreview({
                     'active',
                   );
                   if (!source) throw new Error('NO_COLUMNS');
-                  const blob = await new TextPdfRenderer().render(source, {
-                    title: tableTitle,
+                  const blob = await createVazirmatnPdfRenderer().render(source, {
+                    title: tableTitle || 'اقلام سند',
+                    direction: 'rtl',
                   });
                   downloadBlob(blob, `grid-${new Date().toISOString().slice(0, 10)}.pdf`);
                   setStatus('خروجی PDF آماده شد');
@@ -620,6 +629,8 @@ export function LiveGridPreview({
         multiSelectConfig={multiSelectConfig}
         theme={qaTheme}
         components={checkboxHostComponents}
+        plugins={plugins}
+        footer={true}
         onReady={setController}
       />
 

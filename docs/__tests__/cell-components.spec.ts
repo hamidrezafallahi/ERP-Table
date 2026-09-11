@@ -20,6 +20,7 @@ describe('PR-57 cell-components host guide', () => {
     expect(doc).toContain('textArea');
     expect(doc).toContain('data-erp-cell-textarea');
     expect(doc).toContain('shouldSkipGridNavigation');
+    expect(doc).toContain('highlightIfCurrentSearch');
     expect(doc).toContain('returnDisplayValue');
     expect(doc).toMatch(/without.*CellRenderer/i);
     expect(doc).toContain('Do not');

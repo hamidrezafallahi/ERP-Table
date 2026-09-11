@@ -16,6 +16,7 @@ export function MobileTableBody({
   rows,
   columns,
 }: MobileTableBodyProps) {
+  const activeCell = controller.getViewState()?.activeCell ?? null;
   return (
     <tbody className="w-full min-w-0 overflow-x-auto" role="rowgroup">
       {rows.map((row, index) => (
@@ -29,6 +30,7 @@ export function MobileTableBody({
           isSelected={!!controller.isSelectedRow(row.id)}
           isActive={!!controller.isActiveRow(row.id)}
           isCut={!!controller.isCutRow(row.id)}
+          activeCell={activeCell}
         />
       ))}
     </tbody>

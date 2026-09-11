@@ -1,3 +1,4 @@
+import { highlightIfCurrentSearch } from '../gridSearch/highlightText';
 import type { CellRenderContext } from './cellRenderContext';
 
 /**
@@ -5,15 +6,21 @@ import type { CellRenderContext } from './cellRenderContext';
  * not a `switch (FieldType)` case in CellRenderer.
  */
 export function TextAreaCell(ctx: CellRenderContext) {
+  const showSearchHit = !!(
+    ctx.isCurrentSearchMatch && ctx.searchQuery?.trim()
+  );
   const editing =
-    ctx.mode === 'form' || (ctx.mode === 'cell' && ctx.isActive);
+    !showSearchHit &&
+    (ctx.mode === 'form' || (ctx.mode === 'cell' && ctx.isActive));
   const disabled = ctx.isDeleted || !ctx.isEditable;
   const text = ctx.value == null ? '' : String(ctx.value);
 
   if (!editing || disabled) {
     return (
       <span className="whitespace-pre-wrap break-words py-1 text-start">
-        {text || (ctx.mode === 'view' ? '—' : '')}
+        {showSearchHit
+          ? highlightIfCurrentSearch(text, ctx.searchQuery, true)
+          : text || (ctx.mode === 'view' ? '—' : '')}
       </span>
     );
   }

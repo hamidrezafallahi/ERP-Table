@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 // Host page glue for ERP grids (Next.js / redux slices). Outside package core.
 import {
   useCallback,
@@ -112,7 +112,7 @@ export function useERPGrid(props: Omit<GridContainedPageProps, "Component" | "fo
     const listPages = pages.filter((item) => item.url === activePage?.listUrl);
     const initializePage = useInitializePage();
     const fetchDefaultValues = async (recordId: number, asCopy = false) => {
-        // Look up by this page's id — on tab return activePage may still be the previous tab
+        // Look up by this page's id ΓÇö on tab return activePage may still be the previous tab
         const storedData =
             pages.find((p) => p.pageId === pageId)?.pageData ??
             activePage?.pageData;
@@ -246,8 +246,8 @@ export function useERPGrid(props: Omit<GridContainedPageProps, "Component" | "fo
                 // optional
                 setPageReady(false);
 
-                // اگر toast داری:
-                showErrorToast("خطا در دریافت اطلاعات صفحه", error);
+                // ╪º┌»╪▒ toast ╪»╪º╪▒█î:
+                showErrorToast("╪«╪╖╪º ╪»╪▒ ╪»╪▒█î╪º┘ü╪¬ ╪º╪╖┘ä╪º╪╣╪º╪¬ ╪╡┘ü╪¡┘ç", error);
             }
         };
         init();

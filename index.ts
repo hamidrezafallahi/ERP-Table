@@ -4,6 +4,10 @@ export { ERPTable } from './ui';
 export { CellRenderer, resolveCustomCellNode, resolveBoundCellNode, resolveRegisteredCellNode } from './ui/cellRenderer';
 export type { CellRenderContext, CellComponent, CellComponentMap } from './ui/cellRenderer';
 export { DEFAULT_CELL_COMPONENTS, mergeCellComponents, TextAreaCell } from './ui/cellRenderer';
+export {
+  highlightIfCurrentSearch,
+  highlightSearchText,
+} from './ui/gridSearch/highlightText';
 export { shouldSkipGridNavigation } from './ui/keyboard/skipGridNavigation';
 export { GridTheme, themeErp, themeErpDark } from './ui/theme';
 export type { ThemeCssVars, ThemeParams } from './ui/theme';
@@ -13,8 +17,9 @@ export type { UIRow, IMultiSelectConfig } from './ui/type';
 export type { ERPTableProps } from './ui';
 export type { ItemType, TableSnapShot } from './engine/type';
 export { RowStateEnum } from './domain/value-objects';
-export { FetchRemoteApi } from './infrastructure/Repositories/fetchRemoteApi';
 export { NoopRemoteApi } from './infrastructure/Repositories/noopRemoteApi';
+/** @deprecated Import from `persian-data-grid/adapters/arian-erp` (PR-76). */
+export { FetchRemoteApi } from './infrastructure/Repositories/fetchRemoteApi';
 export { TableEngine } from './engine/tableEngine';
 export { VirtualList, useVirtualWindow, buildVirtualWindow } from './ui/virtual';
 export type { VirtualListProps, UseVirtualWindowResult, VirtualWindowModel } from './ui/virtual';
@@ -88,4 +93,5 @@ export {
 export {
   PdfExportPlugin,
   TextPdfRenderer,
+  VazirmatnPdfRenderer,
 } from './packages/plugins/pdf/src';

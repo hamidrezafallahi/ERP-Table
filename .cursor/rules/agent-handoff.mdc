@@ -1,5 +1,5 @@
 ---
-description: Read WORKLOG + EXECUTION_PLAN before changing the grid; Phase 6+ is the open track.
+description: Read WORKLOG + EXECUTION_PLAN before changing the grid; Phase 16+ is the open track.
 alwaysApply: true
 ---
 
@@ -9,11 +9,26 @@ Before any feature, refactor, or "continue the table":
 
 1. Read `WORKLOG.md` (Current Snapshot).
 2. Read `docs/agent-handoff.md`.
-3. Read `EXECUTION_PLAN.md` from **Active Track** — first unchecked `PR-N` in Phase 6+.
-4. Do not reopen Phase 1–5 (PR-1 … PR-38) except bugfix.
-5. Out of scope without a new RFC: grouping, pivot, tree data, charts, SSRM, cell range selection.
-6. If `EXECUTION_PLAN.md` Open Decisions marks the PR as **باز**, ask the user and stop.
-7. Breaking public API or runtime defaults (except D1 Noop RemoteApi and D11 optional `multiSelectConfig`, already approved): ask first.
-8. After a PR: check the box, append `WORKLOG.md`, run that PR's Verify commands.
+3. Read `docs/ag-grid-gap-analysis.md` — the scorecard that justifies the phase order.
+4. Read `EXECUTION_PLAN.md` from **Active Track** — first unchecked `PR-N` in Phase 16+.
+5. Do not reopen Phase 1–15 (PR-1 … PR-71) except bugfix. Details are archived in `docs/worklog-archive-v0.5.md` and `docs/execution-plan-archive-v0.5.md`.
+6. `PR-72` … `PR-75` are the mandatory gate: finish them before any feature PR.
+7. Open Decisions `D13 … D21` and `D23 … D25` are **قفل** (locked 1405/06/20) — execute them, do not re-ask. Only **`D22` (monorepo)** is still **باز**: ask before `PR-132`.
+8. Out of scope without a new RFC: pivot, integrated charts, spreadsheet formulas, multi-level tree data, full tool panel, Angular/Vue wrappers. Grouping and single-level aggregation are approved (D20) but gated behind RFC-002 (`PR-117`).
+8b. Every deprecated alias introduced by D13/D14/D18/D24 needs all four of: `@deprecated` tag, a test proving both paths work, a `MIGRATION.md` row, and a codemod entry.
+9. After a PR: check the box, append `WORKLOG.md` using the template at the end of that file, run that PR's Verify commands, record numeric output.
 
-Theming: keep `ui/styles/injectStyles.ts` and `ui/styles/erp-table.css` in sync. Prefer semantic `--erp-accent` over palette `--erp-blue-6`.
+Hard rules:
+
+- `domain/` and `application/` never import React or DOM.
+- No README/docs claim without a CI test. Delete the claim rather than fake the test.
+- Hot-path algorithms (keyboard, scroll, edit) must be `O(window)` or `O(log n)`.
+- Data logic (sort, filter, aggregation, cell range) goes in `engine/` as pure functions, not in React components.
+
+Known contradictions — code is the source of truth:
+
+- Row virtualization defaults **off** (`ui/desktop/resolveDesktopVirtualization.ts`), despite the comment in `DesktopTable.tsx` and the archived PR-37 entry. Changing this is `PR-97` / D17.
+- `persian-data-grid/styles.css` does not exist yet; `PR-77` creates it.
+- `GridSearchPanel` is find-and-navigate, not a filter. Real quick filter is `PR-93`.
+
+Theming: until `PR-77`, keep `ui/styles/injectStyles.ts` and `ui/styles/erp-table.css` in sync by hand. Prefer semantic `--erp-accent` over palette `--erp-blue-6`.

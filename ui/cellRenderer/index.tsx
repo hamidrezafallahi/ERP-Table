@@ -18,7 +18,7 @@ import {
 import { RowStateEnum } from '../../domain/value-objects';
 import { ValidCell } from '../../engine/type';
 import { UITableController } from '../../infrastructure/ui/UITableController';
-import { highlightSearchText } from '../gridSearch/highlightText';
+import { highlightIfCurrentSearch } from '../gridSearch/highlightText';
 import { valueParser } from '../helper';
 import { useGridSearchState } from '../hooks/useEngineSelector';
 import { UIRow } from '../type';
@@ -36,6 +36,10 @@ export {
   resolveRegisteredCellNode,
 } from './cellRegistry';
 export { TextAreaCell } from './TextAreaCell';
+export {
+  highlightIfCurrentSearch,
+  highlightSearchText,
+} from '../gridSearch/highlightText';
 
 /* ======================================================
    Types
@@ -117,10 +121,11 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
 
   const renderCellContent = (cellText: unknown) => {
     const parsed = valueParser(cellText, meta.fieldType, locale);
-    if (isCurrentSearchMatch && searchState?.query) {
-      return highlightSearchText(parsed, searchState.query, true);
-    }
-    return parsed;
+    return highlightIfCurrentSearch(
+      parsed,
+      searchState?.query,
+      isCurrentSearchMatch,
+    );
   };
 
   const blockDrag = (e: React.DragEvent) => {
@@ -164,6 +169,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     dispatchChangeValue,
     dispatchChangeDisplay,
     activeCell,
+    searchQuery: searchState?.query,
+    isCurrentSearchMatch,
   };
 
   const renderReadOnlyCell = (cellText: unknown) => (
@@ -518,6 +525,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           onChange={(e) => dispatchChangeValue(e)}
           onClick={() => activeCell()}
           meta={meta}
+          searchQuery={searchState?.query}
+          isCurrentSearchMatch={isCurrentSearchMatch}
         />
       );
     case "text":

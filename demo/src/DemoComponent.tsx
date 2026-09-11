@@ -4,12 +4,12 @@ import {
   createERPTable,
   ExcelExportPlugin,
   ExcelImportPlugin,
-  PdfExportPlugin,
   VirtualList,
   shouldSkipGridNavigation,
   type ColumnSchema,
   type CreateERPTableResult,
 } from 'persian-data-grid';
+import { createVazirmatnPdfExportPlugin } from 'persian-data-grid/plugins/pdf/fonts/vazirmatn';
 
 import { DemoDateCell } from './DemoDateCell';
 import { DemoIndexCol } from './DemoIndexCol';
@@ -141,7 +141,7 @@ export default function DemoComponent() {
                 pushLog(`imported ${rowCount} rows × ${columnCount} cols → IndexedDB`);
               },
             }),
-            new PdfExportPlugin({ download: true }),
+            createVazirmatnPdfExportPlugin({ download: true }),
           ],
         });
         if (mode === 'paged') {

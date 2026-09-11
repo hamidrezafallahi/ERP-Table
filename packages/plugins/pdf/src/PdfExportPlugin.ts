@@ -18,6 +18,10 @@ export type PdfExportPluginOptions = {
 
 /**
  * Subscribes to EXPORT_REQUESTED (format=pdf); Domain stays untouched.
+ *
+ * Default renderer is legacy `TextPdfRenderer` so `./plugins/pdf` stays free of
+ * font bytes (PR-76 / D15). For Persian PDF:
+ * `import { createVazirmatnPdfExportPlugin } from 'persian-data-grid/plugins/pdf/fonts/vazirmatn'`.
  */
 export class PdfExportPlugin implements GridPlugin {
   readonly name = 'pdf-export';

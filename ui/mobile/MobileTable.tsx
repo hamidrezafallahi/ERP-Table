@@ -7,11 +7,12 @@ import React, {
 } from 'react';
 
 import { UITableController } from '../../infrastructure/ui/UITableController';
+import type { PluginHost } from '../../application/plugins/PluginHost';
 import { ERPTableFooter } from '../desktop/ERPTableFooter';
 import { jsonEqual, useControllerSelector } from '../hooks/useEngineSelector';
 import { useScrollToSearchMatch } from '../hooks/useScrollToSearchMatch';
 import { IMultiSelectConfig } from '../type';
-import { ariaGridRowCount } from '../a11y/gridRoles';
+import { ariaGridRowCount, gridCellDomId } from '../a11y/gridRoles';
 import { MobileActionButtons } from './MobileActionButtons';
 import { MobileLoadMoreButton } from './MobileLoadMoreButton';
 import { MobileRowFormModal } from './MobileRowFormModal';
@@ -27,6 +28,7 @@ export interface MobileTableProps {
   header?: ReactNode;
   footer?: boolean | ReactNode;
   multiSelectConfig?: IMultiSelectConfig;
+  pluginHost?: PluginHost;
 }
 
 export function MobileTable({
@@ -36,6 +38,7 @@ export function MobileTable({
   header,
   footer,
   multiSelectConfig,
+  pluginHost,
 }: MobileTableProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const mobileView =controller.getMobileViewState();
@@ -51,6 +54,15 @@ export function MobileTable({
 
   if (!mobileView) return null;
 
+  const viewState = controller.getViewState();
+  const activeDescendant = viewState?.activeCell
+    ? gridCellDomId(
+        tableKey,
+        viewState.activeCell.rowId,
+        viewState.activeCell.columnId,
+      )
+    : undefined;
+
   return (
     <>
       <div className="flex flex-col w-full transition-all duration-200">
@@ -60,6 +72,7 @@ export function MobileTable({
             <MobileActionButtons
               controller={controller}
               multiSelectConfig={multiSelectConfig}
+              pluginHost={pluginHost}
             />
           </div>
         </div>
@@ -80,6 +93,7 @@ export function MobileTable({
               ariaGridRowCount(mobileView.totalRows, Boolean(footer)) ||
               undefined
             }
+            aria-activedescendant={activeDescendant}
           >
             <MobileTableHeader controller={controller} header={header} />
             <MobileTableBody

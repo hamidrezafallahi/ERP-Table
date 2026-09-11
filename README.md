@@ -1,14 +1,15 @@
 # Persian Data Grid
 
+[![CI](https://github.com/hamidrezafallahi/ERP-Table/actions/workflows/ci.yml/badge.svg)](https://github.com/hamidrezafallahi/ERP-Table/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/persian-data-grid.svg)](https://www.npmjs.com/package/persian-data-grid)
 [![npm downloads](https://img.shields.io/npm/dm/persian-data-grid.svg)](https://www.npmjs.com/package/persian-data-grid)
 [![license](https://img.shields.io/npm/l/persian-data-grid.svg)](https://github.com/hamidrezafallahi/ERP-Table/blob/main/LICENSE)
 [![React](https://img.shields.io/badge/React-17%20%7C%2018%20%7C%2019-61dafb)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-ready-3178c6)](https://www.typescriptlang.org/)
 
-**Persian / Jalali data grid for React** — event-sourced, IndexedDB storage, Excel/IDE keyboard navigation, RTL, and reactive cells that call a **host-injected** API.
+**Persian / Jalali data grid for React** — event-sourced, IndexedDB storage, cell keyboard navigation, RTL, and reactive cells that call a **host-injected** API.
 
-A real **Data Grid** for enterprise forms: voucher lines, money columns, Jalali date cells, row actions, virtual scroll, and Excel/PDF plugins.
+A **Data Grid** for enterprise forms: voucher lines, money columns, Jalali date cells, row actions, optional virtual scroll, and Excel/PDF plugins.
 
 > npm package: [`persian-data-grid`](https://www.npmjs.com/package/persian-data-grid) · Author: [Hamidreza Fallahi](https://github.com/hamidrezafallahi) · Demo: [hamidrezafallahi.github.io/ERP-Table](https://hamidrezafallahi.github.io/ERP-Table/)
 
@@ -30,8 +31,8 @@ A real **Data Grid** for enterprise forms: voucher lines, money columns, Jalali 
 
 - **Grid** — published React chrome (pagination, row index/actions, Jalali date cells)
 - **RTL-native** layout and Shamsi / Jalali date cells (`react-persian-range-picker`)
-- **Excel-like keyboard** — arrows, Tab, Enter between cells
-- **VirtualList** — render only visible rows for tens of thousands of lines
+- **Cell keyboard navigation** — arrows, Tab, Enter between cells (clipboard paste from Excel is not implemented yet)
+- **VirtualList** — opt-in row window (`virtualization={true}` + session); desktop pagination is the default
 - **Event-sourced session** with IndexedDB and cell undo
 - **Excel / PDF plugins** on the view stream (domain aggregates stay untouched)
 - **TypeScript**, React **17 / 18 / 19**
@@ -146,7 +147,7 @@ yarn deploy:demo     # GitHub Pages
 
 ### معرفی
 
-`persian-data-grid` یک **Data Grid** برای فرم‌های سازمانی فارسی است: گرید با RTL، سلول تاریخ شمسی، ناوبری کیبورد شبیه Excel، اسکرول مجازی و خروجی Excel/PDF.
+`persian-data-grid` یک **Data Grid** برای فرم‌های سازمانی فارسی است: گرید با RTL، سلول تاریخ شمسی، ناوبری کیبورد بین سلول‌ها، صفحه‌بندی پیش‌فرض (مجازی‌سازی اختیاری)، و خروجی Excel/PDF.
 
 ### نصب
 

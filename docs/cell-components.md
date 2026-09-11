@@ -37,9 +37,11 @@ Every `render` function and every registry component receives the same argument:
 | `dispatchChangeValue(next)` | Write the cell (and optional select option) |
 | `dispatchChangeDisplay(label)` | Write the display string |
 | `activeCell()` | Focus this cell |
+| `searchQuery` / `isCurrentSearchMatch` | Current grid-search hit (PR-71). Use `highlightIfCurrentSearch` so `mark.erp-search-hit` appears even while the cell is active. |
 
 ```ts
 import type { CellComponent, CellRenderContext } from 'persian-data-grid';
+import { highlightIfCurrentSearch } from 'persian-data-grid';
 ```
 
 ## Replace a built-in type
@@ -138,6 +140,8 @@ Select dropdowns already skip Enter / ArrowUp / ArrowDown via `.erp-table-select
 - Fork `CellRenderer` or add a `case` for a host widget.
 - Treat `returnDisplayValue` as JSX. It feeds engine display / search / export.
 - Expect `components` on `createERPTable`. It is an `ERPTable` (React host) prop.
+
+Host `render` / `components` widgets that show text should call `highlightIfCurrentSearch(ctx.value, ctx.searchQuery, ctx.isCurrentSearchMatch)` in the read-only path. Built-in `textArea` and `description` already do. Checkbox / date widgets can ignore the fields.
 
 ## Related
 

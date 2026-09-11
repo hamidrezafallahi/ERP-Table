@@ -3,7 +3,10 @@ import type { PdfRenderer } from '../../../../application/ports/PdfRenderer';
 import { formatExportValue } from '../../excel/src/formatExportValue';
 
 /**
- * Minimal text PDF (no external lib) — Host can swap for jsPDF via PdfRenderer.
+ * Legacy Helvetica PDF (8 columns × 40 rows). Kept for tests and Host opt-in.
+ * Product default is {@link VazirmatnPdfRenderer}.
+ *
+ * @deprecated Use VazirmatnPdfRenderer.
  */
 export class TextPdfRenderer implements PdfRenderer {
   async render(

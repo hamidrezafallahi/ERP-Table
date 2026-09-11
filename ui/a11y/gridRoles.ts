@@ -24,3 +24,36 @@ export function ariaGridRowCount(
 ): number {
   return 1 + dataRowCount + (hasFooter ? 1 : 0);
 }
+
+function ariaToken(value: string): string {
+  return value.replace(/[^A-Za-z0-9_-]/g, '_');
+}
+
+/** Stable DOM id for `aria-activedescendant` on the grid. */
+export function gridCellDomId(
+  tableKey: string,
+  rowId: number,
+  columnId: string,
+): string {
+  return `erp-cell-${ariaToken(tableKey)}-${rowId}-${ariaToken(columnId)}`;
+}
+
+export function isAriaSelectedCell(
+  active: { rowId: number; columnId: string } | null | undefined,
+  rowId: number,
+  columnId: string,
+): boolean {
+  return !!active && active.rowId === rowId && active.columnId === columnId;
+}
+
+export function gridCellA11y(
+  tableKey: string,
+  rowId: number,
+  columnId: string,
+  active: { rowId: number; columnId: string } | null | undefined,
+): { id: string; 'aria-selected': boolean } {
+  return {
+    id: gridCellDomId(tableKey, rowId, columnId),
+    'aria-selected': isAriaSelectedCell(active, rowId, columnId),
+  };
+}

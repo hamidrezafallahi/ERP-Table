@@ -10,7 +10,7 @@ import { ColumnSchema } from '../../bootstrap/type';
 import { columnSizeStyle } from '../../engine/columnWidth';
 import { RowStateEnum } from '../../domain/value-objects';
 import { UITableController } from '../../infrastructure/ui/UITableController';
-import { ariaColIndex, ariaDataRowIndex } from '../a11y/gridRoles';
+import { ariaColIndex, ariaDataRowIndex, gridCellA11y } from '../a11y/gridRoles';
 import { indexPinClassName, indexPinDataAttr } from '../columnPin';
 import { CellRenderer } from '../cellRenderer';
 import { UIRow } from '../type';
@@ -145,6 +145,7 @@ function ERPTableRowComponent({
               <td
                 role="gridcell"
                 aria-colindex={ariaColIndex(idx)}
+                {...gridCellA11y(tableKey, row.id, c.fieldName, table.activeCell)}
                 className={`p-0 h-full overflow-hidden border ${indexPinClassName(c)}`}
                 key={c.fieldName}
                 data-columnid={c.fieldName}
@@ -167,6 +168,7 @@ function ERPTableRowComponent({
               key={c.fieldName}
               role="gridcell"
               aria-colindex={ariaColIndex(idx)}
+              {...gridCellA11y(tableKey, row.id, c.fieldName, table.activeCell)}
               className="p-0 h-full overflow-hidden border"
               data-columnid={c.fieldName}
               style={columnSizeStyle(c, table.columnWidths)}
@@ -221,6 +223,8 @@ export const ERPTableRow = React.memo(ERPTableRowComponent, (prev, next) => {
     prev.table === next.table &&
     prev.isSelected === next.isSelected &&
     prev.isActive === next.isActive &&
-    prev.isCut === next.isCut
+    prev.isCut === next.isCut &&
+    prev.table?.activeCell?.rowId === next.table?.activeCell?.rowId &&
+    prev.table?.activeCell?.columnId === next.table?.activeCell?.columnId
   );
 });

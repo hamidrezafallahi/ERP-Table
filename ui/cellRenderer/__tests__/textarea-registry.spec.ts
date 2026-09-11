@@ -1,3 +1,4 @@
+import React from 'react';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +11,20 @@ import {
   resolveBoundCellNode,
 } from '../cellRegistry';
 import { TextAreaCell } from '../TextAreaCell';
+
+function collectMarks(
+  node: React.ReactNode,
+): { className: string; text: string }[] {
+  if (node == null || typeof node === 'boolean') return [];
+  if (typeof node === 'string' || typeof node === 'number') return [];
+  if (Array.isArray(node)) return node.flatMap(collectMarks);
+  if (!React.isValidElement(node)) return [];
+  const props = node.props as { className?: string; children?: React.ReactNode };
+  if (node.type === 'mark') {
+    return [{ className: props.className ?? '', text: String(props.children ?? '') }];
+  }
+  return collectMarks(props.children);
+}
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 
@@ -59,5 +74,18 @@ describe('PR-56 textArea default registry', () => {
   it('treats textArea values as strings in the command handler', () => {
     const handler = load('application/handlers/cellCommandsHandler.ts');
     expect(handler).toMatch(/case 'textArea'/);
+  });
+
+  it('shows a search mark instead of a textarea when this cell is the current hit (PR-71)', () => {
+    const node = TextAreaCell({
+      ...ctx,
+      isActive: true,
+      value: '123',
+      searchQuery: '123',
+      isCurrentSearchMatch: true,
+    });
+    expect(collectMarks(node)).toEqual([
+      { className: 'erp-search-hit is-current', text: '123' },
+    ]);
   });
 });

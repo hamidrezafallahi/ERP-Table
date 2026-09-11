@@ -13,6 +13,12 @@ export const FA_MESSAGES: ERPTableMessages = {
   'general.exportToExcel': 'خروجی اکسل',
   'general.exportToExcelSuccess': 'خروجی اکسل با موفقیت انجام شد',
   'general.exportToExcelError': 'خروجی اکسل ناموفق بود',
+  'general.exportToPdf': 'خروجی PDF',
+  'general.exportToPdfSuccess': 'خروجی PDF با موفقیت انجام شد',
+  'general.exportToPdfError': 'خروجی PDF ناموفق بود',
+  'general.importFromExcel': 'ورود از اکسل',
+  'general.importFromExcelSuccess': 'ورود اکسل با موفقیت انجام شد',
+  'general.importFromExcelError': 'ورود اکسل ناموفق بود',
   'general.selected': 'انتخاب شده',
   'general.search': 'جستجو',
   'general.selectField': 'انتخاب کنید',
@@ -24,11 +30,13 @@ export const FA_MESSAGES: ERPTableMessages = {
   'general.edit': 'ویرایش',
   'general.rowEdit': 'ویرایش سطر',
   'general.row': 'سطر',
+  'general.selectRow': 'انتخاب سطر',
   'general.save': 'ذخیره',
   'general.notActive': 'غیرفعال',
   'general.add': 'افزودن',
   'general.themeDark': 'تم تیره',
   'general.themeLight': 'تم روشن',
+  'general.toolbar': 'نوار عملیات',
 };
 
 export const EN_MESSAGES: ERPTableMessages = {
@@ -42,6 +50,12 @@ export const EN_MESSAGES: ERPTableMessages = {
   'general.exportToExcel': 'Export to Excel',
   'general.exportToExcelSuccess': 'Excel export succeeded',
   'general.exportToExcelError': 'Excel export failed',
+  'general.exportToPdf': 'Export to PDF',
+  'general.exportToPdfSuccess': 'PDF export succeeded',
+  'general.exportToPdfError': 'PDF export failed',
+  'general.importFromExcel': 'Import from Excel',
+  'general.importFromExcelSuccess': 'Excel import succeeded',
+  'general.importFromExcelError': 'Excel import failed',
   'general.selected': 'Selected',
   'general.search': 'Search',
   'general.selectField': 'Select',
@@ -53,11 +67,13 @@ export const EN_MESSAGES: ERPTableMessages = {
   'general.edit': 'Edit',
   'general.rowEdit': 'Edit row',
   'general.row': 'Row',
+  'general.selectRow': 'Select row',
   'general.save': 'Save',
   'general.notActive': 'Inactive',
   'general.add': 'Add',
   'general.themeDark': 'Dark theme',
   'general.themeLight': 'Light theme',
+  'general.toolbar': 'Toolbar',
 };
 
 export function translate(

@@ -1,42 +1,76 @@
 # Agent handoff — persian-data-grid
 
-اگر از تو خواسته شد «ادامه بده / فاز بعدی / توسعه جدول»: این صفحه را اول بخوان، بعد کد بزن.
+اگر از تو خواسته شد «ادامه بده / فاز بعدی / توسعهٔ جدول»: این صفحه را اول بخوان، بعد **اولین PR تیک‌نخورده** در `EXECUTION_PLAN.md` را پیاده کن، Verify را اجرا کن، چک‌باکس و `WORKLOG.md` را به‌روز کن.
+
+بازچینی‌شده ۱۴۰۵/۰۶/۲۰ (۱۱ سپتامبر ۲۰۲۶) هم‌زمان با طرح اجرایی v2.
 
 ## این کتابخانه چیست
 
-ویرایشگر اقلام سند ERP (RTL، جلالی، RowState، undo، IndexedDB). **Data Grid عمومی نیست.** grouping / pivot / tree / chart / SSRM بدون RFC جدید ممنوع است.
+React Data Grid با هستهٔ event-sourced، ذخیره‌سازی IndexedDB، undo دامنه‌ای، RTL و تقویم جلالی.
 
-## سه فایل اجباری
+خاستگاهش ویرایشگر اقلام سند ERP بود و کد هنوز نشانهٔ آن را دارد (`ERPTable`، `--erp-*`). **جهت‌گیری جدید:** یک Data Grid عمومی که در نیچ «سند مالی فارسی با audit و offline» از همه بهتر است.
+
+این یعنی محدودیت قدیمی «Data Grid عمومی نیست، grouping ممنوع» **دیگر معتبر نیست**. محدودهٔ جدید در `EXECUTION_PLAN.md` → Open Decisions و «خارج از محدوده» تعریف شده است.
+
+## چهار فایل اجباری
 
 | فایل | نقش |
 |------|------|
-| `WORKLOG.md` | الان کجاییم؛ آخرین PR؛ verify |
-| `EXECUTION_PLAN.md` | فازها و چک‌باکس PR-39 به بعد |
+| `WORKLOG.md` | الان کجاییم؛ سرمایه؛ بدهی؛ verify |
+| `EXECUTION_PLAN.md` | فازها و چک‌باکس از `PR-72` به بعد |
+| `docs/ag-grid-gap-analysis.md` | چرا این فازها به این ترتیب‌اند؛ کارت امتیاز |
 | این فایل | پروتکل |
 
-فاز ۱–۵ (PR-1 … PR-38) **تمام شده**. بازنویسی نکن.
+`PR-1 … PR-71` **تمام شده و آرشیو شده** (`docs/worklog-archive-v0.5.md`، `docs/execution-plan-archive-v0.5.md`). بازنویسی نکن؛ فقط bugfix.
 
 ## الان چه کار کنی
 
-1. `WORKLOG.md` → **Current Snapshot**.
-2. `EXECUTION_PLAN.md` → **Active Track** و اولین `- [ ] PR-N`.
-3. بخش **Open Decisions** همان فایل: اگر تصمیم **باز** است و به این PR مربوط است، بپرس و بایست.
-4. شکستن API/پیش‌فرض غیر از D1 (Noop RemoteApi) و D11 (`multiSelectConfig` اختیاری): قبل از کد تأیید بگیر.
-5. یک PR طرح = یک برش. از روی Phase نپر مگر PR صریحاً blocked باشد.
+1. `WORKLOG.md` → **Current Snapshot**. اگر PR جاری نیمه‌کاره است، همان را تمام کن.
+2. `EXECUTION_PLAN.md` → **Status Summary** و اولین `- [ ] PR-N`.
+3. **Open Decisions همان فایل:** `D13 … D21` و `D23 … D25` در ۱۴۰۵/۰۶/۲۰ **قفل** شدند — اجرا کن، نپرس. تنها تصمیم باز **`D22` (monorepo)** است؛ قبل از `PR-132` بپرس و بایست.
+4. Phase 16 تا 23 هیچ بلوکری ندارد. مسیر از `PR-72` مستقیم باز است.
+5. یک PR طرح = یک برش. از فاز نپر مگر PR صریحاً blocked باشد (دلیل را در WORKLOG بنویس).
+6. `PR-117` (RFC-002 برای grouping/aggregation) خودش یک گِیت است: تا RFC تأیید نشود، `PR-118` به بعد شروع نشود.
+
+## قواعد سخت
+
+- `domain/` و `application/` هرگز React یا DOM import نمی‌کنند. این تنها مزیت معماری ماست.
+- **هیچ ادعای README/docs بدون تست در CI.** اگر فیچری تست ندارد، از مستندات حذف می‌شود، نه اینکه تست جعلی بگیرد.
+- الگوریتم مسیر گرم (کلید، اسکرول، ویرایش) باید `O(window)` یا `O(log n)` باشد. O(n) فقط با memoize و invalidate صریح.
+- هر PR فیچرمحور باید هزینهٔ bundle خودش را در `size-limit` اعلام کند.
+- منطق داده (sort، filter، aggregation، بازهٔ سلولی) در `engine/` **خالص و بدون DOM** نوشته می‌شود تا headless و server-side هم از آن استفاده کنند. در کامپوننت React ننویس.
 
 ## بعد از اتمام یک PR
 
 1. در `EXECUTION_PLAN.md` همان خط را `[x]` کن.
-2. در `WORKLOG.md` یک بخش با تاریخ، فایل‌ها، هدف، نتیجه، محدودیت.
+2. در `WORKLOG.md` بخش جدید با قالب انتهای آن فایل (فایل‌ها، هدف، انجام شد، **محدودیت آگاهانه**، اثر روی کارت امتیاز، Verify، بعدی).
 3. Current Snapshot را به PR بعدی عوض کن.
-4. دستورات Verify همان PR را اجرا کن و خروجی را در WORKLOG بنویس.
+4. Verify همان PR را اجرا کن و خروجی عددی را بنویس. قرمز = PR تمام نشده.
+5. یک خط در `CHANGELOG.md` (از `PR-78` به بعد که فایل ساخته شد).
 
-## بعدیِ زنده
+## زمینهٔ فنی که باید بدانی
 
-اگر Snapshot کهنه بود، به EXECUTION_PLAN اعتماد کن. در زمان نوشتن این صفحه: **PR-63**.
+### تناقض‌های شناخته‌شده (اشتباه نگیر)
 
-## زمینهٔ تم (Phase 6–7، بسته)
+- **مجازی‌سازی پیش‌فرض خاموش است** — `ui/desktop/resolveDesktopVirtualization.ts:7-12` می‌گوید `virtualization === true && !!session`. کامنت `DesktopTable` در PR-74 با این رفتار هم‌خوان شد. رفتار در `PR-97` عوض می‌شود (D17).
+- **`persian-data-grid/styles.css` وجود دارد** (PR-76) ولی auto-inject هنوز روشن است — حذف تزریق خودکار در `PR-77`.
+- **`GridSearchPanel` فیلتر نیست** — find & navigate است و ردیف را حذف نمی‌کند. quick filter واقعی در `PR-93`.
 
-توکن‌های نقش (`--erp-bg`, `--erp-accent`, …) روی `.erp-table` هستند. CSS در **دو جا** تکرار شده: `ui/styles/injectStyles.ts` و `ui/styles/erp-table.css`. هر دو را با هم عوض کن. Theming API یعنی `GridTheme.withParams` + CSS variables؛ کپی `withPart` از AG Grid نساز.
+### تم
 
-`ERPTable theme={themeErp.withParams({ accentColor: '#1d4ed8' })}` vars را inline می‌گذارد. Portalها `toCssVars()` را روی overlay کپی می‌کنند. تم تیره: `themeErpDark` + دکمه در `GroupActionButtons` / `MobileActionButtons` (تم سفارشی toggle را قفل می‌کند). `rowHeight` پیش‌فرض ۴۰ (D12).
+توکن‌های نقش (`--erp-bg`, `--erp-accent`, …) روی `.erp-table`. CSS در **دو جا** تکرار شده: `ui/styles/injectStyles.ts` و `ui/styles/erp-table.css`. **تا `PR-77` هر دو را با هم عوض کن.** بعد از `PR-77` منبع حقیقت یکی می‌شود.
+
+`GridTheme.withParams` + CSS variables؛ کپی `withPart` از AG Grid نساز. تم سفارشی دکمهٔ toggle را قفل می‌کند. `rowHeight` پیش‌فرض ۴۰ (D12).
+
+### دستورات verify
+
+```bash
+yarn test                 # ۵۲ فایل / ۲۲۸ تست (پایهٔ ۰٫۵٫۰)
+yarn typecheck:publish    # graph انتشار، strict
+yarn typecheck:host-ui     # کل ui/ با shims
+yarn build                # tsup ESM+CJS+DTS
+yarn verify:dist
+yarn dev                  # دمو روی پورت 5175
+```
+
+از `PR-72` به بعد همین‌ها در CI هم اجرا می‌شوند؛ لوکال سبز کافی نیست.

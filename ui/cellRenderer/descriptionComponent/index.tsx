@@ -10,6 +10,7 @@ import {
   UITableController,
 } from '../../../infrastructure/ui/UITableController';
 import { useLocale, useRemoteQuery } from '../../host';
+import { highlightIfCurrentSearch } from '../../gridSearch/highlightText';
 import {
   CustomDropdownButton,
   CustomTooltip,
@@ -37,6 +38,8 @@ export interface DescriptionComponentProps extends React.HTMLAttributes<HTMLDivE
   blockDrag: (e: React.DragEvent) => void;
   dispatchChangeValue: (newValue: unknown) => void;
   activeCell: () => void;
+  searchQuery?: string;
+  isCurrentSearchMatch?: boolean;
 }
 export interface IDesc {
   AccountDescItemId: number;
@@ -49,7 +52,6 @@ export const DescriptionComponent = forwardRef<
   DescriptionComponentProps
 >((props, ref) => {
   const locale = useLocale();
-  //    const { inputKey, items, isDisabled, lang, handleSaveDescription } = useVoucherDescription({});
   const {
     meta,
     controller,
@@ -64,7 +66,10 @@ export const DescriptionComponent = forwardRef<
     blockDrag,
     dispatchChangeValue,
     activeCell,
+    searchQuery,
+    isCurrentSearchMatch,
   } = props;
+  const showSearchHit = !!(isCurrentSearchMatch && searchQuery?.trim());
   const { endpoint, dependOn } = meta.dynamicSource ?? {};
 
   const hasDependValue = (
@@ -123,6 +128,16 @@ const handleSaveDescription = ()=>{
 }
   return (
     <div className="flex justify-between items-center w-full">
+      {showSearchHit ? (
+        <span
+          className={`px-2 w-full text-xs truncate ${
+            isDeleted ? 'cursor-not-allowed' : ''
+          } ${meta.className ?? ''}`}
+          onClick={() => activeCell()}
+        >
+          {highlightIfCurrentSearch(value, searchQuery, true)}
+        </span>
+      ) : (
       <input
         key={idx}
         ref={inputRef}
@@ -138,6 +153,7 @@ const handleSaveDescription = ()=>{
         onChange={(e) => dispatchChangeValue(e.target.value)}
         onClick={() => activeCell()}
       />
+      )}
 
       <CustomDropdownButton
         placement={locale !== "fa" ? "bottomRight" : "bottomLeft"}

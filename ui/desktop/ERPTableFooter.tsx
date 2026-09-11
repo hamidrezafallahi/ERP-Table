@@ -81,7 +81,7 @@ export function ERPTableFooter({controller, footer, dataRowCount}: Props) {
   );
   if (typeof footer === "boolean" && footer === true) {
     return (
-      <tfoot role="rowgroup">
+      <tfoot role="rowgroup" className="erp-table-footer" data-erp-footer="">
         <tr
           role="row"
           aria-rowindex={footerRowIndex}
@@ -108,7 +108,7 @@ export function ERPTableFooter({controller, footer, dataRowCount}: Props) {
     );
   } else {
     return (
-      <tfoot role="rowgroup">
+      <tfoot role="rowgroup" className="erp-table-footer" data-erp-footer="">
         <tr
           role="row"
           aria-rowindex={footerRowIndex}

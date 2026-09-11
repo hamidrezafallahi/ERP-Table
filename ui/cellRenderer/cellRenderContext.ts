@@ -26,6 +26,9 @@ export interface CellRenderContext {
   dispatchChangeValue: (newValue: unknown, option?: DefaultOptionType) => void;
   dispatchChangeDisplay: (label: string | null) => void;
   activeCell: () => void;
+  /** Current grid-search query when this cell is the active hit (PR-71). */
+  searchQuery?: string;
+  isCurrentSearchMatch?: boolean;
 }
 
 export type CustomCellResolveResult =

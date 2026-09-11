@@ -43,6 +43,8 @@ const CSS = `
   --erp-border: var(--erp-gray-5);
   --erp-danger: var(--erp-red-600);
   --erp-search-match: var(--erp-yellow-400);
+  --erp-search-other: var(--erp-yellow-200);
+  --erp-muted: var(--erp-neutral-500);
   --erp-font: IRANSans, Tahoma, sans-serif;
   --erp-row-height: 40px;
   --erp-font-size: 12px;
@@ -227,7 +229,7 @@ const CSS = `
 .erp-table .text-black-black6 { color: var(--erp-fg); }
 .erp-table .text-blue-blue6 { color: var(--erp-accent); }
 .erp-table .text-red-600 { color: var(--erp-danger); }
-.erp-table .text-neutral-500 { color: var(--erp-neutral-500); }
+.erp-table .text-neutral-500 { color: var(--erp-muted); }
 .erp-table .border-gray-gray5 { border-color: var(--erp-border); }
 .erp-table .border-gray-gray7,
 .erp-table .\!border-gray-gray7 { border-color: var(--erp-gray-7) !important; }
@@ -239,9 +241,27 @@ const CSS = `
 .erp-table .disabled\:opacity-40:disabled { opacity: 0.4; }
 .erp-table .animate-spin { animation: erp-table-spin 0.8s linear infinite; }
 .erp-table .bg-yellow-400 { background-color: var(--erp-search-match); }
-.erp-table .bg-yellow-200 { background-color: var(--erp-yellow-200); }
+.erp-table .bg-yellow-200 { background-color: var(--erp-search-other); }
 .erp-table mark.bg-yellow-400 { background-color: var(--erp-search-match); font-weight: 600; }
-.erp-table mark.bg-yellow-200 { background-color: var(--erp-yellow-200); }
+.erp-table mark.bg-yellow-200 { background-color: var(--erp-search-other); }
+.erp-table mark.erp-search-hit {
+  background-color: var(--erp-search-other);
+  color: inherit;
+}
+.erp-table mark.erp-search-hit.is-current {
+  background-color: var(--erp-search-match);
+  font-weight: 600;
+}
+.erp-table tfoot.erp-table-footer tr {
+  background-color: var(--erp-bg);
+  border-color: var(--erp-border);
+  color: var(--erp-fg);
+  height: var(--erp-row-height);
+}
+.erp-table tfoot.erp-table-footer td {
+  color: var(--erp-fg);
+  font-variant-numeric: tabular-nums;
+}
 
 .erp-table .hidden-show-scrollBar {
   scrollbar-width: thin;
@@ -610,6 +630,11 @@ body.erp-col-resizing * {
 
 .erp-table[dir="rtl"] .erp-col-pin-index {
   box-shadow: -4px 0 8px -6px rgb(0 0 0 / 0.22);
+}
+
+.erp-table .erp-toolbar-btn:focus-visible {
+  outline: 2px solid var(--erp-accent);
+  outline-offset: 2px;
 }
 
 `;

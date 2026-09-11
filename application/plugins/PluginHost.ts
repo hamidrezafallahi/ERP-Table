@@ -109,8 +109,38 @@ export class PluginHost {
     return this.plugins;
   }
 
+  has(pluginName: string): boolean {
+    return this.plugins.some((p) => p.name === pluginName);
+  }
+
   async requestExport(options: RequestExportOptions): Promise<void> {
     const bus = this.createBus();
+    const correlationId = options.correlationId ?? createEventId();
+    const pluginName = options.format === 'pdf' ? 'pdf-export' : 'excel-export';
+    const wait = this.has(pluginName);
+    const successType =
+      options.format === 'pdf' ? 'PDF_EXPORT_COMPLETED' : 'XLSX_EXPORT_COMPLETED';
+    const failType =
+      options.format === 'pdf' ? 'PDF_EXPORT_FAILED' : 'XLSX_EXPORT_FAILED';
+
+    const finished = wait
+      ? new Promise<void>((resolve, reject) => {
+          const unsub = this.deps.eventStore.subscribeAll((event) => {
+            if (event.correlationId !== correlationId) return;
+            if (event.type === successType) {
+              unsub();
+              resolve();
+            }
+            if (event.type === failType) {
+              unsub();
+              const message =
+                (event.payload as { message?: string })?.message ?? 'EXPORT_FAILED';
+              reject(new Error(message));
+            }
+          });
+        })
+      : Promise.resolve();
+
     const payload: ExportRequestedPayload = {
       format: options.format,
       collectionScope: options.collectionScope ?? 'active',
@@ -127,9 +157,11 @@ export class PluginHost {
       version: 0,
       occurredAt: Date.now(),
       actorId: this.deps.actorId,
-      correlationId: options.correlationId,
+      correlationId,
       payload,
     });
+
+    await finished;
   }
 
   async requestImport(options: RequestImportOptions): Promise<void> {

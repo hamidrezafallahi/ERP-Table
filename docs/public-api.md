@@ -14,7 +14,7 @@ Inspired by the Persian range-picker demo layout (`InitialComponent` / `DemoComp
 | `npm run dev` / `dev:playground` | `dev` | QA playground (`demo/src/DemoComponent.tsx`) + live ERPTable |
 | `npm run build:demo` | — | GitHub Pages bundle (`demo/dist`) |
 
-The `demo/` Vite app is excluded from tsup publish (`files` still ships `docs/`).
+The `demo/` Vite app is excluded from tsup publish. The npm `files` field currently ships **only** `dist/` — docs stay on GitHub, not in the package tarball.
 
 ## Composition
 
@@ -41,7 +41,7 @@ Default `remoteApi` is **`NoopRemoteApi`** (no fetch, no ERP cookies). The arian
 
 `multiSelectConfig` is **optional**. Omit it to hide the choose-from-list button and modal. Pass it when the voucher needs that picker.
 
-Published entry: `publish/entry.ts` (built by tsup). CSS is injected (range-picker pattern). Optional `import 'persian-data-grid/styles.css'` if the bundler strips injected styles.
+Published entry: `publish/entry.ts` (built by tsup). CSS is injected at runtime via `injectStyles` **and** shipped as `import 'persian-data-grid/styles.css'` (PR-76). Auto-inject removal is PR-77.
 
 Theming: `theme?: GridTheme` defaults to `themeErp` (rowHeight **40**). CSS `.erp-table { --erp-accent: ... }` still works. `themeToggle` (default `true`) shows a light/dark button in product chrome (`GroupActionButtons` / `MobileActionButtons`). Passing a **custom** theme (`withParams` that is not stock light/dark) **locks** that toggle. `themeErpDark` is the stock dark theme. Portal overlays (select, modal, tooltip, toast, search) copy `toCssVars()` so they inherit outside `.erp-table`.
 
@@ -75,6 +75,8 @@ await grid.pluginHost.requestExport({ format: 'pdf' });
 - Events live on the **view stream** (`EXPORT_REQUESTED`, `XLSX_EXPORT_*`, `PDF_EXPORT_*`).
 - Domain aggregates are never mutated by plugins.
 - Imperative toolbar path still works: `exportActiveCollectionToExcel(controller)`.
+- PDF toolbar button appears on desktop and mobile when `plugins` includes `PdfExportPlugin`. `ERPTable` forwards `plugins` to `createERPTable`.
+- Excel import toolbar button appears when `plugins` includes `ExcelImportPlugin`.
 
 ## Build
 
@@ -99,10 +101,13 @@ npm test
 | `IndexedDbEventStore` | class | Browser-durable event store |
 | `SnapshotStrategy` / `InMemorySnapshotStore` | class | Opt-in aggregate snapshots via `snapshotStore` |
 | `EVENT_CATALOG` | const | Plugin-friendly event tokens |
-| `ExcelExportPlugin` / `PdfExportPlugin` | class | Export plugins on `EXPORT_REQUESTED` |
+| `ExcelExportPlugin` / `PdfExportPlugin` | class | Prefer `persian-data-grid/plugins/*`. Root re-exports are deprecated (PR-76). PDF default is legacy `TextPdfRenderer`; Persian = `createVazirmatnPdfExportPlugin` from fonts/vazirmatn. |
+| `VazirmatnPdfRenderer` | class | Persian table PDF (Vazirmatn OFL, RTL). Requires font bytes from `./plugins/pdf/fonts/vazirmatn`. |
+| `TextPdfRenderer` | class | Legacy Helvetica PDF (8×40). Opt-in via `PdfExportPlugin({ renderer })`. |
 | `PluginHost` | class | Register plugins + `requestExport` |
 | `NoopRemoteApi` / `FetchRemoteApi` | class | Default remote is Noop; ERP injects Fetch |
 | `ERPTable` / `CellRenderer` / `CellRenderContext` / `CellComponentMap` | UI | React surfaces. `columns[].render` then `components[fieldType]`, then FieldType switch. |
+| `highlightIfCurrentSearch` / `highlightSearchText` | function | Search `mark` for custom cells (PR-71). `textArea` / `description` use it by default. |
 | `GridTheme` / `themeErp` / `themeErpDark` | theme | `ERPTable theme={...}` writes `--erp-*` on the root. Stock light/dark toggle lives in product chrome. |
 
 ## Event stores
@@ -221,6 +226,8 @@ Drag a desktop header cell (not the pinned `index` column, not the resize handle
 
 ## Accessibility baseline (PR-62)
 
-Desktop and mobile `ERPTable` chrome expose `role="grid"` on the `<table>`, with `role="row"` / `columnheader` / `gridcell`, plus `aria-colcount` / `aria-rowcount`. `aria-colindex` and `aria-rowindex` are 1-based (header is row 1). Virtualized bodies use the absolute collection index, not the DOM window offset. Active-cell `aria-selected` is PR-63. This is not a WCAG-complete claim.
+Desktop and mobile `ERPTable` chrome expose `role="grid"` on the `<table>`, with `role="row"` / `columnheader` / `gridcell`, plus `aria-colcount` / `aria-rowcount`. `aria-colindex` and `aria-rowindex` are 1-based (header is row 1). Virtualized bodies use the absolute collection index, not the DOM window offset.
+
+The active cell is `aria-selected` on that `gridcell` and referenced from the grid via `aria-activedescendant`. Row checkboxes use `aria-label` (`Select row N` / `انتخاب سطر N`). Icon-only toolbar buttons use `aria-label` from `messages` and a visible `:focus-visible` ring (`--erp-accent`). This is an AT baseline, not a WCAG claim.
 
 

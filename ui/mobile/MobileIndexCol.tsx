@@ -51,6 +51,7 @@ export function MobileIndexCol({
             disabled={isDeleted}
             checked={!!isSelectedRow}
             onClick={handleSelectRow}
+            aria-label={`${t("general.selectRow")} ${idx + 1}`}
           />
         )}
         <div className="w-[20px] text-xs text-center">{(idx + 1).toLocaleString('fa-IR')}</div>

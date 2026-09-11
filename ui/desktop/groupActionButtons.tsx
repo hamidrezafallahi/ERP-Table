@@ -5,7 +5,6 @@ import {
   ClipboardCheck,
   ClipboardIcon,
   CustomModal,
-  CustomTooltip,
   CutIcon,
   Excel,
   GuaranteeReceive,
@@ -19,6 +18,10 @@ import {
 import { TableActions } from '../../domain/value-objects';
 import { exportActiveCollectionToExcel } from '../../infrastructure/excel/exportActiveCollectionToExcel';
 import { UITableController } from '../../infrastructure/ui/UITableController';
+import type { PluginHost } from '../../application/plugins/PluginHost';
+import { ToolbarIconButton } from '../a11y/ToolbarIconButton';
+import { PdfExportToolbarButton } from '../export/PdfExportToolbarButton';
+import { ExcelImportToolbarButton } from '../export/ExcelImportToolbarButton';
 import { GridSearchControl } from '../gridSearch/GridSearchControl';
 import MultiselectList from '../multiSelectList';
 import { ThemeToggleButton } from '../theme/ThemeToggleButton';
@@ -27,11 +30,13 @@ import { IMultiSelectConfig } from '../type';
 interface GroupActionButtonsProps {
   controller: UITableController;
   multiSelectConfig?: IMultiSelectConfig;
+  pluginHost?: PluginHost;
 }
 
 export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
   controller,
   multiSelectConfig,
+  pluginHost,
 }) => {
   const t = useTranslations();
   const direction = useDirection();
@@ -64,6 +69,7 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
     }
   };
 
+  // Toolbar "toggle" = select/deselect all rows (engine TOGGLE_SELECT_ALL_ROWS).
   const handleSelectAllRows = () => {
     controller.dispatch({ type: "TOGGLE_ROW_SELECTED" });
   };
@@ -76,84 +82,68 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
     controller.dispatch({ type: "UI_DELETE_SELECTED_ROW" });
   };
 
+  const canPaste =
+    (tableAction == "copy" || tableAction == "cut") && count != 0;
+
   return (
-    <div className="flex items-center gap-2 flex-1 justify-start">
-      <CustomTooltip title={t("general.addNewRow")}>
-        <button
-          type="button"
-          className="flex justify-center items-center p-1 border rounded"
-          onClick={handleAddRow}
-        >
-          <PlusIcon config={{ width: 18, height: 18 }} />
-        </button>
-      </CustomTooltip>
+    <div
+      className="flex items-center gap-2 flex-1 justify-start"
+      role="toolbar"
+      aria-label={t("general.toolbar")}
+    >
+      <ToolbarIconButton label={t("general.addNewRow")} onClick={handleAddRow}>
+        <PlusIcon config={{ width: 18, height: 18 }} />
+      </ToolbarIconButton>
 
-      <CustomTooltip title={t("general.copy")}>
-        <button
-          type="button"
-          disabled={count == 0}
-          className={`flex justify-center items-center p-1 border rounded ${count == 0 && "opacity-40"}`}
-          onClick={() => {
-            handleChangeTableAction("copy");
-          }}
-        >
-          <GuaranteeReceive config={{ width: 18, height: 18 }} />
-        </button>
-      </CustomTooltip>
+      <ToolbarIconButton
+        label={t("general.copy")}
+        disabled={count == 0}
+        onClick={() => {
+          handleChangeTableAction("copy");
+        }}
+      >
+        <GuaranteeReceive config={{ width: 18, height: 18 }} />
+      </ToolbarIconButton>
 
-      <CustomTooltip title={t("general.cut")}>
-        <button
-          type="button"
-          disabled={count == 0}
-          className={`flex justify-center items-center p-1 border rounded ${count == 0 && "opacity-40"}`}
-          onClick={() => {
-            handleChangeTableAction("cut");
-          }}
-        >
-          <CutIcon config={{ width: 18, height: 18 }} />
-        </button>
-      </CustomTooltip>
+      <ToolbarIconButton
+        label={t("general.cut")}
+        disabled={count == 0}
+        onClick={() => {
+          handleChangeTableAction("cut");
+        }}
+      >
+        <CutIcon config={{ width: 18, height: 18 }} />
+      </ToolbarIconButton>
 
-      <CustomTooltip title={t("general.paste")}>
-        <button
-          type="button"
-          disabled={
-            !((tableAction == "copy" || tableAction == "cut") && count != 0)
-          }
-          className={`flex justify-center items-center p-1 border rounded ${!((tableAction == "copy" || tableAction == "cut") && count != 0) && "opacity-40"}`}
-          onClick={() => {
-            handleChangeTableAction("paste");
-          }}
-        >
-          <ClipboardIcon config={{ width: 18, height: 18 }} />
-        </button>
-      </CustomTooltip>
+      <ToolbarIconButton
+        label={t("general.paste")}
+        disabled={!canPaste}
+        onClick={() => {
+          handleChangeTableAction("paste");
+        }}
+      >
+        <ClipboardIcon config={{ width: 18, height: 18 }} />
+      </ToolbarIconButton>
 
-      <CustomTooltip title={t("general.delete")}>
-        <button
-          type="button"
-          disabled={count == 0}
-          className={`flex justify-center items-center p-1 border rounded ${count == 0 && "opacity-40"}`}
-          onClick={handleDeleteSelectedRows}
-        >
-          <TrashBin config={{ width: 18, height: 18 }} />
-        </button>
-      </CustomTooltip>
+      <ToolbarIconButton
+        label={t("general.delete")}
+        disabled={count == 0}
+        onClick={handleDeleteSelectedRows}
+      >
+        <TrashBin config={{ width: 18, height: 18 }} />
+      </ToolbarIconButton>
 
       {multiSelectConfig && (
         <>
-          <CustomTooltip title={t("general.chooseFromList")}>
-            <button
-              type="button"
-              data-erp-multiselect
-              onClick={() => {
-                setModalIsOpen(true);
-              }}
-              className="flex justify-center items-center p-1 border rounded"
-            >
-              <ClipboardCheck config={{ width: 18, height: 18 }} />
-            </button>
-          </CustomTooltip>
+          <ToolbarIconButton
+            label={t("general.chooseFromList")}
+            data-erp-multiselect=""
+            onClick={() => {
+              setModalIsOpen(true);
+            }}
+          >
+            <ClipboardCheck config={{ width: 18, height: 18 }} />
+          </ToolbarIconButton>
           <CustomModal
                       contentClassName={"!h-[480px]"}
                       width={ 720}
@@ -172,34 +162,34 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
         </>
       )}
 
-      <CustomTooltip title={t("general.toggle")}>
-        <button
-          onClick={handleSelectAllRows}
-          className="flex justify-center items-center p-1 border rounded"
-        >
-          <Layers config={{ width: 18, height: 18 }} />
-        </button>
-      </CustomTooltip>
+      <ToolbarIconButton
+        label={t("general.toggle")}
+        onClick={handleSelectAllRows}
+      >
+        <Layers config={{ width: 18, height: 18 }} />
+      </ToolbarIconButton>
 
-      <CustomTooltip title={t("general.exportToExcel")}>
-        <button
-          type="button"
-          disabled={isExporting}
-          className={`flex justify-center items-center p-1 border rounded ${isExporting ? "opacity-60 cursor-wait" : ""}`}
-          onClick={() => {
-            void handleExportToExcel();
-          }}
-        >
-          {isExporting ? (
-            <Spin
-              size="small"
-              indicator={<SpinIcon config={{ width: 16, height: 16 }} />}
-            />
-          ) : (
-            <Excel config={{ width: 18, height: 18 }} />
-          )}
-        </button>
-      </CustomTooltip>
+      <ToolbarIconButton
+        label={t("general.exportToExcel")}
+        disabled={isExporting}
+        className={isExporting ? "opacity-60 cursor-wait" : ""}
+        onClick={() => {
+          void handleExportToExcel();
+        }}
+      >
+        {isExporting ? (
+          <Spin
+            size="small"
+            indicator={<SpinIcon config={{ width: 16, height: 16 }} />}
+          />
+        ) : (
+          <Excel config={{ width: 18, height: 18 }} />
+        )}
+      </ToolbarIconButton>
+
+      <ExcelImportToolbarButton pluginHost={pluginHost} />
+
+      <PdfExportToolbarButton pluginHost={pluginHost} />
 
       <GridSearchControl controller={controller} />
 

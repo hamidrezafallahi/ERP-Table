@@ -9,6 +9,8 @@ import {
   ariaDataRowIndex,
   ariaFooterRowIndex,
   ariaGridRowCount,
+  gridCellDomId,
+  isAriaSelectedCell,
 } from '../../a11y/gridRoles';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -53,5 +55,33 @@ describe('PR-62 grid roles', () => {
     expect(load('ui/mobile/MobileTableHeader.tsx')).toContain('columnheader');
     expect(load('ui/mobile/MobileTableRow.tsx')).toContain('gridcell');
     expect(load('ui/mobile/MobileTableRow.tsx')).toContain('ariaDataRowIndex');
+  });
+});
+
+describe('PR-63 active cell and row checkbox labels', () => {
+  it('builds a stable cell id and selected flag', () => {
+    expect(gridCellDomId('voucher:1', 12, 'qty.price')).toBe(
+      'erp-cell-voucher_1-12-qty_price',
+    );
+    expect(
+      isAriaSelectedCell({ rowId: 12, columnId: 'qty' }, 12, 'qty'),
+    ).toBe(true);
+    expect(
+      isAriaSelectedCell({ rowId: 12, columnId: 'qty' }, 12, 'price'),
+    ).toBe(false);
+    expect(isAriaSelectedCell(null, 12, 'qty')).toBe(false);
+  });
+
+  it('wires aria-selected, activedescendant, and select-row labels', () => {
+    expect(load('ui/desktop/eRPTableRow.tsx')).toContain('gridCellA11y');
+    expect(load('ui/desktop/DesktopTable.tsx')).toContain(
+      'aria-activedescendant',
+    );
+    expect(load('ui/mobile/MobileTableRow.tsx')).toContain('gridCellA11y');
+    expect(load('ui/desktop/indexCol.tsx')).toContain('general.selectRow');
+    expect(load('ui/mobile/MobileIndexCol.tsx')).toContain(
+      'general.selectRow',
+    );
+    expect(load('ui/index.tsx')).toContain('KEY_DOWN');
   });
 });

@@ -15,6 +15,8 @@ const SEMANTIC_ALIASES: Record<string, string> = {
   '--erp-border': 'var(--erp-gray-5)',
   '--erp-danger': 'var(--erp-red-600)',
   '--erp-search-match': 'var(--erp-yellow-400)',
+  '--erp-search-other': 'var(--erp-yellow-200)',
+  '--erp-muted': 'var(--erp-neutral-500)',
   '--erp-font': 'IRANSans, Tahoma, sans-serif',
   '--erp-row-height': '40px',
   '--erp-font-size': '12px',
@@ -55,6 +57,8 @@ describe('PR-40 hex only in palette', () => {
       expect(css).toContain('background-color: var(--erp-row-stripe)');
       expect(css).toContain('background: var(--erp-bg)');
       expect(css).toContain('.h-9 { height: var(--erp-row-height); }');
+      expect(css).toContain('mark.erp-search-hit');
+      expect(css).toContain('tfoot.erp-table-footer');
     },
   );
 });

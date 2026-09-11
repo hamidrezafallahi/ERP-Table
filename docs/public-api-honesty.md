@@ -43,8 +43,16 @@ Related: [`public-api.md`](./public-api.md) (سطح صادرات)، [`cell-compo
 | `SnapshotStrategy` / `InMemorySnapshotStore` | **live** (PR-50, opt-in) | `CreateERPTableConfig.snapshotStore?` — فقط وقتی پاس داده شود `new SnapshotStrategy` در `bootstrap/index.ts`. پیش‌فرض dual-write repository است. `loadWithCatchUp` هنگام create اجرا می‌شود. | — |
 | `ColumnViewBinding.render` | **live** (PR-54) | `toColumnViewBinding` از `schema.render` پر می‌شود (نه `returnDisplayValue`). `CellRenderer` قبل از switch `FieldType` `resolveCustomCellNode` را صدا می‌زند — دسکتاپ و موبایل همان کامپوننت را دارند. `returnDisplayValue` فقط فرمت نمایش موتور است. | — |
 | Pin ستون `index` | **live** (PR-59) | `position: sticky; inset-inline-start: 0` روی سلول index در header / body / footer (و spacer مجازی per-column). **D10: فقط `index`.** هیچ `pinnedColumns` روی `ERPTableProps`. | — |
-| `role="grid"` | **live** (PR-62) | `<table role="grid">` دسکتاپ و موبایل. هدر `columnheader`، سلول `gridcell`، `aria-colindex` / `aria-rowindex` (مجازی: ایندکس مطلق مجموعه، نه ایندکس DOM). `aria-selected` هنوز PR-63. | PR-63 |
-| `TextPdfRenderer` / `PdfExportPlugin` | **stub** (کیفیت) | PDF با `/BaseFont /Helvetica` و متن لاتین حداکثر ۴۰ سطر. فونت فارسی (Vazirmatn) embed نیست. | Phase 13 PR-65+ (D3, D9) |
+| `role="grid"` | **live** (PR-62) | `<table role="grid">` دسکتاپ و موبایل. هدر `columnheader`، سلول `gridcell`، `aria-colindex` / `aria-rowindex` (مجازی: ایندکس مطلق مجموعه، نه ایندکس DOM). | — |
+| سلول فعال `aria-selected` | **live** (PR-63) | `aria-selected` روی `gridcell` فعال + `aria-activedescendant` روی grid. چک‌باکس ردیف `aria-label` از `general.selectRow` (الگوی DemoIndexCol). میانبر `KEY_DOWN` عوض نشد. | — |
+| تولبار آیکونی | **live** (PR-64) | `ToolbarIconButton` با `aria-label` از `messages`. `role="toolbar"`. فوکوس `:focus-visible` با `var(--erp-accent)` — بدون `outline-none` روی این دکمه‌ها. | — |
+| `VazirmatnPdfRenderer` / Persian PDF | **live** (PR-66 / PR-76) | Renderer requires font bytes. `createVazirmatnPdfExportPlugin` on `./plugins/pdf/fonts/vazirmatn`. Default `PdfExportPlugin()` is legacy `TextPdfRenderer` so `.` / `./plugins/pdf` stay font-free. | — |
+| دکمهٔ PDF تولبار | **live** (PR-67) | وقتی `plugins` شامل `PdfExportPlugin` باشد (`name === 'pdf-export'`). دسکتاپ و موبایل. `ERPTable` همان `plugins` را به `createERPTable` می‌دهد. بدون plugin دکمه نیست. | — |
+| دکمهٔ import اکسل تولبار | **live** (PR-68) | وقتی `plugins` شامل `ExcelImportPlugin` باشد (`name === 'excel-import'`). فایل‌پیکر → `pluginHost.requestImport`. بدون plugin دکمه نیست. | — |
+| فوتر اعداد / highlight جستجو | **live** (PR-69) | `tfoot.erp-table-footer` با `--erp-bg` / `--erp-fg` و `tabular-nums`. `mark.erp-search-hit` از `--erp-search-match` / `--erp-search-other`. query لاتین روی رقم فارسی هم mark می‌شود. | — |
+| سلول بدون `@ts-nocheck` | **live** (PR-70 / PR-74) | مسیر سلول پکیج typed است. host-glue (`useVoucherDescription`, `useERPGrid`) به `examples/host-arian-erp/` منتقل شد. صفر `@ts-nocheck` در `ui/**`. بدون peer `antd`. | — |
+| mark جستجو در textArea / custom | **live** (PR-71) | `CellRenderContext.searchQuery` + `isCurrentSearchMatch`. `TextAreaCell` و `description` حتی وقتی سلول فعال است `mark.erp-search-hit` می‌گذارند. Host با `highlightIfCurrentSearch`. ویجت‌های غیرمتنی (چک‌باکس، تاریخ) mark ندارند. | — |
+| `TextPdfRenderer` | **exported-only** (legacy) | Helvetica و سقف ۸ ستون × ۴۰ سطر. دیگر پیش‌فرض پلاگین نیست؛ Host می‌تواند `renderer: new TextPdfRenderer()` تزریق کند. | — |
 
 ---
 
@@ -83,7 +91,15 @@ Related: [`public-api.md`](./public-api.md) (سطح صادرات)، [`cell-compo
 - Column resize (PR-58): drag the desktop `<th>` edge; session `columnWidths` only (not EventStore)
 - Index column pin (PR-59 / D10): sticky `inset-inline-start` on the `index` cell; no arbitrary column pin API
 - `COLUMN_REORDERED` (PR-61): AppService + header drag on desktop `<th>` + EventStore; `setColumns` keeps domain `order`
-- `role="grid"` (PR-62): desktop + mobile table; `aria-rowindex` is the absolute collection index (virtual window included). Active-cell `aria-selected` is PR-63
+- `role="grid"` (PR-62): desktop + mobile table; `aria-rowindex` is the absolute collection index (virtual window included)
+- Active cell (PR-63): `aria-selected` on the active `gridcell` + `aria-activedescendant` on the grid; row checkbox `aria-label` (`general.selectRow`)
+- Toolbar icons (PR-64): `aria-label` from `messages`; `:focus-visible` outline uses `--erp-accent`
+- `VazirmatnPdfRenderer` (PR-65/66/76): Persian table PDF with embedded Vazirmatn (OFL) when font bytes are passed. Default `PdfExportPlugin` is legacy Text (PR-76). Font subpath: `plugins/pdf/fonts/vazirmatn`.
+- PDF toolbar (PR-67): `PdfExportToolbarButton` when `PdfExportPlugin` is in `ERPTable plugins`
+- Excel import toolbar (PR-68): `ExcelImportToolbarButton` when `ExcelImportPlugin` is in `ERPTable plugins`
+- Footer totals / search marks (PR-69): semantic `--erp-fg` / `--erp-search-match` / `--erp-search-other`; numeric footer on the live demo
+- Cell renderer (PR-70 / PR-74): no `@ts-nocheck` under `ui/**`; host glue in `examples/host-arian-erp/`
+- Search marks in registered cells (PR-71): `textArea` / `description` use `highlightIfCurrentSearch`; custom `render` gets `searchQuery` / `isCurrentSearchMatch`
 
 ---
 

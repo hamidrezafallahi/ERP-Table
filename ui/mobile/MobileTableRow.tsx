@@ -4,7 +4,7 @@ import { ColumnSchema } from '../../bootstrap/type';
 import { overlayStoredColumnWidth } from '../../engine/columnWidth';
 import { RowStateEnum } from '../../domain/value-objects';
 import { UITableController } from '../../infrastructure/ui/UITableController';
-import { ariaColIndex, ariaDataRowIndex } from '../a11y/gridRoles';
+import { ariaColIndex, ariaDataRowIndex, gridCellA11y } from '../a11y/gridRoles';
 import { indexPinClassName, indexPinDataAttr } from '../columnPin';
 import { CellRenderer } from '../cellRenderer';
 import { UIRow } from '../type';
@@ -19,6 +19,7 @@ interface MobileTableRowProps {
   isSelected: boolean;
   isActive: boolean;
   isCut: boolean;
+  activeCell?: { rowId: number; columnId: string } | null;
 }
 
 function MobileTableRowComponent({
@@ -30,6 +31,7 @@ function MobileTableRowComponent({
   isSelected: isSelectedRow,
   isActive: isActiveRow,
   isCut,
+  activeCell,
 }: MobileTableRowProps) {
   const columnWidths = controller.getViewState()?.columnWidths;
   const visibleColumns = columns.filter(
@@ -83,6 +85,7 @@ function MobileTableRowComponent({
               key={c.fieldName}
               role="gridcell"
               aria-colindex={ariaColIndex(idx)}
+              {...gridCellA11y(tableKey, row.id, c.fieldName, activeCell)}
               data-columnid={c.fieldName}
               data-erp-col-pin={indexPinDataAttr(c)}
               style={overlayStoredColumnWidth(c, columnWidths, {})}
@@ -102,6 +105,7 @@ function MobileTableRowComponent({
             key={c.fieldName}
             role="gridcell"
             aria-colindex={ariaColIndex(idx)}
+            {...gridCellA11y(tableKey, row.id, c.fieldName, activeCell)}
             className="p-0 h-full"
             data-columnid={c.fieldName}
             style={overlayStoredColumnWidth(c, columnWidths, {})}
@@ -132,7 +136,9 @@ export const MobileTableRow = React.memo(
       prev.columns === next.columns &&
       prev.isSelected === next.isSelected &&
       prev.isActive === next.isActive &&
-      prev.isCut === next.isCut
+      prev.isCut === next.isCut &&
+      prev.activeCell?.rowId === next.activeCell?.rowId &&
+      prev.activeCell?.columnId === next.activeCell?.columnId
     );
   },
 );

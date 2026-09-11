@@ -215,7 +215,8 @@ export function GridSearchPanel({
         <button
           type="button"
           title={t('general.prev')}
-          className="flex justify-center items-center p-1.5 border border-gray-gray5 rounded disabled:opacity-40"
+          aria-label={t('general.prev')}
+          className="erp-toolbar-btn flex justify-center items-center p-1.5 border border-gray-gray5 rounded disabled:opacity-40"
           disabled={!canNavigate}
           onClick={() => void goToMatch(-1)}
         >
@@ -225,7 +226,8 @@ export function GridSearchPanel({
         <button
           type="button"
           title={t('general.next')}
-          className="flex justify-center items-center p-1.5 border border-gray-gray5 rounded disabled:opacity-40"
+          aria-label={t('general.next')}
+          className="erp-toolbar-btn flex justify-center items-center p-1.5 border border-gray-gray5 rounded disabled:opacity-40"
           disabled={!canNavigate}
           onClick={() => void goToMatch(1)}
         >

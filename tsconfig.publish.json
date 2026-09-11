@@ -3,7 +3,16 @@
   "compilerOptions": {
     "noEmit": true,
     "declaration": false,
-    "declarationMap": false
+    "declarationMap": false,
+    "paths": {
+      "persian-data-grid/plugins/excel": ["./publish/plugins/excel.ts"],
+      "persian-data-grid/plugins/pdf": ["./publish/plugins/pdf.ts"],
+      "persian-data-grid/plugins/pdf/fonts/vazirmatn": [
+        "./publish/plugins/pdf-fonts-vazirmatn.ts"
+      ],
+      "persian-data-grid/adapters/arian-erp": ["./publish/adapters/arian-erp.ts"],
+      "persian-data-grid/headless": ["./publish/headless.ts"]
+    }
   },
   "include": [
     "publish/**/*.ts",
@@ -21,8 +30,6 @@
     "node_modules",
     "dist",
     "**/*.spec.ts",
-    "**/__tests__/**",
-    "ui/useERPGrid.ts",
-    "ui/cellRenderer/descriptionComponent/useVoucherDescription.tsx"
+    "**/__tests__/**"
   ]
 }

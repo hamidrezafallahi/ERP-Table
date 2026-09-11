@@ -3,7 +3,7 @@
 import React from 'react';
 import { DatePicker as PersianDatePicker } from 'react-persian-range-picker';
 
-import { useLocale } from '../host';
+import { useLocale, useERPTableTheme } from '../host';
 
 type Props = {
   value?: unknown;
@@ -21,6 +21,7 @@ export function NewDatePicker({
   showMask = true,
 }: Props) {
   const locale = useLocale();
+  const theme = useERPTableTheme();
   const parsed =
     value == null || value === ''
       ? null
@@ -40,8 +41,8 @@ export function NewDatePicker({
         onChange={(next) => {
           onChange?.(next == null ? '' : next);
         }}
-        primaryColor="#0e0e0e"
-        highlightColor="#ddecfd"
+        primaryColor={theme.params.accentColor}
+        highlightColor={theme.params.rowStripeColor}
         isTodaySelectPreset={false}
       />
     </div>

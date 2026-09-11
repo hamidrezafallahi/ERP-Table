@@ -5,6 +5,7 @@ import {
 } from 'react';
 
 import type { GridSession } from '../application/session/GridSession';
+import type { PluginHost } from '../application/plugins/PluginHost';
 import { createERPTable } from '../bootstrap';
 import type { CreateERPTableConfig } from '../bootstrap/type';
 import type { TableSnapShot } from '../engine/type';
@@ -26,6 +27,7 @@ export type UseERPTableResult =
     ready: true;
     controller: UITableController;
     session: GridSession;
+    pluginHost: PluginHost;
     rows: TableSnapShot;
     changelog: ChangelogEntry[];
     changelogCount: number;
@@ -69,6 +71,7 @@ export function useERPTable(
   const [controller, setController] =
     useState<UITableController | null>(null);
   const [session, setSession] = useState<GridSession | null>(null);
+  const [pluginHost, setPluginHost] = useState<PluginHost | null>(null);
   const [rows, setRows] = useState<TableSnapShot | null>(null);
   const [, setViewVersion] = useState(0);
   const [undoFlags, setUndoFlags] = useState({ canUndo: false, canRedo: false });
@@ -80,12 +83,14 @@ export function useERPTable(
     let cancelled = false;
     setController(null);
     setSession(null);
+    setPluginHost(null);
     setRows(null);
 
     createERPTable(config).then((result: Awaited<ReturnType<typeof createERPTable>>) => {
       if (!cancelled) {
         setController(result.controller);
         setSession(result.session);
+        setPluginHost(result.pluginHost);
       }
     });
 
@@ -157,7 +162,7 @@ export function useERPTable(
     };
   }, [controller]);
 
-  if (!controller || !session || !controller.getViewState()) {
+  if (!controller || !session || !pluginHost || !controller.getViewState()) {
     return { ready: false };
   }
 
@@ -165,6 +170,7 @@ export function useERPTable(
     ready: true,
     controller,
     session,
+    pluginHost,
     rows: rows ?? (controller.getSnapShot('active') as TableSnapShot),
     changelog,
     changelogCount: changelog.length,

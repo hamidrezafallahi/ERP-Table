@@ -100,12 +100,14 @@ export function CustomCheckbox({
   onClick,
   onChange,
   className,
+  'aria-label': ariaLabel,
 }: {
   checked?: boolean;
   disabled?: boolean;
   onClick?: (e: React.MouseEvent<HTMLInputElement>) => void;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   className?: string;
+  'aria-label'?: string;
 }) {
   return (
     <input
@@ -113,6 +115,7 @@ export function CustomCheckbox({
       className={`erp-table-checkbox ${className ?? ''}`}
       checked={!!checked}
       disabled={disabled}
+      aria-label={ariaLabel}
       onClick={onClick}
       onChange={(event) => {
         onChange?.(event);

@@ -132,7 +132,7 @@ describe('excel plugin', () => {
       });
     });
 
-    await host.requestExport({ format: 'xlsx' });
+    await expect(host.requestExport({ format: 'xlsx' })).rejects.toThrow();
     expect(await failed).toBe('NO_COLUMNS');
   });
 });

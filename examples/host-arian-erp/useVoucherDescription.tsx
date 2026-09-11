@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 // Host-coupled voucher description hook (react-redux / ERP services).
 import {
   useMemo,

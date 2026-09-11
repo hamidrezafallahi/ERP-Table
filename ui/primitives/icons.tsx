@@ -238,6 +238,27 @@ export function Layers({ config, className }: IconProps) {
   );
 }
 
+export function PdfIcon({ config, className }: IconProps) {
+  const width = config?.width ?? 18;
+  const height = config?.height ?? 18;
+  return (
+    <svg
+      className={className}
+      width={width}
+      height={height}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
+      <rect x="4" y="2.5" width="16" height="19" rx="2" fill={config?.fill ?? '#b91c1c'} />
+      <path
+        d="M8 15.2V8.8h1.7c1.15 0 1.85.62 1.85 1.55 0 .92-.7 1.52-1.85 1.52H9.15v3.33H8Zm1.15-4.4h.5c.52 0 .82-.28.82-.68 0-.4-.3-.67-.82-.67h-.5v1.35Zm4.05 4.4V8.8h2.35c1.55 0 2.5.88 2.5 2.2 0 1.33-.95 2.22-2.5 2.22h-1.2v1.98h-1.15Zm1.15-3.05h1.1c.72 0 1.18-.4 1.18-1.05 0-.66-.46-1.04-1.18-1.04h-1.1v2.09Z"
+        fill="#fff"
+      />
+    </svg>
+  );
+}
+
 export function Excel({ config, className }: IconProps) {
   const width = config?.width ?? 18;
   const height = config?.height ?? 18;
@@ -254,6 +275,30 @@ export function Excel({ config, className }: IconProps) {
       <path
         d="M8 7.4h2.15l1.85 4.55L13.85 7.4H16L13.1 14.6h-2.2L8 7.4Z"
         fill="#fff"
+      />
+    </svg>
+  );
+}
+
+export function ExcelImport({ config, className }: IconProps) {
+  const width = config?.width ?? 18;
+  const height = config?.height ?? 18;
+  return (
+    <svg
+      className={className}
+      width={width}
+      height={height}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
+      <rect x="3" y="2.5" width="18" height="19" rx="2" fill={config?.fill ?? '#217346'} />
+      <path
+        d="M12 7v7.5M8.8 12.2 12 15.4l3.2-3.2M7.5 17.5h9"
+        stroke="#fff"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

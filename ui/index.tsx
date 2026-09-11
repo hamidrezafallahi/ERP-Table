@@ -91,6 +91,7 @@ export function ERPTable(props: ERPTableProps) {
     theme: themeProp,
     themeToggle = true,
     components,
+    plugins,
   } = props;
 
   const requestedTheme = themeProp ?? themeErp;
@@ -129,6 +130,7 @@ export function ERPTable(props: ERPTableProps) {
     recordPerPage,
     rowHeight: resolvedTheme.params.rowHeight,
     remoteApi,
+    plugins,
   });
 
   useEffect(() => {
@@ -189,6 +191,7 @@ export function ERPTable(props: ERPTableProps) {
     header,
     footer,
     multiSelectConfig,
+    pluginHost: result.pluginHost,
   };
 
   const table = isMobile ? (
