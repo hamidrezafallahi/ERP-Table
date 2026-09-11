@@ -348,6 +348,7 @@ export class ChangeCellValueHandler {
   private validateCellValue(type: FieldType, value: unknown) {
     switch (type) {
       case 'text':
+      case 'textArea':
       case 'description':
       case 'date':
         return typeof value === 'string'
@@ -803,6 +804,7 @@ export class ApplyDynamicProjectionHandler {
   private validateCellValue(type: FieldType, value: unknown) {
     switch (type) {
       case 'text':
+      case 'textArea':
       case 'description':
       case 'date':
         return typeof value === 'string'

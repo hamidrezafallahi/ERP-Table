@@ -1,3 +1,4 @@
+import { assignThemeVars } from '../theme';
 import { useERPTableHost } from './ERPTableHost';
 
 export function showSuccessToast(message?: unknown, _detail?: unknown): void {
@@ -17,6 +18,7 @@ function emitToast(kind: 'success' | 'error', message: string): void {
   const el = document.createElement('div');
   el.className = `erp-table-toast is-${kind}`;
   el.textContent = message;
+  assignThemeVars(el);
   document.body.appendChild(el);
   window.setTimeout(() => el.remove(), 2800);
 }

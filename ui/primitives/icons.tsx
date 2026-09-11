@@ -603,6 +603,57 @@ export function Reload({ config, className }: IconProps) {
   );
 }
 
+export function MoonIcon({ config, className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width={config?.width ?? 18}
+      height={config?.height ?? 18}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
+      <path
+        className={strokeClass(config)}
+        d="M21 14.3A8.5 8.5 0 0 1 9.7 3 7.5 7.5 0 1 0 21 14.3Z"
+        stroke={config?.stroke}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function SunIcon({ config, className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width={config?.width ?? 18}
+      height={config?.height ?? 18}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
+      <circle
+        className={strokeClass(config)}
+        cx="12"
+        cy="12"
+        r="4"
+        stroke={config?.stroke}
+        strokeWidth="1.5"
+      />
+      <path
+        className={strokeClass(config)}
+        d="M12 3v1.5M12 19.5V21M4.93 4.93l1.06 1.06M17.99 17.99l1.06 1.06M3 12h1.5M19.5 12H21M4.93 19.07l1.06-1.06M17.99 6.01l1.06-1.06"
+        stroke={config?.stroke}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function EditPencil({ config, className }: IconProps) {
   return (
     <svg

@@ -76,13 +76,13 @@ export const EVENT_CATALOG: readonly EventCatalogEntry[] = [
     type: 'COLUMN_REORDERED',
     category: 'column',
     undoable: false,
-    description: 'Column order changed.',
+    description: 'Column order changed via Table.reorderColumns (header drag or command).',
   },
   {
     type: 'UNIT_COLUMN_ADDED',
     category: 'column',
     undoable: false,
-    description: 'Unit-level column added dynamically.',
+    description: 'Reserved: unit-level column added dynamically. No product emitter (SET_UNIT_LEVEL stub removed).',
   },
   {
     type: 'PAGE_CHANGED',

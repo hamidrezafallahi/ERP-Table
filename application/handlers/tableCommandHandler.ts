@@ -10,7 +10,7 @@ import {
 import {
   ChangePageCommand,
   ChangePageSizeCommand,
-  ChangeUnitLevelCommand,
+  ColumnReorderedCommand,
   DeleteTableCommand,
   ResetTableCommand,
   SetActiveCollectionCommand,
@@ -24,62 +24,6 @@ type DynamicConfig = {
   columnMeta: Map<string, ColumnSchema>;
   remoteApi: RemoteApi;
 };
-
-/* ======================================================
-   Change Unit Level
-   ====================================================== */
-
-export class ChangeUnitLevelHandler {
-  constructor(
-    private readonly repo: TableRepository,
-    private readonly audit: AuditLogger,
-   ) { }
-
-  async execute(
-    command: ChangeUnitLevelCommand,
-    actor: Actor
-  ): Promise<TableEvent[]> {
-
-    const table = await this.repo.getById(command.store, command.tableKey);
-
-    try {
-
-      table.addColumns([]);
-
-      await this.repo.save(command.store, table);
-
-      const out: TableEvent = {
-        type: 'UNIT_COLUMN_ADDED',
-        tableId: command.tableKey,
-        reason: 'UNIT_LEVEL_UPDATED',
-        details: { level: command.level },
-      };
-
-      this.audit.log({
-        type: out.type,
-        message: out.reason,
-        payload: out.details
-      });
-      return [out];
-
-    } catch (error) {
-
-      if (error instanceof DomainError) {
-        this.audit.log({
-          type: error.code,
-          message: error.message,
-          payload: error.details
-        });
-      } else {
-        this.audit.log({
-          type: 'INVARIANT_VIOLATION',
-          message: 'Unexpected error',
-          payload: { error }
-        });
-      } return []
-    }
-  }
-}
 
 /* ======================================================
    Change Page
@@ -342,6 +286,87 @@ private async applyVisibility(input: {
           payload: { error }
         });
       } return []
+    }
+  }
+}
+
+/* ======================================================
+   Reorder Column
+   ====================================================== */
+
+export class ReorderColumnCommandHandler {
+  constructor(
+    private readonly repo: TableRepository,
+    private readonly audit: AuditLogger,
+    private readonly permission: PermissionPolicy,
+  ) {}
+
+  async execute(
+    command: ColumnReorderedCommand,
+    actor: Actor,
+  ): Promise<TableEvent[]> {
+    try {
+      if (
+        this.permission.canReorderColumn &&
+        !this.permission.canReorderColumn({ actor })
+      ) {
+        throw new DomainError(
+          'FORBIDDEN',
+          'Actor is not allowed to reorder columns',
+          { actor },
+        );
+      }
+
+      const table = await this.repo.getById(command.store, command.tableKey);
+      const columns = table.getActiveCollectionColumns();
+      const n = columns.length;
+      const { sourceIndex, destIndex } = command;
+
+      if (
+        !Number.isInteger(sourceIndex) ||
+        !Number.isInteger(destIndex) ||
+        sourceIndex < 0 ||
+        destIndex < 0 ||
+        sourceIndex >= n ||
+        destIndex >= n
+      ) {
+        throw new DomainError(
+          'COLUMN_NOT_FOUND',
+          'Column reorder indices are out of range',
+          { sourceIndex, destIndex, columnCount: n },
+        );
+      }
+
+      table.reorderColumns(sourceIndex, destIndex);
+      await this.repo.save(command.store, table);
+
+      const out: TableEvent = {
+        type: 'COLUMN_REORDERED',
+        tableId: command.tableKey,
+        sourceIndex,
+        destIndex,
+      };
+      this.audit.log({
+        type: out.type,
+        message: out.type,
+        payload: { sourceIndex, destIndex },
+      });
+      return [out];
+    } catch (error) {
+      if (error instanceof DomainError) {
+        this.audit.log({
+          type: error.code,
+          message: error.message,
+          payload: error.details,
+        });
+      } else {
+        this.audit.log({
+          type: 'INVARIANT_VIOLATION',
+          message: 'Unexpected error',
+          payload: { error },
+        });
+      }
+      return [];
     }
   }
 }

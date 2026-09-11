@@ -17,7 +17,7 @@ export function MobileTableBody({
   columns,
 }: MobileTableBodyProps) {
   return (
-    <tbody className="w-full min-w-0 overflow-x-auto">
+    <tbody className="w-full min-w-0 overflow-x-auto" role="rowgroup">
       {rows.map((row, index) => (
         <MobileTableRow
           key={row.id}

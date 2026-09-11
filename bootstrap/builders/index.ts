@@ -18,8 +18,8 @@ import {
 import {
   ChangePageCommandHandler,
   ChangePageSizeCommandHandler,
+  ReorderColumnCommandHandler,
   SetActiveCollectionCommandHandler,
-  ChangeUnitLevelHandler,
   DeleteTableCommandHandler,
   ResetTableCommandHandler,
 } from '../../application/handlers/tableCommandHandler';
@@ -379,6 +379,7 @@ export function createPermissionPolicy(
     canCopyRow: ({ actor, rowId }) => resolveRowAccess(actor, rowId),
     canDeleteRow: ({ actor, rowId }) => resolveRowAccess(actor, rowId),
     canReorderRow: ({ actor, rowId }) => resolveRowAccess(actor, rowId),
+    canReorderColumn: ({ actor }) => resolveRowAccess(actor),
   };
 }
 
@@ -406,7 +407,7 @@ export function createTableAppService(
   const deleteTableHandler = new DeleteTableCommandHandler(repo, audit, permissionPolicy);
   const resetTableHandler = new ResetTableCommandHandler(repo, audit, permissionPolicy);
   const reorderRowHandler = new ReorderRowCommandHandler(repo, audit, permissionPolicy);
-  const unitLevelHandler = new ChangeUnitLevelHandler(repo, audit);
+  const reorderColumnHandler = new ReorderColumnCommandHandler(repo, audit, permissionPolicy);
   const setPageSize = new ChangePageSizeCommandHandler(repo, audit);
   const setPage = new ChangePageCommandHandler(repo, audit);
   const setActiveCollection = new SetActiveCollectionCommandHandler(repo, audit);
@@ -420,7 +421,6 @@ export function createTableAppService(
     duplicateRowHandler,
     deleteRowHandler,
     reorderRowHandler,
-    unitLevelHandler,
     setPageSize,
     setPage,
     setActiveCollection,
@@ -429,6 +429,7 @@ export function createTableAppService(
     applyDynamicProjection,
     restoreAddedRowHandler,
     pasteRowHandler,
+    reorderColumnHandler,
   );
 
   appService.setRepository(repo);

@@ -6,11 +6,21 @@ Published React surface is the ERP table chrome used in the host app.
 
 Drop-in React table. Same props as the ERP host (`voucherTemplate`, cheque pages, inventory voucher, bank withdrawal):
 
-`actor`, `store`, `tableKey`, `rows`, `columns`, `recordPerPage`, `tableHeight`, `tableTitle`, `activeCollection`, `multiSelectConfig`, `onReady`, optional `footer` / `header` / `moreDetailComponent`.
+`actor`, `store`, `tableKey`, `rows`, `columns`, `recordPerPage`, `tableHeight`, `tableTitle`, `activeCollection`, `onReady`, optional `multiSelectConfig` / `footer` / `header` / `moreDetailComponent`.
 
 Default desktop chrome: paginated body + toolbar (add/copy/cut/paste/delete/excel/search) + numeric footer. CSS tokens match ERP Tailwind (`gray-gray3`, zebra `blue-blue11`, row height 36px).
 
-Browser `FetchRemoteApi` is the default `remoteApi` (cookie `_auth` + `persist:arianERP`). Host may still inject a custom `RemoteApi`.
+Default `remoteApi` is **`NoopRemoteApi`** (no fetch). The arianERP host should pass `remoteApi={new FetchRemoteApi()}` — [`host-arian-erp.md`](./host-arian-erp.md) (`_auth`, `persist:arianERP`, `Defaults`).
+
+Custom cells: [`cell-components.md`](./cell-components.md) (`columns[].render`, `components`, `textArea`).
+
+Desktop column resize: drag the header edge. Width stays in the session (`columnWidths`); it is not persisted. Mobile has no handle.
+
+The `index` column is pinned on horizontal scroll (D10: only `index`).
+
+Column reorder: drag a desktop header cell (`COLUMN_REORDERED`). The pinned `index` column does not move. Keyboard reorder is Phase 12.
+
+The product `<table>` is `role="grid"` with `columnheader` / `gridcell` and 1-based `aria-colindex` / `aria-rowindex`. Virtual rows use the absolute collection index, not the mounted window. This is an AT baseline, not a WCAG claim.
 
 ## `createERPTable`
 

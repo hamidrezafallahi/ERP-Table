@@ -6,6 +6,7 @@ import {
   ExcelImportPlugin,
   PdfExportPlugin,
   VirtualList,
+  shouldSkipGridNavigation,
   type ColumnSchema,
   type CreateERPTableResult,
 } from 'persian-data-grid';
@@ -41,7 +42,6 @@ export default function DemoComponent() {
   const [error, setError] = useState<string | null>(null);
   const [rowCount, setRowCount] = useState(200);
   const [viewMode, setViewMode] = useState<ViewMode>('virtual');
-  const [overlapOn, setOverlapOn] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -177,6 +177,7 @@ export default function DemoComponent() {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target?.closest('[data-demo-no-nav]')) return;
+      if (shouldSkipGridNavigation(target, e.code)) return;
 
       const navKeys = new Set([
         'ArrowLeft',
@@ -377,7 +378,6 @@ export default function DemoComponent() {
         data-demo-row
         className={[
           styles.gridRow,
-          overlapOn ? styles.gridRowOverlap : '',
           isMatch ? styles.gridRowMatch : '',
           dropBefore ? styles.dropBefore : '',
           dropAfter ? styles.dropAfter : '',
@@ -591,13 +591,6 @@ export default function DemoComponent() {
             >
               Pagination
             </button>
-            <button
-              type="button"
-              className={`${styles.demoToggle} ${overlapOn ? styles.demoToggleActive : ''}`}
-              onClick={() => setOverlapOn((v) => !v)}
-            >
-              Sticky IndexCol
-            </button>
           </div>
 
           <div className={styles.demoToolbar}>
@@ -762,22 +755,12 @@ export default function DemoComponent() {
               {viewMode === 'paged'
                 ? `Page ${page} of ${totalPages} · ${totalRows} rows`
                 : `${rows.length} rows`}
-              {overlapOn ? ' · sticky IndexCol on' : ''}
             </span>
           </div>
 
-          {overlapOn && (
-            <p className={styles.demoHint}>
-              Scroll the grid horizontally — IndexCol stays fixed and overlays scrolling cells
-              (demo-only sticky chrome).
-            </p>
-          )}
-
           {grid ? (
-            <div
-              className={`${styles.gridShell} ${overlapOn ? styles.gridShellOverlap : ''}`}
-            >
-              {viewMode === 'virtual' && !overlapOn ? (
+            <div className={styles.gridShell}>
+              {viewMode === 'virtual' ? (
                 <div className={styles.gridScroll}>
                   <div
                     className={styles.gridHeader}
@@ -801,21 +784,16 @@ export default function DemoComponent() {
               ) : (
                 <div className={styles.gridUnified}>
                   <div
-                    className={`${styles.gridHeader} ${overlapOn ? styles.gridRowOverlap : ''}`}
+                    className={styles.gridHeader}
                     style={{ gridTemplateColumns }}
                   >
-                    <span className={`${styles.stickyCell} ${styles.indexSticky}`}>
-                      {indexMeta.fieldCaption}
-                    </span>
+                    <span>{indexMeta.fieldCaption}</span>
                     {dataColumns.map((col) => (
                       <span key={col.fieldName}>{col.fieldCaption}</span>
                     ))}
                   </div>
                   <div className={styles.pagedBody}>
-                    {(overlapOn && viewMode === 'virtual' && rows.length > 400
-                      ? rows.slice(0, 400)
-                      : rows
-                    ).map((row, i) => {
+                    {rows.map((row, i) => {
                       const idx =
                         viewMode === 'paged' ? (page - 1) * pageSize + i : i;
                       return renderRow(row, idx);

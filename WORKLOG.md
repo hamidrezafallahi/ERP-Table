@@ -8,13 +8,228 @@
 
 ## Current Snapshot
 
-- آخرین کار انجام‌شده: **ERPTable published chrome — self-contained UI matching ERP host (pagination default, CSS tokens, FetchRemoteApi)**
-- وضعیت کلی: کتابخانه آمادهٔ `npm i persian-data-grid` با همان ظاهر و منطق صفحات ERP (voucher / cheque / inventory / bank)
-- تغییرات فقط در `C:\fallahi\erp table`
+- **فاز اجرایی باز: Phase 12 — Accessibility baseline**
+- **PR بعدی برای ایجنت: PR-63** (سلول فعال `aria-selected`)
+- آخرین PR تمام‌شده: **PR-62** (`role="grid"`)
+- طرح قبلی Phase 1–5 (PR-1 … PR-38) **بسته** است
+- طرح Phase 6–7 (PR-39 … PR-45) **بسته** است
+- طرح Phase 8 (PR-46 … PR-50) **بسته** است
+- طرح Phase 9 (PR-51 … PR-53) **بسته** است
+- طرح Phase 10 (PR-54 … PR-57) **بسته** است
+- طرح Phase 11 (PR-58 … PR-61) **بسته** است
+- پلن زنده: `EXECUTION_PLAN.md` از Active Track به بعد
+- ورود ایجنت: `docs/agent-handoff.md`
 
 ---
 
 ## Completed Work
+
+### PR-62 — role=grid baseline (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `ui/a11y/gridRoles.ts`, `ui/desktop/DesktopTable.tsx`, `ui/desktop/ERPTableHeader.tsx`, `ui/desktop/eRPTableRow.tsx`, `ui/desktop/ERPTableBody.tsx`, `ui/desktop/ERPTableVirtualBody.tsx`, `ui/desktop/ERPTableFooter.tsx`, `ui/mobile/MobileTable.tsx`, `ui/mobile/MobileTableHeader.tsx`, `ui/mobile/MobileTableBody.tsx`, `ui/mobile/MobileTableRow.tsx`, `docs/public-api-honesty.md`
+- `<table role="grid">` دسکتاپ و موبایل با `columnheader` / `gridcell` و `aria-colindex` / `aria-rowindex` یک‌پایه. مجازی از ایندکس مطلق مجموعه استفاده می‌کند. `aria-selected` نرفت (PR-63).
+- Verify: `yarn test` 49 file / 207 tests؛ `yarn typecheck:publish`؛ `yarn typecheck:host-ui`
+- بعدی: PR-63
+
+### PR-61 — drag هدر برای reorder ستون (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `engine/columnReorder.ts`, `domain/entities/Table.ts`, `application/handlers/tableCommandHandler.ts`, `ui/desktop/ERPTableHeader.tsx`, `ui/desktop/ColumnResizeHandle.tsx`, `ui/styles/erp-table.css`, `ui/styles/injectStyles.ts`, `docs/public-api-honesty.md`
+- درگ HTML5 روی `<th>` دسکتاپ (`data-erp-col-drag`) → `COLUMN_REORDERED`. ستون `index` و هندل resize درگ نمی‌شوند. `reorderColumns` روی ترتیب نمایش کار می‌کند و `order` را بازنویسی می‌کند؛ `setColumns` همان `order` را هنگام refresh اسکیما نگه می‌دارد.
+- Verify: `yarn test` 48 file / 202 tests؛ `yarn typecheck:publish`؛ `yarn typecheck:host-ui`
+- بعدی: PR-62
+
+### PR-60 — COLUMN_REORDERED engine + handler (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `application/commands/index.ts`, `application/handlers/tableCommandHandler.ts`, `application/TableAppService.ts`, `bootstrap/builders/index.ts`, `domain/policies/index.ts`, `infrastructure/ui/uiEvents.ts`, `infrastructure/ui/UITableController.ts`, `docs/public-api-honesty.md`
+- `COLUMN_REORDERED` عضو `ApplicationTableCommand`. Handler → `Table.reorderColumns` + dual-write EventStore. Controller dispatch بدون drag هدر (PR-61).
+- Verify: `yarn test` 46 file / 194 tests؛ `yarn typecheck:publish`؛ `yarn typecheck:host-ui`
+- بعدی: PR-61
+
+### PR-59 — pin ستون index (D10) (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `ui/columnPin.ts`, `ui/desktop/ERPTableHeader.tsx`, `ui/desktop/eRPTableRow.tsx`, `ui/desktop/ERPTableFooter.tsx`, `ui/desktop/ERPTableVirtualBody.tsx`, `ui/desktop/DesktopTable.tsx`, `ui/mobile/MobileTable.tsx`, `ui/mobile/MobileTableHeader.tsx`, `ui/mobile/MobileTableRow.tsx`, `ui/styles/erp-table.css`, `ui/styles/injectStyles.ts`, `demo/src/DemoComponent.tsx`, `docs/public-api-honesty.md`, `docs/public-api.md`, `docs/components.md`, `docs/demo-playground-report.md`
+- Sticky افقی فقط ستون `index` (`inset-inline-start: 0`). جدول `border-collapse: separate` تا sticky سلول کار کند. spacer مجازی یک سلول per column. toggle دموی Sticky IndexCol حذف شد.
+- Verify: `yarn test` 45 file / 190 tests؛ `yarn typecheck:publish`؛ `yarn typecheck:host-ui`
+- بعدی: PR-60
+
+### PR-58 — column resize (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `engine/columnWidth.ts`, `engine/type.ts`, `engine/tableEngine.ts`, `engine/ViewStateBuilder.ts`, `application/commands/index.ts`, `infrastructure/ui/uiEvents.ts`, `infrastructure/ui/UITableController.ts`, `ui/desktop/ColumnResizeHandle.tsx`, `ui/desktop/ERPTableHeader.tsx`, `ui/desktop/eRPTableRow.tsx`, `ui/desktop/ERPTableFooter.tsx`, `ui/mobile/MobileTableHeader.tsx`, `ui/mobile/MobileTableRow.tsx`, `ui/styles/erp-table.css`, `ui/styles/injectStyles.ts`, `docs/public-api-honesty.md`, `docs/public-api.md`, `docs/components.md`
+- Drag لبهٔ `<th>` دسکتاپ (`data-erp-col-resize`، pointer events). عرض در `columnWidths` view state جلسه؛ **بدون EventStore**. `minWidth` کف (۱۴۴ / ایندکس ۱۶۸). موبایل هندل ندارد.
+- Verify: `yarn test` 44 file / 185 tests؛ `yarn typecheck:publish`؛ `yarn typecheck:host-ui`
+- بعدی: PR-59
+
+### PR-57 — cell-components host guide (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `docs/cell-components.md`, `docs/public-api.md`, `docs/getting-started.md`, `docs/components.md`, `README.md`, `docs/public-api-honesty.md`, `docs/__tests__/cell-components.spec.ts`
+- راهنمای ثبت/جایگزینی ادیتور بدون خواندن `CellRenderer`: `render` ستونی، `components`، نوع جدید، کیبورد textarea.
+- Verify: `yarn test` 42 file / 175 tests؛ `yarn typecheck:publish`؛ `yarn typecheck:host-ui`
+- بعدی: PR-58
+
+### PR-56 — textArea via default registry (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `domain/types/ColumnSchema.ts`, `ui/cellRenderer/TextAreaCell.tsx`, `ui/cellRenderer/cellRegistry.ts`, `ui/keyboard/skipGridNavigation.ts`, `ui/index.tsx`, `ui/helper.ts`, `application/handlers/cellCommandsHandler.ts`, `demo/src/fixtures.ts`, `demo/src/DemoComponent.tsx`
+- `FieldType` شامل `textArea`. ادیتور فایل جدا + `DEFAULT_CELL_COMPONENTS`؛ هیچ `case "textArea"` در سوئیچ CellRenderer.
+- Enter/جهت‌نما داخل `[data-erp-cell-textarea]` ناوبری سلول را skip می‌کنند؛ Tab همچنان جابه‌جا می‌شود.
+- دمو: ستون «شرح ردیف» (`DetailDesc`) چندخطی شد.
+- Verify: `yarn test` 41 file / 172 tests؛ `yarn typecheck:publish`؛ `yarn typecheck:host-ui`
+- بعدی: PR-57
+
+### PR-55 — components map (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `ui/cellRenderer/cellRegistry.ts`, `ui/cellRenderer/index.tsx`, `ui/host/ERPTableHost.tsx`, `ui/index.tsx`, `ui/cell-components.typecheck.tsx`, `demo/src/LiveGridPreview.tsx`, `demo/src/fixtures.ts`, `docs/public-api.md`, `docs/public-api-honesty.md`
+- `ERPTableProps.components` روی host context؛ CellRenderer بعد از `columns[].render` و قبل از switch می‌خواند. کلید آزاد برای type سفارشی.
+- دمو: ستون «تأیید» + جایگزینی `checkbox` با `data-erp-cell-component`.
+- Verify: `yarn test` 39 file / 163 tests؛ `yarn typecheck:publish`؛ `yarn typecheck:host-ui`
+- بعدی: PR-56
+
+### PR-54 — bind ColumnViewBinding.render (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `ui/cellRenderer/cellRenderContext.ts`, `ui/cellRenderer/index.tsx`, `domain/types/ColumnSchema.ts`, `infrastructure/columns/mapColumnSchema.ts`, `demo/src/fixtures.ts`, `docs/public-api.md`, `docs/public-api-honesty.md`
+- `columns[].render` قبل از switch `FieldType` در CellRenderer (دسکتاپ + موبایل). `returnDisplayValue` دیگر به `binding.render` map نمی‌شود.
+- دمو: ستون «طرف» (`SideMark`) با `data-erp-custom-cell`.
+- Verify: `yarn test` 38 file / 157 tests؛ `yarn typecheck:publish`؛ `yarn typecheck:host-ui`
+- بعدی: PR-55
+
+### PR-53 — optional multiSelectConfig (D11) (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `ui/index.tsx`, `ui/desktop/DesktopTable.tsx`, `ui/mobile/MobileTable.tsx`, `ui/optional-multiselect.typecheck.tsx`, `ui/desktop/__tests__/multiselect-optional.spec.ts`, `demo/src/InitialComponent.tsx`, `README.md`, `docs/public-api.md`, `docs/components.md`, `docs/host-arian-erp.md`
+- نبودن config = بدون دکمه/مودال choose-from-list. playground هنوز config دارد تا مسیر موجود نشکند.
+- Verify: `yarn test` 37 file / 150 tests؛ `yarn typecheck:publish`؛ `yarn typecheck:host-ui` (کامنت JSX در fixture TSX حذف شد)
+- بعدی: PR-54
+
+### PR-52 — arianERP host adapter docs (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `docs/host-arian-erp.md`, `README.md`, `docs/getting-started.md`, `docs/public-api.md`, `docs/components.md`, `docs/__tests__/host-arian-erp.spec.ts`
+- کوکی `_auth`، `persist:arianERP`، بدنهٔ `Defaults` مستند شد. `FetchRemoteApi` در پکیج ماند؛ bootstrap آن را نمی‌سازد.
+- README نصب صریحاً می‌گوید بدون inject به ERP وصل نمی‌شود.
+- Verify: `yarn test` 36 file / 147 tests؛ `yarn typecheck:publish`
+- بعدی: PR-53
+
+### PR-51 — default NoopRemoteApi (D1) (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `bootstrap/index.ts`, `bootstrap/type.ts`, `index.ts`, `infrastructure/Repositories/fetchRemoteApi.ts`, `bootstrap/__tests__/create-erp-table.spec.ts`, `docs/public-api.md`, `docs/getting-started.md`, `docs/components.md`, `docs/public-api-honesty.md`
+- بدون `remoteApi` دیگر Fetch / کوکی `_auth` / `persist:arianERP` نمی‌زند. `FetchRemoteApi` export ماند برای inject میزبان.
+- دمو از قبل `DemoMockRemoteApi` می‌دهد — select پویا نشکست.
+- Verify: `yarn test` 35 file / 144 tests؛ `yarn typecheck:publish`
+- بعدی: PR-52
+
+### PR-50 — Snapshot opt-in (D7) (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `bootstrap/type.ts`, `bootstrap/index.ts`, `application/TableAppService.ts`, `bootstrap/__tests__/snapshot-opt-in.spec.ts`, `docs/public-api.md`, `docs/public-api-honesty.md`
+- `snapshotStore?` / `snapshotEveryNEvents?`؛ بدون store همان dual-write؛ با store `SnapshotStrategy` + catch-up هنگام create
+- Verify: `yarn test` 35 file / 142 tests؛ `yarn typecheck:publish`
+- بعدی: PR-51 (شکستن D1)
+
+### PR-49 — SparseRowIndex on virtual path (D6) (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `engine/ViewStateBuilder.ts`, `engine/tableEngine.ts`, `application/session/GridSession.ts`, `infrastructure/session/DefaultGridSession.ts`, `ui/virtual/virtualWindow.ts`, `ui/virtual/useVirtualWindow.ts`, `ui/desktop/ERPTableVirtualBody.tsx`, `ui/desktop/DesktopTable.tsx`, `engine/__tests__/sparse-ui-row-index.spec.ts`, `docs/public-api-honesty.md`
+- ایندکس تنک با ترتیب ستون `index`؛ رندر مجازی بدون clone+sort کل `getAllUIRows()`؛ add/delete/reorder invalidate می‌کند
+- pagination پیش‌فرض اجباری نشد؛ `SparseRowIndex` export ماند
+- Verify: `yarn test` 34 file / 140 tests؛ `yarn typecheck:publish`
+- بعدی: PR-50
+
+### PR-48 — CLEAR_ROW_SELECTION live / SET_UNIT_LEVEL removed (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `application/commands/index.ts`, `engine/tableEngine.ts`, `engine/managers/SelectionManager.ts`, `infrastructure/ui/UITableController.ts`, `infrastructure/ui/uiEvents.ts`, `application/TableAppService.ts`, `application/handlers/tableCommandHandler.ts`, `bootstrap/builders/index.ts`, `application/__tests__/dual-write.spec.ts`, `application/__tests__/command-categories.spec.ts`, `engine/__tests__/clear-row-selection.spec.ts`, `docs/public-api-honesty.md`, `docs/__tests__/public-api-honesty.spec.ts`, `docs/event-catalog.md`, `application/events/eventCatalog.ts`
+- `CLEAR_ROW_SELECTION` در `EngineTableCommand` + `tableEngine` + UI controller؛ انتخاب ردیف را خالی می‌کند
+- stub `SET_UNIT_LEVEL` / `ChangeUnitLevelHandler` / `addColumns([])` حذف شد؛ `UNIT_COLUMN_ADDED` در catalog reserved ماند (بدون emitter)
+- Verify: `yarn test` 33 file / 137 tests؛ `yarn typecheck:publish`
+- **نشد:** سیم کردن `COLUMN_REORDERED` (Phase 11)
+- بعدی: PR-49
+
+### PR-47 — asyncValidator await (D5) (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `engine/tableEngine.ts`, `engine/__tests__/async-validator.spec.ts`, `docs/public-api-honesty.md`, `docs/__tests__/public-api-honesty.spec.ts`
+- `validation()` اگر ستونی `asyncValidator` داشته باشد Promise را await می‌کند و خطا را در همان `errors` map می‌گذارد؛ بدون rule ناهمگام همان تیک sync می‌ماند
+- `isValidCell` امضای sync را نگه می‌دارد؛ نتیجهٔ async بعد از settle در cache می‌آید و store را bump می‌کند تا هدر/سلول re-render شوند
+- Verify: `yarn test` 32 file / 134 tests (۴ تست PR-47 + honesty grep برای `await rule.asyncValidator`)؛ `yarn typecheck:publish`
+- **نشد:** عوض کردن signature عمومی `isValidCell` به Promise
+- بعدی: PR-48
+
+### PR-46 — Public API honesty audit (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `docs/public-api-honesty.md`, `docs/__tests__/public-api-honesty.spec.ts`, `docs/public-api.md` (لینک), `package.json` (اسکریپت test شامل `docs/__tests__`)
+- هدف: فهرست شکاف‌ها بدون تغییر runtime
+- مرده/stub: `CLEAR_ROW_SELECTION` (حتی در union نیست)، `COLUMN_REORDERED` (Unhandled engine command)، `SET_UNIT_LEVEL` → `addColumns([])`
+- exported-only: `asyncValidator` ignore، `SparseRowIndex` فقط تست viewport، `SnapshotStrategy` خارج از bootstrap
+- Verify: `yarn test` 31 file / 130 tests (۷ assertion grep برای هم‌خوانی سند با کد)
+- **نشد:** سیم کردن هیچ stub (PR-47+)
+- بعدی: PR-47
+
+### PR-45 — density از theme.params (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `bootstrap/type.ts`, `bootstrap/index.ts`, `ui/desktop/useERPTableLayout.ts`, `ui/desktop/DesktopTable.tsx`, `ui/index.tsx`, `ui/styles/injectStyles.ts`, `ui/styles/erp-table.css`, `demo/src/LiveGridPreview.tsx`
+- `createERPTable` از `config.rowHeight ?? 40` برای `tableHeight / rowHeight` استفاده می‌کند
+- virtual body و layout از `useERPTableTheme().params.rowHeight` می‌خوانند
+- `.h-9` = `var(--erp-row-height)` (پیش‌فرض توکن ۴۰px مطابق D12)
+- دمو: دکمهٔ «سطر ۴۸»
+- Verify کل Phase 7: `yarn test` 30 file / 123 tests؛ `yarn typecheck:publish`؛ `yarn typecheck:host-ui`؛ `yarn build` + `verify:dist` پاس (`themeErpDark` در DTS)
+- ظاهر: بدون مرورگر تعاملی در این جلسه؛ دمو روی `yarn dev` (پورت 5175) باید HMR شود
+- **نشد:** عوض کردن پیش‌فرض ۴۰
+- بعدی: PR-46
+
+### PR-44 — themeErpDark + دکمه محصول (D8) (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `ui/theme/GridTheme.ts`, `ui/theme/resolveActiveTheme.ts`, `ui/theme/ThemeToggleButton.tsx`, `ui/desktop/groupActionButtons.tsx`, `ui/mobile/MobileActionButtons.tsx`, `ui/index.tsx`, `ui/host/messages.ts`
+- تم سفارشی (`withParams` غیر stock) دکمه را قفل/مخفی می‌کند
+- دمو UI موازی نساخته؛ همان chrome + دکمه‌های QA صورتی/سطر۴۸ که تم را سفارشی می‌کنند (و در آن حالت toggle قفل است)
+- بعدی در همان جلسه: PR-45
+
+### PR-43 — Portal inheritance (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `ui/host/ERPTableHost.tsx` (`useThemePortalStyle`), `ui/theme/applyCssVars.ts`, `ui/primitives/chrome.tsx`, `Select.tsx`, `Dropdown.tsx`, `ui/host/toast.ts`, `ui/gridSearch/GridSearchPanel.tsx`
+- overlay روی `document.body` همان `toCssVars()` را می‌گیرد
+- بعدی در همان جلسه: PR-44
+
+### PR-42 — theme prop + host context (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `ui/index.tsx`, `ui/host/ERPTableHost.tsx`, `index.ts`, `publish/entry.ts`, `docs/public-api.md`
+- `ERPTableProps.theme?: GridTheme` پیش‌فرض `themeErp`؛ `style={toCssVars()}` روی `.erp-table`؛ `useERPTableTheme()`
+- دمو: دکمهٔ «صورتی» = `withParams({ accentColor: 'hotpink' })`
+- **نشد در این برش به‌تنهایی:** تم تیره (PR-44)، density موتور (PR-45)
+- بعدی در همان جلسه: PR-43
+
+### PR-41 — GridTheme + themeErp (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `ui/theme/GridTheme.ts`, `ui/theme/index.ts`, `ui/theme/__tests__/grid-theme.spec.ts`, `index.ts`, `publish/entry.ts`, `docs/public-api.md`, `scripts/verify-dist.mjs`
+- هدف: API Typed بدون وصل به `ERPTable`
+- `themeErp.params.rowHeight === 40` (D12)
+- Verify: `yarn test` 28 file / 115 tests؛ `yarn typecheck:publish`؛ `yarn build` + `verify:dist` پاس (`GridTheme` / `themeErp` در DTS)
+- **نشد:** prop روی ERPTable (PR-42)
+- بعدی: PR-42
+
+### PR-40 — Kill hardcoded hex (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `ui/styles/injectStyles.ts`, `ui/styles/erp-table.css`, `ui/styles/__tests__/semantic-tokens.spec.ts`
+- utilityها (`bg-blue-blue11` → `--erp-row-stripe` و مشابه) و pagination/modal/toast/select به `var(--erp-*)`
+- hex باقی‌مانده فقط در بلوک تعریف پالت (شامل `--erp-success` / `--erp-error` / `--erp-overlay` / `--erp-scrollbar` / `--erp-gray-100` برای مقدار دقیق قبلی)
+- Verify: تست PR-40 hex-guard + بقیهٔ سوئیت
+- بعدی در همان جلسه: PR-41
+
+### PR-39 — Semantic CSS role aliases (۲۰۲۶-۰۹-۱۱)
+
+- فایل‌ها: `ui/styles/injectStyles.ts`, `ui/styles/erp-table.css`, `ui/styles/__tests__/semantic-tokens.spec.ts`, `package.json` (اسکریپت test)
+- هدف: توکن نقش (`--erp-bg`, `--erp-accent`, …) روی `.erp-table`، alias به پالت فعلی
+- `font-family` / `color` ریشه از `--erp-font` / `--erp-fg` می‌خوانند (مقدار محاسبه‌شده همان IRANSans و `--erp-black-6`)
+- `--erp-row-height: 40px` مطابق D12
+- **نشد:** JSX، prop `theme`، تم تیره، عوض کردن utility/hex (PR-40)
+- Verify: `yarn test` — 27 file / 110 tests پاس
+- ظاهر: بدون مرورگر تعاملی؛ رنگ‌ها alias هستند پس zebra/هدر باید همان palette قبلی باشد
+- بعدی: PR-40
+
+---
+
+### Phase 6+ roadmap + handoff (۲۰۲۶-۰۹-۱۱) — فقط مستندات
+
+- مقایسهٔ سخت‌گیرانه با AG Grid: کتابخانه = ویرایشگر اقلام سند، نه گرید عمومی.
+- `EXECUTION_PLAN.md`: Phase 6–14 (PR-39 … PR-70) اضافه شد. Phase 1–5 دست‌نخورده و بسته.
+- تصمیم‌های قفل: D1 Noop پیش‌فرض RemoteApi؛ D2 سیم کامل COLUMN_REORDERED؛ D3 PDF فارسی واقعی؛ D4 هر شکستن دیگر باید جدا تأیید شود.
+- دور دوم (۲۰۲۶-۰۹-۱۱): D5 اجرای asyncValidator؛ D6 SparseRowIndex در مسیر مجازی Phase 8؛ D7 snapshot opt-in؛ D8 دکمه تم تیره در ERPTable محصول؛ D9 Vazirmatn/OFL؛ D10 pin فقط index؛ D11 multiSelectConfig اختیاری؛ D12 rowHeight پیش‌فرض ۴۰.
+- کد محصول تغییر نکرد. Verify: ندارد (docs-only).
+- بعدی: PR-39
+
+---
 
 ### Publish ERPTable chrome as drop-in package (۲۰۲۶-۰۹-۰۹)
 
@@ -645,13 +860,10 @@
 
 ## Next Planned Work
 
-> هیچ کار اجباری از EXECUTION_PLAN باقی نمانده است.
+> منبع حقیقت چک‌باکس‌ها: `EXECUTION_PLAN.md` Phase 6+.
 
-Backlog اختیاری (Phase 6+ / ادامهٔ دمو در صورت تصمیم جداگانه):
+**الان:** PR-42 — `ERPTableProps.theme` + `style={theme.toCssVars()}` روی ریشه. تم تیره و portal در PR-43/44.
 
-1. جایگزینی تدریجی `@ts-nocheck` host-glue با peer deps تایپی واقعی
-2. مهاجرت تدریجی hostهای قدیمی در صورت نیاز به pagination
-3. API sticky/overlap یا merge سلول در کتابخانه
-4. optional peer برای `react-persian-range-picker` در CellRenderer
-5. VirtualList reveal برای نتایج `SET_GRID_SEARCH`
-6. Column drag UI روی `COLUMN_REORDERED`
+ترتیب فازها: 6 theming foundation → 7 theming API (دکمه تیره در محصول) → 8 API honesty + SparseRowIndex روی virtual → 9 decouple arianERP + multiSelect اختیاری → 10 cell registry → 11 column chrome (resize / pin index / reorder) → 12 a11y → 13 Persian PDF با Vazirmatn → 14 voucher polish.
+
+تصمیم باز برای ایجنت نمانده (D1–D12 قفل). شکستن جدید غیر از D1/D11 را بپرس.

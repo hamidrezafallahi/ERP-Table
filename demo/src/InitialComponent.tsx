@@ -159,7 +159,6 @@ const TEXT: Record<SectionKey, SectionContent> = {
   columns={columns}
   rows={rows}
   tableHeight={420}
-  multiSelectConfig={multiSelectConfig}
   onReady={setController}
 />`}</pre>
           </>

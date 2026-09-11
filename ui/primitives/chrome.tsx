@@ -3,6 +3,8 @@
 import React, { useId, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { useThemePortalStyle } from '../host';
+
 type Props = {
   title?: React.ReactNode;
   children: React.ReactNode;
@@ -11,6 +13,12 @@ type Props = {
 
 export function CustomTooltip({ title, children }: Props) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const portalStyle = useThemePortalStyle({
+    position: 'fixed',
+    left: pos?.x,
+    top: pos?.y,
+    transform: 'translate(-50%, -100%)',
+  });
 
   if (!title) return <>{children}</>;
 
@@ -28,11 +36,7 @@ export function CustomTooltip({ title, children }: Props) {
         ? createPortal(
             <span
               className="erp-table-tooltip"
-              style={{
-                left: pos.x,
-                top: pos.y,
-                transform: 'translate(-50%, -100%)',
-              }}
+              style={portalStyle}
             >
               {title}
             </span>,
@@ -66,10 +70,11 @@ export function CustomModal({
   width = 720,
   contentClassName,
 }: ModalProps) {
+  const overlayStyle = useThemePortalStyle();
   if (!isModalOpen || typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="erp-table-modal-overlay" onClick={closeModal}>
+    <div className="erp-table-modal-overlay" style={overlayStyle} onClick={closeModal}>
       <div
         className="erp-table-modal"
         style={{ width }}

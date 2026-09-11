@@ -106,6 +106,16 @@ export class SelectionManager {
     });
   }
 
+  clearRowSelection(cmd: { tableKey: string }): void {
+    const store = this.getStore(cmd.tableKey);
+    if (!store) return;
+    store.setState((prev) => ({
+      ...prev,
+      selectedRows: {},
+      rangeAnchorRowId: undefined,
+    }));
+  }
+
   selectRange(cmd: { tableKey: string; rowId: number }): void {
     const store = this.getStore(cmd.tableKey);
     if (!store) return;

@@ -10,7 +10,7 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { Select } from '../primitives';
-import { useMediaQuery, useTranslations } from '../host';
+import { useMediaQuery, useThemePortalStyle, useTranslations } from '../host';
 import { LeftChevron, RightChevron } from '../primitives';
 
 import { UITableController } from '../../infrastructure/ui/UITableController';
@@ -42,6 +42,7 @@ export function GridSearchPanel({
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const themeVars = useThemePortalStyle();
 
   const table = controller.getViewState();
   const columns = useMemo(
@@ -247,6 +248,7 @@ export function GridSearchPanel({
       <div
         ref={panelRef}
         style={{
+          ...themeVars,
           position: 'fixed',
           top: 0,
           left: 0,
@@ -267,6 +269,7 @@ export function GridSearchPanel({
     <div
       ref={panelRef}
       style={{
+        ...themeVars,
         position: 'fixed',
         left: position.left,
         top: position.top,

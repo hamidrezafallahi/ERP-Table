@@ -11,6 +11,7 @@ import { ERPTableFooter } from '../desktop/ERPTableFooter';
 import { jsonEqual, useControllerSelector } from '../hooks/useEngineSelector';
 import { useScrollToSearchMatch } from '../hooks/useScrollToSearchMatch';
 import { IMultiSelectConfig } from '../type';
+import { ariaGridRowCount } from '../a11y/gridRoles';
 import { MobileActionButtons } from './MobileActionButtons';
 import { MobileLoadMoreButton } from './MobileLoadMoreButton';
 import { MobileRowFormModal } from './MobileRowFormModal';
@@ -25,7 +26,7 @@ export interface MobileTableProps {
   tableTitle?: ReactNode;
   header?: ReactNode;
   footer?: boolean | ReactNode;
-  multiSelectConfig: IMultiSelectConfig;
+  multiSelectConfig?: IMultiSelectConfig;
 }
 
 export function MobileTable({
@@ -69,7 +70,17 @@ export function MobileTable({
           className="hidden-show-scrollBar overflow-x-auto [overflow-anchor:none]"
           style={{ overflowAnchor: 'none' }}
         >
-          <table className="min-w-max border-collapse">
+          <table
+            className="min-w-max"
+            role="grid"
+            aria-colcount={
+              mobileView.columns.filter((c) => !c.hidden).length || undefined
+            }
+            aria-rowcount={
+              ariaGridRowCount(mobileView.totalRows, Boolean(footer)) ||
+              undefined
+            }
+          >
             <MobileTableHeader controller={controller} header={header} />
             <MobileTableBody
               controller={controller}
@@ -78,7 +89,11 @@ export function MobileTable({
               columns={mobileView.columns}
             />
             {footer && (
-              <ERPTableFooter controller={controller} footer={footer} />
+              <ERPTableFooter
+                controller={controller}
+                footer={footer}
+                dataRowCount={mobileView.totalRows}
+              />
             )}
           </table>
         </div>

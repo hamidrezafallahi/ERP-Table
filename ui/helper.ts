@@ -54,6 +54,7 @@ export const valueParser = (
 
   switch (type) {
     case 'text':
+    case 'textArea':
     case 'description':
     case 'number':
     case 'select':

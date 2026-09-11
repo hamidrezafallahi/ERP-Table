@@ -224,4 +224,47 @@ describe('table domain behavior', () => {
     expect(restored.getCell('name')?.getValue()).toBe('draft');
     expect(restored.getCell('index')?.getValue()).toBe(2);
   });
+
+  it('reorderColumns moves a column inside the active collection', () => {
+    const table = createTable([createRow({ rowId: 1, index: 1, name: 'alpha' })]);
+    expect(table.getColumns().map((c) => c.fieldName)).toEqual(['index', 'name']);
+
+    const event = table.reorderColumns(1, 0);
+
+    expect(event.type).toBe('COLUMN_REORDERED');
+    expect(event.sourceIndex).toBe(1);
+    expect(event.destIndex).toBe(0);
+    expect(table.getColumns().map((c) => c.fieldName)).toEqual(['name', 'index']);
+    expect(table.getActiveCollectionColumns().map((c) => [c.fieldName, c.order])).toEqual([
+      ['name', 0],
+      ['index', 1],
+    ]);
+  });
+
+  it('setColumns keeps domain order when the host resends original order', () => {
+    const table = createTable([createRow({ rowId: 1, index: 1, name: 'alpha' })]);
+    table.reorderColumns(1, 0);
+
+    table.setColumns([
+      {
+        fieldName: 'index',
+        fieldCaption: 'Index',
+        fieldType: 'number',
+        visibility: { kind: 'always' },
+        order: 0,
+      },
+      {
+        fieldName: 'name',
+        fieldCaption: 'Name',
+        fieldType: 'text',
+        visibility: { kind: 'always' },
+        order: 1,
+      },
+    ]);
+
+    expect(table.getActiveCollectionColumns().map((c) => c.fieldName)).toEqual([
+      'name',
+      'index',
+    ]);
+  });
 });

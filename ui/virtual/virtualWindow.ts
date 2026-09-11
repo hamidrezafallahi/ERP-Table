@@ -1,5 +1,6 @@
 import type { VisibleRange } from '../../domain/value-objects/Viewport';
 import { Viewport } from '../../domain/value-objects/Viewport';
+import { SparseRowIndex } from '../../engine/SparseRowIndex';
 import { ViewportCalculator } from '../../engine/ViewportCalculator';
 
 export type VirtualWindowModel<T> = {
@@ -31,6 +32,39 @@ export function buildVirtualWindow<T>(
     spacerBottom: range.endOffset,
     totalHeight: range.totalHeight,
   };
+}
+
+/** Same window as `buildVirtualWindow`, from SparseRowIndex.projectVisible (O(window)). */
+export function buildVirtualWindowFromSparse<T>(
+  index: SparseRowIndex<T>,
+  viewport: Viewport,
+): VirtualWindowModel<T> {
+  const range = ViewportCalculator.calculate(index.size, viewport);
+  const visibleItems = index.projectVisible(range);
+  const absoluteIndices = ViewportCalculator.indices(range);
+  return {
+    range,
+    visibleItems,
+    absoluteIndices,
+    spacerTop: range.startOffset,
+    spacerBottom: range.endOffset,
+    totalHeight: range.totalHeight,
+  };
+}
+
+export function isSparseRowIndex<T>(
+  value: readonly T[] | SparseRowIndex<T>,
+): value is SparseRowIndex<T> {
+  return value instanceof SparseRowIndex;
+}
+
+export function buildVirtualWindowFromSource<T>(
+  items: readonly T[] | SparseRowIndex<T>,
+  viewport: Viewport,
+): VirtualWindowModel<T> {
+  return isSparseRowIndex(items)
+    ? buildVirtualWindowFromSparse(items, viewport)
+    : buildVirtualWindow(items, viewport);
 }
 
 export function viewportFromScroll(params: {

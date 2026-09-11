@@ -3,6 +3,7 @@ import type { TableRepository } from '../../application/ports/TableRepository';
 import type { Table } from '../../domain/entities/Table';
 import type { AuditLogger } from '../../application/ports/AuditLogger';
 import { RowStateEnum } from '../../domain/value-objects';
+import { NoopRemoteApi } from '../../infrastructure/Repositories/noopRemoteApi';
 
 vi.mock('@services/customBaseQuery', () => ({
   baseQueryByToken: async () => ({ data: null }),
@@ -646,5 +647,80 @@ describe('createERPTable runtime wiring', () => {
     ).toBe(true);
     expect(listener).toHaveBeenCalled();
     unsubscribe?.();
+  });
+
+  it('derives pageSize from tableHeight / rowHeight (default 40)', async () => {
+    const { createERPTable } = await import('../index');
+    const columns = [
+      {
+        fieldName: 'name',
+        fieldCaption: 'Name',
+        fieldType: 'text' as const,
+        fieldCollection: 'default',
+        visibility: { kind: 'always' as const },
+      },
+    ];
+    const rows = [{ id: 1, collection: 'default', values: { name: 'a' } }];
+    const base = {
+      actor: { userId: 'u1', roles: ['admin'] },
+      tableType: 'default',
+      activeCollection: 'default',
+      repo: new MemoryTableRepository(),
+      audit: new SilentAuditLogger(),
+      remoteApi: { request: async () => null } as any,
+      columns,
+      rows,
+      tableHeight: 400,
+    };
+
+    const defaultHeight = await createERPTable({
+      ...base,
+      store: 'store-rh-40',
+      tableKey: 'table-rh-40',
+    });
+    expect(defaultHeight.controller.getViewState()?.pagination.pageSize).toBe(10);
+
+    const tall = await createERPTable({
+      ...base,
+      store: 'store-rh-50',
+      tableKey: 'table-rh-50',
+      rowHeight: 50,
+    });
+    expect(tall.controller.getViewState()?.pagination.pageSize).toBe(8);
+  });
+
+  it('defaults to NoopRemoteApi and does not fetch when remoteApi is omitted', async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+
+    const { createERPTable } = await import('../index');
+    const result = await createERPTable({
+      store: 'store-noop-remote',
+      tableKey: 'table-noop-remote',
+      actor: { userId: 'u1', roles: ['admin'] },
+      tableType: 'default',
+      activeCollection: 'default',
+      repo: new MemoryTableRepository(),
+      audit: new SilentAuditLogger(),
+      columns: [
+        {
+          fieldName: 'name',
+          fieldCaption: 'Name',
+          fieldType: 'text',
+          fieldCollection: 'default',
+          visibility: { kind: 'always' },
+        },
+      ],
+      rows: [{ id: 1, collection: 'default', values: { name: 'a' } }],
+    });
+
+    const api = result.controller.getRemoteApi();
+    expect(api).toBeInstanceOf(NoopRemoteApi);
+    await expect(
+      api!.request({ endpoint: '/api/erp/anything', params: { q: 1 } }),
+    ).resolves.toBeNull();
+    expect(fetchSpy).not.toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
   });
 });

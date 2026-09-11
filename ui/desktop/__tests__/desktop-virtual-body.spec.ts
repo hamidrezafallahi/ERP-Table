@@ -121,5 +121,9 @@ describe('DesktopTable virtualization path (core)', () => {
     expect(window.visibleItems.length).toBeLessThan(allUi.length);
     expect(window.visibleItems.length).toBeGreaterThan(0);
     expect(window.spacerTop).toBeGreaterThan(0);
+
+    const sparseWindow = result.session.projectVisibleUiRows();
+    expect(sparseWindow.length).toBe(window.visibleItems.length);
+    expect(sparseWindow.length).toBeLessThan(result.session.getUiRowCount());
   });
 });

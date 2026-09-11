@@ -62,7 +62,7 @@
     "build:demo": "vite build --config demo/vite.config.ts",
     "preview:demo": "vite preview --config demo/vite.config.ts",
     "deploy:demo": "gh-pages -d demo/dist",
-    "test": "vitest run domain/__tests__ application/__tests__ infrastructure/__tests__ bootstrap/__tests__ engine/__tests__ ui/virtual/__tests__ ui/desktop/__tests__ ui/gridSearch/__tests__ packages/plugins/excel/__tests__ packages/plugins/pdf/__tests__",
+    "test": "vitest run domain/__tests__ application/__tests__ infrastructure/__tests__ bootstrap/__tests__ engine/__tests__ ui/virtual/__tests__ ui/desktop/__tests__ ui/cellRenderer/__tests__ ui/keyboard/__tests__ ui/gridSearch/__tests__ ui/styles/__tests__ ui/theme/__tests__ docs/__tests__ packages/plugins/excel/__tests__ packages/plugins/pdf/__tests__",
     "typecheck:publish": "tsc -p tsconfig.publish.json --noEmit",
     "typecheck:host-ui": "tsc -p tsconfig.json --noEmit",
     "build": "tsup --config tsup.config.ts",

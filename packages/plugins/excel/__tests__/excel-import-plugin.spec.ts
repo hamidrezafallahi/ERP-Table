@@ -33,6 +33,8 @@ function stubSession(dispatched: unknown[]): GridSession {
     getViewport: () => ({}) as never,
     getVisibleRange: () => ({ startIndex: 0, endIndex: 0 }) as never,
     projectVisibleRows: (rows) => [...rows],
+    getUiRowCount: () => 0,
+    projectVisibleUiRows: () => [],
     canUndo: () => false,
     canRedo: () => false,
     undo: async () => false,

@@ -4,10 +4,12 @@ import type { GridSession } from '../../application/session/GridSession';
 import { Viewport } from '../../domain/value-objects/Viewport';
 import { structuralEqual } from '../../engine/equality';
 import {
-  buildVirtualWindow,
+  buildVirtualWindowFromSource,
+  isSparseRowIndex,
   type VirtualWindowModel,
   virtualWindowKey,
 } from './virtualWindow';
+import type { SparseRowIndex } from '../../engine/SparseRowIndex';
 
 export type UseVirtualWindowResult<T> = VirtualWindowModel<T> & {
   readonly onScroll: (scrollTop: number, clientHeight?: number) => void;
@@ -19,7 +21,7 @@ export type UseVirtualWindowResult<T> = VirtualWindowModel<T> & {
  */
 export function useVirtualWindow<T>(
   session: GridSession | null | undefined,
-  items: readonly T[],
+  items: readonly T[] | SparseRowIndex<T>,
   options?: {
     rowHeight?: number;
     overscan?: number;
@@ -31,7 +33,7 @@ export function useVirtualWindow<T>(
   const initialViewportSize = options?.initialViewportSize ?? 400;
 
   const [windowModel, setWindowModel] = useState<VirtualWindowModel<T>>(() =>
-    buildVirtualWindow(
+    buildVirtualWindowFromSource(
       items,
       session?.getViewport() ??
         new Viewport(0, initialViewportSize, rowHeight, overscan),
@@ -41,7 +43,7 @@ export function useVirtualWindow<T>(
   useEffect(() => {
     if (!session) {
       setWindowModel(
-        buildVirtualWindow(
+        buildVirtualWindowFromSource(
           items,
           new Viewport(0, initialViewportSize, rowHeight, overscan),
         ),
@@ -50,7 +52,7 @@ export function useVirtualWindow<T>(
     }
 
     const sync = () => {
-      const next = buildVirtualWindow(items, session.getViewport());
+      const next = buildVirtualWindowFromSource(items, session.getViewport());
       setWindowModel((prev) =>
         virtualWindowKey(prev.range) === virtualWindowKey(next.range) &&
         prev.visibleItems.length === next.visibleItems.length &&
@@ -65,12 +67,15 @@ export function useVirtualWindow<T>(
     return session.subscribeSelected(
       () => {
         const vp = session.getViewport();
+        const itemCount = isSparseRowIndex(items)
+          ? session.getUiRowCount()
+          : items.length;
         return {
           scrollOffset: vp.scrollOffset,
           viewportSize: vp.viewportSize,
           rowHeight: vp.rowHeight,
           overscan: vp.overscan,
-          itemCount: items.length,
+          itemCount,
         };
       },
       sync,

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { Viewport } from '../../../domain/value-objects/Viewport';
+import { SparseRowIndex } from '../../../engine/SparseRowIndex';
 import {
   buildVirtualWindow,
+  buildVirtualWindowFromSparse,
   viewportFromScroll,
   virtualWindowKey,
 } from '../virtualWindow';
@@ -43,5 +45,21 @@ describe('virtualWindow adapter helpers', () => {
     const a = buildVirtualWindow([1, 2, 3, 4, 5], new Viewport(0, 80, 40, 0));
     const b = buildVirtualWindow([1, 2, 3, 4, 5], new Viewport(80, 80, 40, 0));
     expect(virtualWindowKey(a.range)).not.toBe(virtualWindowKey(b.range));
+  });
+
+  it('projects 100k sparse rows without materializing the full list', () => {
+    const TOTAL = 100_000;
+    const index = new SparseRowIndex<number>();
+    for (let i = 0; i < TOTAL; i += 1) {
+      index.set(i, i);
+    }
+    const model = buildVirtualWindowFromSparse(
+      index,
+      new Viewport(40_000, 400, 40, 2),
+    );
+    expect(model.visibleItems.length).toBe(model.range.visibleCount);
+    expect(model.visibleItems.length).toBeLessThan(20);
+    expect(model.visibleItems[0]).toBe(model.range.startIndex);
+    expect(model.totalHeight).toBe(TOTAL * 40);
   });
 });

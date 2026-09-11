@@ -12,6 +12,7 @@ import {
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { GridSearchControl } from '../gridSearch/GridSearchControl';
 import MultiselectList from '../multiSelectList';
+import { ThemeToggleButton } from '../theme/ThemeToggleButton';
 import { IMultiSelectConfig } from '../type';
 
 interface MobileActionButtonsProps {
@@ -63,6 +64,8 @@ export function MobileActionButtons({
         <>
           <CustomTooltip title={t("general.chooseFromList")}>
             <button
+              type="button"
+              data-erp-multiselect
               onClick={() => setModalIsOpen(true)}
               className="flex justify-center items-center p-1 border rounded"
             >
@@ -87,6 +90,8 @@ export function MobileActionButtons({
       )}
 
       <GridSearchControl controller={controller} />
+
+      <ThemeToggleButton />
 
       <span className="px-2 text-black-black6 text-xs">
         {t("general.selected")} {count}

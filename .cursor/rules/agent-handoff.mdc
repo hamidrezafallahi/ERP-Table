@@ -1,0 +1,19 @@
+---
+description: Read WORKLOG + EXECUTION_PLAN before changing the grid; Phase 6+ is the open track.
+alwaysApply: true
+---
+
+# Grid development handoff
+
+Before any feature, refactor, or "continue the table":
+
+1. Read `WORKLOG.md` (Current Snapshot).
+2. Read `docs/agent-handoff.md`.
+3. Read `EXECUTION_PLAN.md` from **Active Track** — first unchecked `PR-N` in Phase 6+.
+4. Do not reopen Phase 1–5 (PR-1 … PR-38) except bugfix.
+5. Out of scope without a new RFC: grouping, pivot, tree data, charts, SSRM, cell range selection.
+6. If `EXECUTION_PLAN.md` Open Decisions marks the PR as **باز**, ask the user and stop.
+7. Breaking public API or runtime defaults (except D1 Noop RemoteApi and D11 optional `multiSelectConfig`, already approved): ask first.
+8. After a PR: check the box, append `WORKLOG.md`, run that PR's Verify commands.
+
+Theming: keep `ui/styles/injectStyles.ts` and `ui/styles/erp-table.css` in sync. Prefer semantic `--erp-accent` over palette `--erp-blue-6`.

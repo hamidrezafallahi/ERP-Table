@@ -4,16 +4,20 @@ import React, {
   useState,
 } from 'react';
 
+import { columnSizeStyle } from '../../engine/columnWidth';
 import { UITableController } from '../../infrastructure/ui/UITableController';
+import { ariaColIndex, ariaFooterRowIndex } from '../a11y/gridRoles';
+import { indexPinClassName, indexPinDataAttr } from '../columnPin';
 import { useLocale } from '../host';
 import { valueParser } from '../helper';
 
 interface Props {
   controller: UITableController;
   footer?: boolean | ReactNode;
+  dataRowCount?: number;
 }
 
-export function ERPTableFooter({controller, footer}: Props) {
+export function ERPTableFooter({controller, footer, dataRowCount}: Props) {
   const locale = useLocale();
   const [totals, setTotals] = useState<Record<string, number>>({});
   const table = controller.getViewState();
@@ -70,17 +74,28 @@ export function ERPTableFooter({controller, footer}: Props) {
   }, [controller]);
 
   if (!table || !table.columns) return null;
-  const cols = table.columns.filter((c) => !c.hidden).length;
+  const visibleColumns = table.columns.filter((c) => !c.hidden);
+  const cols = visibleColumns.length;
+  const footerRowIndex = ariaFooterRowIndex(
+    dataRowCount ?? table.pagination.totalRows,
+  );
   if (typeof footer === "boolean" && footer === true) {
     return (
-      <tfoot>
+      <tfoot role="rowgroup">
         <tr
+          role="row"
+          aria-rowindex={footerRowIndex}
           className={`w-full border border-gray-gray5 bg-main-white !h-9 rounded `}
         >
-          {table.columns
-            .filter((c) => !c.hidden)
-            .map((c) => (
-              <td key={c.fieldName}>
+          {visibleColumns.map((c, index) => (
+              <td
+                key={c.fieldName}
+                role="gridcell"
+                aria-colindex={ariaColIndex(index)}
+                className={indexPinClassName(c)}
+                data-erp-col-pin={indexPinDataAttr(c)}
+                style={columnSizeStyle(c, table.columnWidths)}
+              >
                 {c.fieldType === "price" ||
                 c.fieldType === "number" ||
                 c.fieldType === "static"
@@ -93,11 +108,20 @@ export function ERPTableFooter({controller, footer}: Props) {
     );
   } else {
     return (
-      <tfoot>
+      <tfoot role="rowgroup">
         <tr
+          role="row"
+          aria-rowindex={footerRowIndex}
           className={`w-full border border-gray-gray5 bg-main-white h-9 rounded `}
         >
-          <td colSpan={cols}>{footer}</td>
+          <td
+            role="gridcell"
+            colSpan={cols}
+            aria-colindex={1}
+            aria-colspan={cols}
+          >
+            {footer}
+          </td>
         </tr>
       </tfoot>
     );

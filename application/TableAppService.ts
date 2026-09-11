@@ -23,8 +23,8 @@ import {
 import {
   ChangePageCommandHandler,
   ChangePageSizeCommandHandler,
+  ReorderColumnCommandHandler,
   SetActiveCollectionCommandHandler,
-  ChangeUnitLevelHandler,
   DeleteTableCommandHandler,
   ResetTableCommandHandler,
 } from './handlers/tableCommandHandler';
@@ -37,6 +37,9 @@ export class TableAppService {
   private eventStore?: EventStore;
   private undoStack?: CellUndoStack;
   private repo?: TableRepository;
+  private snapshotStrategy?: {
+    onAppend(streamId: string, tableId: string, appendedCount: number): Promise<void>;
+  };
 
   constructor(
     private readonly changeCellValue: ChangeCellValueHandler,
@@ -47,7 +50,6 @@ export class TableAppService {
     private readonly duplicateRow: DuplicateRowCommandHandler,
     private readonly deleteRow: DeleteRowCommandHandler,
     private readonly reorderRow: ReorderRowCommandHandler,
-    private readonly setUnitLevel: ChangeUnitLevelHandler,
     private readonly setPageSize: ChangePageSizeCommandHandler,
     private readonly setPage: ChangePageCommandHandler,
     private readonly setActiveCollection: SetActiveCollectionCommandHandler,
@@ -56,10 +58,17 @@ export class TableAppService {
     private readonly applyDynamicProjection: ApplyDynamicProjectionHandler,
     private readonly restoreAddedRow?: RestoreAddedRowCommandHandler,
     private readonly pasteRow?: PasteRowCommandHandler,
+    private readonly reorderColumn?: ReorderColumnCommandHandler,
   ) {}
 
   setEventStore(eventStore: EventStore): void {
     this.eventStore = eventStore;
+  }
+
+  setSnapshotStrategy(strategy: {
+    onAppend(streamId: string, tableId: string, appendedCount: number): Promise<void>;
+  }): void {
+    this.snapshotStrategy = strategy;
   }
 
   setUndoStack(undoStack: CellUndoStack): void {
@@ -95,6 +104,7 @@ export class TableAppService {
     }
     if (this.eventStore && result) {
       await this.appendToEventStore(command, result, correlationId);
+      await this.recordSnapshot(command, result);
     }
     return result;
   }
@@ -133,8 +143,11 @@ export class TableAppService {
         return this.deleteTable.execute(command, actor);
       case 'ROW_REORDERED':
         return this.reorderRow.execute(command, actor);
-      case 'SET_UNIT_LEVEL':
-        return this.setUnitLevel.execute(command, actor);
+      case 'COLUMN_REORDERED':
+        if (!this.reorderColumn) {
+          throw new Error('COLUMN_REORDERED handler is not configured');
+        }
+        return this.reorderColumn.execute(command, actor);
       case 'CHANGE_PAGE_SIZE':
         return this.setPageSize.execute(command, actor);
       case 'CHANGE_PAGE':
@@ -276,6 +289,18 @@ export class TableAppService {
     }));
 
     await this.eventStore.append(streamId, gridEvents, -1);
+  }
+
+  private async recordSnapshot(
+    command: ApplicationTableCommand,
+    result: TableEvent[] | TableEvent | null | unknown,
+  ): Promise<void> {
+    if (!this.snapshotStrategy) return;
+    const events = this.normalizeResult(result);
+    if (events.length === 0) return;
+    const tableId = (command as { tableKey?: string }).tableKey ?? '';
+    if (!tableId) return;
+    await this.snapshotStrategy.onAppend(`table:${tableId}`, tableId, events.length);
   }
 
   private normalizeResult(result: unknown): TableEvent[] {

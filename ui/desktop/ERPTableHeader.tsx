@@ -1,15 +1,19 @@
-import React, {
-  ReactNode,
-  useEffect,
-  useState,
-} from 'react';
-
+import React, { type ReactNode, useEffect, useRef, useState } from 'react';
 import { CustomDropdownButton, CustomCheckbox } from '../primitives';
 
 import { ColumnSchema } from '../../bootstrap/type';
+import { resolveColumnReorder } from '../../engine/columnReorder';
+import { columnSizeStyle, isIndexColumn } from '../../engine/columnWidth';
 import { ValidationCallbackResult } from '../../engine/type';
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { revealRow } from '../gridSearch/utils';
+import { useDirection } from '../host';
+import {
+  ARIA_HEADER_ROW_INDEX,
+  ariaColIndex,
+} from '../a11y/gridRoles';
+import { indexPinClassName, indexPinDataAttr } from '../columnPin';
+import { ColumnResizeHandle } from './ColumnResizeHandle';
 
 interface Props {
   controller: UITableController;
@@ -18,7 +22,10 @@ interface Props {
 }
 
 export function ERPTableHeader({controller, tableKey, header}: Props) {
+  const direction = useDirection();
   const table = controller.getViewState();
+  const draggedFieldRef = useRef<string | null>(null);
+  const [dropField, setDropField] = useState<string | null>(null);
   const [validationResult, setValidationResult] =
     useState<ValidationCallbackResult>({
       valid: true,
@@ -35,7 +42,8 @@ export function ERPTableHeader({controller, tableKey, header}: Props) {
 
   if (!table || !table.columns) return null;
 
-  const visibleColumns = (table.columns ?? []).filter((c: ColumnSchema) => !c.hidden);
+  const displayColumns = table.columns ?? [];
+  const visibleColumns = displayColumns.filter((c: ColumnSchema) => !c.hidden);
   const isSelectedActivePageRows = table.rows.every(
     (row) => !!table.selectedRows[row.id],
   );
@@ -73,8 +81,51 @@ export function ERPTableHeader({controller, tableKey, header}: Props) {
   );
   const cols = visibleColumns.length;
 
+  const beginColumnDrag = (
+    e: React.DragEvent<HTMLTableCellElement>,
+    fieldName: string,
+  ) => {
+    draggedFieldRef.current = fieldName;
+    e.dataTransfer.setData("text/plain", fieldName);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const hoverColumnDrop = (fieldName: string) => {
+    setDropField((current) => (current === fieldName ? current : fieldName));
+  };
+
+  const leaveColumnDrop = (
+    fieldName: string,
+    currentTarget: HTMLElement,
+    relatedTarget: EventTarget | null,
+  ) => {
+    if (relatedTarget instanceof Node && currentTarget.contains(relatedTarget)) {
+      return;
+    }
+    setDropField((current) => (current === fieldName ? null : current));
+  };
+
+  const dropColumn = (destField: string) => {
+    const sourceField = draggedFieldRef.current;
+    draggedFieldRef.current = null;
+    setDropField(null);
+    if (!sourceField) return;
+    const move = resolveColumnReorder(displayColumns, sourceField, destField);
+    if (!move) return;
+    void controller.dispatch({
+      type: "COLUMN_REORDERED",
+      sourceIndex: move.sourceIndex,
+      destIndex: move.destIndex,
+    });
+  };
+
+  const endColumnDrag = () => {
+    draggedFieldRef.current = null;
+    setDropField(null);
+  };
+
   return (
-    <thead className="top-0 right-0 left-0 z-20 sticky inset-0">
+    <thead className="top-0 z-20 sticky" role="rowgroup">
       {header}
       {!validationResult.valid && (
         <CustomDropdownButton
@@ -86,16 +137,37 @@ export function ERPTableHeader({controller, tableKey, header}: Props) {
         </CustomDropdownButton>
       )}
       <tr
+        role="row"
+        aria-rowindex={ARIA_HEADER_ROW_INDEX}
         style={{gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`}}
         className={`relative h-10  bg-gray-gray3 rounded-t-lg w-full `}
       >
         {visibleColumns.map((col, index) => {
-          if (col.fieldType === "index") {
+          const size = columnSizeStyle(col, table.columnWidths);
+          const handle = (
+            <ColumnResizeHandle
+              columnId={col.fieldName}
+              currentWidth={size.width}
+              column={col}
+              direction={direction}
+              onResize={(width) => {
+                void controller.dispatch({
+                  type: "UI_RESIZE_COLUMN",
+                  columnId: col.fieldName,
+                  width,
+                });
+              }}
+            />
+          );
+          if (isIndexColumn(col)) {
             return (
               <th
                 key={col.fieldName}
-                style={{...col.style, width: 168, minWidth: 168}}
-                className={`  px-2 text-xs border  text-start whitespace-nowrap ${col.className || ""}`}
+                role="columnheader"
+                aria-colindex={ariaColIndex(index)}
+                style={{...col.style, ...size}}
+                className={`relative px-2 text-xs border  text-start whitespace-nowrap ${indexPinClassName(col)} ${col.className || ""}`}
+                data-erp-col-pin={indexPinDataAttr(col)}
               >
                 <div className="flex items-center gap-2">
                   <CustomCheckbox
@@ -105,6 +177,7 @@ export function ERPTableHeader({controller, tableKey, header}: Props) {
 
                   {col.fieldCaption}
                 </div>
+                {handle}
               </th>
             );
           }
@@ -112,8 +185,32 @@ export function ERPTableHeader({controller, tableKey, header}: Props) {
           return (
             <th
               key={col.fieldName}
-              style={{...col.style, minWidth: col.minWidth}}
-              className={`px-2 text-xs border text-start min-w-36 ${col.className || ""}`}
+              role="columnheader"
+              aria-colindex={ariaColIndex(index)}
+              style={{...col.style, ...size}}
+              className={`relative px-2 text-xs border text-start min-w-36 ${indexPinClassName(col)} ${col.className || ""}`}
+              data-erp-col-pin={indexPinDataAttr(col)}
+              data-erp-col-drag={col.fieldName}
+              data-erp-col-drop={dropField === col.fieldName ? col.fieldName : undefined}
+              draggable
+              onDragStart={(e) => beginColumnDrag(e, col.fieldName)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                hoverColumnDrop(col.fieldName);
+              }}
+              onDragLeave={(e) => {
+                leaveColumnDrop(
+                  col.fieldName,
+                  e.currentTarget,
+                  e.relatedTarget,
+                );
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                dropColumn(col.fieldName);
+              }}
+              onDragEnd={endColumnDrag}
             >
               {index === 0 && (
                 <CustomCheckbox
@@ -122,6 +219,7 @@ export function ERPTableHeader({controller, tableKey, header}: Props) {
                 />
               )}
               {col.fieldCaption}
+              {handle}
             </th>
           );
         })}

@@ -12,12 +12,12 @@ import {
 import {
   ConsoleAuditLogger,
 } from '../infrastructure/Repositories/consoleAuditLogger';
-import { FetchRemoteApi } from '../infrastructure/Repositories/fetchRemoteApi';
 import { NoopRemoteApi } from '../infrastructure/Repositories/noopRemoteApi';
 import { InMemoryEventStore } from '../infrastructure/eventStore/InMemoryEventStore';
 import { IndexedDbEventStore } from '../infrastructure/eventStore/IndexedDbEventStore';
 import { HistoryPanelViewModel } from '../infrastructure/history/HistoryPanelViewModel';
 import { ChangelogProjection } from '../infrastructure/projections/ChangelogProjection';
+import { SnapshotStrategy } from '../infrastructure/snapshot/SnapshotStrategy';
 import { UITableController } from '../infrastructure/ui/UITableController';
 import { CellUndoStack } from '../application/undo/CellUndoStack';
 import { createEngineGridQuery } from '../application/plugins/createEngineGridQuery';
@@ -73,19 +73,31 @@ export async function createERPTable(config: CreateERPTableConfig): Promise<Crea
   // ---------- infra ----------
   const repo = config.repo ?? new CachedTableRepository();
   const audit = config.audit ?? new ConsoleAuditLogger();
-  const remoteApi =
-    config.remoteApi ??
-    (typeof window !== 'undefined' ? new FetchRemoteApi() : new NoopRemoteApi());
+  const remoteApi = config.remoteApi ?? new NoopRemoteApi();
   const eventStore = await resolveEventStore(config);
   const changelogProjection = new ChangelogProjection(eventStore);
   const historyPanelViewModel = new HistoryPanelViewModel(changelogProjection);
   const cellUndoStack = new CellUndoStack();
   await changelogProjection.start();
 
+  const engineRef: { current?: TableEngine } = {};
+  const snapshotStrategy = config.snapshotStore
+    ? new SnapshotStrategy(
+        config.snapshotStore,
+        eventStore,
+        () =>
+          engineRef.current?.getSnapShot('active') ?? {
+            rows: [],
+          },
+        { everyNEvents: config.snapshotEveryNEvents },
+      )
+    : undefined;
+
   // ---------- محاسبه pageSize دقیقاً مثل نسخه اولیه ----------
   const page = 1;
+  const rowHeight = config.rowHeight ?? 40;
   const pageSize = config.tableHeight
-    ? Math.floor(config.tableHeight / 40)
+    ? Math.floor(config.tableHeight / rowHeight)
     : config.recordPerPage ?? 10;
   // ---------- columns & rows (با چک repo) ----------
   const activeCollection = config.activeCollection ?? config.tableType;
@@ -137,9 +149,13 @@ export async function createERPTable(config: CreateERPTableConfig): Promise<Crea
   const permissionPolicy = createPermissionPolicy(config, columnMeta, table, repo, audit);
   const app = createTableAppService(repo, audit, permissionPolicy, { columnMeta, remoteApi }, eventStore);
   app.setUndoStack(cellUndoStack);
+  if (snapshotStrategy) {
+    app.setSnapshotStrategy(snapshotStrategy);
+  }
 
   // ---------- engine & session & controller ----------
   const engine = new TableEngine(app, repo, config.actor, audit);
+  engineRef.current = engine;
   const session = new DefaultGridSession({
     engine,
     store: config.store,
@@ -164,6 +180,10 @@ export async function createERPTable(config: CreateERPTableConfig): Promise<Crea
     mapColumnSchemas(config.columns);
   await controller.dispatch({ type: 'TABLE_REGISTERED', storeName: config.store, table });
 
+  if (snapshotStrategy) {
+    await snapshotStrategy.loadWithCatchUp(`table:${config.tableKey}`);
+  }
+
   const pluginHost = new PluginHost({
     tableId: config.tableKey,
     actorId: config.actor.userId,
@@ -185,6 +205,7 @@ export async function createERPTable(config: CreateERPTableConfig): Promise<Crea
     columnDefinitions,
     columnBindings,
     eventStore,
+    snapshotStrategy,
     changelogProjection,
     historyPanelViewModel,
     cellUndoStack,

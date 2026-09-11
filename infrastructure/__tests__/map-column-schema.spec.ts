@@ -44,6 +44,20 @@ describe('mapColumnSchema', () => {
     expect(binding.minWidth).toBe(80);
     expect(binding.style).toEqual({ textAlign: 'right' });
     expect(typeof binding.displayFormat).toBe('function');
+    expect(binding.render).toBeUndefined();
+  });
+
+  it('maps schema.render onto ColumnViewBinding, not returnDisplayValue', () => {
+    const render = () => 'custom-node';
+    const returnDisplayValue = () => 'display-label';
+    const binding = toColumnViewBinding({
+      ...schema,
+      render,
+      returnDisplayValue,
+    });
+
+    expect(binding.render).toBe(render);
+    expect(binding.render).not.toBe(returnDisplayValue);
   });
 
   it('maps lists of schemas into definitions and bindings', () => {

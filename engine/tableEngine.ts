@@ -27,6 +27,7 @@ import { EngineErrorHandler } from './EngineErrorHandler';
 import { NavigationManager } from './managers/NavigationManager';
 import { RowManager } from './managers/RowManager';
 import { SelectionManager } from './managers/SelectionManager';
+import { SparseRowIndex } from './SparseRowIndex';
 import { TableStore } from './tableStore';
 import {
   CellError,
@@ -37,6 +38,7 @@ import {
   ValidationCallback,
   ValidCell,
 } from './type';
+import { clampColumnWidth } from './columnWidth';
 import { ViewStateBuilder } from './ViewStateBuilder';
 
 export class TableEngine {
@@ -45,6 +47,11 @@ export class TableEngine {
   private tableKey?: string;
   public readonly errors = new Map<string, CellError>();
   public readonly searchResult = new Map<string, CellError>();
+  private readonly asyncCellCache = new Map<
+    string,
+    { valueKey: string; error?: CellError }
+  >();
+  private readonly asyncCellSeq = new Map<string, number>();
 
 
   // ─── collaborators ─────────────────────────────────────────────────────────
@@ -97,9 +104,11 @@ export class TableEngine {
       rangeAnchorRowId: undefined,
       gridSearch: null,
       mobileEditor: null,
+      columnWidths: {},
     });
     this.tableKey = table.id;
     this.tableStore = tableStore;
+    this.viewBuilder.invalidateUiRowIndex();
     try {
       await this.repo.save(store, table);
     } catch (e) {
@@ -119,6 +128,7 @@ export class TableEngine {
     if (this.tableKey === cmd.tableKey) {
       this.tableStore = undefined;
       this.tableKey = undefined;
+      this.viewBuilder.invalidateUiRowIndex();
     }
   }
 
@@ -127,6 +137,7 @@ export class TableEngine {
     if (this.tableKey === cmd.tableKey) {
       this.tableStore = undefined;
       this.tableKey = undefined;
+      this.viewBuilder.invalidateUiRowIndex();
     }
   }
 
@@ -146,6 +157,7 @@ export class TableEngine {
         this.errHandler.notFound('Table (from repo)', cmd.tableKey, 'TableEngine.resetTable');
         return;
       }
+      this.viewBuilder.invalidateUiRowIndex();
       tableStore.setState(prev => ({
         ...prev,
         table: freshTable,
@@ -156,6 +168,7 @@ export class TableEngine {
         rangeAnchorRowId: undefined,
         gridSearch: null,
         mobileEditor: null,
+        columnWidths: {},
       }));
     } catch (e) {
       this.errHandler.handle(e, 'TableEngine.resetTable');
@@ -163,6 +176,26 @@ export class TableEngine {
   }
 
   // ─── private helper ─────────────────────────────────────────────────────────
+
+  private shouldInvalidateUiRowIndex(command: ApplicationTableCommand): boolean {
+    switch (command.type) {
+      case 'ADD_EMPTY_ROW':
+      case 'ADD_NEW_ROWS':
+      case 'DUPLICATE_ROW':
+      case 'PASTE_ROW':
+      case 'ROW_DELETED':
+      case 'RESTORE_ADDED_ROW':
+      case 'TABLE_DELETED':
+      case 'TABLE_RESET':
+      case 'ROW_REORDERED':
+      case 'SET_ACTIVE_COLLECTION':
+        return true;
+      case 'CHANGE_CELL_VALUE':
+        return command.columnId === 'index';
+      default:
+        return false;
+    }
+  }
 
   private getStore(expectedTableKey?: string): TableStore<TableState> | undefined {
     const store = this.tableStore;
@@ -194,6 +227,9 @@ export class TableEngine {
       );
       const store = this.getStore((command as any).tableKey);
       if (!store || !updated) return;
+      if (this.shouldInvalidateUiRowIndex(command)) {
+        this.viewBuilder.invalidateUiRowIndex();
+      }
       const prev = store.getState();
       store.setState(() => ({ ...prev, table: updated }));
 
@@ -340,9 +376,11 @@ export class TableEngine {
 
       // ── Row movement ─────────────────────────────────────────────────────────
       case 'MOVE_VERTICAL_SELECTED_ROWS':
+        this.viewBuilder.invalidateUiRowIndex();
         this.rowMgr.moveVerticalSelectedRows(command);
         return;
       case 'MOVE_VERTICAL_ACTIVE_ROW':
+        this.viewBuilder.invalidateUiRowIndex();
         this.rowMgr.moveVerticalActiveRow(command);
         return;
 
@@ -355,6 +393,9 @@ export class TableEngine {
         return;
       case 'TOGGLE_SELECT_PAGE_ROWS':
         this.selection.toggleSelectPageRows(command);
+        return;
+      case 'CLEAR_ROW_SELECTION':
+        this.selection.clearRowSelection(command);
         return;
       case 'ROW_SELECTION_TOGGLED':
         this.selection.toggleRowSelection(command);
@@ -393,12 +434,17 @@ export class TableEngine {
       case 'SET_MOBILE_EDITOR':
         this.setMobileEditor(command);
         return;
+      case 'RESIZE_COLUMN':
+        this.resizeColumn(command);
+        return;
 
       // ── Delegate to AppService ───────────────────────────────────────────────
       default:
         if (!isApplicationTableCommand(command)) {
           this.errHandler.handle(
-            new Error(`Unhandled engine command: ${command.type}`),
+            new Error(
+              `Unhandled engine command: ${(command as { type: string }).type}`,
+            ),
             'TableEngine.dispatch'
           );
           return;
@@ -431,6 +477,27 @@ export class TableEngine {
     }));
   }
 
+  private resizeColumn(command: {
+    tableKey: string;
+    columnId: string;
+    width: number;
+  }): void {
+    const store = this.getStore(command.tableKey);
+    if (!store) return;
+    const col = store
+      .getState()
+      .table.getActiveCollectionColumns()
+      .find((c) => c.fieldName === command.columnId);
+    const next = clampColumnWidth(command.width, col ?? { fieldName: command.columnId });
+    store.setState(prev => ({
+      ...prev,
+      columnWidths: {
+        ...(prev.columnWidths ?? {}),
+        [command.columnId]: next,
+      },
+    }));
+  }
+
   // ─── public read API ────────────────────────────────────────────────────────
 
   getViewState(): TableViewState | undefined {
@@ -443,6 +510,18 @@ export class TableEngine {
 
   getAllUIRows(): UIRow[] | null {
     return this.viewBuilder.getAllUIRows();
+  }
+
+  getUiRowIndex(): SparseRowIndex<number> {
+    return this.viewBuilder.getUiRowIndex();
+  }
+
+  getUiRowCount(): number {
+    return this.viewBuilder.getUiRowCount();
+  }
+
+  projectVisibleUiRows(range: { startIndex: number; endIndex: number }): UIRow[] {
+    return this.viewBuilder.projectVisibleUiRows(range);
   }
 
   getMobileViewState(): MobileTableViewState | undefined {
@@ -574,11 +653,193 @@ export class TableEngine {
         rule.validator(rule, v, (err?: string[]) => (customError = err));
         if (customError && customError.length) return { caption, rowId, message: rule.message ?? customError[0] };
       }
-      if (rule.asyncValidator) {
-        // async validator‌ها رو اینجا فقط ignore می‌کنیم (درصورت نیاز async handle کن)
+    }
+    return undefined;
+  }
+
+  private schemaHasAsyncValidator(schema: ColumnSchema | undefined): boolean {
+    return !!schema?.rules?.some(
+      (rule) => typeof rule.asyncValidator === 'function',
+    );
+  }
+
+  private tableHasAsyncValidators(table: Table): boolean {
+    return table.getColumns().some((column) =>
+      this.schemaHasAsyncValidator(column),
+    );
+  }
+
+  private cellValueKey(value: unknown): string {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+
+  private errorFromAsyncFailure(
+    err: unknown,
+    rule: { message?: string },
+    schema: ColumnSchema,
+    caption: string,
+    rowId: number,
+  ): CellError {
+    const fallback =
+      err instanceof Error
+        ? err.message
+        : typeof err === 'string'
+          ? err
+          : `${schema.fieldCaption || caption} نامعتبر است`;
+    return { caption, rowId, message: rule.message ?? fallback };
+  }
+
+  private async applyAsyncValidators(
+    value: unknown,
+    schema: ColumnSchema,
+    caption: string,
+    rowId: number,
+  ): Promise<CellError | undefined> {
+    const rules = schema.rules ?? [];
+    for (const rule of rules) {
+      if (typeof rule.asyncValidator !== 'function') continue;
+      const v = rule.transform ? rule.transform(value) : value;
+      const isEmpty =
+        v === null ||
+        v === undefined ||
+        (typeof v === 'string' && v.trim() === '') ||
+        (Array.isArray(v) && v.length === 0);
+      if (isEmpty) continue;
+      try {
+        await rule.asyncValidator(rule, v);
+      } catch (err) {
+        return this.errorFromAsyncFailure(err, rule, schema, caption, rowId);
       }
     }
     return undefined;
+  }
+
+  private async validateCellFull(
+    value: unknown,
+    schema: ColumnSchema,
+    caption: string,
+    rowId: number,
+  ): Promise<CellError | undefined> {
+    const syncError = this.validateCell(value, schema, caption, rowId);
+    if (syncError) return syncError;
+    return this.applyAsyncValidators(value, schema, caption, rowId);
+  }
+
+  private finishValidation(
+    cb: ValidationCallback,
+    tableStore: TableStore<TableState>,
+  ): void {
+    cb({
+      valid: this.errors.size === 0,
+      errors: this.errors,
+      data: this.getAllRows(),
+    });
+    tableStore.setState((prev) => ({
+      ...prev,
+      expandedRows: {},
+    }));
+  }
+
+  private collectValidationJobs(table: Table): Array<{
+    cellId: string;
+    value: unknown;
+    schema: ColumnSchema;
+    caption: string;
+    rowId: number;
+  }> {
+    const jobs: Array<{
+      cellId: string;
+      value: unknown;
+      schema: ColumnSchema;
+      caption: string;
+      rowId: number;
+    }> = [];
+    this.getAllRows()
+      ?.filter((row) => row.rowState.value !== RowStateEnum.Deleted)
+      .forEach((row: Row, rowIndex: number) => {
+        for (const [columnId, cell] of row.getCells().entries()) {
+          const schema = table.getColumnSchema(new ColumnId(columnId));
+          if (!schema || schema.hidden) continue;
+          jobs.push({
+            cellId: `row-${rowIndex}-${columnId}`,
+            value: cell.getValue(),
+            schema,
+            caption: schema.fieldCaption,
+            rowId: row.id.value,
+          });
+        }
+      });
+    return jobs;
+  }
+
+  private applyValidationErrors(nextErrors: Map<string, CellError>): void {
+    this.errors.clear();
+    nextErrors.forEach((error, cellId) => {
+      this.errors.set(cellId, error);
+    });
+  }
+
+  private runValidationSync(
+    table: Table,
+    cb: ValidationCallback,
+    tableStore: TableStore<TableState>,
+  ): void {
+    const nextErrors = new Map<string, CellError>();
+    for (const job of this.collectValidationJobs(table)) {
+      const error = this.validateCell(
+        job.value,
+        job.schema,
+        job.caption,
+        job.rowId,
+      );
+      if (error) nextErrors.set(job.cellId, error);
+    }
+    this.applyValidationErrors(nextErrors);
+    this.finishValidation(cb, tableStore);
+  }
+
+  private async runValidationAsync(
+    table: Table,
+    cb: ValidationCallback,
+    tableStore: TableStore<TableState>,
+  ): Promise<void> {
+    const nextErrors = new Map<string, CellError>();
+    for (const job of this.collectValidationJobs(table)) {
+      const error = await this.validateCellFull(
+        job.value,
+        job.schema,
+        job.caption,
+        job.rowId,
+      );
+      if (error) nextErrors.set(job.cellId, error);
+    }
+    this.applyValidationErrors(nextErrors);
+    this.finishValidation(cb, tableStore);
+  }
+
+  private scheduleAsyncCellCheck(
+    cellId: string,
+    valueKey: string,
+    value: unknown,
+    schema: ColumnSchema,
+    caption: string,
+    rowId: number,
+  ): void {
+    const seq = (this.asyncCellSeq.get(cellId) ?? 0) + 1;
+    this.asyncCellSeq.set(cellId, seq);
+    void this.applyAsyncValidators(value, schema, caption, rowId).then(
+      (error) => {
+        if (this.asyncCellSeq.get(cellId) !== seq) return;
+        this.asyncCellCache.set(cellId, { valueKey, error });
+        if (error) this.errors.set(cellId, error);
+        else this.errors.delete(cellId);
+        this.getStore()?.setState((prev) => ({ ...prev }));
+      },
+    );
   }
   validation(cb: ValidationCallback): void {
     const store = this.getStore();
@@ -601,44 +862,21 @@ export class TableEngine {
     }
     const table = store.getState().table;
     try {
-      const nextErrors = new Map<string, CellError>();
-      this.getAllRows()
-        ?.filter((row) => row.rowState.value !== RowStateEnum.Deleted)
-        .forEach((row: Row, rowIndex: number) => {
-          for (const [columnId, cell] of row.getCells().entries()) {
-            const schema = table.getColumnSchema(new ColumnId(columnId));
-            if (!schema || schema.hidden) continue;
-            const cellId = `row-${rowIndex}-${columnId}`;
-            const error = this.validateCell(
-              cell.getValue() as any,
-              schema,
-              schema.fieldCaption,
-              row.id.value,
-            );
-            if (error) {
-              nextErrors.set(cellId, error);
-            }
-          }
+      if (this.tableHasAsyncValidators(table)) {
+        void this.runValidationAsync(table, cb, store).catch((error) => {
+          const message =
+            error instanceof Error ? error.message : String(error ?? "خطای اعتبارسنجی");
+          cb({
+            valid: false,
+            errors: new Map<string, CellError>([
+              ['system', { caption: '', rowId: NaN, message }],
+            ]),
+            data: null,
+          });
         });
-      this.errors.clear();
-      nextErrors.forEach((error, cellId) => {
-        this.errors.set(cellId, error);
-      });
-      cb(
-        {
-          valid: this.errors.size === 0,
-          errors: this.errors,
-          data: this.getAllRows()
-        }
-      );
-      store.setState(prev => {
-        return {
-          ...prev,
-          // activeRowId: null,
-          // activeCell: null,
-          expandedRows: {}
-        };
-      });
+        return;
+      }
+      this.runValidationSync(table, cb, store);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : String(error ?? "خطای اعتبارسنجی");
@@ -680,13 +918,35 @@ export class TableEngine {
         return { isValid: true, cellError: { caption: "", rowId: NaN, message: "" } };
       }
       const error = this.validateCell(cell.getValue() as any, schema, caption, rowId);
+      const cellId = `row-${rowIndex}-${caption}`;
       if (error) {
+        this.asyncCellCache.delete(cellId);
         return { isValid: false, cellError: error }
-      } else {
-        const cellId = `row-${rowIndex}-${caption}`;
+      }
+      if (!this.schemaHasAsyncValidator(schema)) {
         this.errors.delete(cellId);
         return { isValid: true, cellError: { caption: "", rowId: NaN, message: '' } }
       }
+      const valueKey = this.cellValueKey(cell.getValue());
+      const cached = this.asyncCellCache.get(cellId);
+      if (cached?.valueKey === valueKey) {
+        if (cached.error) {
+          this.errors.set(cellId, cached.error);
+          return { isValid: false, cellError: cached.error };
+        }
+        this.errors.delete(cellId);
+        return { isValid: true, cellError: { caption: "", rowId: NaN, message: '' } };
+      }
+      this.scheduleAsyncCellCheck(
+        cellId,
+        valueKey,
+        cell.getValue(),
+        schema,
+        caption,
+        rowId,
+      );
+      this.errors.delete(cellId);
+      return { isValid: true, cellError: { caption: "", rowId: NaN, message: '' } };
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e ?? "خطای اعتبارسنجی");
       return { isValid: false, cellError: { caption: "", rowId: NaN, message } }

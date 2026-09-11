@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect } from 'react';
 
-import { useLocale } from '../host';
+import { useERPTableHost } from '../host';
 import {
   CustomCheckbox,
   InfoIcon,
@@ -22,7 +22,20 @@ import { highlightSearchText } from '../gridSearch/highlightText';
 import { valueParser } from '../helper';
 import { useGridSearchState } from '../hooks/useEngineSelector';
 import { UIRow } from '../type';
+import { type CellRenderContext } from './cellRenderContext';
+import { resolveBoundCellNode } from './cellRegistry';
 import { DescriptionComponent } from './descriptionComponent';
+
+export type { CellRenderContext } from './cellRenderContext';
+export { resolveCustomCellNode } from './cellRenderContext';
+export type { CellComponent, CellComponentMap } from './cellRegistry';
+export {
+  DEFAULT_CELL_COMPONENTS,
+  mergeCellComponents,
+  resolveBoundCellNode,
+  resolveRegisteredCellNode,
+} from './cellRegistry';
+export { TextAreaCell } from './TextAreaCell';
 
 /* ======================================================
    Types
@@ -54,7 +67,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   mode = "cell",
 }) => {
   const dateHostRef = React.useRef<HTMLDivElement | null>(null);
-  const locale = useLocale();
+  const { locale, components } = useERPTableHost();
   const searchState = useGridSearchState(controller);
   if (!meta) return null;
   const disable =
@@ -134,6 +147,25 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
       }
     }
   }, [isActive, mode, type]);
+  const cellRenderContext: CellRenderContext = {
+    tableKey,
+    row,
+    columnId,
+    meta,
+    controller,
+    value,
+    display,
+    isActive: !!isActive,
+    isDeleted,
+    isEditable,
+    mode,
+    tabIndex,
+    validation,
+    dispatchChangeValue,
+    dispatchChangeDisplay,
+    activeCell,
+  };
+
   const renderReadOnlyCell = (cellText: unknown) => (
     <span
       key={idx}
@@ -152,24 +184,50 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     </span>
   );
 
-  if (mode === "view") {
-    if (disable) {
+  if (disable) {
+    if (mode === "view") {
       return (
         <span key={idx} className={`text-xs ${meta.className}`}>
           --
         </span>
       );
     }
+    return (
+      <span key={idx} className={` "text-xs"  ${meta.className}`}>
+        --
+      </span>
+    );
+  }
+
+  const customCell = resolveBoundCellNode(meta, components, cellRenderContext);
+  if (customCell.hit) {
+    const isColumnRender = typeof meta.render === 'function';
+    return (
+      <div
+        key={idx}
+        {...(isColumnRender
+          ? { 'data-erp-custom-cell': columnId }
+          : { 'data-erp-cell-component': type })}
+        tabIndex={isDeleted ? -1 : tabIndex}
+        className={`w-full h-full min-h-9 px-2 flex text-xs ${
+          type === 'textArea' ? 'items-start' : 'items-center'
+        } ${meta.className ?? ''} ${
+          isDeleted ? 'cursor-not-allowed' : 'cursor-text'
+        } ${isCurrentSearchMatch ? 'ring-2 ring-yellow-400' : ''}`}
+        onClick={() => {
+          if (!isDeleted) activeCell();
+        }}
+      >
+        {customCell.node}
+      </div>
+    );
+  }
+
+  if (mode === "view") {
     return renderReadOnlyCell(display ?? value);
   }
 
-  if (disable) {
-    return (
-      <span key={idx} className={` "text-xs"  ${meta.className}`}>
-        {disable ? "--" : String(value ?? "")}
-      </span>
-    );
-  } else if (isEditable === false) {
+  if (isEditable === false) {
     if (meta.fieldType === "selectOption") {
       return (
         <span key={idx} className={`text-xs text-start  ${meta.className} `}>
@@ -432,24 +490,6 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           {String(display ?? value ?? "") || "—"}
         </span>
       );
-    // case "textArea":
-    //   return (
-    //     <textarea
-    //       key={idx}
-    //       ref={inputRef as any}
-    //       disabled={isDeleted || !editable}
-    //       value={value == null ? "" : String(value)}
-    //       className={`${isDeleted && "cursor-not-allowed"}
-    //         flex items-center bg-transparent px-2 outline-none focus-visible:outline-none
-    //        focus:outline-none ring-0 focus:!ring-0 focus:ring-offset-0   h-8 transition-colors  `}
-    //       draggable={false}
-    //       onDragStart={blockDrag}
-    //       onDragOver={blockDrag}
-    //       onDrop={blockDrag}
-    //       onChange={(e) => dispatchChangeValue(e.target.value)}
-    //       onClick={() => activeCell()}
-    //     />
-    //   );
     case "description":
       return (
         <DescriptionComponent

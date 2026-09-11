@@ -126,6 +126,12 @@ export interface ReorderRowUiCommand extends UICommandBase {
   readonly droppedRowId: number;
   readonly position: 'before' | 'after';
 }
+
+export interface ReorderColumnUiCommand extends UICommandBase {
+  readonly type: 'COLUMN_REORDERED';
+  readonly sourceIndex: number;
+  readonly destIndex: number;
+}
 export interface ToggleRowSelectedUiCommand extends UICommandBase {
   readonly type: 'TOGGLE_ROW_SELECTED';
 
@@ -133,6 +139,9 @@ export interface ToggleRowSelectedUiCommand extends UICommandBase {
 export interface TogglePageRowSelectedUiCommand extends UICommandBase {
   readonly type: 'TOGGLE_PAGE_ROW_SELECTED';
 
+}
+export interface ClearRowSelectionUiCommand extends UICommandBase {
+  readonly type: 'CLEAR_ROW_SELECTION';
 }
 export interface RowSelectedUiCommand extends UICommandBase {
   readonly type: 'ROW_SELECTED';
@@ -187,12 +196,19 @@ export interface CloseMobileEditorUiCommand extends UICommandBase {
   readonly type: 'UI_CLOSE_MOBILE_EDITOR';
 }
 
+export interface ResizeColumnUiCommand extends UICommandBase {
+  readonly type: 'UI_RESIZE_COLUMN';
+  readonly columnId: string;
+  readonly width: number;
+}
+
 /* ---------- Union ---------- */
 
 export type UITableCommand =
   ActiveRowUiCommand
   | ToggleRowSelectedUiCommand
   | TogglePageRowSelectedUiCommand
+  | ClearRowSelectionUiCommand
   | RowSelectedUiCommand
   | UIMoveActiveVerticalCellEvent
   | UIMoveActiveCellEvent
@@ -211,6 +227,7 @@ export type UITableCommand =
   | RegisterTableUiCommand
   | ToggleRowExpandedUiCommand
   | ReorderRowUiCommand
+  | ReorderColumnUiCommand
   | ActionTableUiCommand
   | ActiveCollectionUiCommand
   | DeleteSelectedRowsUiCommand
@@ -219,4 +236,5 @@ export type UITableCommand =
   | ClearGridSearchUiCommand
   | OpenMobileAddUiCommand
   | OpenMobileEditUiCommand
-  | CloseMobileEditorUiCommand;
+  | CloseMobileEditorUiCommand
+  | ResizeColumnUiCommand;

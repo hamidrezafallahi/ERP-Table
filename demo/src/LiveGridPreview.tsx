@@ -9,6 +9,8 @@ import {
   parseXlsxBlob,
   RowStateEnum,
   TextPdfRenderer,
+  themeErp,
+  type CellComponentMap,
   type IMultiSelectConfig,
   type UITableController,
 } from 'persian-data-grid';
@@ -28,6 +30,23 @@ const FA_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
 const SEARCH_COLUMNS = VOUCHER_DATA_COLUMNS.filter(
   (col) => col.visibility?.kind === 'always',
 );
+
+const checkboxHostComponents: CellComponentMap = {
+  checkbox: (ctx) => (
+    <label
+      data-erp-cell-component="checkbox"
+      className="flex w-full justify-center"
+    >
+      <input
+        type="checkbox"
+        checked={ctx.value === true}
+        disabled={ctx.isDeleted || !ctx.isEditable}
+        onChange={(e) => ctx.dispatchChangeValue(e.target.checked)}
+        onClick={(e) => e.stopPropagation()}
+      />
+    </label>
+  ),
+};
 
 function faNum(n: number) {
   return String(n).replace(/\d/g, (d) => FA_DIGITS[Number(d)] ?? d);
@@ -117,6 +136,8 @@ export function LiveGridPreview({
   const [canRedo, setCanRedo] = useState(false);
   const [searchColumn, setSearchColumn] = useState(SEARCH_COLUMNS[0]?.fieldName ?? 'DetailDesc');
   const [searchQuery, setSearchQuery] = useState('');
+  const [qaAccent, setQaAccent] = useState(false);
+  const [qaTallRows, setQaTallRows] = useState(false);
   const [matchIndex, setMatchIndex] = useState(-1);
   const [matchTotal, setMatchTotal] = useState(0);
   const [actionLogs, setActionLogs] = useState<LogItem[]>([]);
@@ -125,8 +146,15 @@ export function LiveGridPreview({
 
   const rows = useMemo(() => buildVoucherDemoRows(rowCount), [rowCount]);
   const columns = useMemo(() => VOUCHER_COLUMNS, []);
-  const instanceKey = `${tableKey}-r${rowCount}`;
+  const instanceKey = `${tableKey}-r${rowCount}-h${qaTallRows ? 48 : 40}`;
   const showLog = toolbar;
+  const qaTheme = useMemo(() => {
+    if (!qaAccent && !qaTallRows) return undefined;
+    return themeErp.withParams({
+      ...(qaAccent ? { accentColor: 'hotpink' } : {}),
+      ...(qaTallRows ? { rowHeight: 48 } : {}),
+    });
+  }, [qaAccent, qaTallRows]);
 
   const pushLog = useCallback((message: string) => {
     setActionLogs((prev) => [{ at: formatClock(), message }, ...prev].slice(0, 80));
@@ -306,6 +334,27 @@ export function LiveGridPreview({
               }}
             >
               اسکرول مجازی
+            </button>
+            <span className={styles.liveToolbarLabel}>آزمایش تم</span>
+            <button
+              type="button"
+              className={`${styles.demoToggle} ${qaAccent ? styles.demoToggleActive : ''}`}
+              onClick={() => {
+                setQaAccent((value) => !value);
+                pushLog('تم آزمایشی → accent hotpink');
+              }}
+            >
+              صورتی
+            </button>
+            <button
+              type="button"
+              className={`${styles.demoToggle} ${qaTallRows ? styles.demoToggleActive : ''}`}
+              onClick={() => {
+                setQaTallRows((value) => !value);
+                pushLog('ارتفاع سطر → ۴۸');
+              }}
+            >
+              سطر ۴۸
             </button>
             {!virtualization ? (
               <>
@@ -569,6 +618,8 @@ export function LiveGridPreview({
         remoteApi={remoteApi}
         locale="fa"
         multiSelectConfig={multiSelectConfig}
+        theme={qaTheme}
+        components={checkboxHostComponents}
         onReady={setController}
       />
 

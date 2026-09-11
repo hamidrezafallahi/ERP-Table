@@ -7,6 +7,7 @@ import { CollectionScope } from '../domain/entities/Table';
 import { RowStateEnum } from '../domain/value-objects';
 import { UIRow } from '../ui/type';
 import { EngineErrorHandler } from './EngineErrorHandler';
+import { SparseRowIndex } from './SparseRowIndex';
 import { TableStore } from './tableStore';
 import {
   MOBILE_PAGE_SIZE,
@@ -18,10 +19,61 @@ import {
 } from './type';
 
 export class ViewStateBuilder {
+  private readonly uiRowIndex = new SparseRowIndex<number>();
+  private uiRowIndexDirty = true;
+
   constructor(
     private readonly readStore: () => TableStore<TableState> | undefined,
     private readonly err: EngineErrorHandler,
   ) { }
+
+  invalidateUiRowIndex(): void {
+    this.uiRowIndexDirty = true;
+  }
+
+  getUiRowIndex(): SparseRowIndex<number> {
+    this.ensureUiRowIndex();
+    return this.uiRowIndex;
+  }
+
+  getUiRowCount(): number {
+    return this.getUiRowIndex().size;
+  }
+
+  projectVisibleUiRows(range: { startIndex: number; endIndex: number }): UIRow[] {
+    const ids = this.getUiRowIndex().projectVisible(range);
+    const out: UIRow[] = [];
+    for (const id of ids) {
+      const row = this.getRowView(id);
+      if (row) out.push(row);
+    }
+    return out;
+  }
+
+  private ensureUiRowIndex(): void {
+    if (!this.uiRowIndexDirty) return;
+    this.uiRowIndex.clear();
+    const storeRef = this.readStore();
+    if (!storeRef) {
+      this.uiRowIndexDirty = false;
+      return;
+    }
+    const { table } = storeRef.getState();
+    const activeName = table.getActiveCollectionName();
+    const sorted = table
+      .getRows()
+      .filter((row) => row.collection === activeName)
+      .sort((a, b) => {
+        const aIndex = Number(a.getCells().get('index')?.getValue() ?? 0);
+        const bIndex = Number(b.getCells().get('index')?.getValue() ?? 0);
+        return aIndex - bIndex;
+      });
+    for (const row of sorted) {
+      const id = row.id.value;
+      this.uiRowIndex.set(id, id);
+    }
+    this.uiRowIndexDirty = false;
+  }
 
   private getStore() {
     const store = this.readStore();
@@ -113,7 +165,7 @@ export class ViewStateBuilder {
 
       const store = storeRef.getState();
 
-      const { table, expandedRows, activeCell, selectedRows, gridSearch, mobileEditor } = store;
+      const { table, expandedRows, activeCell, selectedRows, gridSearch, mobileEditor, columnWidths } = store;
 
       const pagination = table.getPagination();
 
@@ -144,6 +196,7 @@ export class ViewStateBuilder {
         action: table.getTableAction(),
         gridSearch,
         mobileEditor,
+        columnWidths: columnWidths ?? {},
       };
     } catch (error) {
       this.err.handle(error, 'ViewStateBuilder.getViewState');

@@ -3,6 +3,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { useThemePortalStyle } from '../host';
+
 export type SelectOption = {
   value?: string | number;
   label?: React.ReactNode;
@@ -63,6 +65,13 @@ export function Select({
   const [pos, setPos] = useState({ top: 0, left: 0, width: 180 });
   const rootRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const menuStyle = useThemePortalStyle({
+    position: 'fixed',
+    top: pos.top,
+    left: pos.left,
+    width: pos.width,
+    minWidth: pos.width,
+  });
 
   const selected = options.find((o) => String(o.value) === String(value));
 
@@ -99,13 +108,7 @@ export function Select({
   const menu = (
     <div
       className="erp-table-select__menu"
-      style={{
-        position: 'fixed',
-        top: pos.top,
-        left: pos.left,
-        width: pos.width,
-        minWidth: pos.width,
-      }}
+      style={menuStyle}
       onScroll={onPopupScroll}
     >
       {showSearch ? (

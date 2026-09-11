@@ -1,7 +1,10 @@
 "use client";
 import React, {
   ReactNode,
+  useCallback,
   useEffect,
+  useMemo,
+  useState,
 } from 'react';
 
 import { injectERPTableStyles } from './styles/injectStyles';
@@ -16,7 +19,16 @@ import {
 } from './host';
 import { DesktopTable } from './desktop/DesktopTable';
 import { MobileTable } from './mobile/MobileTable';
+import {
+  GridTheme,
+  isStockDarkTheme,
+  resolveActiveTheme,
+  themeErp,
+  themeToStyle,
+} from './theme';
 import { IMultiSelectConfig } from './type';
+import type { CellComponentMap } from './cellRenderer/cellRegistry';
+import { shouldSkipGridNavigation } from './keyboard/skipGridNavigation';
 import { useERPTable } from './useERPTable';
 
 export interface ERPTableProps extends CreateERPTableConfig {
@@ -26,7 +38,8 @@ export interface ERPTableProps extends CreateERPTableConfig {
   footer?: boolean | ReactNode;
   activeCollection?: string;
   tableHeight?: number;
-  multiSelectConfig: IMultiSelectConfig;
+  /** When omitted, the choose-from-list button and modal are not rendered (D11). */
+  multiSelectConfig?: IMultiSelectConfig;
   moreDetailComponent?: React.ComponentType<{data: unknown}>;
   /**
    * Desktop virtual scroll. Default **false** to match ERP pagination.
@@ -37,6 +50,18 @@ export interface ERPTableProps extends CreateERPTableConfig {
   direction?: 'rtl' | 'ltr';
   messages?: Partial<ERPTableMessages>;
   onToast?: (kind: ERPTableToastKind, message: string, detail?: unknown) => void;
+  /** Typed CSS variables on the table root. Default `themeErp`. */
+  theme?: GridTheme;
+  /**
+   * Show the light/dark button in product chrome. Default true.
+   * Hidden when `theme` is a custom (non-stock) GridTheme.
+   */
+  themeToggle?: boolean;
+  /**
+   * Replace built-in FieldType editors (PR-55). Keys are FieldType or a custom
+   * string. Column `render` still wins. Omit = CellRenderer switch fallback.
+   */
+  components?: CellComponentMap;
 }
 
 export function ERPTable(props: ERPTableProps) {
@@ -63,7 +88,34 @@ export function ERPTable(props: ERPTableProps) {
     direction,
     messages,
     onToast,
+    theme: themeProp,
+    themeToggle = true,
+    components,
   } = props;
+
+  const requestedTheme = themeProp ?? themeErp;
+  const requestedKey = JSON.stringify(requestedTheme.params);
+  const [preferDark, setPreferDark] = useState(() =>
+    isStockDarkTheme(requestedTheme),
+  );
+
+  const { theme: resolvedTheme, locked: themeLocked } = useMemo(
+    () =>
+      resolveActiveTheme({
+        requested: requestedTheme,
+        preferDark,
+      }),
+    [requestedTheme, preferDark],
+  );
+
+  useEffect(() => {
+    if (themeLocked) return;
+    setPreferDark(isStockDarkTheme(requestedTheme));
+  }, [requestedKey, themeLocked, requestedTheme]);
+
+  const onToggleTheme = useCallback(() => {
+    setPreferDark((value) => !value);
+  }, []);
 
   const result = useERPTable({
     store,
@@ -75,6 +127,7 @@ export function ERPTable(props: ERPTableProps) {
     rowAccess,
     tableHeight,
     recordPerPage,
+    rowHeight: resolvedTheme.params.rowHeight,
     remoteApi,
   });
 
@@ -94,19 +147,8 @@ export function ERPTable(props: ERPTableProps) {
     };
 
     const handler = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.closest(".ant-select") ||
-        target.closest(".erp-table-select")
-      ) {
-        if (
-          e.code === "ArrowUp" ||
-          e.code === "ArrowDown" ||
-          e.code === "Enter" ||
-          e.code === "NumpadEnter"
-        ) {
-          return;
-        }
+      if (shouldSkipGridNavigation(e.target, e.code)) {
+        return;
       }
       const activeRow = controller.getActiveRow();
       const activeCell = controller.getActiveCell();
@@ -163,15 +205,30 @@ export function ERPTable(props: ERPTableProps) {
     />
   );
 
+  const dir = direction ?? (locale === 'fa' ? 'rtl' : 'ltr');
+  const themeMode = isStockDarkTheme(resolvedTheme) ? 'dark' : 'light';
+
   return (
     <ERPTableHostProvider
       locale={locale}
-      direction={direction ?? (locale === 'fa' ? 'rtl' : 'ltr')}
+      direction={dir}
       messages={messages}
       onToast={onToast}
       remoteApi={remoteApi ?? result.controller.getRemoteApi()}
+      theme={resolvedTheme}
+      themeToggle={themeToggle}
+      themeLocked={themeLocked}
+      onToggleTheme={themeLocked ? undefined : onToggleTheme}
+      components={components}
     >
-      <div className="erp-table" dir={direction ?? (locale === 'fa' ? 'rtl' : 'ltr')} data-erp-table>
+      <div
+        className="erp-table"
+        dir={dir}
+        data-erp-table
+        data-erp-theme={themeMode}
+        data-erp-theme-locked={themeLocked ? 'true' : 'false'}
+        style={themeToStyle(resolvedTheme)}
+      >
         {table}
       </div>
     </ERPTableHostProvider>

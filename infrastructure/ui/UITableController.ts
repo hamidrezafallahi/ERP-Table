@@ -103,6 +103,16 @@ export class UITableController {
     this.engine.dispatch({ type: 'ROW_REORDERED', store: this.store, tableKey: this.tableKey, draggedRowId, droppedRowId, position });
   }
 
+  private reorderColumns(sourceIndex: number, destIndex: number): void {
+    this.engine.dispatch({
+      type: 'COLUMN_REORDERED',
+      store: this.store,
+      tableKey: this.tableKey,
+      sourceIndex,
+      destIndex,
+    });
+  }
+
   private async addEmptyRow(): Promise<void> {
     await this.engine.dispatch({
       type: 'ADD_EMPTY_ROW',
@@ -161,6 +171,10 @@ export class UITableController {
     await this.engine.dispatch({ type: 'TOGGLE_SELECT_PAGE_ROWS', tableKey: this.tableKey });
   }
 
+  private async clearRowSelection(): Promise<void> {
+    await this.engine.dispatch({ type: 'CLEAR_ROW_SELECTION', tableKey: this.tableKey });
+  }
+
   private selectFromActiveToLast(activeRowId: number): void {
     if (activeRowId == null) return;
     this.engine.dispatch({ type: 'SELECT_FROM_ACTIVE_TO_LAST', tableKey: this.tableKey, anchorRowId: activeRowId });
@@ -188,6 +202,10 @@ export class UITableController {
 
   private setMobileEditor(editor: MobileEditorState): void {
     this.engine.dispatch({ type: 'SET_MOBILE_EDITOR', tableKey: this.tableKey, editor });
+  }
+
+  private resizeColumn(columnId: string, width: number): void {
+    this.engine.dispatch({ type: 'RESIZE_COLUMN', tableKey: this.tableKey, columnId, width });
   }
 
   // ─── public read API ────────────────────────────────────────────────
@@ -496,6 +514,9 @@ export class UITableController {
       case 'ROW_REORDERED':
         this.reorderRow(command.draggedRowId, command.droppedRowId, command.position);
         return;
+      case 'COLUMN_REORDERED':
+        this.reorderColumns(command.sourceIndex, command.destIndex);
+        return;
       case 'TABLE_REGISTERED':
         await this.registerTable(command.table);
         return;
@@ -528,6 +549,9 @@ export class UITableController {
       case 'TOGGLE_PAGE_ROW_SELECTED':
         await this.togglePageRowSelect();
         return;
+      case 'CLEAR_ROW_SELECTION':
+        await this.clearRowSelection();
+        return;
       case 'UI_ACTION_TABLE':
         await this.setTableAction(command.action);
         return;
@@ -549,6 +573,9 @@ export class UITableController {
         return;
       case 'UI_CLOSE_MOBILE_EDITOR':
         this.setMobileEditor(null);
+        return;
+      case 'UI_RESIZE_COLUMN':
+        this.resizeColumn(command.columnId, command.width);
         return;
       default: {
         const _exhaustive: never = command;

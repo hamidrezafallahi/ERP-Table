@@ -125,6 +125,11 @@ function describeEntry(entry: ChangelogEntry): Pick<HistoryItem, 'title' | 'desc
         title: 'Rows reordered',
         description: `Rows moved from ${formatValue(payload?.sourceIndex)} to ${formatValue(payload?.destIndex)}.`,
       };
+    case 'COLUMN_REORDERED':
+      return {
+        title: 'Columns reordered',
+        description: `Columns moved from ${formatValue(payload?.sourceIndex)} to ${formatValue(payload?.destIndex)}.`,
+      };
     case 'ROW_DESCRIPTION_SAVED':
       return {
         title: 'Description saved',

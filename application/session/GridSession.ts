@@ -48,6 +48,10 @@ export interface GridSession {
   getViewport(): import('../../domain/value-objects/Viewport').Viewport;
   getVisibleRange(totalRows?: number): import('../../domain/value-objects/Viewport').VisibleRange;
   projectVisibleRows<T>(rows: readonly T[], totalRows?: number): T[];
+  /** Active-collection row count from the sparse UI index (order = `index` column). */
+  getUiRowCount(): number;
+  /** Visible UI rows for the current viewport — O(window), not O(n). */
+  projectVisibleUiRows(): NonNullable<ReturnType<TableEngine['getRowView']>>[];
 }
 
 

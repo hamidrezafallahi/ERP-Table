@@ -7,8 +7,10 @@ import React, {
 } from 'react';
 
 import type { GridSession } from '../../application/session/GridSession';
+import { columnSizeStyle } from '../../engine/columnWidth';
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import type { UIRow } from '../type';
+import { indexPinClassName, indexPinDataAttr } from '../columnPin';
 import { useVirtualWindow } from '../virtual/useVirtualWindow';
 import { ERPTableRow } from './eRPTableRow';
 
@@ -41,25 +43,23 @@ export function ERPTableVirtualBody({
 }: Props) {
   const table = controller.getViewState();
   const dragRowId = useRef<number | null>(null);
-  const allRows = (controller.getAllUIRows() ?? []) as UIRow[];
-
-  const sortedRows = [...allRows].sort(
-    (a, b) =>
-      (Number(a.cells['index']?.value) || 0) -
-      (Number(b.cells['index']?.value) || 0),
-  );
+  const uiRowIndex = session.getEngine().getUiRowIndex();
 
   const {
-    visibleItems,
+    visibleItems: visibleIds,
     absoluteIndices,
     spacerTop,
     spacerBottom,
     onScroll,
-  } = useVirtualWindow(session, sortedRows, {
+  } = useVirtualWindow(session, uiRowIndex, {
     rowHeight,
     overscan,
     initialViewportSize: viewportHeight,
   });
+
+  const visibleItems = visibleIds
+    .map((id) => controller.getRowView(id))
+    .filter((row): row is UIRow => row != null);
 
   useEffect(() => {
     void session.dispatchViewIntent({
@@ -85,26 +85,38 @@ export function ERPTableVirtualBody({
 
   if (!table) return null;
 
-  const colSpan = Math.max(
-    1,
-    (table.columns ?? []).filter((c) => !c.hidden).length,
-  );
+  const visibleColumns = (table.columns ?? []).filter((c) => !c.hidden);
+  const spacerStyle = {
+    height: 0,
+    padding: 0,
+    border: 'none',
+    lineHeight: 0,
+  } as const;
 
-  return (
-    <tbody className="w-full min-w-0 overflow-x-auto" data-erp-virtual-body>
-      {spacerTop > 0 ? (
-        <tr aria-hidden data-erp-virtual-spacer="top">
+  const renderSpacer = (kind: 'top' | 'bottom', height: number) => {
+    if (height <= 0) return null;
+    return (
+      <tr aria-hidden role="presentation" data-erp-virtual-spacer={kind}>
+        {visibleColumns.map((c) => (
           <td
-            colSpan={colSpan}
+            key={c.fieldName}
+            role="presentation"
+            className={indexPinClassName(c)}
+            data-erp-col-pin={indexPinDataAttr(c)}
             style={{
-              height: spacerTop,
-              padding: 0,
-              border: 'none',
-              lineHeight: 0,
+              ...spacerStyle,
+              height,
+              ...columnSizeStyle(c, table.columnWidths),
             }}
           />
-        </tr>
-      ) : null}
+        ))}
+      </tr>
+    );
+  };
+
+  return (
+    <tbody className="w-full min-w-0 overflow-x-auto" data-erp-virtual-body role="rowgroup">
+      {renderSpacer('top', spacerTop)}
 
       {visibleItems.map((row, i) => {
         const absoluteIndex = absoluteIndices[i] ?? i;
@@ -126,19 +138,7 @@ export function ERPTableVirtualBody({
         );
       })}
 
-      {spacerBottom > 0 ? (
-        <tr aria-hidden data-erp-virtual-spacer="bottom">
-          <td
-            colSpan={colSpan}
-            style={{
-              height: spacerBottom,
-              padding: 0,
-              border: 'none',
-              lineHeight: 0,
-            }}
-          />
-        </tr>
-      ) : null}
+      {renderSpacer('bottom', spacerBottom)}
     </tbody>
   );
 }

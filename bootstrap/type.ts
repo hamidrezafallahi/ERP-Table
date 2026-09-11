@@ -22,6 +22,8 @@ import type { RemoteApi } from '../application/ports/RemoteApi';
 import type { TableEngine } from '../engine/tableEngine';
 import type { UITableController } from '../infrastructure/ui/UITableController';
 import type { EventStore } from '../application/ports/EventStore';
+import type { SnapshotStore } from '../application/ports/SnapshotStore';
+import type { SnapshotStrategy } from '../infrastructure/snapshot/SnapshotStrategy';
 import type { ChangelogProjection } from '../infrastructure/projections/ChangelogProjection';
 import type { HistoryPanelViewModel } from '../infrastructure/history/HistoryPanelViewModel';
 import type { CellUndoStack } from '../application/undo/CellUndoStack';
@@ -65,12 +67,26 @@ export type CreateERPTableConfig = {
   permissionPolicy?: PermissionPolicy;
   tableHeight?: number;
   recordPerPage?: number;
+  /** Used with `tableHeight` to derive pageSize. Default 40 (D12). */
+  rowHeight?: number;
+  /**
+   * Default `NoopRemoteApi` (D1) — no fetch, no ERP cookies.
+   * ERP host must pass `new FetchRemoteApi()` (or a custom adapter) for dynamic select / resolveOn.
+   */
   remoteApi?: RemoteApi;
   /**
    * Override event store. Default: IndexedDbEventStore in the browser,
    * InMemoryEventStore in Node/tests.
    */
   eventStore?: EventStore;
+  /**
+   * Opt-in aggregate snapshots (D7). Default stays dual-write repository only.
+   * When set, `SnapshotStrategy` snapshots every `snapshotEveryNEvents` (default 200)
+   * and `createERPTable` runs catch-up (`last snapshot + events after version`).
+   */
+  snapshotStore?: SnapshotStore;
+  /** Snapshot cadence when `snapshotStore` is set. Default 200. */
+  snapshotEveryNEvents?: number;
   /** Optional plugins (Excel/PDF export+import, …) registered at composition root. */
   plugins?: readonly GridPlugin[];
 };
@@ -85,6 +101,7 @@ export type CreateERPTableResult = {
   columnDefinitions: ColumnDefinition[];
   columnBindings: ColumnViewBinding[];
   eventStore: EventStore;
+  snapshotStrategy?: SnapshotStrategy;
   changelogProjection: ChangelogProjection;
   historyPanelViewModel: HistoryPanelViewModel;
   cellUndoStack: CellUndoStack;

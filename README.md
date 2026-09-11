@@ -6,7 +6,7 @@
 [![React](https://img.shields.io/badge/React-17%20%7C%2018%20%7C%2019-61dafb)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-ready-3178c6)](https://www.typescriptlang.org/)
 
-**Persian / Jalali data grid for React** — event-sourced, IndexedDB storage, Excel/IDE keyboard navigation, RTL, and reactive cells that call your API.
+**Persian / Jalali data grid for React** — event-sourced, IndexedDB storage, Excel/IDE keyboard navigation, RTL, and reactive cells that call a **host-injected** API.
 
 A real **Data Grid** for enterprise forms: voucher lines, money columns, Jalali date cells, row actions, virtual scroll, and Excel/PDF plugins.
 
@@ -50,6 +50,8 @@ pnpm add persian-data-grid
 
 **Peer dependencies:** `react` and `react-dom` (`^17` / `^18` / `^19`).
 
+Install does **not** connect to arianERP. Default `remoteApi` is `NoopRemoteApi`. ERP hosts must inject `FetchRemoteApi` — see [docs/host-arian-erp.md](./docs/host-arian-erp.md) (`_auth`, `persist:arianERP`, `Defaults`).
+
 ```tsx
 import { ERPTable } from 'persian-data-grid';
 
@@ -60,7 +62,6 @@ import { ERPTable } from 'persian-data-grid';
   columns={columnConfig}
   rows={rows}
   tableHeight={tableHeight}
-  multiSelectConfig={multiSelectConfig}
   onReady={setController}
 />
 ```
@@ -87,7 +88,6 @@ export function VoucherLines() {
       recordPerPage={10}
       tableTitle="اقلام سند"
       locale="fa"
-      multiSelectConfig={multiSelectConfig}
       onReady={setController}
     />
   );
@@ -121,7 +121,7 @@ const grid = await createERPTable({
 | `PdfExportPlugin` | pdf |
 | `UITableController` / `GridSession` | Imperative control |
 
-See [docs/public-api.md](./docs/public-api.md), [docs/getting-started.md](./docs/getting-started.md), [docs/components.md](./docs/components.md).
+See [docs/public-api.md](./docs/public-api.md), [docs/getting-started.md](./docs/getting-started.md), [docs/cell-components.md](./docs/cell-components.md), [docs/components.md](./docs/components.md), [docs/host-arian-erp.md](./docs/host-arian-erp.md).
 
 ---
 
@@ -156,6 +156,8 @@ npm i persian-data-grid
 
 وابستگی‌های peer: `react` و `react-dom` (نسخه ۱۷، ۱۸ یا ۱۹).
 
+نصب به‌تنهایی به ERP وصل نمی‌شود. پیش‌فرض `NoopRemoteApi` است. میزبان arianERP باید `FetchRemoteApi` تزریق کند: [docs/host-arian-erp.md](./docs/host-arian-erp.md).
+
 ### شروع سریع
 
 ```tsx
@@ -168,7 +170,6 @@ import { ERPTable } from 'persian-data-grid';
   columns={columns}
   rows={rows}
   tableHeight={420}
-  multiSelectConfig={multiSelectConfig}
   onReady={setController}
 />
 ```

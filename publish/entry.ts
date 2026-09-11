@@ -7,7 +7,13 @@ import '../ui/styles/injectStyles';
 
 export { ERPTable } from '../ui';
 export type { ERPTableProps } from '../ui';
-export { CellRenderer } from '../ui/cellRenderer';
+export { GridTheme, themeErp, themeErpDark } from '../ui/theme';
+export type { ThemeCssVars, ThemeParams } from '../ui/theme';
+export { useERPTableTheme } from '../ui/host';
+export { CellRenderer, resolveCustomCellNode, resolveBoundCellNode, resolveRegisteredCellNode } from '../ui/cellRenderer';
+export type { CellRenderContext, CellComponent, CellComponentMap } from '../ui/cellRenderer';
+export { DEFAULT_CELL_COMPONENTS, mergeCellComponents, TextAreaCell } from '../ui/cellRenderer';
+export { shouldSkipGridNavigation } from '../ui/keyboard/skipGridNavigation';
 export { useERPTable } from '../ui/useERPTable';
 export type { UseERPTableResult } from '../ui/useERPTable';
 export type { UIRow, IMultiSelectConfig } from '../ui/type';

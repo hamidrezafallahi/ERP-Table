@@ -32,6 +32,8 @@ const grid = await createERPTable({
 grid.session.getSnapShot('active');
 ```
 
+Default `remoteApi` is `NoopRemoteApi`. For arianERP (`_auth`, `persist:arianERP`, `Defaults`), inject `FetchRemoteApi` — [`host-arian-erp.md`](./host-arian-erp.md).
+
 Date cells use `react-persian-range-picker`.
 
 ## Local demo (this repo)
@@ -51,6 +53,9 @@ Demo app lives under `demo/` and is **not** part of the published tsup bundle.
 ## Next
 
 - [public-api.md](./public-api.md) — exports & publish
+- [cell-components.md](./cell-components.md) — register a cell editor without reading CellRenderer
+- [host-arian-erp.md](./host-arian-erp.md) — arianERP `FetchRemoteApi` (`_auth`, persist, Defaults)
 - [components.md](./components.md) — VirtualList / session / plugins
 - [event-catalog.md](./event-catalog.md) — stable event tokens
-- [demo-playground-report.md](./demo-playground-report.md) — playground QA features (overlap, DnD, search, pagination, Jalali mask)
+- [demo-playground-report.md](./demo-playground-report.md) — playground QA features (DnD, search, pagination, Jalali mask)
+- [agent-handoff.md](./agent-handoff.md) — ایجنت: فاز باز و گزارش کار (`EXECUTION_PLAN.md` / `WORKLOG.md`)

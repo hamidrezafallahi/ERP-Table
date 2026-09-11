@@ -7,7 +7,7 @@ import {
 
 import { UITableController } from '../../infrastructure/ui/UITableController';
 
-const RECORD_HEIGHT = 40;
+const DEFAULT_ROW_HEIGHT = 40;
 const TABLE_HEADER_HEIGHT = 40;
 const VIEWPORT_BOTTOM_GAP = 20;
 const MIN_TABLE_HEIGHT = 240;
@@ -20,6 +20,7 @@ type UseERPTableLayoutOptions = {
   ready?: boolean;
   /** When false, skip CHANGE_PAGE_SIZE sync (virtual scroll mode). */
   syncPageSize?: boolean;
+  rowHeight?: number;
 };
 
 export function useERPTableLayout({
@@ -29,6 +30,7 @@ export function useERPTableLayout({
   tableHeight,
   ready = false,
   syncPageSize = true,
+  rowHeight = DEFAULT_ROW_HEIGHT,
 }: UseERPTableLayoutOptions) {
   const [autoHeight, setAutoHeight] = useState<number | null>(null);
 
@@ -68,10 +70,10 @@ export function useERPTableLayout({
     if (!controller) return;
 
     const syncPageSizeToHeight = (height: number) => {
-      if (height < RECORD_HEIGHT * 2) return;
+      if (height < rowHeight * 2) return;
 
       const rowsArea = Math.max(0, height - TABLE_HEADER_HEIGHT);
-      const pageSize = Math.max(3, Math.floor(rowsArea / RECORD_HEIGHT));
+      const pageSize = Math.max(3, Math.floor(rowsArea / rowHeight));
       const table = controller.getViewState();
 
       if (table && table.pagination.pageSize !== pageSize) {
@@ -95,7 +97,7 @@ export function useERPTableLayout({
     observer.observe(bodyRef.current);
 
     return () => observer.disconnect();
-  }, [controller, bodyRef, tableHeight, autoHeight, syncPageSize]);
+  }, [controller, bodyRef, tableHeight, autoHeight, syncPageSize, rowHeight]);
 
   return {
     bodyHeight: tableHeight ?? autoHeight,

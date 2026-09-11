@@ -6,6 +6,8 @@ import type { GridSession } from '../../application/session/GridSession';
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { useScrollToSearchMatch } from '../hooks/useScrollToSearchMatch';
 import { IMultiSelectConfig } from '../type';
+import { useERPTableTheme } from '../host';
+import { ariaGridRowCount } from '../a11y/gridRoles';
 import { ERPTableBody } from './ERPTableBody';
 import { ERPTableFooter } from './ERPTableFooter';
 import { ERPTableHeader } from './ERPTableHeader';
@@ -23,7 +25,7 @@ export interface DesktopTableProps {
   header?: ReactNode;
   footer?: boolean | ReactNode;
   tableHeight?: number;
-  multiSelectConfig: IMultiSelectConfig;
+  multiSelectConfig?: IMultiSelectConfig;
   moreDetailComponent?: React.ComponentType<{ data: unknown }>;
   ready: boolean;
   /**
@@ -52,6 +54,7 @@ export function DesktopTable({
   const rootRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const useVirtual = resolveDesktopVirtualization(virtualization, session);
+  const rowHeight = useERPTableTheme().params.rowHeight;
 
   const { bodyHeight } = useERPTableLayout({
     rootRef,
@@ -60,10 +63,18 @@ export function DesktopTable({
     tableHeight,
     ready,
     syncPageSize: !useVirtual,
+    rowHeight,
   });
   const resolvedBodyHeight = tableHeight ?? bodyHeight ?? 400;
 
   useScrollToSearchMatch(bodyRef, controller);
+
+  const view = controller.getViewState();
+  const colCount = (view?.columns ?? []).filter((c) => !c.hidden).length;
+  const dataRowCount = useVirtual && session
+    ? session.getUiRowCount()
+    : view?.pagination.totalRows ?? 0;
+  const hasFooter = Boolean(footer);
 
   return (
     <div
@@ -83,7 +94,12 @@ export function DesktopTable({
           overflowAnchor: 'none',
         }}
       >
-        <table className="border-collapse min-w-max w-full">
+        <table
+          className="min-w-max w-full"
+          role="grid"
+          aria-colcount={colCount || undefined}
+          aria-rowcount={ariaGridRowCount(dataRowCount, hasFooter) || undefined}
+        >
           <ERPTableHeader
             controller={controller}
             tableKey={tableKey}
@@ -96,6 +112,7 @@ export function DesktopTable({
               tableKey={tableKey}
               scrollParentRef={bodyRef}
               viewportHeight={resolvedBodyHeight}
+              rowHeight={rowHeight}
               moreDetailComponent={moreDetailComponent}
             />
           ) : (
@@ -106,7 +123,11 @@ export function DesktopTable({
             />
           )}
           {footer && (
-            <ERPTableFooter controller={controller} footer={footer} />
+            <ERPTableFooter
+              controller={controller}
+              footer={footer}
+              dataRowCount={dataRowCount}
+            />
           )}
         </table>
       </div>
@@ -126,7 +147,7 @@ export function DesktopTable({
             className="text-xs text-neutral-500 px-2"
             data-erp-virtual-row-count
           >
-            {(controller.getAllUIRows() ?? []).length} rows
+            {session?.getUiRowCount() ?? 0} rows
           </div>
         )}
       </div>

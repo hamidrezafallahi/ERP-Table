@@ -1,4 +1,10 @@
-import type { ColumnSchema, RowInput } from 'persian-data-grid';
+import { createElement } from 'react';
+
+import type {
+  CellRenderContext,
+  ColumnSchema,
+  RowInput,
+} from 'persian-data-grid';
 
 /** Always-on index column — same shape as voucherTemplate/config.ts */
 export const DEMO_INDEX_COLUMN: ColumnSchema = {
@@ -432,11 +438,11 @@ export const VOUCHER_DATA_COLUMNS: ColumnSchema[] = [
   {
     fieldName: 'DetailDesc',
     fieldCaption: 'شرح ردیف',
-    fieldType: 'text',
+    fieldType: 'textArea',
     fieldCollection: 'default',
     order: 4,
-    minWidth: 96,
-    className: 'text-center justify-center',
+    minWidth: 140,
+    className: 'text-start',
     visibility: { kind: 'always' },
   },
   {
@@ -494,6 +500,42 @@ export const VOUCHER_DATA_COLUMNS: ColumnSchema[] = [
     minWidth: 120,
     visibility: { kind: 'always' },
   },
+  {
+    fieldName: 'SideMark',
+    fieldCaption: 'طرف',
+    fieldType: 'static',
+    editable: false,
+    fieldCollection: 'default',
+    order: 9,
+    minWidth: 56,
+    className: 'text-center justify-center',
+    visibility: { kind: 'always' },
+    render: (raw) => {
+      const ctx = raw as CellRenderContext;
+      const bed = Number(
+        ctx.controller.getCell(ctx.row.id, 'Bed')?.getValue() ?? 0,
+      );
+      const bes = Number(
+        ctx.controller.getCell(ctx.row.id, 'Bes')?.getValue() ?? 0,
+      );
+      const label = bed > 0 ? 'بد' : bes > 0 ? 'بس' : '—';
+      return createElement(
+        'span',
+        { 'data-erp-custom-cell': 'SideMark' },
+        label,
+      );
+    },
+  },
+  {
+    fieldName: 'Confirmed',
+    fieldCaption: 'تأیید',
+    fieldType: 'checkbox',
+    fieldCollection: 'default',
+    order: 10,
+    minWidth: 56,
+    className: 'text-center justify-center',
+    visibility: { kind: 'always' },
+  },
 ];
 
 export const VOUCHER_COLUMNS: ColumnSchema[] = [
@@ -539,6 +581,7 @@ export function buildVoucherDemoRows(count = 2): RowInput[] {
         FollowUpNumber: String(123124 + i),
         Bed: isDebit ? 10_000_000 + i * 1_000 : '',
         Bes: isDebit ? '' : 10_000_000 + i * 1_000,
+        Confirmed: isDebit,
       },
     };
   });

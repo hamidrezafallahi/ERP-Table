@@ -47,7 +47,7 @@ export function toColumnViewBinding(schema: ColumnSchema): ColumnViewBinding {
     className: schema.className,
     minWidth: schema.minWidth,
     style: schema.style,
-    render: schema.returnDisplayValue as ColumnViewBinding['render'],
+    render: schema.render as ColumnViewBinding['render'],
     displayFormat: schema.displayFormat,
     onChange: schema.onChange,
     indexOptions: schema.indexOptions,

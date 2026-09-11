@@ -15,6 +15,7 @@ export interface DynamicValueConfig {
 export type FieldType =
   | 'index'
   | 'text'
+  | 'textArea'
   | 'number'
   | 'price'
   | 'select'
@@ -73,6 +74,11 @@ export interface ColumnSchema<T = unknown, K = unknown> {
   expandable?: boolean;
   returnValue?: (values: T, colId: string) => unknown;
   returnDisplayValue?: (values: T, colId: string) => unknown;
+  /**
+   * Custom cell renderer (PR-54). `CellRenderer` calls this before the FieldType
+   * switch. Not the same as `returnDisplayValue` (engine display string).
+   */
+  render?: (ctx: unknown) => unknown;
   enableDeleteButton?: boolean;
   enableExpandButton?: boolean;
   enableMoveButton?: boolean;

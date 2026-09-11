@@ -50,6 +50,8 @@ export type TableViewState = {
   action: TableActions;
   gridSearch: GridSearchState;
   mobileEditor: MobileEditorState;
+  /** Session-only column widths (px). Not EventStore. */
+  columnWidths: Record<string, number>;
 };
 
 export type MobileTableViewState = {
@@ -88,6 +90,7 @@ export type TableState = {
   rangeAnchorRowId: number | undefined;
   gridSearch: GridSearchState;
   mobileEditor: MobileEditorState;
+  columnWidths: Record<string, number>;
 };
 
 

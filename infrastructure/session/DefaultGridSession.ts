@@ -256,16 +256,21 @@ export class DefaultGridSession implements GridSession {
   }
 
   getVisibleRange(totalRows?: number): VisibleRange {
-    const count =
-      totalRows ??
-      this.deps.engine.getSnapShot('active')?.rows?.length ??
-      0;
+    const count = totalRows ?? this.deps.engine.getUiRowCount();
     return ViewportCalculator.calculate(count, this.viewport);
   }
 
   projectVisibleRows<T>(rows: readonly T[], totalRows?: number): T[] {
     const range = this.getVisibleRange(totalRows ?? rows.length);
     return ViewportCalculator.projectRows(rows, range);
+  }
+
+  getUiRowCount(): number {
+    return this.deps.engine.getUiRowCount();
+  }
+
+  projectVisibleUiRows(): NonNullable<ReturnType<TableEngine['getRowView']>>[] {
+    return this.deps.engine.projectVisibleUiRows(this.getVisibleRange());
   }
 
   private notifyViewportListeners(): void {

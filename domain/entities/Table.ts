@@ -136,6 +136,8 @@ export class Table {
         fieldCollection: targetCollectionKey,
         // Prefer explicit hidden from caller; otherwise keep persisted visibility.
         hidden: col.hidden ?? existing?.hidden ?? false,
+        // PR-61: keep user/domain order across host schema refresh.
+        order: existing?.order ?? col.order,
       };
       const targetCollection = this.collection.get(targetCollectionKey);
       if (targetCollection) {
@@ -665,16 +667,24 @@ export class Table {
   }
 
   reorderColumns(sourceIndex: number, destIndex: number): ColumnReordered {
-    // Reorders columns within the currently active Collection only.
+    // Reorder in display order (same as getActiveCollectionColumns), then
+    // rewrite `order` so a later host setColumns does not hide the move.
     const activeCollection = this.getActiveCollection();
     const colsMap = activeCollection.getColumns();
-    const colsArray = Array.from(colsMap.values());
+    const colsArray = Array.from(colsMap.values()).sort(
+      (a, b) => (a.order ?? 0) - (b.order ?? 0),
+    );
     const [moved] = colsArray.splice(sourceIndex, 1);
+    if (!moved) {
+      return new ColumnReordered(sourceIndex, destIndex);
+    }
     colsArray.splice(destIndex, 0, moved);
 
     colsMap.clear();
-    for (const c of colsArray) {
-      colsMap.set(c.fieldName, c);
+    for (let i = 0; i < colsArray.length; i += 1) {
+      const col = colsArray[i];
+      if (!col) continue;
+      colsMap.set(col.fieldName, { ...col, order: i });
     }
 
     return new ColumnReordered(sourceIndex, destIndex);

@@ -26,7 +26,7 @@ export function ERPTableBody({
   );
 
   return (
-    <tbody className="w-full min-w-0 overflow-x-auto">
+    <tbody className="w-full min-w-0 overflow-x-auto" role="rowgroup">
       {sortedRows.map((row, index) => (
         <ERPTableRow
           key={row.id}

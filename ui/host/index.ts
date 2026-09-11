@@ -1,4 +1,12 @@
-export { ERPTableHostProvider, useERPTableHost, useTranslations, useLocale, useDirection } from './ERPTableHost';
+export {
+  ERPTableHostProvider,
+  useERPTableHost,
+  useERPTableTheme,
+  useThemePortalStyle,
+  useTranslations,
+  useLocale,
+  useDirection,
+} from './ERPTableHost';
 export { useMediaQuery } from './useMediaQuery';
 export { useRemoteQuery } from './useRemoteQuery';
 export { showErrorToast, showSuccessToast, useHostToast } from './toast';

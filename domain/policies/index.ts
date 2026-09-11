@@ -9,5 +9,6 @@ export interface PermissionPolicy {
   canCopyRow?: (input: { actor: Actor;rowId: number; }) => boolean;
   canDeleteRow?: (input: { actor: Actor; rowId: number; }) => boolean;
   canReorderRow?: (input: { actor: Actor; rowId: number; }) => boolean;
+  canReorderColumn?: (input: { actor: Actor }) => boolean;
 }
 

@@ -51,6 +51,8 @@ export type UseERPTableResult =
     getViewport: GridSession['getViewport'];
     getVisibleRange: GridSession['getVisibleRange'];
     projectVisibleRows: GridSession['projectVisibleRows'];
+    getUiRowCount: GridSession['getUiRowCount'];
+    projectVisibleUiRows: GridSession['projectVisibleUiRows'];
     changeViewport: (input: {
       scrollOffset: number;
       viewportSize?: number;
@@ -179,9 +181,11 @@ export function useERPTable(
     subscribeSelected: ((selector, listener, isEqual) =>
       controller.subscribeSelected(selector, listener, isEqual)) as GridSession['subscribeSelected'],
     getViewport: () => session.getViewport(),
-    getVisibleRange: (totalRows: number) => session.getVisibleRange(totalRows),
+    getVisibleRange: (totalRows?: number) => session.getVisibleRange(totalRows),
     projectVisibleRows: <T,>(rows: T[], totalRows?: number) =>
       session.projectVisibleRows(rows, totalRows),
+    getUiRowCount: () => session.getUiRowCount(),
+    projectVisibleUiRows: () => session.projectVisibleUiRows(),
     changeViewport: (input: {
       scrollOffset: number;
       viewportSize?: number;

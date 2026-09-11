@@ -46,6 +46,9 @@ const expectedDts = [
   'PdfExportPlugin',
   'UITableController',
   'RowStateEnum',
+  'GridTheme',
+  'themeErp',
+  'themeErpDark',
 ];
 const missingDts = expectedDts.filter((name) => !dts.includes(name));
 if (missingDts.length) {

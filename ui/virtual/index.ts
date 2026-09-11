@@ -4,6 +4,7 @@ export { useVirtualWindow } from './useVirtualWindow';
 export type { UseVirtualWindowResult } from './useVirtualWindow';
 export {
   buildVirtualWindow,
+  buildVirtualWindowFromSparse,
   viewportFromScroll,
   virtualWindowKey,
 } from './virtualWindow';

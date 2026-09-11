@@ -1,13 +1,20 @@
 // index.tsx – نقطه خروجی کامپوننت
 
 export { ERPTable } from './ui';
-export { CellRenderer } from './ui/cellRenderer';
+export { CellRenderer, resolveCustomCellNode, resolveBoundCellNode, resolveRegisteredCellNode } from './ui/cellRenderer';
+export type { CellRenderContext, CellComponent, CellComponentMap } from './ui/cellRenderer';
+export { DEFAULT_CELL_COMPONENTS, mergeCellComponents, TextAreaCell } from './ui/cellRenderer';
+export { shouldSkipGridNavigation } from './ui/keyboard/skipGridNavigation';
+export { GridTheme, themeErp, themeErpDark } from './ui/theme';
+export type { ThemeCssVars, ThemeParams } from './ui/theme';
+export { useERPTableTheme } from './ui/host';
 export { UITableController } from './infrastructure/ui/UITableController';
 export type { UIRow, IMultiSelectConfig } from './ui/type';
 export type { ERPTableProps } from './ui';
 export type { ItemType, TableSnapShot } from './engine/type';
 export { RowStateEnum } from './domain/value-objects';
 export { FetchRemoteApi } from './infrastructure/Repositories/fetchRemoteApi';
+export { NoopRemoteApi } from './infrastructure/Repositories/noopRemoteApi';
 export { TableEngine } from './engine/tableEngine';
 export { VirtualList, useVirtualWindow, buildVirtualWindow } from './ui/virtual';
 export type { VirtualListProps, UseVirtualWindowResult, VirtualWindowModel } from './ui/virtual';

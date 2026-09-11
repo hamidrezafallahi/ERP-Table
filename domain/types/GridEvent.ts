@@ -35,6 +35,10 @@ export interface RowReorderedPayload {
   readonly sourceIndex: number;
   readonly destIndex: number;
 }
+export interface ColumnReorderedPayload {
+  readonly sourceIndex: number;
+  readonly destIndex: number;
+}
 export interface RowDescriptionSavedPayload {
   readonly rowId: number;
   readonly description: boolean;
@@ -116,6 +120,7 @@ export type RowAddedGridEvent = GridEvent<'ROW_ADDED' | 'NEW_ROW_ADDED', RowAdde
 export type RowDeletedGridEvent = GridEvent<'ROW_DELETED' | 'NEW_ROW_REMOVED', RowDeletedPayload>;
 export type RowRestoredGridEvent = GridEvent<'ROW_RESTORED', RowRestoredPayload>;
 export type RowReorderedGridEvent = GridEvent<'ROW_REORDERED', RowReorderedPayload>;
+export type ColumnReorderedGridEvent = GridEvent<'COLUMN_REORDERED', ColumnReorderedPayload>;
 export type PageChangedGridEvent = GridEvent<'PAGE_CHANGED', PageChangedPayload>;
 export type PageSizeChangedGridEvent = GridEvent<'PAGE_SIZE_CHANGED', PageSizeChangedPayload>;
 export type ViewportChangedGridEvent = GridEvent<'VIEWPORT_CHANGED', ViewportChangedPayload>;

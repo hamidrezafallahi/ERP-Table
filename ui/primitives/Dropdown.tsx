@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { useThemePortalStyle } from '../host';
+
 export type DropdownItem = {
   key?: string;
   label?: React.ReactNode;
@@ -30,6 +32,11 @@ export function CustomDropdownButton({
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLDivElement>(null);
+  const menuStyle = useThemePortalStyle({
+    position: 'fixed',
+    top: pos.top,
+    left: pos.left,
+  });
 
   useEffect(() => {
     if (!open || !triggerRef.current) return;
@@ -66,7 +73,7 @@ export function CustomDropdownButton({
         ? createPortal(
             <div
               className={`erp-table-dropdown ${dropdownClassName ?? ''}`}
-              style={{ top: pos.top, left: pos.left }}
+              style={menuStyle}
             >
               {items.map((item, index) => {
                 if (item.type === 'divider') {

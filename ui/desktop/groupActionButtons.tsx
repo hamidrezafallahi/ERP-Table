@@ -21,6 +21,7 @@ import { exportActiveCollectionToExcel } from '../../infrastructure/excel/export
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { GridSearchControl } from '../gridSearch/GridSearchControl';
 import MultiselectList from '../multiSelectList';
+import { ThemeToggleButton } from '../theme/ThemeToggleButton';
 import { IMultiSelectConfig } from '../type';
 
 interface GroupActionButtonsProps {
@@ -143,6 +144,8 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
         <>
           <CustomTooltip title={t("general.chooseFromList")}>
             <button
+              type="button"
+              data-erp-multiselect
               onClick={() => {
                 setModalIsOpen(true);
               }}
@@ -199,6 +202,8 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
       </CustomTooltip>
 
       <GridSearchControl controller={controller} />
+
+      <ThemeToggleButton />
 
       <span className="px-2 text-black-black6 text-xs">
         {t("general.selected")} {count.toLocaleString(direction === 'rtl' ? 'fa-IR' : 'en-US')}

@@ -20,7 +20,6 @@ function createServiceWithStore() {
     duplicateRow: makeMockHandler(null),
     deleteRow: makeMockHandler(null),
     reorderRow: makeMockHandler(null),
-    setUnitLevel: makeMockHandler([]),
     setPageSize: makeMockHandler([]),
     setPage: makeMockHandler(pageChangedEvent),
     setActiveCollection: makeMockHandler([]),
@@ -38,7 +37,6 @@ function createServiceWithStore() {
     handlers.duplicateRow as any,
     handlers.deleteRow as any,
     handlers.reorderRow as any,
-    handlers.setUnitLevel as any,
     handlers.setPageSize as any,
     handlers.setPage as any,
     handlers.setActiveCollection as any,
@@ -142,7 +140,6 @@ describe('TableAppService dual-write', () => {
       makeMockHandler([]) as any,
       makeMockHandler([]) as any,
       makeMockHandler([]) as any,
-      makeMockHandler([]) as any,
     );
 
     const result = await service.execute(
@@ -169,5 +166,47 @@ describe('TableAppService dual-write', () => {
     expect(events).toHaveLength(2);
     expect(events[0].type).toBe('CELL_CHANGED');
     expect(events[1].type).toBe('PAGE_CHANGED');
+  });
+
+  it('writes COLUMN_REORDERED when the handler is configured', async () => {
+    const store = new InMemoryEventStore();
+    const reorderColumn = makeMockHandler([
+      { type: 'COLUMN_REORDERED', tableId: 't1', sourceIndex: 0, destIndex: 1 },
+    ]);
+    const service = new TableAppService(
+      makeMockHandler([]) as any,
+      makeMockHandler([]) as any,
+      makeMockHandler([]) as any,
+      makeMockHandler(null) as any,
+      makeMockHandler(null) as any,
+      makeMockHandler(null) as any,
+      makeMockHandler(null) as any,
+      makeMockHandler(null) as any,
+      makeMockHandler([]) as any,
+      makeMockHandler([]) as any,
+      makeMockHandler([]) as any,
+      makeMockHandler([]) as any,
+      makeMockHandler([]) as any,
+      makeMockHandler([]) as any,
+      undefined,
+      undefined,
+      reorderColumn as any,
+    );
+    service.setEventStore(store);
+
+    await service.execute(
+      {
+        type: 'COLUMN_REORDERED',
+        store: 's1',
+        tableKey: 't1',
+        sourceIndex: 0,
+        destIndex: 1,
+      } as any,
+      {} as any,
+    );
+
+    const events = await store.read('table:t1');
+    expect(events).toHaveLength(1);
+    expect(events[0].type).toBe('COLUMN_REORDERED');
   });
 });

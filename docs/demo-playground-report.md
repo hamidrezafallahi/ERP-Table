@@ -13,7 +13,7 @@ Playground قبلاً فقط VirtualList + undo/add/export را نشان می‌
 
 | # | قابلیت | دکمه / کنترل در دمو | وضعیت |
 |---|--------|---------------------|--------|
-| 1 | روی‌هم‌افتادگی سلول (sticky) | **روی‌هم‌افتادگی سلول** | پیاده در دمو |
+| 1 | روی‌هم‌افتادگی سلول (sticky) | — (حذف toggle دمو) | **محصول PR-59:** pin ستون `index` |
 | 2 | DatePicker ماسک‌دار جلالی | ستون Date | `react-persian-range-picker` · `showMask` |
 | 3 | Drag & drop ردیف | دستهٔ **⋮⋮** | `ROW_REORDERED` |
 | 4 | اکشن سمپل هر سطر | **کپی / حذف / +** | ViewIntent |
@@ -27,9 +27,9 @@ Playground قبلاً فقط VirtualList + undo/add/export را نشان می‌
 
 ### 1. روی‌هم‌افتادگی سلول‌ها
 
-- در دمو با ستون‌های sticky (Drag / ID / Item) و اسکرول افقی شبیه‌سازی شده است.
-- با روشن بودن toggle، جدول از اسکرول یکپارچه استفاده می‌کند تا sticky با VirtualList تداخل نکند؛ هنگام اسکرول افقی ستون‌های ثابت روی بقیه می‌افتند.
-- **نکته برای توسعه بعدی:** این رفتار UI دمو است؛ هنوز API دامنه‌ای merge/rowSpan/colSpan برای «روی‌هم‌افتادگی سلول» در هسته وجود ندارد. اگر محصول نیاز به merge واقعی دارد، باید به‌عنوان feature جدا در domain/UI میزبان تعریف شود.
+- **PR-59:** پین افقی ستون `index` در محصول (`ERPTable` / `LiveGridPreview`) است، نه CSS دمو. D10: فقط `index`.
+- دکمهٔ قدیمی **Sticky IndexCol** از playground سفارشی حذف شد تا با API محصول دو رفتار موازی نباشد.
+- merge/rowSpan/colSpan دامنه هنوز وجود ندارد؛ اگر محصول merge واقعی بخواهد، RFC جدا است.
 
 ### 2. DatePicker ماسک‌دار (`react-persian-range-picker`)
 
@@ -43,7 +43,7 @@ Playground قبلاً فقط VirtualList + undo/add/export را نشان می‌
 
 - دستهٔ drag در ابتدای هر سطر؛ drop قبل/بعد با خط راهنما.
 - Dispatch: `engine.dispatch({ type: 'ROW_REORDERED', draggedRowId, droppedRowId, position })`
-- **توسعه بعدی:** column reorder UI هنوز در دمو نیست (`COLUMN_REORDERED` در دامنه هست).
+- ستون: درگ هدر دسکتاپ در `ERPTable` / `LiveGridPreview` (`COLUMN_REORDERED`). ستون `index` جابه‌جا نمی‌شود.
 
 ### 4. اکشن‌های سمپل سطر (الگوی voucherTemplate / IndexCol)
 
@@ -104,8 +104,8 @@ Playground قبلاً فقط VirtualList + undo/add/export را نشان می‌
 
 ## Backlog پیشنهادی (توسعه بعدی)
 
-1. API رسمی cell overlap / sticky columns در کتابخانه (نه فقط CSS دمو).
+1. ~~API رسمی sticky ستون index~~ — انجام شد در PR-59 (D10: فقط `index`).
 2. Peer optional برای Persian DatePicker در CellRenderer.
-3. Column DnD UI.
+3. ~~Column DnD UI~~ — انجام شد در PR-61 (هدر دسکتاپ؛ کیبورد Phase 12).
 4. Reveal match در VirtualList با `CHANGE_VIEWPORT`.
 5. هم‌ترازی کامل chrome دمو با `ERPTable` میزبان بدون duplicate logic.

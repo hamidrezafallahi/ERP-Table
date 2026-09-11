@@ -1,8 +1,11 @@
 import React, { useMemo } from 'react';
 
 import { ColumnSchema } from '../../bootstrap/type';
+import { overlayStoredColumnWidth } from '../../engine/columnWidth';
 import { RowStateEnum } from '../../domain/value-objects';
 import { UITableController } from '../../infrastructure/ui/UITableController';
+import { ariaColIndex, ariaDataRowIndex } from '../a11y/gridRoles';
+import { indexPinClassName, indexPinDataAttr } from '../columnPin';
 import { CellRenderer } from '../cellRenderer';
 import { UIRow } from '../type';
 import { MobileIndexCol } from './MobileIndexCol';
@@ -28,6 +31,7 @@ function MobileTableRowComponent({
   isActive: isActiveRow,
   isCut,
 }: MobileTableRowProps) {
+  const columnWidths = controller.getViewState()?.columnWidths;
   const visibleColumns = columns.filter(
     (c: ColumnSchema) => !c.hidden,
   );
@@ -56,7 +60,13 @@ function MobileTableRowComponent({
   }, [isActiveRow, isSelectedRow, isDeleted, isCut]);
 
   return (
-    <tr className={rowClass} data-rowid={row.id} onClick={handleRowClick}>
+    <tr
+      role="row"
+      aria-rowindex={ariaDataRowIndex(index)}
+      className={rowClass}
+      data-rowid={row.id}
+      onClick={handleRowClick}
+    >
       {visibleColumns.map((c: ColumnSchema, idx: number) => {
         const meta: ColumnSchema = {
           ...c,
@@ -69,9 +79,13 @@ function MobileTableRowComponent({
         if (c.fieldName === "index") {
           return (
             <td
-              className="p-0 h-full"
+              className={`p-0 h-full ${indexPinClassName(c)}`}
               key={c.fieldName}
+              role="gridcell"
+              aria-colindex={ariaColIndex(idx)}
               data-columnid={c.fieldName}
+              data-erp-col-pin={indexPinDataAttr(c)}
+              style={overlayStoredColumnWidth(c, columnWidths, {})}
             >
               <MobileIndexCol
                 idx={index}
@@ -86,8 +100,11 @@ function MobileTableRowComponent({
         return (
           <td
             key={c.fieldName}
+            role="gridcell"
+            aria-colindex={ariaColIndex(idx)}
             className="p-0 h-full"
             data-columnid={c.fieldName}
+            style={overlayStoredColumnWidth(c, columnWidths, {})}
           >
             <CellRenderer
               idx={idx}

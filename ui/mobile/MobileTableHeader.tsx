@@ -2,8 +2,14 @@ import React, { ReactNode, useEffect, useState } from 'react';
 
 import { CustomDropdownButton, CustomCheckbox } from '../primitives';
 
+import { overlayStoredColumnWidth } from '../../engine/columnWidth';
 import { ValidationCallbackResult } from '../../engine/type';
 import { UITableController } from '../../infrastructure/ui/UITableController';
+import {
+  ARIA_HEADER_ROW_INDEX,
+  ariaColIndex,
+} from '../a11y/gridRoles';
+import { indexPinClassName, indexPinDataAttr } from '../columnPin';
 
 interface MobileTableHeaderProps {
   controller: UITableController;
@@ -75,7 +81,7 @@ export function MobileTableHeader({
   );
 
   return (
-    <thead className="top-0 right-0 left-0 z-20 sticky inset-0">
+    <thead className="top-0 z-20 sticky" role="rowgroup">
       {header}
       {!validationResult.valid && (
         <CustomDropdownButton
@@ -86,14 +92,24 @@ export function MobileTableHeader({
           <span className="bg-red-600 border rounded-full w-2 h-2"></span>
         </CustomDropdownButton>
       )}
-      <tr className="relative h-10 bg-gray-gray3 rounded-t-lg w-full">
-        {visibleColumns.map((col) => {
+      <tr
+        role="row"
+        aria-rowindex={ARIA_HEADER_ROW_INDEX}
+        className="relative h-10 bg-gray-gray3 rounded-t-lg w-full"
+      >
+        {visibleColumns.map((col, index) => {
           if (col.fieldType === "index") {
             return (
               <th
                 key={col.fieldName}
-                style={{ ...col.style, width: 120 }}
-                className={`px-2 text-xs border text-start whitespace-nowrap ${col.className || ""}`}
+                role="columnheader"
+                aria-colindex={ariaColIndex(index)}
+                style={{
+                  ...col.style,
+                  ...overlayStoredColumnWidth(col, table.columnWidths, { width: 120 }),
+                }}
+                className={`px-2 text-xs border text-start whitespace-nowrap ${indexPinClassName(col)} ${col.className || ""}`}
+                data-erp-col-pin={indexPinDataAttr(col)}
               >
                 <CustomCheckbox
                   checked={isSelectedActivePageRows}
@@ -107,7 +123,14 @@ export function MobileTableHeader({
           return (
             <th
               key={col.fieldName}
-              style={{ ...col.style, minWidth: col.minWidth }}
+              role="columnheader"
+              aria-colindex={ariaColIndex(index)}
+              style={{
+                ...col.style,
+                ...overlayStoredColumnWidth(col, table.columnWidths, {
+                  minWidth: col.minWidth,
+                }),
+              }}
               className={`px-2 text-xs border text-start min-w-24 ${col.className || ""}`}
             >
               {col.fieldCaption}

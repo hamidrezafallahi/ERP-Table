@@ -7,8 +7,11 @@ import { useTranslations } from '../host';
 import { NoData } from '../primitives';
 
 import { ColumnSchema } from '../../bootstrap/type';
+import { columnSizeStyle } from '../../engine/columnWidth';
 import { RowStateEnum } from '../../domain/value-objects';
 import { UITableController } from '../../infrastructure/ui/UITableController';
+import { ariaColIndex, ariaDataRowIndex } from '../a11y/gridRoles';
+import { indexPinClassName, indexPinDataAttr } from '../columnPin';
 import { CellRenderer } from '../cellRenderer';
 import { UIRow } from '../type';
 import { IndexCol } from './indexCol';
@@ -117,6 +120,8 @@ function ERPTableRowComponent({
   return (
     <>
       <tr
+        role="row"
+        aria-rowindex={ariaDataRowIndex(index)}
         className={rowClass}
         data-rowid={row.id}
         draggable
@@ -138,10 +143,13 @@ function ERPTableRowComponent({
           if (c.fieldName === "index" || c.fieldType === "index") {
             return (
               <td
-                className="p-0 h-full overflow-hidden border"
+                role="gridcell"
+                aria-colindex={ariaColIndex(idx)}
+                className={`p-0 h-full overflow-hidden border ${indexPinClassName(c)}`}
                 key={c.fieldName}
                 data-columnid={c.fieldName}
-                style={{ width: 168, minWidth: 168, maxWidth: 200 }}
+                data-erp-col-pin={indexPinDataAttr(c)}
+                style={columnSizeStyle(c, table.columnWidths)}
               >
                 <IndexCol
                   idx={index}
@@ -157,9 +165,11 @@ function ERPTableRowComponent({
           return (
             <td
               key={c.fieldName}
+              role="gridcell"
+              aria-colindex={ariaColIndex(idx)}
               className="p-0 h-full overflow-hidden border"
               data-columnid={c.fieldName}
-              style={{ minWidth: c.minWidth }}
+              style={columnSizeStyle(c, table.columnWidths)}
             >
               <CellRenderer
                 idx={idx}
@@ -177,8 +187,13 @@ function ERPTableRowComponent({
       </tr>
 
       {row.isExpanded && (
-        <tr>
-          <td colSpan={totalColSpan}>
+        <tr role="row">
+          <td
+            role="gridcell"
+            colSpan={totalColSpan}
+            aria-colindex={1}
+            aria-colspan={totalColSpan}
+          >
             {MoreDetailComponent ? (
               <MoreDetailComponent data={row} />
             ) : (

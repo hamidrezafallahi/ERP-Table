@@ -18,8 +18,8 @@ Source of truth in code: `application/events/eventCatalog.ts`.
 | `ROW_RESTORED` | row | no | Restore soft-deleted / modified |
 | `ROW_REORDERED` | row | no | Index reorder |
 | `ROW_DESCRIPTION_SAVED` | row | no | Description flag |
-| `COLUMN_REORDERED` | column | no | Column order |
-| `UNIT_COLUMN_ADDED` | column | no | Dynamic unit column |
+| `COLUMN_REORDERED` | column | no | Column order — emitted by `Table.reorderColumns` (header drag or command). |
+| `UNIT_COLUMN_ADDED` | column | no | Reserved; no product emitter (`SET_UNIT_LEVEL` stub removed in PR-48) |
 | `PAGE_CHANGED` | view | no | View stream |
 | `PAGE_SIZE_CHANGED` | view | no | View stream |
 | `VIEWPORT_CHANGED` | view | no | Virtual scroll window |

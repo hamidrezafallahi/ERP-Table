@@ -27,6 +27,8 @@ export const FA_MESSAGES: ERPTableMessages = {
   'general.save': 'ذخیره',
   'general.notActive': 'غیرفعال',
   'general.add': 'افزودن',
+  'general.themeDark': 'تم تیره',
+  'general.themeLight': 'تم روشن',
 };
 
 export const EN_MESSAGES: ERPTableMessages = {
@@ -54,6 +56,8 @@ export const EN_MESSAGES: ERPTableMessages = {
   'general.save': 'Save',
   'general.notActive': 'Inactive',
   'general.add': 'Add',
+  'general.themeDark': 'Dark theme',
+  'general.themeLight': 'Light theme',
 };
 
 export function translate(

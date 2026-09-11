@@ -277,10 +277,6 @@ export interface ChangePageSizeCommand extends BaseTableCommand {
 
 /* ---------- Other ---------- */
 
-export interface ChangeUnitLevelCommand extends BaseTableCommand {
-  readonly type: 'SET_UNIT_LEVEL';
-  readonly level: number;
-}
 export interface ApplyDynamicProjectionCommand extends BaseTableCommand {
   readonly type: 'APPLY_DYNAMIC_PROJECTION';
   readonly tableKey: string;
@@ -303,6 +299,13 @@ export interface SetMobileEditorCommand {
   readonly editor: MobileEditorState;
 }
 
+export interface ResizeColumnCommand {
+  readonly type: 'RESIZE_COLUMN';
+  readonly tableKey: string;
+  readonly columnId: string;
+  readonly width: number;
+}
+
 /* ---------- Union ---------- */
 
 export type EngineTableCommand =
@@ -310,7 +313,6 @@ export type EngineTableCommand =
   | SelectRangeCommand
   | ToggleRowExpandCommand
   | SelectRowCommand
-  | ColumnReorderedCommand
   | CollapseAllRowsCommand
   | RegisterTableCommand
   | DisposeTableCommand
@@ -318,6 +320,7 @@ export type EngineTableCommand =
   | ToggleRowSelectionCommand
   | SelectAllRowsCommand
   | SelectPageRowsCommand
+  | ClearRowSelectionCommand
   | ActiveCellCommand
   | ActiveRowCommand
   | MoveActiveCellCommand
@@ -328,7 +331,8 @@ export type EngineTableCommand =
   | ExpandRowCommand
   | ChangeTableActionCommand
   | SetGridSearchCommand
-  | SetMobileEditorCommand;
+  | SetMobileEditorCommand
+  | ResizeColumnCommand;
 
 export type ApplicationTableCommand =
   | ChangeCellValueCommand
@@ -344,10 +348,10 @@ export type ApplicationTableCommand =
   | SetActiveCollectionCommand
   | ResetTableCommand
   | RowReorderedCommand
+  | ColumnReorderedCommand
   | ChangePageCommand
   | ChangePageSizeCommand
-  | ApplyDynamicProjectionCommand
-  | ChangeUnitLevelCommand;
+  | ApplyDynamicProjectionCommand;
 
 export type TableCommand =
   | EngineTableCommand
@@ -367,10 +371,10 @@ const applicationCommandTypes = new Set<TableCommand['type']>([
   'SET_ACTIVE_COLLECTION',
   'TABLE_RESET',
   'ROW_REORDERED',
+  'COLUMN_REORDERED',
   'CHANGE_PAGE',
   'CHANGE_PAGE_SIZE',
   'APPLY_DYNAMIC_PROJECTION',
-  'SET_UNIT_LEVEL',
 ]);
 
 export function isApplicationTableCommand(

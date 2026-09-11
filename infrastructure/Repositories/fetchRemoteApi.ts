@@ -37,9 +37,11 @@ function joinUrl(baseUrl: string, endpoint: string): string {
 }
 
 /**
- * Browser RemoteApi used by ERP after npm install.
- * Reads auth cookie `_auth` and redux-persist `persist:arianERP` the same way
- * the ERP FetchRemoteApi did, then POSTs JSON (relative URLs work on the ERP host).
+ * Host-injected RemoteApi for arianERP.
+ * Not the package default — pass `remoteApi={new FetchRemoteApi()}` from the ERP host.
+ * Reads auth cookie `_auth` and redux-persist `persist:arianERP`, then POSTs JSON
+ * (relative URLs work on the ERP host).
+ * See `docs/host-arian-erp.md`.
  */
 export class FetchRemoteApi implements RemoteApi {
   constructor(
