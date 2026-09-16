@@ -15,7 +15,7 @@ export const EVENT_CATALOG: readonly EventCatalogEntry[] = [
     type: 'CELL_CHANGED',
     category: 'cell',
     undoable: true,
-    description: 'Cell value changed; payload includes previousValue and newValue.',
+    description: 'Cell value changed; payload includes previousValue and newValue. Host React: onCellValueChanged + onRowValueChanged (PR-85).',
   },
   {
     type: 'CELL_DISPLAY_CHANGED',
@@ -77,6 +77,13 @@ export const EVENT_CATALOG: readonly EventCatalogEntry[] = [
     category: 'column',
     undoable: false,
     description: 'Column order changed via Table.reorderColumns (header drag or command).',
+  },
+  {
+    type: 'COLUMN_STATE_CHANGED',
+    category: 'column',
+    undoable: false,
+    description:
+      'Column layout snapshot (width, order, pin, hide, sort) after user/API change (PR-115).',
   },
   {
     type: 'UNIT_COLUMN_ADDED',
@@ -161,6 +168,18 @@ export const EVENT_CATALOG: readonly EventCatalogEntry[] = [
     category: 'plugin',
     undoable: false,
     description: 'PDF plugin failed to export.',
+  },
+  {
+    type: 'CSV_EXPORT_COMPLETED',
+    category: 'plugin',
+    undoable: false,
+    description: 'CSV plugin finished building a .csv blob (PR-122).',
+  },
+  {
+    type: 'CSV_EXPORT_FAILED',
+    category: 'plugin',
+    undoable: false,
+    description: 'CSV plugin failed to export.',
   },
   {
     type: 'IMPORT_REQUESTED',

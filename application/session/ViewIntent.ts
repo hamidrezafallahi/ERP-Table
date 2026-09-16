@@ -1,4 +1,5 @@
 import type { TableActions } from '../../domain/value-objects';
+import type { ArrowDirection } from '../../engine/selection/cellRange';
 import type { GridSearchState, MobileEditorState } from '../../engine/type';
 
 /**
@@ -40,6 +41,11 @@ export type ViewIntent =
       overscan?: number;
     }
   | { type: 'UNDO' }
-  | { type: 'REDO' };
+  | { type: 'REDO' }
+  | { type: 'EXTEND_CELL_RANGE'; direction: ArrowDirection }
+  | { type: 'EXTEND_CELL_RANGE_TO_EDGE'; direction: ArrowDirection }
+  | { type: 'JUMP_ACTIVE_CELL_ROW_EDGE'; edge: 'start' | 'end' }
+  | { type: 'JUMP_ACTIVE_CELL_GRID'; corner: 'first' | 'last' }
+  | { type: 'SELECT_ALL_CELLS' };
 
 export type ViewIntentDispatcher = (intent: ViewIntent) => Promise<void>;

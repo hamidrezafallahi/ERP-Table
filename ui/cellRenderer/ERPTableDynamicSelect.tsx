@@ -4,19 +4,34 @@ import React, { FC, useEffect, useMemo, useState } from 'react';
 
 import { useRemoteQuery, useTranslations } from '../host';
 import { Reload, Select } from '../primitives';
+import type { SelectOption as UiSelectOption } from '../primitives/Select';
 
 type DependOn = { fieldName: string; value: unknown };
-type SelectOption = {
+type RemoteSelectOption = {
   _SelectId: string | number;
   _SelectValue?: string;
   _SelectDisplay?: string;
+};
+type MappedSelectOption = {
+  key: string | number;
+  value: string | number;
+  label?: string;
+  title?: string;
+  option: RemoteSelectOption;
+};
+type DynamicSelectSource = {
+  endpoint?: string;
+  repoViewId?: string;
+  dependOn?: DependOn | DependOn[];
+  dependsOn?: DependOn | DependOn[] | string[];
+  [key: string]: unknown;
 };
 
 export interface ERPTableDynamicSelectProps {
   className?: string;
   value?: unknown;
   onChange?: (value: unknown, option?: unknown) => void;
-  dynamicValue: any;
+  dynamicValue?: DynamicSelectSource;
   showId?: boolean;
   infinite?: boolean;
   onSearchPhrase?: (
@@ -25,16 +40,16 @@ export interface ERPTableDynamicSelectProps {
     option?: unknown,
   ) => void;
   showSearch?: boolean;
-  onOptionsChange?: (options: any[]) => void;
+  onOptionsChange?: (options: MappedSelectOption[]) => void;
   labelValue?: 'selectDisplay' | 'selectValue';
   selectFirstDefault?: boolean;
-  displayFormatter?: (option: SelectOption) => string;
+  displayFormatter?: (option: RemoteSelectOption) => string;
   disabled?: boolean;
   showRefetch?: boolean;
   noCache?: boolean;
-  filterOptions?: (option: any) => boolean;
-  filterOption?: (input: string, option: any) => boolean;
-  options?: any[];
+  filterOptions?: (option: MappedSelectOption) => boolean;
+  filterOption?: (input: string, option: UiSelectOption) => boolean;
+  options?: MappedSelectOption[];
   onClear?: () => void;
   onClick?: () => void;
   autoFocus?: boolean;
@@ -73,7 +88,7 @@ export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
   onSearch,
 }) => {
   const t = useTranslations();
-  const [options, setOptions] = useState<any[]>([]);
+  const [options, setOptions] = useState<MappedSelectOption[]>([]);
   const [searchPhrase, setSearchPhrase] = useState<string | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const pageRecordCount = 5000;
@@ -86,9 +101,24 @@ export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
     ...bodyRequest
   } = dynamicValue ?? {};
 
-  const getOptionLabel = (option: SelectOption) => {
+  const getOptionLabel = (option: RemoteSelectOption) => {
     if (displayFormatter) return displayFormatter(option);
     return option._SelectDisplay;
+  };
+
+  const asDependOn = (
+    value: unknown,
+  ): DependOn | DependOn[] | undefined => {
+    if (!value || typeof value === 'string') return undefined;
+    if (Array.isArray(value)) {
+      if (value.length === 0) return [];
+      if (typeof value[0] === 'string') return undefined;
+      return value as DependOn[];
+    }
+    if (typeof value === 'object' && value !== null && 'fieldName' in value) {
+      return value as DependOn;
+    }
+    return undefined;
   };
 
   const hasDependValue = (dependency: DependOn | DependOn[] | undefined) => {
@@ -99,7 +129,7 @@ export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
     return dependency.value !== null && dependency.value !== undefined;
   };
 
-  const dependencySource = dependOn ?? dependsOn;
+  const dependencySource = asDependOn(dependOn ?? dependsOn);
   const dependencyBody = Array.isArray(dependencySource)
     ? Object.fromEntries(dependencySource.map((item: DependOn) => [item.fieldName, item.value]))
     : dependencySource
@@ -118,7 +148,7 @@ export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
     Object.entries(body).filter(([, v]) => v !== null),
   );
 
-  const { data, isFetching, refetch } = useRemoteQuery<SelectOption[]>({
+  const { data, isFetching, refetch } = useRemoteQuery<RemoteSelectOption[]>({
     url: endpoint,
     body: existBody,
     skip: dependencySource ? !hasDependValue(dependencySource) : false,
@@ -134,14 +164,17 @@ export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
 
   useEffect(() => {
     if (!data?.Data) return;
-    const mapOption = (option: SelectOption) => ({
+    const mapOption = (option: RemoteSelectOption): MappedSelectOption => ({
       key: option._SelectId,
       value: option._SelectId,
-      label: labelValue === 'selectValue' ? option._SelectValue : getOptionLabel(option),
+      label:
+        (labelValue === 'selectValue'
+          ? option._SelectValue
+          : getOptionLabel(option)) ?? undefined,
       title: getOptionLabel(option),
       option,
     });
-    const dynamicOptions = (data.Data as SelectOption[]).map(mapOption);
+    const dynamicOptions = (data.Data ?? []).map(mapOption);
     if (infinite) {
       if (pageNumber === 1) setOptions(dynamicOptions);
       else setOptions((prev) => [...prev, ...dynamicOptions]);

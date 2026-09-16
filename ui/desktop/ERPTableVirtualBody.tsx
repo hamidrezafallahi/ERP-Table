@@ -10,9 +10,15 @@ import type { GridSession } from '../../application/session/GridSession';
 import { columnSizeStyle } from '../../engine/columnWidth';
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import type { UIRow } from '../type';
-import { indexPinClassName, indexPinDataAttr } from '../columnPin';
+import { columnPinCellProps } from '../columnPin';
 import { useVirtualWindow } from '../virtual/useVirtualWindow';
+import { useColumnWindowOrAll } from '../virtual/columnWindow';
+import { ColumnWindowCells } from '../virtual/ColumnWindowCells';
 import { ERPTableRow } from './eRPTableRow';
+
+const ERPTableGroupRow = React.lazy(() =>
+  import('./ERPTableGroupRow').then((m) => ({ default: m.ERPTableGroupRow })),
+);
 
 const DEFAULT_ROW_HEIGHT = 40;
 
@@ -25,6 +31,8 @@ type Props = {
   rowHeight?: number;
   overscan?: number;
   moreDetailComponent?: React.ComponentType<{ data: unknown }>;
+  /** Shifts aria-rowindex when pinned-top rows are present (PR-116). */
+  pinnedTopCount?: number;
 };
 
 /**
@@ -40,6 +48,7 @@ export function ERPTableVirtualBody({
   rowHeight = DEFAULT_ROW_HEIGHT,
   overscan = 2,
   moreDetailComponent: MoreDetailComponent,
+  pinnedTopCount = 0,
 }: Props) {
   const table = controller.getViewState();
   const dragRowId = useRef<number | null>(null);
@@ -83,9 +92,13 @@ export function ERPTableVirtualBody({
     return () => el.removeEventListener('scroll', handleScroll);
   }, [scrollParentRef, onScroll]);
 
+  const colWindow = useColumnWindowOrAll(
+    table?.columns ?? [],
+    table?.columnWidths,
+  );
+
   if (!table) return null;
 
-  const visibleColumns = (table.columns ?? []).filter((c) => !c.hidden);
   const spacerStyle = {
     height: 0,
     padding: 0,
@@ -97,19 +110,32 @@ export function ERPTableVirtualBody({
     if (height <= 0) return null;
     return (
       <tr aria-hidden role="presentation" data-erp-virtual-spacer={kind}>
-        {visibleColumns.map((c) => (
-          <td
-            key={c.fieldName}
-            role="presentation"
-            className={indexPinClassName(c)}
-            data-erp-col-pin={indexPinDataAttr(c)}
-            style={{
-              ...spacerStyle,
-              height,
-              ...columnSizeStyle(c, table.columnWidths),
-            }}
-          />
-        ))}
+        <ColumnWindowCells
+          window={colWindow}
+          spacerElement="td"
+          spacerRole="presentation"
+          spacerStyle={{ ...spacerStyle, height }}
+          renderColumn={(c) => {
+            const pin = columnPinCellProps(
+              c,
+              colWindow.startPinOffsets,
+              colWindow.endPinOffsets,
+            );
+            return (
+            <td
+              key={c.fieldName}
+              role="presentation"
+              className={pin.className}
+              data-erp-col-pin={pin['data-erp-col-pin']}
+              style={{
+                ...spacerStyle,
+                height,
+                ...columnSizeStyle(c, table.columnWidths, colWindow.layoutWidths),
+                ...pin.style,
+              }}
+            />
+          );}}
+        />
       </tr>
     );
   };
@@ -118,25 +144,43 @@ export function ERPTableVirtualBody({
     <tbody className="w-full min-w-0 overflow-x-auto" data-erp-virtual-body role="rowgroup">
       {renderSpacer('top', spacerTop)}
 
-      {visibleItems.map((row, i) => {
-        const absoluteIndex = absoluteIndices[i] ?? i;
-        return (
-          <ERPTableRow
-            key={row.id}
-            row={row}
-            stripeIndex={absoluteIndex}
-            index={absoluteIndex}
-            table={table}
-            controller={controller}
-            tableKey={tableKey}
-            draggedRowIdRef={dragRowId}
-            moreDetailComponent={MoreDetailComponent}
-            isSelected={!!table.selectedRows?.[row.id]}
-            isActive={!!controller.isActiveRow(row.id)}
-            isCut={!!controller.isCutRow(row.id)}
-          />
-        );
-      })}
+      <React.Suspense fallback={null}>
+        {visibleItems.map((row, i) => {
+          const absoluteIndex = absoluteIndices[i] ?? i;
+          if (row.rowKind === 'group') {
+            return (
+              <ERPTableGroupRow
+                key={row.id}
+                row={row}
+                index={absoluteIndex}
+                pinnedTopCount={pinnedTopCount}
+                table={table}
+                controller={controller}
+                tableKey={tableKey}
+                isSelected={!!table.selectedRows?.[row.id]}
+                isActive={!!controller.isActiveRow(row.id)}
+              />
+            );
+          }
+          return (
+            <ERPTableRow
+              key={row.id}
+              row={row}
+              stripeIndex={absoluteIndex}
+              index={absoluteIndex}
+              pinnedTopCount={pinnedTopCount}
+              table={table}
+              controller={controller}
+              tableKey={tableKey}
+              draggedRowIdRef={dragRowId}
+              moreDetailComponent={MoreDetailComponent}
+              isSelected={!!table.selectedRows?.[row.id]}
+              isActive={!!controller.isActiveRow(row.id)}
+              isCut={!!controller.isCutRow(row.id)}
+            />
+          );
+        })}
+      </React.Suspense>
 
       {renderSpacer('bottom', spacerBottom)}
     </tbody>

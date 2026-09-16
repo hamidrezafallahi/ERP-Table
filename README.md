@@ -18,11 +18,14 @@ A **Data Grid** for enterprise forms: voucher lines, money columns, Jalali date 
 ## Table of contents
 
 - [Features](#features)
+- [Performance](#performance)
 - [Install](#install)
 - [Quick start](#quick-start)
 - [API overview](#api-overview)
 - [Demo](#demo)
 - [فارسی](#فارسی)
+- [Changelog](#changelog)
+- [Contributing](#contributing)
 - [License](#license)
 
 ---
@@ -31,11 +34,24 @@ A **Data Grid** for enterprise forms: voucher lines, money columns, Jalali date 
 
 - **Grid** — published React chrome (pagination, row index/actions, Jalali date cells)
 - **RTL-native** layout and Shamsi / Jalali date cells (`react-persian-range-picker`)
-- **Cell keyboard navigation** — arrows, Tab, Enter between cells (clipboard paste from Excel is not implemented yet)
-- **VirtualList** — opt-in row window (`virtualization={true}` + session); desktop pagination is the default
+- **Cell keyboard navigation** — arrows, Tab, Enter, Home/End; **Ctrl+C/X/V** Excel clipboard round-trip; fill handle on range corner (numeric + Jalali series, one undo). See [`docs/keyboard.md`](docs/keyboard.md).
+- **VirtualList** — row window on by default (`session` present); pass `virtualization={false}` for pagination
 - **Event-sourced session** with IndexedDB and cell undo
 - **Excel / PDF plugins** on the view stream (domain aggregates stay untouched)
 - **TypeScript**, React **17 / 18 / 19**
+
+## Performance
+
+CI harness — see [docs/performance.md](./docs/performance.md):
+
+| Metric | Measured |
+|--------|----------|
+| Hydrate 100k rows (8 cols) | 1675 ms |
+| Scroll 1000 viewport steps | 156 ms |
+| 100 cell edits | 674 ms |
+| Sort (rebuild index) | 2014 ms |
+| Text filter | 403 ms |
+| Heap delta 100k × 20 cols | 215 MB |
 
 ---
 
@@ -51,19 +67,24 @@ pnpm add persian-data-grid
 
 **Peer dependencies:** `react` and `react-dom` (`^17` / `^18` / `^19`).
 
-Install does **not** connect to arianERP. Default `remoteApi` is `NoopRemoteApi`. ERP hosts must inject `FetchRemoteApi` — see [docs/host-arian-erp.md](./docs/host-arian-erp.md) (`_auth`, `persist:arianERP`, `Defaults`).
+Install does **not** connect to arianERP. Default `remoteApi` is `NoopRemoteApi`. ERP hosts must inject `FetchRemoteApi` from `persian-data-grid/adapters/arian-erp` — see [examples/host-arian-erp/host-arian-erp.md](./examples/host-arian-erp/host-arian-erp.md) (`_auth`, `persist:arianERP`, `Defaults`).
+
+Styles are **not** auto-injected. Import the CSS (recommended) or call `injectGridStyles()` once if the host has no CSS bundler:
 
 ```tsx
-import { ERPTable } from 'persian-data-grid';
+import { DataGrid } from 'persian-data-grid';
+import 'persian-data-grid/styles.css';
 
-<ERPTable
-  store="erp"
-  tableKey={pageId}
-  actor={actor}
-  columns={columnConfig}
-  rows={rows}
-  tableHeight={tableHeight}
-  onReady={setController}
+type Invoice = { id: string; title: string; amount: number; date: string };
+
+<DataGrid<Invoice>
+  rowData={invoices}
+  columnDefs={[
+    { field: 'title', headerName: 'شرح' },
+    { field: 'amount', type: 'price' },
+    { field: 'date', type: 'date' },
+  ]}
+  onCellValueChanged={(e) => save(e.data)}
 />
 ```
 
@@ -72,24 +93,21 @@ import { ERPTable } from 'persian-data-grid';
 ## Quick start
 
 ```tsx
-import { useState } from 'react';
-import { ERPTable, type UITableController } from 'persian-data-grid';
+import { DataGrid } from 'persian-data-grid';
+import 'persian-data-grid/styles.css';
 
-export function VoucherLines() {
-  const [controller, setController] = useState<UITableController | null>(null);
+type Invoice = { id: string; title: string; amount: number; date: string };
 
+export function InvoiceLines({ invoices }: { invoices: Invoice[] }) {
   return (
-    <ERPTable
-      store="erp"
-      tableKey="voucher-1"
-      actor={{ userId: 'u1', roles: ['admin'] }}
-      columns={columns}
-      rows={rows}
-      tableHeight={420}
-      recordPerPage={10}
-      tableTitle="اقلام سند"
-      locale="fa"
-      onReady={setController}
+    <DataGrid<Invoice>
+      rowData={invoices}
+      columnDefs={[
+        { field: 'title', headerName: 'شرح' },
+        { field: 'amount', type: 'price' },
+        { field: 'date', type: 'date' },
+      ]}
+      onCellValueChanged={(e) => save(e.data)}
     />
   );
 }
@@ -98,15 +116,13 @@ export function VoucherLines() {
 Headless composition (own UI + `VirtualList`):
 
 ```ts
-import { createERPTable, VirtualList } from 'persian-data-grid';
+import { createGrid, VirtualList } from 'persian-data-grid';
 
-const grid = await createERPTable({
-  store: 'erp',
-  tableKey: 'voucher-1',
-  actor: { userId: 'u1', roles: ['admin'] },
-  columns,
-  rows,
+const grid = createGrid({
+  columnDefs: [{ field: 'title', headerName: 'شرح' }],
+  rowData: invoices,
 });
+await grid.ready;
 ```
 
 ---
@@ -116,14 +132,16 @@ const grid = await createERPTable({
 | Export | Purpose |
 |--------|---------|
 | Grid | Drop-in React **grid** |
+| `injectGridStyles` | Explicit CSS inject when the host cannot `import` CSS |
 | Composition root | session, engine, plugins |
 | `VirtualList` | Virtualized row window |
 | `ExcelExportPlugin` / `ExcelImportPlugin` | xlsx |
 | `PdfExportPlugin` | pdf |
-| `UITableController` / `GridSession` | Imperative control |
+| `GridApi` / `apiRef` | Imperative control (PR-86). `UITableController` class is on `/headless`. |
 
-See [docs/public-api.md](./docs/public-api.md), [docs/getting-started.md](./docs/getting-started.md), [docs/cell-components.md](./docs/cell-components.md), [docs/components.md](./docs/components.md), [docs/host-arian-erp.md](./docs/host-arian-erp.md).
+See [docs/public-api.md](./docs/public-api.md), [docs/getting-started.md](./docs/getting-started.md), [docs/cell-components.md](./docs/cell-components.md), [docs/components.md](./docs/components.md), [examples/host-arian-erp/host-arian-erp.md](./examples/host-arian-erp/host-arian-erp.md).
 
+Product docs site (English source + فارسی, live demos, TypeDoc API): `yarn docs:dev` — build with `yarn docs:build` (also in CI).
 ---
 
 ## Demo
@@ -157,14 +175,17 @@ npm i persian-data-grid
 
 وابستگی‌های peer: `react` و `react-dom` (نسخه ۱۷، ۱۸ یا ۱۹).
 
-نصب به‌تنهایی به ERP وصل نمی‌شود. پیش‌فرض `NoopRemoteApi` است. میزبان arianERP باید `FetchRemoteApi` تزریق کند: [docs/host-arian-erp.md](./docs/host-arian-erp.md).
+نصب به‌تنهایی به ERP وصل نمی‌شود. پیش‌فرض `NoopRemoteApi` است. میزبان arianERP باید `FetchRemoteApi` را از `persian-data-grid/adapters/arian-erp` تزریق کند: [examples/host-arian-erp/host-arian-erp.md](./examples/host-arian-erp/host-arian-erp.md).
+
+استایل خودکار تزریق نمی‌شود. `import 'persian-data-grid/styles.css'` را اضافه کنید (یا برای هاست بدون bundler، `injectGridStyles()`).
 
 ### شروع سریع
 
 ```tsx
-import { ERPTable } from 'persian-data-grid';
+import { DataGrid } from 'persian-data-grid';
+import 'persian-data-grid/styles.css';
 
-<ERPTable
+<DataGrid
   store="erp"
   tableKey={pageId}
   actor={actor}
@@ -181,9 +202,19 @@ import { ERPTable } from 'persian-data-grid';
 
 ---
 
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) (Keep a Changelog). The next npm line is **0.6.0**.
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md). Security reports: [SECURITY.md](./SECURITY.md).
+
 ## License
 
-MIT © [Hamidreza Fallahi](https://github.com/hamidrezafallahi)
+MIT © [Hamidreza Fallahi](https://github.com/hamidrezafallahi) (`LICENSE` in the npm tarball).
+
+The optional Vazirmatn PDF font is SIL Open Font License 1.1 (`OFL.txt` in the tarball; banner on `persian-data-grid/plugins/pdf`).
 
 Repository: [github.com/hamidrezafallahi/ERP-Table](https://github.com/hamidrezafallahi/ERP-Table)  
 Issues: [GitHub Issues](https://github.com/hamidrezafallahi/ERP-Table/issues)  

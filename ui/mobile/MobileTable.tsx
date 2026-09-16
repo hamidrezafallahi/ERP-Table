@@ -13,6 +13,7 @@ import { jsonEqual, useControllerSelector } from '../hooks/useEngineSelector';
 import { useScrollToSearchMatch } from '../hooks/useScrollToSearchMatch';
 import { IMultiSelectConfig } from '../type';
 import { ariaGridRowCount, gridCellDomId } from '../a11y/gridRoles';
+import { GridLiveRegion } from '../a11y/GridLiveRegion';
 import { MobileActionButtons } from './MobileActionButtons';
 import { MobileLoadMoreButton } from './MobileLoadMoreButton';
 import { MobileRowFormModal } from './MobileRowFormModal';
@@ -20,6 +21,10 @@ import { MobileTableBody } from './MobileTableBody';
 import { MobileTableHeader } from './MobileTableHeader';
 import { useScrollAfterMobileAdd } from './useScrollAfterMobileAdd';
 import { scrollToTableEnd } from './scrollToTableEnd';
+import {
+  GridOverlays,
+  type GridOverlayComponent,
+} from '../overlays';
 
 export interface MobileTableProps {
   controller: UITableController;
@@ -29,6 +34,9 @@ export interface MobileTableProps {
   footer?: boolean | ReactNode;
   multiSelectConfig?: IMultiSelectConfig;
   pluginHost?: PluginHost;
+  loading?: boolean;
+  loadingOverlayComponent?: GridOverlayComponent;
+  noRowsOverlayComponent?: GridOverlayComponent;
 }
 
 export function MobileTable({
@@ -39,6 +47,9 @@ export function MobileTable({
   footer,
   multiSelectConfig,
   pluginHost,
+  loading = false,
+  loadingOverlayComponent,
+  noRowsOverlayComponent,
 }: MobileTableProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const mobileView =controller.getMobileViewState();
@@ -65,6 +76,7 @@ export function MobileTable({
 
   return (
     <>
+      <GridLiveRegion controller={controller} />
       <div className="flex flex-col w-full transition-all duration-200">
         <div className="flex items-center gap-2 bg-main-white px-1 py-2 border-gray-gray5 border-b w-full shrink-0">
           <div className="shrink-0">{tableTitle}</div>
@@ -80,12 +92,19 @@ export function MobileTable({
         <div
           ref={scrollRef}
           data-erp-table-scroll
-          className="hidden-show-scrollBar overflow-x-auto [overflow-anchor:none]"
-          style={{ overflowAnchor: 'none' }}
+          className="hidden-show-scrollBar overflow-x-auto [overflow-anchor:none] relative"
+          style={{ overflowAnchor: 'none', minHeight: 160 }}
         >
+          <GridOverlays
+            loading={loading}
+            rowCount={mobileView.totalRows}
+            loadingOverlayComponent={loadingOverlayComponent}
+            noRowsOverlayComponent={noRowsOverlayComponent}
+          />
           <table
             className="min-w-max"
             role="grid"
+            tabIndex={0}
             aria-colcount={
               mobileView.columns.filter((c) => !c.hidden).length || undefined
             }
@@ -94,6 +113,25 @@ export function MobileTable({
               undefined
             }
             aria-activedescendant={activeDescendant}
+            data-pdg-grid-focus=""
+            onFocus={(e) => {
+              if (e.target !== e.currentTarget) return;
+              if (controller.getActiveCell()) return;
+              const firstRow = mobileView.rows[0];
+              const firstCol = mobileView.columns.find(
+                (c) =>
+                  !c.hidden &&
+                  c.fieldType !== 'index' &&
+                  c.fieldName !== 'index',
+              );
+              if (firstRow && firstCol) {
+                void controller.dispatch({
+                  type: 'UI_ACTIVE_CELL',
+                  rowId: firstRow.id,
+                  columnId: firstCol.fieldName,
+                });
+              }
+            }}
           >
             <MobileTableHeader controller={controller} header={header} />
             <MobileTableBody

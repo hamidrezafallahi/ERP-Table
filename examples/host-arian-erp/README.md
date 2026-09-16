@@ -9,4 +9,4 @@ Reference copies of ERP page glue that used to live under `ui/` but are **not** 
 
 These files keep `@ts-nocheck` and depend on host modules (`next-intl`, `react-redux`, `@slice/*`, …). Copy them into the host app and adapt imports; do not import them from `persian-data-grid`.
 
-Adapter contract for `FetchRemoteApi` / cookies: [`docs/host-arian-erp.md`](../../docs/host-arian-erp.md).
+Adapter contract for `FetchRemoteApi` / cookies: [`host-arian-erp.md`](./host-arian-erp.md).

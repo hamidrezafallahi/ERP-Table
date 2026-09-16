@@ -5,6 +5,8 @@ import type {
 import type { Row } from '../entities/Row';
 import type { Table } from '../entities/Table';
 import type { IRule } from '../value-objects';
+import type { ColumnDefBridge } from './ColumnDef';
+import type { ColumnGroupMeta } from './ColumnGroupDef';
 
 export interface DynamicValueConfig {
   endpoint: string;
@@ -50,12 +52,12 @@ type ColumnAccessControl = {
 
 export interface IDependOn {
   fieldName: string;
-  value: any;
+  value: unknown;
 }
 
 export type DefaultOptionType = {
   value?: string | number;
-  label?: any;
+  label?: string;
   title?: string;
   [key: string]: unknown;
 };
@@ -105,12 +107,19 @@ export interface ColumnSchema<T = unknown, K = unknown> {
     children?: [] | undefined;
   };
   selectOptions?: { label: string; value: string | number }[];
-  indexOptions?: (...args: any[]) => any[];
-  onChange?: (...args: any[]) => void;
+  indexOptions?: (...args: unknown[]) => unknown[];
+  onChange?: (...args: unknown[]) => void;
   displayFormat?: (value: unknown) => unknown;
   minWidth?: number;
-  style?: any;
+  style?: Record<string, string | number>;
   popUpWidth?: number;
-  dynamicSelectFilterOption?: (inputValue: string, option: any) => boolean;
+  dynamicSelectFilterOption?: (inputValue: string, option: unknown) => boolean;
   labelValue?: 'selectDisplay' | 'selectValue';
+  /**
+   * ColumnDef-only fields restored by `toColumnDef` (PR-81).
+   * ERP hosts can ignore this.
+   */
+  columnDef?: ColumnDefBridge;
+  /** Leaf column group ancestry (PR-113). */
+  columnGroup?: ColumnGroupMeta;
 }

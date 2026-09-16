@@ -13,6 +13,7 @@ Related: [`public-api.md`](./public-api.md) (exports), [`public-api-honesty.md`]
 | One column looks custom | `columns[].render` |
 | Every `checkbox` (or another FieldType) looks custom | `ERPTable components={{ checkbox: … }}` |
 | New editor type for many columns | `components` key + `fieldType` on those columns |
+| Custom column filter popover | `filterComponents` + `ColumnDef.filter` (PR-95) |
 | Display string for engine / search / export | `returnDisplayValue` — **not** a React renderer |
 
 Lookup order, desktop and mobile:
@@ -125,6 +126,58 @@ To ship a type inside this package (like `textArea`):
 2. Put the editor in a **new file**.
 3. Register it on `DEFAULT_CELL_COMPONENTS`.
 4. If values are strings, add `case 'yourType'` next to `text` in the cell command validator — not in the UI switch.
+
+## Custom column filters
+
+Register a filter UI the same way as a cell editor — without forking the header:
+
+| Need | API |
+|------|-----|
+| Built-in text / number / date / set / boolean | omit `filter` (inferred from `fieldType`) or set `filter: 'number'` |
+| Disable filter on a column | `filter: false` |
+| Custom popover for one or many columns | `filterComponents` + `ColumnDef.filter: 'myFilter'` |
+
+```tsx
+import {
+  DataGrid,
+  type FilterComponent,
+  type FilterComponentMap,
+} from 'persian-data-grid';
+
+const RoundAmountFilter: FilterComponent = ({ apply, close }) => (
+  <button
+    type="button"
+    onClick={() =>
+      apply({
+        filterType: 'custom',
+        type: 'roundAmount',
+        customFilter: (value) => {
+          const n = Number(value);
+          return Number.isFinite(n) && n !== 0 && n % 1_000_000 === 0;
+        },
+      })
+    }
+  >
+    فقط مبالغ رُند
+  </button>
+);
+
+const filterComponents: FilterComponentMap = {
+  roundAmount: RoundAmountFilter,
+};
+
+<DataGrid
+  filterComponents={filterComponents}
+  columnDefs={[
+    { field: 'Bed', headerName: 'بدهکار', type: 'price', filter: 'roundAmount' },
+  ]}
+  rowData={rows}
+/>
+```
+
+`FilterComponentContext` gives `column`, `colId`, `filterModel`, `current`, `params`, `controller`, `apply`, and `close`. Call `apply(null)` to clear. The predicate runs through engine `applyFilter` on the UI row index (PR-94/95).
+
+Floating filter inputs only cover built-in kinds; custom filters use the header ▽ popover.
 
 ## Keyboard
 

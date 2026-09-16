@@ -18,14 +18,16 @@ export class TextPdfRenderer implements PdfRenderer {
     lines.push(columns.map((c) => c.fieldCaption ?? c.fieldName).join(' | '));
 
     for (const row of source.rows.slice(0, 40)) {
+      const prefix = row.kind === 'group' ? '▸ ' : '';
       lines.push(
-        columns
-          .map((col) => {
-            const cell = row.cells[col.fieldName];
-            const raw = cell?.display ?? cell?.value ?? '';
-            return formatExportValue(raw, col.fieldType).slice(0, 24);
-          })
-          .join(' | '),
+        prefix +
+          columns
+            .map((col) => {
+              const cell = row.cells[col.fieldName];
+              const raw = cell?.display ?? cell?.value ?? '';
+              return formatExportValue(raw, col.fieldType).slice(0, 24);
+            })
+            .join(' | '),
       );
     }
 

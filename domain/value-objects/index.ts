@@ -15,7 +15,19 @@ export class CellDisplay {
 }
 
 export class ColumnId {
+  private static readonly interned = new Map<string, ColumnId>();
+
   constructor(public readonly value: string) { }
+
+  /** Shared instance per field name (PR-101) — avoids 100k×cols ColumnId objects. */
+  static for(value: string): ColumnId {
+    let id = ColumnId.interned.get(value);
+    if (!id) {
+      id = new ColumnId(value);
+      ColumnId.interned.set(value, id);
+    }
+    return id;
+  }
 
   equals(other: ColumnId) {
     return this.value === other.value;
@@ -36,14 +48,14 @@ export type IRule = {
   required?: boolean;
   whitespace?: boolean;
   message?: string;
-  transform?: (value: any) => any;
+  transform?: (value: unknown) => unknown;
   pattern?: string | RegExp;
   min?: number;
   max?: number;
   len?: number;
-  enum?: any[];
-  validator?: (rule: IRule, value: any, callback: (error?: string[]) => void) => void | Promise<void>;
-  asyncValidator?: (rule: IRule, value: any) => Promise<void>;
+  enum?: unknown[];
+  validator?: (rule: IRule, value: unknown, callback: (error?: string[]) => void) => void | Promise<void>;
+  asyncValidator?: (rule: IRule, value: unknown) => Promise<void>;
   warningOnly?: boolean;
   validateTrigger?: string | string[];
 };

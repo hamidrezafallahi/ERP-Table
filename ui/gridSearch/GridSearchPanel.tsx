@@ -164,12 +164,15 @@ export function GridSearchPanel({
   const resultSummary = !hasSearched
     ? ''
     : totalMatches > 0
-      ? `${totalMatches} مورد پیدا شد`
-      : 'موردی یافت نشد';
+      ? t('general.searchFound', { count: totalMatches })
+      : t('general.searchNotFound');
 
   const positionSummary =
     totalMatches > 0 && currentMatchIndex >= 0
-      ? `${currentMatchIndex + 1} از ${totalMatches}`
+      ? t('general.searchPosition', {
+          current: currentMatchIndex + 1,
+          total: totalMatches,
+        })
       : '';
 
   const panelContent = (

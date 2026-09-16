@@ -56,6 +56,17 @@ export interface ViewportChangedPayload {
   readonly startIndex: number;
   readonly endIndex: number;
 }
+export interface ColumnStateChangedPayload {
+  readonly columns: readonly {
+    readonly colId: string;
+    readonly width: number;
+    readonly hide: boolean;
+    readonly order: number;
+    readonly pinned?: 'start' | 'end' | null;
+    readonly sort?: 'asc' | 'desc' | null;
+    readonly sortIndex?: number | null;
+  }[];
+}
 export interface TableDeletedPayload {}
 export interface TableResetPayload {}
 export interface ActiveCollectionChangedPayload {}
@@ -71,7 +82,7 @@ export interface DynamicProjectionPayload {
 /* ── Plugin / export payloads ───────────────────────── */
 
 export interface ExportRequestedPayload {
-  readonly format: 'xlsx' | 'pdf';
+  readonly format: 'xlsx' | 'pdf' | 'csv';
   readonly collectionScope: 'active' | 'all' | string[];
   readonly fileName?: string;
   readonly sheetName?: string;
@@ -79,14 +90,14 @@ export interface ExportRequestedPayload {
 }
 
 export interface ExportCompletedPayload {
-  readonly format: 'xlsx' | 'pdf';
+  readonly format: 'xlsx' | 'pdf' | 'csv';
   readonly rowCount: number;
   readonly columnCount?: number;
   readonly blobId?: string;
 }
 
 export interface ExportFailedPayload {
-  readonly format: 'xlsx' | 'pdf';
+  readonly format: 'xlsx' | 'pdf' | 'csv';
   readonly code: string;
   readonly message: string;
 }
@@ -121,6 +132,7 @@ export type RowDeletedGridEvent = GridEvent<'ROW_DELETED' | 'NEW_ROW_REMOVED', R
 export type RowRestoredGridEvent = GridEvent<'ROW_RESTORED', RowRestoredPayload>;
 export type RowReorderedGridEvent = GridEvent<'ROW_REORDERED', RowReorderedPayload>;
 export type ColumnReorderedGridEvent = GridEvent<'COLUMN_REORDERED', ColumnReorderedPayload>;
+export type ColumnStateChangedGridEvent = GridEvent<'COLUMN_STATE_CHANGED', ColumnStateChangedPayload>;
 export type PageChangedGridEvent = GridEvent<'PAGE_CHANGED', PageChangedPayload>;
 export type PageSizeChangedGridEvent = GridEvent<'PAGE_SIZE_CHANGED', PageSizeChangedPayload>;
 export type ViewportChangedGridEvent = GridEvent<'VIEWPORT_CHANGED', ViewportChangedPayload>;

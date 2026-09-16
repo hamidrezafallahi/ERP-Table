@@ -144,8 +144,8 @@ const handleSaveDescription = ()=>{
         disabled={isDeleted || !editable}
         value={value == null ? "" : String(value)}
         className={`${isDeleted && "cursor-not-allowed"}
-              bg-transparent px-2 outline-none focus-visible:outline-none
-           focus:outline-none ring-0 focus:!ring-0 focus:ring-offset-0  transition-colors !h-full w-full text-xs  ${meta.className}`}
+              pdg-cell-editor bg-transparent px-2
+           ring-0 focus:!ring-0 focus:ring-offset-0  transition-colors !h-full w-full text-xs  ${meta.className}`}
         draggable={false}
         onDragStart={blockDrag}
         onDragOver={blockDrag}

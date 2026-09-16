@@ -368,7 +368,7 @@ export class ChangeCellValueHandler {
       case 'select':
       case 'selectOption': {
         if (value === '' || value === undefined) {
-          return { ok: true as const, value: value as any };
+          return { ok: true as const, value };
         }
         const n = typeof value === 'number' ? value : Number(value);
         return Number.isFinite(n)
@@ -823,7 +823,7 @@ export class ApplyDynamicProjectionHandler {
       case 'price':
       case 'select':
       case 'selectOption': {
-        if (value === '' || value === undefined) return { ok: true as const, value: value as any };
+        if (value === '' || value === undefined) return { ok: true as const, value };
         const n = typeof value === 'number' ? value : Number(value);
         return Number.isFinite(n)
           ? { ok: true as const, value: n }

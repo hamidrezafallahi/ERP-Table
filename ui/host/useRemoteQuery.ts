@@ -23,7 +23,12 @@ export function useRemoteQuery<T = unknown>(args: UseRemoteQueryArgs) {
     }
     setIsFetching(true);
     try {
-      const response = await remoteApi.request<any>({
+      const response = await remoteApi.request<{
+        Data?: T;
+        TotalCount?: number;
+        ReturnCount?: number;
+        Result?: string;
+      }>({
         endpoint: args.url,
         params: args.body,
         method: 'POST',

@@ -2,6 +2,7 @@ import type { EventStore, AppendResult, Unsubscribe } from '../../application/po
 import type { GridEvent } from '../../domain/types/GridEvent';
 import type { KvDatabase } from './KvDatabase';
 import { MemoryKvDatabase, openIndexedDbDatabase } from './KvDatabase';
+import { DEFAULT_EVENT_STORE_PREFIX } from './eventStoreName';
 
 type Listener = (event: GridEvent) => void;
 
@@ -27,7 +28,7 @@ export class IndexedDbEventStore implements EventStore {
   }
 
   static async open(
-    dbName = 'erp-table-events',
+    dbName = DEFAULT_EVENT_STORE_PREFIX,
   ): Promise<IndexedDbEventStore> {
     const db = await openIndexedDbDatabase(dbName, [STREAMS, GLOBAL, META]);
     return new IndexedDbEventStore(db);

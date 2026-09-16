@@ -11,6 +11,7 @@ import { themeErp } from '../GridTheme';
 describe('applyCssVars', () => {
   it('themeToStyle merges extra properties after CSS vars', () => {
     const style = themeToStyle(themeErp, { position: 'fixed', top: 10 });
+    expect(style['--pdg-accent']).toBe('#0658b0');
     expect(style['--erp-accent']).toBe('#0658b0');
     expect(style.position).toBe('fixed');
     expect(style.top).toBe(10);

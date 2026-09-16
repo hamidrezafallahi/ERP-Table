@@ -424,6 +424,30 @@ export class Table {
     return { added };
   }
 
+  setColumnHidden(columnId: string, hidden: boolean): boolean {
+    const cols = this.getActiveCollection().getColumns();
+    const existing = cols.get(columnId);
+    if (!existing) return false;
+    if (Boolean(existing.hidden) === hidden) return false;
+    cols.set(columnId, { ...existing, hidden });
+    return true;
+  }
+
+  /** Runtime pin on `columnDef.pinned` (PR-114). Index column is not mutable. */
+  setColumnPinned(columnId: string, pinned: 'start' | 'end' | null): boolean {
+    const cols = this.getActiveCollection().getColumns();
+    const existing = cols.get(columnId);
+    if (!existing) return false;
+    const bridge = { ...(existing.columnDef ?? {}) };
+    if (pinned == null) delete bridge.pinned;
+    else bridge.pinned = pinned;
+    const nextPinned = bridge.pinned ?? null;
+    const prevPinned = existing.columnDef?.pinned ?? null;
+    if (nextPinned === prevPinned) return false;
+    cols.set(columnId, { ...existing, columnDef: bridge });
+    return true;
+  }
+
   removeColumns(columnIds: ColumnId[]): { removed: ColumnId[] } {
     const removed: ColumnId[] = [];
     for (const colId of columnIds) {
@@ -471,6 +495,16 @@ export class Table {
 
   getRow(rowId: number): Row | undefined {
     return this.getActiveCollection().getRows().get(rowId);
+  }
+
+  /** Host `rowData` sync (PR-82) — put without going through add/undo. */
+  hostPutRow(row: Row): void {
+    this.getActiveCollection().getRows().set(row.id.value, row);
+  }
+
+  /** Host `rowData` sync (PR-82) — drop to match the host array. */
+  hostRemoveRow(rowId: number): void {
+    this.getActiveCollection().getRows().delete(rowId);
   }
 
   addRows(newRows: Row[]): void {

@@ -23,10 +23,17 @@ export class Row {
     public changeFields: Set<string> = new Set(),
     public visibilityCondition: Record<string, boolean>,
     public collection: string = "default",
-    public isSaveDescription: boolean
+    public isSaveDescription: boolean,
+    /**
+     * Host object for `rowData` (PR-82). Same reference — never deep-cloned —
+     * so `ColumnDef.valueGetter` can read the original `TRow`.
+     */
+    public data?: unknown,
+    /** Stable host id from `getRowId` (string). */
+    public sourceId?: string,
   ) { }
   updateChangeFields(columnId: ColumnId): void {
-    const cell = this.cells.get(columnId.value);
+    const cell = this.getCell(columnId.value);
     if (!cell) return;
     const value = cell.getValueObject();
     const originalValue = cell.getOriginalValue();
@@ -62,7 +69,7 @@ export class Row {
     columnId: ColumnId,
     value:  unknown
   ): CellChanged | null {
-    const cell = this.cells.get(columnId.value);
+    const cell = this.getCell(columnId.value);
     if (!cell) return null;
     return cell.changeValue(value);
   }
@@ -77,16 +84,69 @@ export class Row {
     columnId: ColumnId,
     value: unknown
   ): DisplayChanged | null {
-    const cell = this.cells.get(columnId.value);
+    const cell = this.getCell(columnId.value);
     if (!cell) return null;
     return cell.changeDisplay(value);
   }
   getCells(): ReadonlyMap<string, Cell> {
     return new Map(this.cells);
   }
-  getCell(columnId: string): Cell|undefined {
-    return this.cells.get(columnId)
+
+  /**
+   * Return a cell without materializing from host `data` (PR-101).
+   */
+  peekCell(columnId: string): Cell | undefined {
+    return this.cells.get(columnId);
   }
+
+  /**
+   * Lazy host cells (PR-101): when `rowData` left values on `data`, materialize
+   * a Cell on first read and cache it.
+   */
+  getCell(columnId: string): Cell | undefined {
+    const existing = this.cells.get(columnId);
+    if (existing) return existing;
+    if (!this.data || typeof this.data !== 'object') return undefined;
+    if (columnId === 'index') return undefined;
+    const record = this.data as Record<string, unknown>;
+    if (!Object.prototype.hasOwnProperty.call(record, columnId)) {
+      return undefined;
+    }
+    const value = record[columnId];
+    const cell = new Cell(
+      this.id,
+      ColumnId.for(columnId),
+      value,
+      value,
+      value,
+    );
+    this.cells.set(columnId, cell);
+    return cell;
+  }
+
+  /**
+   * Read a cell value without allocating a Cell when the host object still
+   * holds the canonical value (PR-101 hot path for sort/filter/quick filter).
+   */
+  readValue(columnId: string): unknown {
+    const existing = this.cells.get(columnId);
+    if (existing) return existing.getValue();
+    if (columnId === 'index') return undefined;
+    if (this.data && typeof this.data === 'object') {
+      const record = this.data as Record<string, unknown>;
+      if (Object.prototype.hasOwnProperty.call(record, columnId)) {
+        return record[columnId];
+      }
+    }
+    return undefined;
+  }
+
+  readDisplay(columnId: string): unknown {
+    const existing = this.cells.get(columnId);
+    if (existing) return existing.getDisplay();
+    return this.readValue(columnId);
+  }
+
   ensureCell(columnId: ColumnId, defaultValue: CellValue, displayValue: CellDisplay) {
     if (this.cells.has(columnId.value)) return;
 
@@ -110,13 +170,31 @@ export class Row {
   }
 
 
+  setData(data: unknown): void {
+    this.data = data;
+  }
+
+  getData(): unknown {
+    return this.data;
+  }
+
   clone(): Row {
     const clonedCells = new Map<string, Cell>();
     for (const [k, cell] of this.cells.entries()) {
       const clonedCell = cell.clone();
       clonedCells.set(k, clonedCell);
     }
-    return new Row(this.id, clonedCells, this.rowState, this.changeFields,this.visibilityCondition, this.collection,this.isSaveDescription);
+    return new Row(
+      this.id,
+      clonedCells,
+      this.rowState,
+      this.changeFields,
+      this.visibilityCondition,
+      this.collection,
+      this.isSaveDescription,
+      this.data,
+      this.sourceId,
+    );
   }
 
 }

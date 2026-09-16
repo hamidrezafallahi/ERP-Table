@@ -49,16 +49,16 @@
 | فاز | موضوع | PR | نسخه | وضعیت |
 |-----|--------|----|------|--------|
 | ۱–۱۵ | طرح قدیم (آرشیو) | PR-1 … PR-71 | ≤ 0.5.0 | ✅ بسته |
-| **۱۶** | Truth, Packaging, CI | PR-72 … PR-80 | 0.6.0 | ⬜ باز |
-| ۱۷ | مدل دادهٔ جنریک + zero-config | PR-81 … PR-88 | 0.7.0 | ⬜ |
-| ۱۸ | عملیات داده (sort / filter) | PR-89 … PR-96 | 0.8.0 | ⬜ |
-| ۱۹ | مقیاس (virtual، infinite، O(n)) | PR-97 … PR-103 | 0.9.0 | ⬜ |
-| ۲۰ | کلیپ‌بورد و بازهٔ سلولی | PR-104 … PR-109 | 0.10.0 | ⬜ |
-| ۲۱ | همتراز ستون و هدر | PR-110 … PR-116 | 0.11.0 | ⬜ |
-| ۲۲ | Aggregation و grouping (RFC) | PR-117 … PR-122 | 0.12.0 | ⬜ |
+| **۱۶** | Truth, Packaging, CI | PR-72 … PR-80 | 0.6.0 | ✅ |
+| ۱۷ | مدل دادهٔ جنریک + zero-config | PR-81 … PR-88 | 0.7.0 | ✅ |
+| ۱۸ | عملیات داده (sort / filter) | PR-89 … PR-96 | 0.8.0 | ✅ |
+| ۱۹ | مقیاس (virtual، infinite، O(n)) | PR-97 … PR-103 | 0.9.0 | ✅ |
+| ۲۰ | کلیپ‌بورد و بازهٔ سلولی | PR-104 … PR-109 | 0.10.0 | ✅ |
+| ۲۱ | همتراز ستون و هدر | PR-110 … PR-116 | 0.11.0 | ✅ |
+| ۲۲ | Aggregation و grouping (RFC) | PR-117 … PR-122 | 0.12.0 | ✅ |
 | ۲۳ | a11y، کیبورد استاندارد، i18n | PR-123 … PR-128 | 0.13.0 | ⬜ |
-| ۲۴ | مستندات، اکوسیستم، `1.0.0` | PR-129 … PR-135 | 1.0.0 | ⬜ |
-| ۲۵ | خندق رقابتی (audit UI، sync، هم‌ویرایشی) | PR-136 … PR-141 | 1.1+ | ⬜ |
+| ۲۴ | مستندات، اکوسیستم، `1.0.0` | PR-129 … PR-135 | 1.0.0 | ✅ جز PR-132 ⏸ D22؛ gate قرمز |
+| ۲۵ | خندق رقابتی (audit UI، sync، هم‌ویرایشی) | PR-136 … PR-141 | 1.1+ | 🔄 PR-136…139 ✅ |
 
 ---
 
@@ -157,7 +157,7 @@ pivot، نمودار یکپارچه، فرمول صفحه‌گسترده، tree 
 
 ### PR-77 — CSS صریح و رفع `sideEffects` (D16)
 
-- [ ] `PR-77` **D16 قفل — اجرا کن.** `injectERPTableStyles()` خودکار در سطح ماژول را بردار (`ui/styles/injectStyles.ts:651`). دو مسیر پشتیبانی شود:
+- [x] `PR-77` **D16 قفل — اجرا کن.** `injectERPTableStyles()` خودکار در سطح ماژول را بردار (`ui/styles/injectStyles.ts:651`). دو مسیر پشتیبانی شود:
   1. `import 'persian-data-grid/styles.css'` (توصیه‌شده، tree-shake friendly)
   2. `injectGridStyles()` صریح برای هاست‌هایی که bundler CSS ندارند
   `"sideEffects": ["**/*.css"]` بگذار. تکرار CSS در دو فایل را با **یک منبع حقیقت** جایگزین کن: `erp-table.css` منبع باشد و `injectStyles.ts` از آن تولید شود (اسکریپت build، نه کپی دستی). این بدهی Phase 6 است.
@@ -165,17 +165,17 @@ pivot، نمودار یکپارچه، فرمول صفحه‌گسترده، tree 
 
 ### PR-78 — انطباق لایسنس و فراداده پکیج
 
-- [ ] `PR-78` `OFL.txt` و `LICENSE` را در `files` پکیج npm اضافه کن. بلوک لایسنس فونت را در banner بستهٔ `plugins/pdf` بگذار. `CHANGELOG.md` (Keep a Changelog)، `CONTRIBUTING.md`، `SECURITY.md`، `.github/ISSUE_TEMPLATE/`، `funding` (اختیاری). `keywords` را از `erp grid` به کلمات بازار واقعی بچرخان.
+- [x] `PR-78` `OFL.txt` و `LICENSE` را در `files` پکیج npm اضافه کن. بلوک لایسنس فونت را در banner بستهٔ `plugins/pdf` بگذار. `CHANGELOG.md` (Keep a Changelog)، `CONTRIBUTING.md`، `SECURITY.md`، `.github/ISSUE_TEMPLATE/`، `funding` (اختیاری). `keywords` را از `erp grid` به کلمات بازار واقعی بچرخان.
 - **Verify:** `npm pack --dry-run` فهرست فایل‌ها را نشان دهد؛ `OFL.txt` در آن باشد.
 
 ### PR-79 — صفر `any` در سطح عمومی
 
-- [ ] `PR-79` ۶۶ مورد `any` و ۱۸ مورد `as any` را در سورس قابل‌انتشار هدف بگیر. اولویت: تایپ‌هایی که به `dist/index.d.ts` نشت می‌کنند — `application/ports/RemoteApi.ts` (`TResponse = any`, `Record<string, any>`), `ui/type.ts:28` (`onAdd: (e: any) => void`). `unknown` + type guard به‌جای `any`. ESLint rule `@typescript-eslint/no-explicit-any` روی `publish` graph با `error`.
+- [x] `PR-79` ۶۶ مورد `any` و ۱۸ مورد `as any` را در سورس قابل‌انتشار هدف بگیر. اولویت: تایپ‌هایی که به `dist/index.d.ts` نشت می‌کنند — `application/ports/RemoteApi.ts` (`TResponse = any`, `Record<string, any>`), `ui/type.ts:28` (`onAdd: (e: any) => void`). `unknown` + type guard به‌جای `any`. ESLint rule `@typescript-eslint/no-explicit-any` روی `publish` graph با `error`.
 - **Verify:** `typecheck:publish`؛ grep روی `dist/index.d.ts` برای ` any` صفر برگردد؛ lint در CI.
 
 ### PR-80 — پاک کردن arianERP از سطح عمومی
 
-- [ ] `PR-80` `FetchRemoteApi` (با `persist:arianERP` و کوکی `_auth`) از `.` به `./adapters/arian-erp` منتقل شود. `erp-table-events:` به‌عنوان نام DB با `config.store` قابل تنظیم شود و پیش‌فرضش نام خنثی بگیرد (مهاجرت دادهٔ IndexedDB موجود مستند شود). `docs/host-arian-erp.md` به `examples/` برود.
+- [x] `PR-80` `FetchRemoteApi` (با `persist:arianERP` و کوکی `_auth`) از `.` به `./adapters/arian-erp` منتقل شود. `erp-table-events:` به‌عنوان نام DB با `config.store` قابل تنظیم شود و پیش‌فرضش نام خنثی بگیرد (مهاجرت دادهٔ IndexedDB موجود مستند شود). `docs/host-arian-erp.md` به `examples/` برود.
 - **نکن:** شکستن هاست ERP فعلی بدون فصل مهاجرت.
 - **Verify:** grep `arianERP` روی `dist/index.js` صفر برگردد.
 
@@ -200,7 +200,7 @@ pivot، نمودار یکپارچه، فرمول صفحه‌گسترده، tree 
 
 ### PR-81 — `ColumnDef<TRow>` جنریک (D14)
 
-- [ ] `PR-81` **D14 قفل — اجرا کن.** نوع جدید در `domain/types/ColumnDef.ts`:
+- [x] `PR-81` **D14 قفل — اجرا کن.** نوع جدید در `domain/types/ColumnDef.ts`:
 
 ```ts
 interface ColumnDef<TRow, TValue = unknown> {
@@ -227,12 +227,12 @@ interface ColumnDef<TRow, TValue = unknown> {
 
 ### PR-82 — `rowData: TRow[]` + `getRowId`
 
-- [ ] `PR-82` adapter `rowData → Row` دامنه‌ای. `getRowId?: (row: TRow) => string` با پیش‌فرض ایندکس. `Row` دامنه باید `data: TRow` اصلی را نگه دارد (بدون کلون عمیق) تا `valueGetter` کار کند. diff پایدار برای وقتی `rowData` عوض می‌شود (بدون reset کل جدول).
+- [x] `PR-82` adapter `rowData → Row` دامنه‌ای. `getRowId?: (row: TRow) => string` با پیش‌فرض ایندکس. `Row` دامنه باید `data: TRow` اصلی را نگه دارد (بدون کلون عمیق) تا `valueGetter` کار کند. diff پایدار برای وقتی `rowData` عوض می‌شود (بدون reset کل جدول).
 - **Verify:** تست: ۱۰۰۰ ردیف `{id, name, price}` بدون `RowInput`؛ تغییر یک ردیف در آرایه فقط همان ردیف را re-render کند.
 
 ### PR-83 — props اختیاری‌سازی و zero-config
 
-- [ ] `PR-83` `store` / `tableKey` / `actor` اختیاری شوند:
+- [x] `PR-83` `store` / `tableKey` / `actor` اختیاری شوند:
   - بدون `store` ⇒ بدون IndexedDB، بدون EventStore پایدار (in-memory).
   - بدون `actor` ⇒ actor پیش‌فرض با همهٔ دسترسی‌ها.
   - بدون `tableKey` ⇒ کلید تولیدشدهٔ پایدار در عمر کامپوننت.
@@ -242,27 +242,27 @@ interface ColumnDef<TRow, TValue = unknown> {
 
 ### PR-84 — `createGrid` sync + hydrate تنبل (D24)
 
-- [ ] `PR-84` **D24 قفل — اجرا کن.** `createERPTable` را به `createGrid` تغییر نام بده (alias منسوخ بماند) و امضایش را sync کن: نمونه فوراً برگردد، بارگذاری EventStore/snapshot تنبل و قابل `await grid.ready`. این جلوی «`useEffect` + `await` + race» در مصرف‌کننده را می‌گیرد.
+- [x] `PR-84` **D24 قفل — اجرا کن.** `createERPTable` را به `createGrid` تغییر نام بده (alias منسوخ بماند) و امضایش را sync کن: نمونه فوراً برگردد، بارگذاری EventStore/snapshot تنبل و قابل `await grid.ready`. این جلوی «`useEffect` + `await` + race» در مصرف‌کننده را می‌گیرد.
 - **Verify:** تست: `createGrid()` بدون `await` قابل render است؛ `grid.ready` resolve می‌شود.
 
 ### PR-85 — props رخداد React
 
-- [ ] `PR-85` رخدادهای استاندارد روی `DataGrid`: `onCellValueChanged`، `onRowValueChanged`، `onSelectionChanged`، `onCellFocused`، `onRowDataUpdated`، `onGridReady`. همه مشتق از stream رخداد موجود (`EVENT_CATALOG`) — منبع حقیقت دوگانه نساز.
+- [x] `PR-85` رخدادهای استاندارد روی `DataGrid`: `onCellValueChanged`، `onRowValueChanged`، `onSelectionChanged`، `onCellFocused`، `onRowDataUpdated`، `onGridReady`. همه مشتق از stream رخداد موجود (`EVENT_CATALOG`) — منبع حقیقت دوگانه نساز.
 - **Verify:** تست: ویرایش سلول دقیقاً یک `onCellValueChanged` با `{oldValue, newValue, colId, rowId, data}` بدهد.
 
 ### PR-86 — `apiRef` imperative
 
-- [ ] `PR-86` `apiRef?: Ref<GridApi<TRow>>` با سطح حداقلی و **مستند**: `getRowNode`، `setRowData`، `refreshCells`، `getSelectedRows`، `deselectAll`، `startEditingCell`، `stopEditing`، `exportDataAsExcel`، `undo`، `redo`، `getColumnState`، `applyColumnState`. `UITableController` پیاده‌سازی زیرین بماند ولی از سطح عمومی `.` بیرون برود.
+- [x] `PR-86` `apiRef?: Ref<GridApi<TRow>>` با سطح حداقلی و **مستند**: `getRowNode`، `setRowData`، `refreshCells`، `getSelectedRows`، `deselectAll`، `startEditingCell`، `stopEditing`، `exportDataAsExcel`، `undo`، `redo`، `getColumnState`، `applyColumnState`. `UITableController` پیاده‌سازی زیرین بماند ولی از سطح عمومی `.` بیرون برود.
 - **Verify:** تست هر متد + `typecheck:publish`.
 
 ### PR-87 — تغییر نام سطح عمومی (D13)
 
-- [ ] `PR-87` **D13 قفل — اجرا کن.** `ERPTable` → `DataGrid`. `ERPTableProps` → `DataGridProps`. `useERPTable` → `useGrid`. `themeErp` → `themeDefault`، `themeErpDark` → `themeDark`. توکن CSS `--erp-*` → `--pdg-*` با لایهٔ alias برای یک نسخه. کلاس `.erp-table` → `.pdg-grid` با alias. **همهٔ نام‌های قدیمی به‌عنوان alias منسوخ (`@deprecated`) یک نسخه باقی بمانند.** فصل مهاجرت در `MIGRATION.md`.
+- [x] `PR-87` **D13 قفل — اجرا کن.** `ERPTable` → `DataGrid`. `ERPTableProps` → `DataGridProps`. `useERPTable` → `useGrid`. `themeErp` → `themeDefault`، `themeErpDark` → `themeDark`. توکن CSS `--erp-*` → `--pdg-*` با لایهٔ alias برای یک نسخه. کلاس `.erp-table` → `.pdg-grid` با alias. **همهٔ نام‌های قدیمی به‌عنوان alias منسوخ (`@deprecated`) یک نسخه باقی بمانند.** فصل مهاجرت در `MIGRATION.md`.
 - **Verify:** تست: هم `ERPTable` و هم `DataGrid` رندر شوند؛ codemod ساده (`scripts/codemod-v0.7.mjs`) روی fixture کار کند.
 
 ### PR-88 — ژنریک انتها-به-انتها و مستندسازی
 
-- [ ] `PR-88` `DataGrid<TRow>` کامل جنریک شود: `rowData`، `columnDefs`، `onCellValueChanged`، `apiRef` همه `TRow` را حمل کنند. تست تایپ (`*.typecheck.tsx`) برای استنتاج بدون annotation صریح. `docs/getting-started.md` بازنویسی: مسیر ۶۰ ثانیه.
+- [x] `PR-88` `DataGrid<TRow>` کامل جنریک شود: `rowData`، `columnDefs`، `onCellValueChanged`، `apiRef` همه `TRow` را حمل کنند. تست تایپ (`*.typecheck.tsx`) برای استنتاج بدون annotation صریح. `docs/getting-started.md` بازنویسی: مسیر ۶۰ ثانیه.
 - **Verify:** `typecheck:publish`؛ تست تایپ برای `TRow` نادرست باید خطا بدهد (`expectTypeOf`).
 
 ### Phase 17 Exit Criteria
@@ -300,23 +300,23 @@ type Invoice = { id: string; title: string; amount: number; date: string };
 
 ### PR-89 — `SortModel` در هسته
 
-- [ ] `PR-89` `engine/dataOps/sortModel.ts`: تابع خالص `applySort(rowIds, sortModel, accessor)`. `SortModel = { colId, sort: 'asc'|'desc' }[]` (multi-sort مرتب). comparator پیش‌فرض بر پایهٔ `FieldType` (عدد، متن با `Intl.Collator('fa')`، تاریخ جلالی، boolean) و override با `ColumnDef.comparator`. مرتب‌سازی **پایدار (stable)**. ستون `index` به‌عنوان tie-breaker نهایی تا رفتار سند حفظ شود.
+- [x] `PR-89` `engine/dataOps/sortModel.ts`: تابع خالص `applySort(rowIds, sortModel, accessor)`. `SortModel = { colId, sort: 'asc'|'desc' }[]` (multi-sort مرتب). comparator پیش‌فرض بر پایهٔ `FieldType` (عدد، متن با `Intl.Collator('fa')`، تاریخ جلالی، boolean) و override با `ColumnDef.comparator`. مرتب‌سازی **پایدار (stable)**. ستون `index` به‌عنوان tie-breaker نهایی تا رفتار سند حفظ شود.
 - **نکن:** لمس `ViewStateBuilder.sortRows` در این PR؛ فقط تابع خالص + تست.
 - **Verify:** تست: پایداری، multi-sort، `null` آخر، collation فارسی (`آ` < `ا` < `ب`)، ۱۰۰k ردیف زیر بودجه.
 
 ### PR-90 — وصل sort به ایندکس ردیف
 
-- [ ] `PR-90` `ViewStateBuilder` / `SparseRowIndex` ترتیب را از `SortModel` بگیرند. بدون sortModel ⇒ همان ترتیب `index` امروز (بدون رگرسیون رفتار سند). ایندکس فقط با تغییر sortModel یا داده invalidate شود، نه با هر notify.
+- [x] `PR-90` `ViewStateBuilder` / `SparseRowIndex` ترتیب را از `SortModel` بگیرند. بدون sortModel ⇒ همان ترتیب `index` امروز (بدون رگرسیون رفتار سند). ایندکس فقط با تغییر sortModel یا داده invalidate شود، نه با هر notify.
 - **Verify:** تست: dispatch `SET_SORT_MODEL` ترتیب `getAllUIRows` را عوض کند؛ ویرایش یک سلول ایندکس را بازنسازی نکند مگر ستون sort باشد.
 
 ### PR-91 — UI مرتب‌سازی هدر
 
-- [ ] `PR-91` کلیک هدر: asc → desc → none. `Shift+Click` برای multi-sort با نشانگر اولویت. آیکن و `aria-sort` روی `<th>`. `sortable: false` رعایت شود. ستون `index` قابل sort نباشد. تعامل با drag reorder موجود نشکند (کلیک ≠ درگ، آستانهٔ حرکت).
+- [x] `PR-91` کلیک هدر: asc → desc → none. `Shift+Click` برای multi-sort با نشانگر اولویت. آیکن و `aria-sort` روی `<th>`. `sortable: false` رعایت شود. ستون `index` قابل sort نباشد. تعامل با drag reorder موجود نشکند (کلیک ≠ درگ، آستانهٔ حرکت).
 - **Verify:** تست DOM: کلیک → `aria-sort="ascending"`؛ درگ ۵px sort را trigger نکند؛ دمو دو ستون.
 
 ### PR-92 — `FilterModel` در هسته
 
-- [ ] `PR-92` `engine/dataOps/filterModel.ts`: تابع خالص `applyFilter(rowIds, filterModel, accessor)`.
+- [x] `PR-92` `engine/dataOps/filterModel.ts`: تابع خالص `applyFilter(rowIds, filterModel, accessor)`.
 
 | نوع | عملگرها |
 |-----|---------|
@@ -332,22 +332,22 @@ type Invoice = { id: string; title: string; amount: number; date: string };
 
 ### PR-93 — quick filter واقعی
 
-- [ ] `PR-93` `quickFilterText?: string` که **ردیف را حذف کند** (نه mark). ایندکس معکوس متن روی ردیف با invalidate تدریجی تا O(n) هر کلید نباشد. `GridSearchPanel` موجود به‌عنوان قابلیت جدا («جستجو و پیمایش») بماند و در docs از filter تفکیک شود.
+- [x] `PR-93` `quickFilterText?: string` که **ردیف را حذف کند** (نه mark). ایندکس معکوس متن روی ردیف با invalidate تدریجی تا O(n) هر کلید نباشد. `GridSearchPanel` موجود به‌عنوان قابلیت جدا («جستجو و پیمایش») بماند و در docs از filter تفکیک شود.
 - **Verify:** تست: `quickFilterText` تعداد ردیف را کم کند؛ بودجهٔ تایپ ۱۰ کاراکتر روی ۵۰k ردیف.
 
 ### PR-94 — UI فیلتر: منوی ستون + floating filter
 
-- [ ] `PR-94` آیکن فیلتر روی هدر → پاپ‌اور (با وراثت تم portal از PR-43). ردیف `floatingFilter` اختیاری زیر هدر. نشانگر «فیلتر فعال». `apiRef.setFilterModel` / `getFilterModel`.
+- [x] `PR-94` آیکن فیلتر روی هدر → پاپ‌اور (با وراثت تم portal از PR-43). ردیف `floatingFilter` اختیاری زیر هدر. نشانگر «فیلتر فعال». `apiRef.setFilterModel` / `getFilterModel`.
 - **Verify:** تست DOM برای هر نوع فیلتر + تم تیره + RTL.
 
 ### PR-95 — کامپوننت فیلتر سفارشی
 
-- [ ] `PR-95` رجیستری فیلتر مانند رجیستری سلول: `filterComponents?: Record<string, FilterComponent>` و `ColumnDef.filter: 'text' | 'number' | ... | MyFilter`. مستند در `docs/cell-components.md` یا فایل جدید.
+- [x] `PR-95` رجیستری فیلتر مانند رجیستری سلول: `filterComponents?: Record<string, FilterComponent>` و `ColumnDef.filter: 'text' | 'number' | ... | MyFilter`. مستند در `docs/cell-components.md` یا فایل جدید.
 - **Verify:** تست: فیلتر سفارشی «فقط مبالغ رُند» روی دمو.
 
 ### PR-96 — قرارداد datasource سمت سرور
 
-- [ ] `PR-96` وقتی `rowModelType: 'serverSide' | 'infinite'` است، sort/filter محلی اعمال نشود و به‌جایش callback بزند:
+- [x] `PR-96` وقتی `rowModelType: 'serverSide' | 'infinite'` است، sort/filter محلی اعمال نشود و به‌جایش callback بزند:
 
 ```ts
 interface GridDatasource<TRow> {
@@ -382,18 +382,18 @@ interface GridDatasource<TRow> {
 
 ### PR-97 — مجازی‌سازی پیش‌فرض روشن (D17)
 
-- [ ] `PR-97` **D17 قفل — اجرا کن.** `resolveDesktopVirtualization` واقعاً وقتی session هست پیش‌فرض `true` بدهد. `virtualization={false}` تنها راه pagination بماند. صفحه‌بندی و مجازی‌سازی نباید هم‌زمان فرض شوند. تعامل با pin ستون index و spacerها تست شود.
+- [x] `PR-97` **D17 قفل — اجرا کن.** `resolveDesktopVirtualization` واقعاً وقتی session هست پیش‌فرض `true` بدهد. `virtualization={false}` تنها راه pagination بماند. صفحه‌بندی و مجازی‌سازی نباید هم‌زمان فرض شوند. تعامل با pin ستون index و spacerها تست شود.
 - **نکن:** حذف مسیر pagination — هاست‌های ERP به آن وابسته‌اند.
 - **Verify:** تست: بدون prop، ردیف‌های render شده ≪ کل؛ `virtualization={false}` صفحه‌بندی بدهد؛ فصل مهاجرت در `MIGRATION.md`.
 
 ### PR-98 — مجازی‌سازی ستون
 
-- [ ] `PR-98` پنجرهٔ افقی: `ViewportCalculator` را دو‌بعدی کن (`ColumnViewport` با عرض‌های تجمعی و جست‌وجوی دودویی). ستون‌های pin شده همیشه رندر شوند. spacer چپ/راست با آگاهی RTL. هدر، بدنه و فوتر باید **یک** پنجرهٔ ستون مشترک داشته باشند.
+- [x] `PR-98` پنجرهٔ افقی: `ViewportCalculator` را دو‌بعدی کن (`ColumnViewport` با عرض‌های تجمعی و جست‌وجوی دودویی). ستون‌های pin شده همیشه رندر شوند. spacer چپ/راست با آگاهی RTL. هدر، بدنه و فوتر باید **یک** پنجرهٔ ستون مشترک داشته باشند.
 - **Verify:** تست: ۲۰۰ ستون، `<th>` رندرشده < ۲۵؛ اسکرول افقی سلول اشتباه ندهد؛ pin سالم بماند.
 
 ### PR-99 — حذف O(n) از مسیر گرم
 
-- [ ] `PR-99` چهار مورد مستند در gap analysis:
+- [x] `PR-99` چهار مورد مستند در gap analysis:
   1. `ViewStateBuilder.ensureUiRowIndex` — sort کامل روی هر invalidate → ایندکس مرتب افزایشی (insert/remove در O(log n)).
   2. `NavigationManager` ناوبری عمودی — sort کل ردیف‌ها → همسایهٔ بعدی از ایندکس مرتب در O(1).
   3. `ui/gridSearch/utils.ts` — اسکن O(n) هر کوئری → ایندکس متن از PR-93.
@@ -402,22 +402,22 @@ interface GridDatasource<TRow> {
 
 ### PR-100 — بودجهٔ perf واقعی گرید
 
-- [ ] `PR-100` `infrastructure/__tests__/performance-budget.spec.ts` امروز فقط append رخداد را می‌سنجد. یک harness جدید: **۱۰۰k ردیف دامنهٔ واقعی hydrate شده**، سپس اندازه‌گیری mount اولیه، اسکرول ۱۰۰۰ گام، ۱۰۰ ویرایش سلول، sort، filter. بودجه در JSON جدا تا در CI قابل تنظیم باشد. نتیجه در README به‌صورت عدد منتشر شود (نه صفت).
+- [x] `PR-100` `infrastructure/__tests__/performance-budget.spec.ts` امروز فقط append رخداد را می‌سنجد. یک harness جدید: **۱۰۰k ردیف دامنهٔ واقعی hydrate شده**، سپس اندازه‌گیری mount اولیه، اسکرول ۱۰۰۰ گام، ۱۰۰ ویرایش سلول، sort، filter. بودجه در JSON جدا تا در CI قابل تنظیم باشد. نتیجه در README به‌صورت عدد منتشر شود (نه صفت).
 - **Verify:** CI روی runner استاندارد سبز؛ عدد در `docs/performance.md`.
 
 ### PR-101 — مصرف حافظه و ردیف‌های جدا از DOM
 
-- [ ] `PR-101` پروفایل حافظهٔ ۱۰۰k ردیف. اگر `Row`/`Cell` دامنه هر سلول را object می‌کند، مدل ستونی یا lazy cell در نظر بگیر. هدف مستند: < ۳۰۰ MB برای ۱۰۰k × ۲۰ ستون.
+- [x] `PR-101` پروفایل حافظهٔ ۱۰۰k ردیف. اگر `Row`/`Cell` دامنه هر سلول را object می‌کند، مدل ستونی یا lazy cell در نظر بگیر. هدف مستند: < ۳۰۰ MB برای ۱۰۰k × ۲۰ ستون.
 - **Verify:** تست حافظه با `process.memoryUsage()` و آستانه؛ اگر ناپایدار بود، skip با ثبت عدد در WORKLOG.
 
 ### PR-102 — مدل ردیف بلوکی (infinite / server-side)
 
-- [ ] `PR-102` روی قرارداد PR-96: کش بلوکی (اندازهٔ بلوک قابل تنظیم)، حالت loading سطر، `lastRow` نامعلوم، حذف بلوک با LRU، `apiRef.refreshServerSide()`. sort/filter به سرور واگذار شود.
+- [x] `PR-102` روی قرارداد PR-96: کش بلوکی (اندازهٔ بلوک قابل تنظیم)، حالت loading سطر، `lastRow` نامعلوم، حذف بلوک با LRU، `apiRef.refreshServerSide()`. sort/filter به سرور واگذار شود.
 - **Verify:** تست با datasource فیک: اسکرول تنها بلوک‌های لازم را بخواهد؛ تغییر فیلتر کش را دور بریزد.
 
 ### PR-103 — حالت‌های loading و overlay
 
-- [ ] `PR-103` `loading?: boolean`، overlay «بدون ردیف»، overlay «در حال بارگذاری»، skeleton ردیف در مدل infinite، `noRowsOverlayComponent` / `loadingOverlayComponent` قابل تعویض.
+- [x] `PR-103` `loading?: boolean`، overlay «بدون ردیف»، overlay «در حال بارگذاری»، skeleton ردیف در مدل infinite، `noRowsOverlayComponent` / `loadingOverlayComponent` قابل تعویض.
 - **Verify:** تست DOM هر سه حالت + تم تیره.
 
 ### Phase 19 Exit Criteria
@@ -439,32 +439,32 @@ interface GridDatasource<TRow> {
 
 ### PR-104 — مدل بازهٔ سلولی
 
-- [ ] `PR-104` `engine/selection/cellRange.ts`: `CellRange = { startRow, endRow, colIds }`، چند بازه، anchor + focus، `Shift+Arrow` گسترش، `Shift+Click`، `Ctrl+Click` بازهٔ جدید، `Ctrl+A` کل. تابع خالص؛ بدون DOM.
+- [x] `PR-104` `engine/selection/cellRange.ts`: `CellRange = { startRow, endRow, colIds }`، چند بازه، anchor + focus، `Shift+Arrow` گسترش، `Shift+Click`، `Ctrl+Click` بازهٔ جدید، `Ctrl+A` کل. تابع خالص؛ بدون DOM.
 - **Verify:** تست واحد گسترش/ادغام/نرمال‌سازی بازه‌ها.
 
 ### PR-105 — UI بازهٔ سلولی
 
-- [ ] `PR-105` رندر حاشیه و پس‌زمینهٔ بازه با توکن تم (`--pdg-range-bg`, `--pdg-range-border`). سازگار با مجازی‌سازی ردیف و ستون (بازه‌ای که از پنجره بیرون است باید حاشیهٔ درست بدهد). `apiRef.getCellRanges()` / `addCellRange()`.
+- [x] `PR-105` رندر حاشیه و پس‌زمینهٔ بازه با توکن تم (`--pdg-range-bg`, `--pdg-range-border`). سازگار با مجازی‌سازی ردیف و ستون (بازه‌ای که از پنجره بیرون است باید حاشیهٔ درست بدهد). `apiRef.getCellRanges()` / `addCellRange()`.
 - **Verify:** تست DOM + دمو؛ اسکرول وسط بازه ظاهر را نشکند.
 
 ### PR-106 — کپی به کلیپ‌بورد سیستم
 
-- [ ] `PR-106` `Ctrl+C` (D18) بازهٔ انتخابی را بنویسد: `text/plain` با TSV و `text/html` با `<table>` تا در Excel/Word فرمت حفظ شود. `valueFormatter` اعمال شود یا مقدار خام — با گزینهٔ `copyFormattedValue`. شامل/بدون هدر با `copyHeadersToClipboard`. رویداد `onClipboardCopy` برای override هاست.
+- [x] `PR-106` `Ctrl+C` (D18) بازهٔ انتخابی را بنویسد: `text/plain` با TSV و `text/html` با `<table>` تا در Excel/Word فرمت حفظ شود. `valueFormatter` اعمال شود یا مقدار خام — با گزینهٔ `copyFormattedValue`. شامل/بدون هدر با `copyHeadersToClipboard`. رویداد `onClipboardCopy` برای override هاست.
 - **Verify:** تست با `navigator.clipboard` mock: TSV درست، ارقام فارسی به لاتین برای Excel (تنظیم‌پذیر)، تست دستی round-trip در Excel و ثبت در WORKLOG.
 
 ### PR-107 — چسباندن از Excel
 
-- [ ] `PR-107` `Ctrl+V`: TSV/CSV را parse کن (شامل مقادیر نقل‌قول‌شده و چندخطی)، به بازهٔ مقصد tile کن، **ردیف کم بیاید ⇒ ردیف اضافه کن** (با `pasteAddsRows` قابل خاموش‌کردن). همهٔ تغییرها یک `correlationId` بگیرند تا **یک واحد undo** شوند (زیرساختش از PR-15b/PR-33 موجود است). parse تاریخ جلالی و مبلغ با جداکنندهٔ فارسی. سلول‌های `editable: false` رد شوند با گزارش.
+- [x] `PR-107` `Ctrl+V`: TSV/CSV را parse کن (شامل مقادیر نقل‌قول‌شده و چندخطی)، به بازهٔ مقصد tile کن، **ردیف کم بیاید ⇒ ردیف اضافه کن** (با `pasteAddsRows` قابل خاموش‌کردن). همهٔ تغییرها یک `correlationId` بگیرند تا **یک واحد undo** شوند (زیرساختش از PR-15b/PR-33 موجود است). parse تاریخ جلالی و مبلغ با جداکنندهٔ فارسی. سلول‌های `editable: false` رد شوند با گزارش.
 - **Verify:** تست: چسباندن ۵۰۰×۱۰ سلول ⇒ یک undo؛ رقم فارسی «۱۲۳٫۴۵۶» درست parse شود؛ تاریخ «۱۴۰۵/۰۶/۲۰» درست بنشیند.
 
 ### PR-108 — fill handle
 
-- [ ] `PR-108` مربع گوشهٔ پایین بازه؛ درگ عمودی/افقی کپی کند. تشخیص سری برای عدد و تاریخ جلالی (`۱, ۲, ۳` و `۱۴۰۵/۰۱/۳۱ → ۱۴۰۵/۰۲/۳۱`). `Ctrl+درگ` کپی خالص. یک واحد undo.
+- [x] `PR-108` مربع گوشهٔ پایین بازه؛ درگ عمودی/افقی کپی کند. تشخیص سری برای عدد و تاریخ جلالی (`۱, ۲, ۳` و `۱۴۰۵/۰۱/۳۱ → ۱۴۰۵/۰۲/۳۱`). `Ctrl+درگ` کپی خالص. یک واحد undo.
 - **Verify:** تست سری عددی، سری تاریخ جلالی، کپی متن، undo واحد.
 
 ### PR-109 — مجموعهٔ میانبر استاندارد (D18)
 
-- [ ] `PR-109` **D18 قفل — اجرا کن.** `Ctrl+C/X/V` استاندارد؛ `Alt+C/X/V` فعلی به‌عنوان alias با `@deprecated` در docs. افزودن `Home` / `End` / `Ctrl+Home` / `Ctrl+End` / `Ctrl+Shift+Arrow`. جدول کامل میانبرها در `docs/keyboard.md` + تست برای هر ردیف جدول.
+- [x] `PR-109` **D18 قفل — اجرا کن.** `Ctrl+C/X/V` استاندارد؛ `Alt+C/X/V` فعلی به‌عنوان alias با `@deprecated` در docs. افزودن `Home` / `End` / `Ctrl+Home` / `Ctrl+End` / `Ctrl+Shift+Arrow`. جدول کامل میانبرها در `docs/keyboard.md` + تست برای هر ردیف جدول.
 - **Verify:** تست پارامتری روی جدول میانبرها (هیچ ردیف مستند بدون تست).
 
 ### Phase 20 Exit Criteria
@@ -486,37 +486,37 @@ interface GridDatasource<TRow> {
 
 ### PR-110 — pin هر ستون (D19)
 
-- [ ] `PR-110` **D19 قفل — اجرا کن (جانشین D10).** `ColumnDef.pinned: 'start' | 'end' | null` با معنای منطقی RTL (`start` = راست در RTL). سه ناحیهٔ رندر (pin start / scrollable / pin end) در هدر، بدنه، بدنهٔ مجازی، و فوتر. سازگار با مجازی‌سازی ستون PR-98.
+- [x] `PR-110` **D19 قفل — اجرا کن (جانشین D10).** `ColumnDef.pinned: 'start' | 'end' | null` با معنای منطقی RTL (`start` = راست در RTL). سه ناحیهٔ رندر (pin start / scrollable / pin end) در هدر، بدنه، بدنهٔ مجازی، و فوتر. سازگار با مجازی‌سازی ستون PR-98.
 - **Verify:** تست: pin دو ستون در دو طرف + اسکرول افقی + RTL و LTR.
 
 ### PR-111 — hide/show ستون در runtime
 
-- [ ] `PR-111` `apiRef.setColumnVisible(colId, visible)` + `columnDefs[].hide` واکنشی. رعایت قواعد `visibility` دامنه‌ای موجود (RBAC) — یعنی هاست نتواند ستونی را نشان دهد که سیاست منع کرده.
+- [x] `PR-111` `apiRef.setColumnVisible(colId, visible)` + `columnDefs[].hide` واکنشی. رعایت قواعد `visibility` دامنه‌ای موجود (RBAC) — یعنی هاست نتواند ستونی را نشان دهد که سیاست منع کرده.
 - **Verify:** تست: مخفی‌کردن ستون، ایندکس ARIA درست بماند، RBAC override نشود.
 
 ### PR-112 — auto-size و flex
 
-- [ ] `PR-112` `autoSizeColumns()` با اندازه‌گیری متن خارج از جریان (canvas `measureText` برای اجتناب از reflow)، `sizeColumnsToFit()`، `ColumnDef.flex`. دابل‌کلیک روی هندل resize = auto-size همان ستون.
+- [x] `PR-112` `autoSizeColumns()` با اندازه‌گیری متن خارج از جریان (canvas `measureText` برای اجتناب از reflow)، `sizeColumnsToFit()`، `ColumnDef.flex`. دابل‌کلیک روی هندل resize = auto-size همان ستون.
 - **Verify:** تست: auto-size روی محتوای بلند فارسی عرض بزرگ‌تر بدهد؛ `flex: 1` جمع عرض = عرض کانتینر.
 
 ### PR-113 — هدر چندسطحی (column groups)
 
-- [ ] `PR-113` `ColumnGroupDef { headerName, children, marryChildren? }`. هدر چندردیفه با `colspan`، باز/بستن گروه، `aria-colspan`. reorder در سطح گروه.
+- [x] `PR-113` `ColumnGroupDef { headerName, children, marryChildren? }`. هدر چندردیفه با `colspan`، باز/بستن گروه، `aria-colspan`. reorder در سطح گروه.
 - **Verify:** تست: دو سطح گروه + `aria` درست + reorder داخل گروه.
 
 ### PR-114 — منوی ستون
 
-- [ ] `PR-114` منوی `⋮` روی هدر: sort asc/desc/none، فیلتر، مخفی‌کردن، pin start/end/none، auto-size، «تنظیم ستون‌ها». آیتم‌ها قابل تنظیم با `columnMenuItems` و افزودن آیتم سفارشی هاست.
+- [x] `PR-114` منوی `⋮` روی هدر: sort asc/desc/none، فیلتر، مخفی‌کردن، pin start/end/none، auto-size، «تنظیم ستون‌ها». آیتم‌ها قابل تنظیم با `columnMenuItems` و افزودن آیتم سفارشی هاست.
 - **Verify:** تست DOM هر آیتم + کیبورد (فلش/Enter/Esc) + تم تیره.
 
 ### PR-115 — `columnState` ذخیره و بازگردانی
 
-- [ ] `PR-115` `getColumnState()` / `applyColumnState()` شامل عرض، ترتیب، pin، hide، sort. persist اختیاری در همان EventStore (رخداد `COLUMN_STATE_CHANGED`) یا `localStorage` با کلید `stateKey`. این کاری است که کاربران سازمانی همیشه می‌خواهند و امروز عرض ستون فقط در حافظهٔ جلسه است.
+- [x] `PR-115` `getColumnState()` / `applyColumnState()` شامل عرض، ترتیب، pin، hide، sort. persist اختیاری در همان EventStore (رخداد `COLUMN_STATE_CHANGED`) یا `localStorage` با کلید `stateKey`. این کاری است که کاربران سازمانی همیشه می‌خواهند و امروز عرض ستون فقط در حافظهٔ جلسه است.
 - **Verify:** تست: resize + reorder + reload ⇒ همان چیدمان.
 
 ### PR-116 — ردیف‌های pin بالا/پایین
 
-- [ ] `PR-116` `pinnedTopRowData` / `pinnedBottomRowData`. کاربرد سند: ردیف «جمع کل» و ردیف «ورود سریع». باید از مجازی‌سازی مستقل رندر شوند.
+- [x] `PR-116` `pinnedTopRowData` / `pinnedBottomRowData`. کاربرد سند: ردیف «جمع کل» و ردیف «ورود سریع». باید از مجازی‌سازی مستقل رندر شوند.
 - **Verify:** تست: ردیف pin شده با اسکرول جابه‌جا نشود؛ فوتر aggregation نشکند.
 
 ### Phase 21 Exit Criteria
@@ -534,32 +534,32 @@ interface GridDatasource<TRow> {
 
 ### PR-117 — RFC-002: aggregation و grouping
 
-- [ ] `PR-117` `docs/rfc/RFC-002-aggregation-grouping.md`: مدل داده، اثر روی EventStore (آیا گروه رخداد دارد؟)، اثر روی undo، اثر روی مجازی‌سازی (ردیف گروه در پنجره)، اثر روی صادرات Excel/PDF. **بدون تأیید این RFC، PR-118 به بعد شروع نشود.**
+- [x] `PR-117` `docs/rfc/RFC-002-aggregation-grouping.md`: مدل داده، اثر روی EventStore (آیا گروه رخداد دارد؟)، اثر روی undo، اثر روی مجازی‌سازی (ردیف گروه در پنجره)، اثر روی صادرات Excel/PDF. **بدون تأیید این RFC، PR-118 به بعد شروع نشود.**
 - **Verify:** تأیید کاربر ثبت‌شده در WORKLOG.
 
 ### PR-118 — موتور aggregation
 
-- [ ] `PR-118` `engine/dataOps/aggregation.ts`: `aggFunc: 'sum'|'avg'|'min'|'max'|'count'|'first'|'last'| ((values) => unknown)`. محاسبهٔ **افزایشی** روی رخداد تغییر سلول (نه بازمحاسبهٔ کامل). دقت پول: جمع با عدد صحیح ریال یا decimal، نه float.
+- [x] `PR-118` `engine/dataOps/aggregation.ts`: `aggFunc: 'sum'|'avg'|'min'|'max'|'count'|'first'|'last'| ((values) => unknown)`. محاسبهٔ **افزایشی** روی رخداد تغییر سلول (نه بازمحاسبهٔ کامل). دقت پول: جمع با عدد صحیح ریال یا decimal، نه float.
 - **Verify:** تست: جمع ۱۰۰k مبلغ بدون خطای float؛ ویرایش یک سلول O(1) جمع را به‌روز کند.
 
 ### PR-119 — فوتر از مدل aggregation
 
-- [ ] `PR-119` `ERPTableFooter` از `ColumnDef.aggFunc` بخواند، نه از منطق sum هاردکد. چند ردیف فوتر (`جمع`، `میانگین`) با `footerRows`.
+- [x] `PR-119` `ERPTableFooter` از `ColumnDef.aggFunc` بخواند، نه از منطق sum هاردکد. چند ردیف فوتر (`جمع`، `میانگین`) با `footerRows`.
 - **Verify:** تست: ستون با `aggFunc: 'avg'`؛ ستون بدون aggFunc خالی بماند.
 
 ### PR-120 — موتور grouping تک‌سطحی
 
-- [ ] `PR-120` `groupBy: colId | colId[]` (فعلاً یک سطح فعال، API آمادهٔ چندسطح). ردیف گروه با مقدار aggregation، باز/بسته، `groupDefaultExpanded`. ایندکس ردیف باید ردیف‌های گروه را در ترتیب مسطح بشناسد تا مجازی‌سازی نشکند.
+- [x] `PR-120` `groupBy: colId | colId[]` (فعلاً یک سطح فعال، API آمادهٔ چندسطح). ردیف گروه با مقدار aggregation، باز/بسته، `groupDefaultExpanded`. ایندکس ردیف باید ردیف‌های گروه را در ترتیب مسطح بشناسد تا مجازی‌سازی نشکند.
 - **Verify:** تست: گروه‌بندی بر «نوع کالا»، جمع هر گروه درست، ۱۰۰k ردیف زیر بودجه.
 
 ### PR-121 — UI grouping
 
-- [ ] `PR-121` ردیف گروه با chevron، تودرتویی، `aria-expanded` / `aria-level`، انتخاب گروه ⇒ انتخاب فرزندان.
+- [x] `PR-121` ردیف گروه با chevron، تودرتویی، `aria-expanded` / `aria-level`، انتخاب گروه ⇒ انتخاب فرزندان.
 - **Verify:** تست DOM + a11y + کیبورد (فلش راست/چپ باز/بسته).
 
 ### PR-122 — صادرات با گروه و جمع
 
-- [ ] `PR-122` Excel و PDF ردیف گروه و جمع‌ها را منتقل کنند. Excel با گروه‌بندی بومی (outline) اگر ممکن است. CSV هم اضافه شود (`./plugins/csv`، سبک، Tier 1 گمشده).
+- [x] `PR-122` Excel و PDF ردیف گروه و جمع‌ها را منتقل کنند. Excel با گروه‌بندی بومی (outline) اگر ممکن است. CSV هم اضافه شود (`./plugins/csv`، سبک، Tier 1 گمشده).
 - **Verify:** تست round-trip؛ باز کردن فایل در Excel و ثبت در WORKLOG.
 
 ### Phase 22 Exit Criteria
@@ -578,32 +578,32 @@ interface GridDatasource<TRow> {
 
 ### PR-123 — تست a11y واقعی
 
-- [ ] `PR-123` `ui/desktop/__tests__/grid-a11y.spec.ts` امروز فقط grep سورس است. با `jsdom` + `axe-core` تست واقعی بنویس: گرید ۲۰ ردیف، حالت‌های sort/filter/group/pin، مودال‌ها، منوی ستون. صفر violation سطح `serious`/`critical`.
+- [x] `PR-123` `ui/desktop/__tests__/grid-a11y.spec.ts` امروز فقط grep سورس است. با `jsdom` + `axe-core` تست واقعی بنویس: گرید ۲۰ ردیف، حالت‌های sort/filter/group/pin، مودال‌ها، منوی ستون. صفر violation سطح `serious`/`critical`.
 - **Verify:** axe در CI؛ حذف عمدی یک `aria-label` باید قرمز کند.
 
 ### PR-124 — مدیریت فوکوس
 
-- [ ] `PR-124` فوکوس یک‌tab-stop روی گرید با `aria-activedescendant` (الگوی APG). `Esc` از ادیتور به سلول، از سلول به گرید. تله فوکوس در مودال و منو. `:focus-visible` روی ادیتور سلول (امروز `outline-none` است).
+- [x] `PR-124` فوکوس یک‌tab-stop روی گرید با `aria-activedescendant` (الگوی APG). `Esc` از ادیتور به سلول، از سلول به گرید. تله فوکوس در مودال و منو. `:focus-visible` روی ادیتور سلول (امروز `outline-none` است).
 - **Verify:** تست کیبورد: `Tab` یک‌بار وارد گرید شود، فلش داخل حرکت کند، `Tab` دوم خارج شود.
 
 ### PR-125 — اعلان live region
 
-- [ ] `PR-125` `aria-live` برای «مرتب شد بر اساس X صعودی»، «۱۲ ردیف از ۵۰۰ پس از فیلتر»، «۳ ردیف انتخاب شد»، خطای validation. متن‌ها از `messages` تا قابل ترجمه باشند.
+- [x] `PR-125` `aria-live` برای «مرتب شد بر اساس X صعودی»، «۱۲ ردیف از ۵۰۰ پس از فیلتر»، «۳ ردیف انتخاب شد»، خطای validation. متن‌ها از `messages` تا قابل ترجمه باشند.
 - **Verify:** تست: تغییر sort متن live region را عوض کند.
 
 ### PR-126 — لغو ویرایش و چرخهٔ ادیتور
 
-- [ ] `PR-126` `Esc` ویرایش را لغو کند و مقدار قبلی برگردد (امروز commit فوری است و راه لغو نیست). `Enter` تأیید + حرکت پایین، `Tab` تأیید + حرکت کنار. `singleClickEdit`، `stopEditingWhenCellsLoseFocus`، ویرایش تمام‌ردیف دسکتاپ (`editType: 'fullRow'`) با `onRowValueChanged`.
+- [x] `PR-126` `Esc` ویرایش را لغو کند و مقدار قبلی برگردد (امروز commit فوری است و راه لغو نیست). `Enter` تأیید + حرکت پایین، `Tab` تأیید + حرکت کنار. `singleClickEdit`، `stopEditingWhenCellsLoseFocus`، ویرایش تمام‌ردیف دسکتاپ (`editType: 'fullRow'`) با `onRowValueChanged`.
 - **Verify:** تست: تایپ + `Esc` مقدار را برنگرداند به EventStore؛ `Enter` یک رخداد بزند.
 
 ### PR-127 — i18n و locale pack
 
-- [ ] `PR-127` `messages` فعلی را به locale pack ارتقا بده: `fa`، `en`، `ar` در `./locales/*`. عدد و تاریخ از `Intl` با `numberingSystem` قابل تنظیم. `dir` از locale مشتق شود ولی override بپذیرد.
+- [x] `PR-127` `messages` فعلی را به locale pack ارتقا بده: `fa`، `en`، `ar` در `./locales/*`. عدد و تاریخ از `Intl` با `numberingSystem` قابل تنظیم. `dir` از locale مشتق شود ولی override بپذیرد.
 - **Verify:** تست: `locale="en"` متن‌ها انگلیسی و `dir="ltr"`؛ هیچ رشتهٔ فارسی هاردکد در `ui/` نماند (تست grep).
 
 ### PR-128 — `dateAdapter` تعویض‌پذیر (D21)
 
-- [ ] `PR-128` **D21 قفل — اجرا کن.** تقویم به‌صورت port: `DateAdapter { parse, format, addDays, startOfMonth, compare }`. `jalaliAdapter` پیش‌فرض، `gregorianAdapter` ارائه شود. `react-persian-range-picker` از dependency اصلی به peer اختیاری برود (کاهش bundle) و DatePicker پیش‌فرض بدون آن هم کار کند.
+- [x] `PR-128` **D21 قفل — اجرا کن.** تقویم به‌صورت port: `DateAdapter { parse, format, addDays, startOfMonth, compare }`. `jalaliAdapter` پیش‌فرض، `gregorianAdapter` ارائه شود. `react-persian-range-picker` از dependency اصلی به peer اختیاری برود (کاهش bundle) و DatePicker پیش‌فرض بدون آن هم کار کند.
 - **Verify:** تست: همان گرید با `gregorianAdapter`؛ bundle `.` بعد از حذف date-picker کاهش نشان دهد.
 
 ### Phase 23 Exit Criteria
@@ -623,17 +623,17 @@ interface GridDatasource<TRow> {
 
 ### PR-129 — سایت مستندات انگلیسی‌محور (D23)
 
-- [ ] `PR-129` **D23 قفل — اجرا کن.** سایت مستندات (Docusaurus یا VitePress) روی GitHub Pages: Getting Started، Concepts، هر فیچر یک صفحه با مثال زنده، API Reference **تولیدشده با TypeDoc از `publish/entry.ts`** (نه جدول دستی که کهنه می‌شود). انگلیسی منبع، فارسی ترجمه.
+- [x] `PR-129` **D23 قفل — اجرا کن.** سایت مستندات (Docusaurus یا VitePress) روی GitHub Pages: Getting Started، Concepts، هر فیچر یک صفحه با مثال زنده، API Reference **تولیدشده با TypeDoc از `publish/entry.ts`** (نه جدول دستی که کهنه می‌شود). انگلیسی منبع، فارسی ترجمه.
 - **Verify:** build سایت در CI؛ لینک‌شکسته صفر؛ API reference از کد تولید شود.
 
 ### PR-130 — گالری مثال
 
-- [ ] `PR-130` حداقل ۱۲ مثال مستقل و قابل کپی: پایه، sort/filter، ویرایش + validation، انتخاب بازه و کلیپ‌بورد، مجازی ۱۰۰k، infinite/server-side، گروه‌بندی + جمع، تم سفارشی + تیره، سلول سفارشی، خروجی Excel/PDF/CSV، تاریخ جلالی، پنل تاریخچه/audit. هر مثال StackBlitz/CodeSandbox.
+- [x] `PR-130` حداقل ۱۲ مثال مستقل و قابل کپی: پایه، sort/filter، ویرایش + validation، انتخاب بازه و کلیپ‌بورد، مجازی ۱۰۰k، infinite/server-side، گروه‌بندی + جمع، تم سفارشی + تیره، سلول سفارشی، خروجی Excel/PDF/CSV، تاریخ جلالی، پنل تاریخچه/audit. هر مثال StackBlitz/CodeSandbox.
 - **Verify:** هر مثال در CI کامپایل شود (`tsc` روی پوشهٔ examples).
 
 ### PR-131 — `MIGRATION.md` و codemod
 
-- [ ] `PR-131` راهنمای مهاجرت یکجا برای همهٔ شکستن‌های D13–D22 با جدول «قدیم → جدید». codemod قابل اجرا با `npx persian-data-grid-codemod`.
+- [x] `PR-131` راهنمای مهاجرت یکجا برای همهٔ شکستن‌های D13–D22 با جدول «قدیم → جدید». codemod قابل اجرا با `npx persian-data-grid-codemod`.
 - **Verify:** codemod روی یک پروژهٔ fixture 0.5 اجرا شود و کامپایل بدهد.
 
 ### PR-132 — Monorepo و بسته‌های جدا (D22)
@@ -643,17 +643,17 @@ interface GridDatasource<TRow> {
 
 ### PR-133 — تست e2e و رگرسیون بصری
 
-- [ ] `PR-133` Playwright: سناریوهای واقعی (ویرایش + undo، چسباندن از کلیپ‌بورد، اسکرول ۱۰۰k، sort/filter، خروجی Excel و باز کردن فایل). اسنپ‌شات بصری برای تم روشن/تیره و RTL/LTR.
+- [x] `PR-133` Playwright: سناریوهای واقعی (ویرایش + undo، چسباندن از کلیپ‌بورد، اسکرول ۱۰۰k، sort/filter، خروجی Excel و باز کردن فایل). اسنپ‌شات بصری برای تم روشن/تیره و RTL/LTR.
 - **Verify:** e2e در CI؛ نرخ flake < ۱٪ در ۱۰ اجرا.
 
 ### PR-134 — سیاست semver و انتشار (D25)
 
-- [ ] `PR-134` **D25 قفل — اجرا کن.** سیاست نسخه‌گذاری در `CONTRIBUTING.md`، changesets، `npm publish --provenance`، release note خودکار از CHANGELOG، کانال `next` برای پیش‌انتشار.
+- [x] `PR-134` **D25 قفل — اجرا کن.** سیاست نسخه‌گذاری در `CONTRIBUTING.md`، changesets، `npm publish --provenance`، release note خودکار از CHANGELOG، کانال `next` برای پیش‌انتشار.
 - **Verify:** یک انتشار `0.13.0-next.0` کامل انجام شود.
 
 ### PR-135 — گِیت انتشار `1.0.0`
 
-- [ ] `PR-135` چک‌لیست معیار انتشار از `docs/ag-grid-gap-analysis.md` §۴ را به یک تست/اسکریپت CI تبدیل کن (`scripts/release-gate.mjs`): امتیاز کارت ≥ ۷۰، bundle ≤ ۶۵ KB gzip، axe صفر، بودجهٔ ۱۰۰k سبز، صفر `any` عمومی، هر ادعای README تست‌دار، ≥ ۱۲ مثال. `1.0.0` فقط با گِیت سبز.
+- [x] `PR-135` چک‌لیست معیار انتشار از `docs/ag-grid-gap-analysis.md` §۴ را به یک تست/اسکریپت CI تبدیل کن (`scripts/release-gate.mjs`): امتیاز کارت ≥ ۷۰، bundle ≤ ۶۵ KB gzip، axe صفر، بودجهٔ ۱۰۰k سبز، صفر `any` عمومی، هر ادعای README تست‌دار، ≥ ۱۲ مثال. `1.0.0` فقط با گِیت سبز.
 - **Verify:** اسکریپت روی وضعیت امروز باید **قرمز** باشد و دلیل دقیق بدهد.
 
 ### Phase 24 Exit Criteria
@@ -676,22 +676,22 @@ interface GridDatasource<TRow> {
 
 ### PR-136 — پنل تاریخچه/Audit به‌عنوان کامپوننت محصول
 
-- [ ] `PR-136` `HistoryPanelViewModel` از PR-11/PR-12 موجود است ولی **هیچ UI ندارد**. کامپوننت `<GridHistoryPanel />`: تایم‌لاین «چه کسی، کِی، کدام سلول، از چه به چه»، فیلتر severity/category، پرش به سلول، بازگردانی نقطه‌ای. این چیزی است که ag-grid Enterprise هم نمی‌فروشد.
+- [x] `PR-136` `HistoryPanelViewModel` از PR-11/PR-12 موجود است ولی **هیچ UI ندارد**. کامپوننت `<GridHistoryPanel />`: تایم‌لاین «چه کسی، کِی، کدام سلول، از چه به چه»، فیلتر severity/category، پرش به سلول، بازگردانی نقطه‌ای. این چیزی است که ag-grid Enterprise هم نمی‌فروشد.
 - **Verify:** تست DOM + دمو؛ ویرایش سلول در پنل ظاهر شود؛ کلیک روی آیتم به سلول اسکرول کند.
 
 ### PR-137 — حالت آفلاین قابل‌دیدن
 
-- [ ] `PR-137` نشانگر آفلاین/آنلاین، صف تغییرات معلق، «۱۲ تغییر ذخیره‌نشده»، بازیابی پس از refresh از IndexedDB + snapshot. زیرساخت موجود است؛ محصول نیست.
+- [x] `PR-137` نشانگر آفلاین/آنلاین، صف تغییرات معلق، «۱۲ تغییر ذخیره‌نشده»، بازیابی پس از refresh از IndexedDB + snapshot. زیرساخت موجود است؛ محصول نیست.
 - **Verify:** تست: قطع شبکه، ویرایش، refresh، بازیابی کامل.
 
 ### PR-138 — Port همگام‌سازی و حل تعارض
 
-- [ ] `PR-138` `SyncPort`: push رخدادهای محلی، pull رخدادهای سرور، تشخیص تعارض روی `(rowId, colId, version)`، سیاست‌های `lastWriteWins` / `serverWins` / `manual` با UI انتخاب. OCC از `InMemoryEventStore` قبلاً هست — روی آن بساز.
+- [x] `PR-138` `SyncPort`: push رخدادهای محلی، pull رخدادهای سرور، تشخیص تعارض روی `(rowId, colId, version)`، سیاست‌های `lastWriteWins` / `serverWins` / `manual` با UI انتخاب. OCC از `InMemoryEventStore` قبلاً هست — روی آن بساز.
 - **Verify:** تست: دو کلاینت یک سلول را عوض کنند؛ هر سه سیاست خروجی درست بدهند.
 
 ### PR-139 — حضور و هم‌ویرایشی
 
-- [ ] `PR-139` presence (کرسر و انتخاب کاربران دیگر) روی stream رخداد + transport تعویض‌پذیر (WebSocket/BroadcastChannel). ادغام بدون تعارض برای ویرایش سلول‌های مختلف.
+- [x] `PR-139` presence (کرسر و انتخاب کاربران دیگر) روی stream رخداد + transport تعویض‌پذیر (WebSocket/BroadcastChannel). ادغام بدون تعارض برای ویرایش سلول‌های مختلف.
 - **Verify:** تست با دو session در یک تب (BroadcastChannel) + دمو.
 
 ### PR-140 — اکوسیستم تاریخ و مالی فارسی

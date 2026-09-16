@@ -9,3 +9,12 @@ export {
   virtualWindowKey,
 } from './virtualWindow';
 export type { VirtualWindowModel } from './virtualWindow';
+export {
+  ColumnWindowProvider,
+  useColumnWindow,
+  useColumnWindowOrAll,
+  buildColumnWindowModel,
+  scrollOffsetFromInlineStart,
+} from './columnWindow';
+export type { ColumnWindowModel } from './columnWindow';
+export { ColumnWindowCells } from './ColumnWindowCells';

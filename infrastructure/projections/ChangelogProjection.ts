@@ -77,14 +77,20 @@ export class ChangelogProjection {
     if (filter.rowId !== undefined) {
       const rid = filter.rowId;
       result = result.filter((e) => {
-        const p = e.payload as any;
+        const p =
+          typeof e.payload === 'object' && e.payload !== null
+            ? (e.payload as Record<string, unknown>)
+            : undefined;
         return p?.rowId === rid;
       });
     }
     if (filter.columnId) {
       const cid = filter.columnId;
       result = result.filter((e) => {
-        const p = e.payload as any;
+        const p =
+          typeof e.payload === 'object' && e.payload !== null
+            ? (e.payload as Record<string, unknown>)
+            : undefined;
         return p?.columnId === cid;
       });
     }

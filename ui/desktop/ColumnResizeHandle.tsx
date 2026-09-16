@@ -10,6 +10,8 @@ type Props = {
   column: ColumnWidthHint;
   direction: 'rtl' | 'ltr';
   onResize: (width: number) => void;
+  /** Double-click resize handle → auto-size this column (PR-112). */
+  onAutoSize?: () => void;
 };
 
 export function ColumnResizeHandle({
@@ -18,6 +20,7 @@ export function ColumnResizeHandle({
   column,
   direction,
   onResize,
+  onAutoSize,
 }: Props) {
   const drag = useRef<{ startX: number; startW: number } | null>(null);
 
@@ -66,6 +69,11 @@ export function ColumnResizeHandle({
       onLostPointerCapture={() => {
         drag.current = null;
         document.body.classList.remove('erp-col-resizing');
+      }}
+      onDoubleClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onAutoSize?.();
       }}
     />
   );

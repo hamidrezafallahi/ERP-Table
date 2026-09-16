@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useId, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { trapTabKey } from '../../infrastructure/ui/focusTrap';
 import { useThemePortalStyle } from '../host';
 
 type Props = {
@@ -71,11 +72,47 @@ export function CustomModal({
   contentClassName,
 }: ModalProps) {
   const overlayStyle = useThemePortalStyle();
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const id = requestAnimationFrame(() => {
+      const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      focusables?.[0]?.focus();
+    });
+    const onKey = (e: KeyboardEvent) => {
+      if (!dialogRef.current) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModal?.();
+        return;
+      }
+      trapTabKey(dialogRef.current, e);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      cancelAnimationFrame(id);
+      document.removeEventListener('keydown', onKey);
+      previouslyFocused?.focus?.();
+    };
+  }, [isModalOpen, closeModal]);
+
   if (!isModalOpen || typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="erp-table-modal-overlay" style={overlayStyle} onClick={closeModal}>
+    <div
+      className="erp-table-modal-overlay"
+      style={overlayStyle}
+      onClick={() => closeModal?.()}
+    >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={typeof headerName === 'string' ? headerName : undefined}
         className="erp-table-modal"
         style={{ width }}
         onClick={(e) => e.stopPropagation()}
@@ -83,7 +120,11 @@ export function CustomModal({
         <div className="erp-table-modal__header">
           {headerIcon}
           <span>{headerName}</span>
-          <button type="button" className="erp-table-modal__close" onClick={closeModal}>
+          <button
+            type="button"
+            className="erp-table-modal__close"
+            onClick={() => closeModal?.()}
+          >
             ×
           </button>
         </div>

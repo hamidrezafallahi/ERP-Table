@@ -2,6 +2,7 @@
 
 import { Table } from '../../domain/entities/Table';
 import { TableActions } from '../../domain/value-objects';
+import type { FilterModel } from '../../engine/dataOps/filterModel';
 import type {
   GridSearchState,
   MobileEditorState,
@@ -121,6 +122,15 @@ export interface DuplicateRowCommand extends BaseTableCommand {
  * Clone one source row (clipboard paste). Engine batches these with a shared
  * correlationId so undo reverses the whole paste unit.
  */
+export interface PasteCellsCommand extends BaseTableCommand {
+  readonly type: 'PASTE_CELLS';
+  readonly updates: readonly {
+    rowId: number;
+    columnId: string;
+    rawText: string;
+  }[];
+}
+
 export interface PasteRowCommand extends BaseTableCommand {
   readonly type: 'PASTE_ROW';
   readonly sourceRowId: number;
@@ -306,6 +316,70 @@ export interface ResizeColumnCommand {
   readonly width: number;
 }
 
+export interface SetColumnVisibleCommand {
+  readonly type: 'SET_COLUMN_VISIBLE';
+  readonly tableKey: string;
+  readonly columnId: string;
+  readonly visible: boolean;
+}
+
+export interface ToggleColumnGroupCommand {
+  readonly type: 'TOGGLE_COLUMN_GROUP';
+  readonly tableKey: string;
+  readonly groupId: string;
+}
+
+export interface SetColumnPinnedCommand {
+  readonly type: 'SET_COLUMN_PIN';
+  readonly tableKey: string;
+  readonly columnId: string;
+  readonly pinned: 'start' | 'end' | null;
+}
+
+export interface SetSortModelCommand {
+  readonly type: 'SET_SORT_MODEL';
+  readonly tableKey: string;
+  /** Empty / omit fields cleared by host ⇒ document `index` order. */
+  readonly sortModel: readonly {
+    readonly colId: string;
+    readonly sort: 'asc' | 'desc';
+  }[];
+}
+
+export interface SetQuickFilterTextCommand {
+  readonly type: 'SET_QUICK_FILTER_TEXT';
+  readonly tableKey: string;
+  /** Empty string clears the filter (all rows visible). */
+  readonly quickFilterText: string;
+}
+
+export interface SetFilterModelCommand {
+  readonly type: 'SET_FILTER_MODEL';
+  readonly tableKey: string;
+  /** Empty object clears all column filters. */
+  readonly filterModel: FilterModel;
+}
+
+export interface SetRowGroupColumnsCommand {
+  readonly type: 'SET_ROW_GROUP_COLUMNS';
+  readonly tableKey: string;
+  /** Only the first entry is active in 0.12.0 (RFC-002). */
+  readonly columns: readonly string[];
+}
+
+export interface SetGroupDefaultExpandedCommand {
+  readonly type: 'SET_GROUP_DEFAULT_EXPANDED';
+  readonly tableKey: string;
+  readonly expanded: boolean;
+}
+
+export interface ToggleRowGroupCommand {
+  readonly type: 'TOGGLE_ROW_GROUP';
+  readonly tableKey: string;
+  /** `normalizeGroupKey` of the group. */
+  readonly groupKey: string;
+}
+
 /* ---------- Union ---------- */
 
 export type EngineTableCommand =
@@ -332,7 +406,16 @@ export type EngineTableCommand =
   | ChangeTableActionCommand
   | SetGridSearchCommand
   | SetMobileEditorCommand
-  | ResizeColumnCommand;
+  | ResizeColumnCommand
+  | SetColumnVisibleCommand
+  | ToggleColumnGroupCommand
+  | SetColumnPinnedCommand
+  | SetSortModelCommand
+  | SetQuickFilterTextCommand
+  | SetFilterModelCommand
+  | SetRowGroupColumnsCommand
+  | SetGroupDefaultExpandedCommand
+  | ToggleRowGroupCommand;
 
 export type ApplicationTableCommand =
   | ChangeCellValueCommand
@@ -341,6 +424,7 @@ export type ApplicationTableCommand =
   | AddEmptyRowCommand
   | AddNewRowsCommand
   | DuplicateRowCommand
+  | PasteCellsCommand
   | PasteRowCommand
   | DeleteRowCommand
   | RestoreAddedRowCommand
@@ -365,6 +449,7 @@ const applicationCommandTypes = new Set<TableCommand['type']>([
   'ADD_NEW_ROWS',
   'DUPLICATE_ROW',
   'PASTE_ROW',
+  'PASTE_CELLS',
   'ROW_DELETED',
   'RESTORE_ADDED_ROW',
   'TABLE_DELETED',

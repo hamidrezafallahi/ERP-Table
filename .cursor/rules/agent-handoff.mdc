@@ -27,8 +27,9 @@ Hard rules:
 
 Known contradictions — code is the source of truth:
 
-- Row virtualization defaults **off** (`ui/desktop/resolveDesktopVirtualization.ts`), despite the comment in `DesktopTable.tsx` and the archived PR-37 entry. Changing this is `PR-97` / D17.
-- `persian-data-grid/styles.css` does not exist yet; `PR-77` creates it.
-- `GridSearchPanel` is find-and-navigate, not a filter. Real quick filter is `PR-93`.
+- Row virtualization defaults **on** when a session is present (`ui/desktop/resolveDesktopVirtualization.ts`). Pass `virtualization={false}` for classic pagination (PR-97 / D17).
+- CSS is **not** auto-injected. Source of truth is `ui/styles/erp-table.css`; regenerate `injectStyles.ts` with `yarn generate:inject-styles`. Consumers must `import 'persian-data-grid/styles.css'` or call `injectGridStyles()`.
+- `FetchRemoteApi` is **not** on `.` — only `persian-data-grid/adapters/arian-erp`. IndexedDB default is `persian-data-grid-events:{store}`; 0.5.x hosts pass `eventStoreName: 'erp-table-events'`.
+- `GridSearchPanel` is find-and-navigate, not a filter. Real quick filter is `PR-93`. Search no longer O(n)-scans all rows (`PR-99`).
 
-Theming: until `PR-77`, keep `ui/styles/injectStyles.ts` and `ui/styles/erp-table.css` in sync by hand. Prefer semantic `--erp-accent` over palette `--erp-blue-6`.
+Theming: prefer semantic `--pdg-accent` over palette `--pdg-blue-6` (`--erp-*` is a one-version alias). Do not hand-edit `ui/styles/injectStyles.ts`.

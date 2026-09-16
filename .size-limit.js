@@ -8,7 +8,10 @@ import { existsSync } from 'node:fs';
 const ALL_BUDGETS = [
   { name: '.', path: 'dist/index.js', limit: '65 KB' },
   { name: './headless', path: 'dist/headless.js', limit: '100 KB' },
+  { name: './presence', path: 'dist/presence.js', limit: '20 KB' },
+  { name: './sync', path: 'dist/sync.js', limit: '20 KB' },
   { name: './plugins/excel', path: 'dist/plugins/excel.js', limit: '60 KB' },
+  { name: './plugins/csv', path: 'dist/plugins/csv.js', limit: '15 KB' },
   { name: './plugins/pdf', path: 'dist/plugins/pdf.js', limit: '50 KB' },
   {
     name: './plugins/pdf/fonts/vazirmatn',

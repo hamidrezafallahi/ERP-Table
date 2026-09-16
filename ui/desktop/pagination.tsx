@@ -1,8 +1,14 @@
 // ui/pagination.tsx
 
 import { Pagination } from '../primitives';
-import { useLocale } from '../host';
-import { CustomButton, LeftChevron, RightChevron } from '../primitives';
+import {
+  formatLocaleNumber,
+  useDirection,
+  useLocale,
+  useNumberingSystem,
+  useTranslations,
+} from '../host';
+import { LeftChevron, RightChevron } from '../primitives';
 
 import { UITableController } from '../../infrastructure/ui/UITableController';
 
@@ -18,7 +24,9 @@ export default function ERPTablePagination({
 }: Props) {
   const table = controller.getViewState();
   const locale = useLocale();
-  const direction = locale === "fa" ? "rtl" : "ltr";
+  const numberingSystem = useNumberingSystem();
+  const direction = useDirection();
+  const t = useTranslations();
   if (!table) return null;
   const { page, pageSize, totalPages, totalRows } = table.pagination;
   const handlePageChange = (e: number) => {
@@ -27,30 +35,15 @@ export default function ERPTablePagination({
   const handlePageSizeChange = (_page: number, pageSize: number) => {
     controller.dispatch({ type: "CHANGE_PAGE_SIZE", pageSize: pageSize });
   };
+  const fmt = (n: number) =>
+    formatLocaleNumber(n, { locale, numberingSystem, useGrouping: true });
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex justify-center items-center gap-3 bg-main-white p-2 border-gray-gray5 border-t w-full">
       <Pagination
-        prevIcon={
-          <CustomButton className="m-0 p-0 rounded w-fit">
-            {direction === "rtl" ? <RightChevron /> : <LeftChevron />}
-          </CustomButton>
-        }
-        nextIcon={
-          <CustomButton className="m-0 p-0 w-fit">
-            {direction === "rtl" ? <LeftChevron /> : <RightChevron />}
-          </CustomButton>
-        }
-        className={`
-  [&_.ant-pagination-item-active:hover]:!bg-main-black 
-  [&_.ant-pagination-item-active:hover]:!border-main-black 
-  [&_.ant-pagination-item-active]:!border-main-black 
-  [&_.ant-pagination-next_.ant-btn:hover]:!border-main-black 
-  [&_.ant-pagination-prev_.ant-btn:hover]:!border-main-black 
-  [&_.ant-pagination-item-active_a:hover]:!text-main-white 
-  [&_.ant-pagination-item-active_a]:!text-main-black
-`}
         current={page}
+        prevIcon={direction === "rtl" ? <RightChevron /> : <LeftChevron />}
+        nextIcon={direction === "rtl" ? <LeftChevron /> : <RightChevron />}
         jumpNextIcon={<span>...</span>}
         jumpPrevIcon={<span>...</span>}
         pageSize={pageSize}
@@ -62,10 +55,10 @@ export default function ERPTablePagination({
         locale={{ items_per_page: "" }}
         showTotal={(total: number) => (
           <div className="flex items-center gap-1 h-full font-light text-gray-gray10 text-xs">
-            <span>{total.toLocaleString("fa-IR")}</span>
-            <span>سطر در</span>
-            <span>{totalPages.toLocaleString("fa-IR")}</span>
-            <span>صفحه</span>
+            <span>{fmt(total)}</span>
+            <span>{t('general.rowsIn')}</span>
+            <span>{fmt(totalPages)}</span>
+            <span>{t('general.page')}</span>
           </div>
         )}
         onChange={handlePageChange}

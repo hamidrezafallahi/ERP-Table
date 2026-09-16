@@ -194,9 +194,14 @@ const buildSheetXml = (
   const bodyRows = table.rows
     .map((row, rowIndex) => {
       const excelRow = rowIndex + 2;
+      const isGroup = table.rowKinds?.[rowIndex] === 'group';
       const isOdd = rowIndex % 2 === 0;
-      const dataStyle = isOdd ? 2 : 3;
+      const dataStyle = isGroup ? 1 : isOdd ? 2 : 3;
       const rowNumStyle = isOdd ? 4 : 5;
+      const outline =
+        typeof table.outlineLevels?.[rowIndex] === 'number'
+          ? ` outlineLevel="${table.outlineLevels[rowIndex]}"`
+          : '';
 
       const cells = [
         numberCell(`A${excelRow}`, rowIndex + 1, rowNumStyle),
@@ -209,7 +214,7 @@ const buildSheetXml = (
         ),
       ].join('');
 
-      return `<row r="${excelRow}" ht="18" customHeight="1">${cells}</row>`;
+      return `<row r="${excelRow}" ht="18" customHeight="1"${outline}>${cells}</row>`;
     })
     .join('');
 

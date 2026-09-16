@@ -9,7 +9,7 @@ export type SelectOption = {
   value?: string | number;
   label?: React.ReactNode;
   title?: string;
-  option?: any;
+  option?: unknown;
   [key: string]: unknown;
 };
 
@@ -22,7 +22,7 @@ type Props = {
   allowClear?: boolean;
   placeholder?: React.ReactNode;
   options?: SelectOption[];
-  filterOption?: (input: string, option: any) => boolean;
+  filterOption?: (input: string, option: SelectOption) => boolean;
   onChange?: (value: unknown, option?: unknown) => void;
   onClick?: () => void;
   onSearch?: (value: string) => void;
@@ -31,7 +31,10 @@ type Props = {
   popupMatchSelectWidth?: number | boolean;
   popupRender?: (menu: React.ReactNode) => React.ReactNode;
   autoFocus?: boolean;
-  optionRender?: (originNode: any, info?: any) => React.ReactNode;
+  optionRender?: (
+    originNode: { data: SelectOption },
+    info?: { data: SelectOption },
+  ) => React.ReactNode;
   notFoundContent?: React.ReactNode;
   getPopupContainer?: (trigger: HTMLElement) => HTMLElement;
   optionFilterProp?: string;

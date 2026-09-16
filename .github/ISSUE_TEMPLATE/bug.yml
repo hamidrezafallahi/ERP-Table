@@ -1,0 +1,43 @@
+name: Bug report
+description: Something in the grid or publish graph does not match documented behaviour.
+title: '[bug] '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. Security reports go through [SECURITY.md](../SECURITY.md), not this form.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what did you see instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Minimal snippet (`rowData` / `columns`, package version, browser).
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: persian-data-grid version
+      placeholder: '0.5.0'
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Node (headless / tests)
+        - Other
+    validations:
+      required: true

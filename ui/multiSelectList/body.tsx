@@ -6,12 +6,15 @@ import { CustomCheckbox } from '../primitives';
 import { valueParser } from '../helper';
 import { IMultiSelectConfig } from '../type';
 
+type MultiSelectRow = Record<string, unknown>;
+type MultiSelectRowId = string | number;
+
 interface Props {
-  rows: any[];
+  rows: MultiSelectRow[];
   ListConfig: IMultiSelectConfig["ListConfig"];
-  selectedRows: Map<any, any>;
-  fieldKey:string
-  onToggleRow: (id: any) => void;
+  selectedRows: Map<MultiSelectRowId, MultiSelectRow>;
+  fieldKey: string;
+  onToggleRow: (row: MultiSelectRow) => void;
 }
 
 export function MultiSelectListBody({
@@ -26,11 +29,13 @@ export function MultiSelectListBody({
   return (
    <tbody>
   {rows.map((row) => {
-    const id = row[fieldKey];
+    const rawId = row[fieldKey];
+    const id =
+      typeof rawId === 'string' || typeof rawId === 'number' ? rawId : String(rawId);
 
     return (
-      <tr key={id} className="border h-10">
-        {ListConfig.filter((c: any) => c.hidden !== true).map((col, idx: number) => (
+      <tr key={String(id)} className="border h-10">
+        {ListConfig.filter((c) => c.hidden !== true).map((col, idx: number) => (
           <td key={idx} className="px-2 border text-xs">
             {idx === 0 && (
               <CustomCheckbox

@@ -16,10 +16,17 @@ export type ExportCellSource = {
   readonly display?: unknown;
 };
 
+export type ExportRowKind = 'group' | 'leaf' | 'total';
+
 export type ExportRowSource = {
   readonly id: number;
   readonly rowState: string;
   readonly cells: Readonly<Record<string, ExportCellSource>>;
+  /** Present when export projection includes grouping (PR-122). */
+  readonly kind?: ExportRowKind;
+  readonly groupKey?: string;
+  /** Excel outline level: 0 = group header, 1 = leaf under group. */
+  readonly outlineLevel?: number;
 };
 
 export type ExportSource = {

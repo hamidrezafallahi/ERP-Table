@@ -42,6 +42,9 @@ jobs:
       - name: Typecheck host UI
         run: yarn typecheck:host-ui
 
+      - name: Lint publish graph (no explicit any)
+        run: yarn lint:publish
+
       - name: Build
         run: yarn build
 
@@ -50,3 +53,49 @@ jobs:
 
       - name: Size budget
         run: yarn size
+
+      - name: Build docs site
+        # PR-129: VitePress + TypeDoc; link check inside docs:build
+        run: yarn docs:build
+
+      - name: Typecheck example gallery
+        # PR-130: every gallery example must compile
+        run: yarn examples:typecheck
+
+      - name: Release gate (expected red until 1.0.0)
+        # PR-135: must not block feature CI; soft until gate is green
+        run: yarn release:gate
+        continue-on-error: true
+
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: yarn playwright install --with-deps chromium
+
+      - name: Run e2e
+        run: yarn e2e
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

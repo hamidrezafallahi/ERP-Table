@@ -1,5 +1,13 @@
 node_modules/
 dist/
 demo/dist/
+website/.vitepress/cache
+website/.vitepress/dist
+scripts/.tmp-codemod-out/
+test-results/
+playwright-report/
+e2e/test-results/
+blob-report/
+*.tgz
 *.log
 .DS_Store

@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 
+import 'persian-data-grid/styles.css';
 import DemoComponent from './DemoComponent';
 import { InitialComponent } from './InitialComponent';
 

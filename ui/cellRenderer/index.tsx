@@ -1,16 +1,6 @@
 "use client";
 import React, { useEffect } from 'react';
 
-import { useERPTableHost } from '../host';
-import {
-  CustomCheckbox,
-  InfoIcon,
-  NewDatePicker,
-  Select,
-  Tooltip,
-} from '../primitives';
-import { ERPTableDynamicSelect as DynamicSelect } from './ERPTableDynamicSelect';
-
 import {
   ColumnSchema,
   DefaultOptionType,
@@ -20,11 +10,24 @@ import { ValidCell } from '../../engine/type';
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { highlightIfCurrentSearch } from '../gridSearch/highlightText';
 import { valueParser } from '../helper';
+import {
+  useDateAdapter,
+  useERPTableHost,
+  useNumberingSystem,
+} from '../host';
 import { useGridSearchState } from '../hooks/useEngineSelector';
+import {
+  CustomCheckbox,
+  InfoIcon,
+  NewDatePicker,
+  Select,
+  Tooltip,
+} from '../primitives';
 import { UIRow } from '../type';
 import { type CellRenderContext } from './cellRenderContext';
 import { resolveBoundCellNode } from './cellRegistry';
 import { DescriptionComponent } from './descriptionComponent';
+import { ERPTableDynamicSelect as DynamicSelect } from './ERPTableDynamicSelect';
 
 export type { CellRenderContext } from './cellRenderContext';
 export { resolveCustomCellNode } from './cellRenderContext';
@@ -72,15 +75,19 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
 }) => {
   const dateHostRef = React.useRef<HTMLDivElement | null>(null);
   const { locale, components } = useERPTableHost();
+  const numberingSystem = useNumberingSystem();
+  const dateAdapter = useDateAdapter();
   const searchState = useGridSearchState(controller);
   if (!meta) return null;
   const disable =
     typeof row.visibilityCondition[columnId] === "boolean" &&
     row.visibilityCondition[columnId] === false;
   const viewCell = controller.getCell(row.id, columnId);
-  const value = viewCell?.getValue();
-  const display = viewCell?.getDisplay();
+  const draft = controller.getEditDraft(row.id, columnId);
+  const value = draft ? draft.value : viewCell?.getValue();
+  const display = draft ? draft.display : viewCell?.getDisplay();
   const isActive = controller.isActiveCell(row.id, columnId);
+  const isEditing = controller.isEditingCell(row.id, columnId);
   const validation: ValidCell = controller.isValidCell(row.id, columnId) ?? {
     isValid: true,
     cellError: { rowId: row.id, caption: meta.fieldCaption, message: '' },
@@ -106,8 +113,17 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
       value: label ?? '',
     });
   };
-  const activeCell = () => {
-    controller.dispatch({type: "UI_ACTIVE_CELL", rowId: row.id, columnId});
+  const activeCell = (e?: React.MouseEvent) => {
+    controller.dispatch({
+      type: 'UI_ACTIVE_CELL',
+      rowId: row.id,
+      columnId,
+      shiftKey: e?.shiftKey,
+      ctrlKey: Boolean(e?.ctrlKey || e?.metaKey),
+    });
+  };
+  const startEdit = () => {
+    controller.startCellEdit(row.id, columnId);
   };
 
   const type = meta.fieldType;
@@ -120,7 +136,13 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     searchState.matches[searchState.currentIndex]?.columnId === columnId;
 
   const renderCellContent = (cellText: unknown) => {
-    const parsed = valueParser(cellText, meta.fieldType, locale);
+    const parsed = valueParser(
+      cellText,
+      meta.fieldType,
+      locale,
+      numberingSystem,
+      dateAdapter,
+    );
     return highlightIfCurrentSearch(
       parsed,
       searchState?.query,
@@ -134,7 +156,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   };
 
   useEffect(() => {
-    const shouldFocus = mode === "form" || (mode === "cell" && isActive);
+    const shouldFocus = mode === "form" || (mode === "cell" && isEditing);
     if (!shouldFocus) return;
     if (type === "date") {
       const id = window.setTimeout(() => {
@@ -151,7 +173,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         inputRef.current.select();
       }
     }
-  }, [isActive, mode, type]);
+  }, [isEditing, mode, type]);
   const cellRenderContext: CellRenderContext = {
     tableKey,
     row,
@@ -221,8 +243,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
         } ${meta.className ?? ''} ${
           isDeleted ? 'cursor-not-allowed' : 'cursor-text'
         } ${isCurrentSearchMatch ? 'ring-2 ring-yellow-400' : ''}`}
-        onClick={() => {
-          if (!isDeleted) activeCell();
+        onClick={(e) => {
+          if (!isDeleted) activeCell(e);
         }}
       >
         {customCell.node}
@@ -250,7 +272,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     }
   } else if (
     mode !== "form" &&
-    (!isActive || isDeleted || isCurrentSearchMatch)
+    (!isEditing || isDeleted || isCurrentSearchMatch)
   ) {
     return (
       <>
@@ -263,8 +285,11 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           ${isDeleted ? "cursor-not-allowed " : "cursor-text"}
           ${isCurrentSearchMatch ? "ring-2 ring-yellow-400" : ""}
           `}
-          onClick={() => {
-            activeCell();
+          onClick={(e) => {
+            activeCell(e);
+          }}
+          onDoubleClick={() => {
+            if (!isDeleted && isEditable) startEdit();
           }}
         >
           <div
@@ -298,8 +323,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           value={value === "" || value == null ? "" : Number(value)}
           disabled={isDeleted || !isEditable}
           className={`${isDeleted && "cursor-not-allowed"}
-            bg-transparent px-3 outline-none 
-          focus-visible:outline-none focus:outline-none ring-0 focus:!ring-0 
+            pdg-cell-editor bg-transparent px-3
+          ring-0 focus:!ring-0 
           focus:ring-offset-0 !h-full w-full  text-xs transition-colors ${meta.className}`}
           draggable={false}
           onDragStart={blockDrag}
@@ -323,8 +348,8 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           ref={inputRef}
           disabled={isDeleted || !isEditable}
           className={`${isDeleted && "cursor-not-allowed"}
-        bg-transparent px-3 outline-none !bg-white !rounded 
-        focus-visible:outline-none focus:outline-none ring-0 focus:!ring-0 
+        pdg-cell-editor bg-transparent px-3 !bg-white !rounded 
+        ring-0 focus:!ring-0 
         focus:ring-offset-0 h-9 w-full text-xs transition-colors  
         ${meta.className}`}
           draggable={false}
@@ -451,13 +476,21 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           filterOption={(input, option) => {
             if (meta?.dynamicSelectFilterOption) {
               return meta.dynamicSelectFilterOption(input, option);
-            } else {
-              const label = option?.label;
-              return (
-                typeof label === "string" &&
-                option.option._SelectDisplay.toLowerCase().includes(input)
-              );
             }
+            const label = option?.label;
+            const remote = option.option;
+            const display =
+              typeof remote === 'object' &&
+              remote !== null &&
+              '_SelectDisplay' in remote &&
+              typeof (remote as { _SelectDisplay?: unknown })._SelectDisplay ===
+                'string'
+                ? (remote as { _SelectDisplay: string })._SelectDisplay
+                : '';
+            return (
+              typeof label === 'string' &&
+              display.toLowerCase().includes(input.toLowerCase())
+            );
           }}
           filterOptions={(option) => {
             const unique = (controller.getAllRows() ?? []).some(
@@ -492,7 +525,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           key={idx}
           tabIndex={tabIndex}
           className={`  px-2 w-full h-full text-xs cursor-text ${meta.className}`}
-          onClick={() => activeCell()}
+          onClick={(e) => activeCell(e)}
         >
           {String(display ?? value ?? "") || "—"}
         </span>
@@ -512,18 +545,17 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           controller={controller}
           columnId={columnId}
           key={idx}
-          ref={inputRef as any}
           disabled={isDeleted || !isEditable}
           value={value == null ? "" : String(value)}
           className={`${isDeleted && "cursor-not-allowed"}
-            flex items-center bg-transparent px-2 outline-none focus-visible:outline-none
-           focus:outline-none ring-0 focus:!ring-0 focus:ring-offset-0   h-8 transition-colors  `}
+            flex items-center bg-transparent px-2 pdg-cell-editor
+           ring-0 focus:!ring-0 focus:ring-offset-0   h-8 transition-colors  `}
           draggable={false}
           onDragStart={blockDrag}
           onDragOver={blockDrag}
           onDrop={blockDrag}
           onChange={(e) => dispatchChangeValue(e)}
-          onClick={() => activeCell()}
+          onClick={(e) => activeCell(e)}
           meta={meta}
           searchQuery={searchState?.query}
           isCurrentSearchMatch={isCurrentSearchMatch}
@@ -538,14 +570,14 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           disabled={isDeleted || !isEditable}
           value={value == null ? "" : String(value)}
           className={`${isDeleted && "cursor-not-allowed"}
-              bg-transparent px-2 outline-none focus-visible:outline-none
-           focus:outline-none ring-0 focus:ring-0! focus:ring-offset-0  transition-colors h-full! w-full text-xs  ${meta.className}`}
+              pdg-cell-editor bg-transparent px-2
+           ring-0 focus:ring-0! focus:ring-offset-0  transition-colors h-full! w-full text-xs  ${meta.className}`}
           draggable={false}
           onDragStart={blockDrag}
           onDragOver={blockDrag}
           onDrop={blockDrag}
           onChange={(e) => dispatchChangeValue(e.target.value)}
-          onClick={() => activeCell()}
+          onClick={(e) => activeCell(e)}
         />
       );
   }

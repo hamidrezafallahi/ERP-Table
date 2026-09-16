@@ -30,6 +30,10 @@ export default defineConfig(({ command }) => ({
         'publish/adapters/arian-erp.ts',
       ),
       'persian-data-grid/headless': path.resolve(repoRoot, 'publish/headless.ts'),
+      'persian-data-grid/styles.css': path.resolve(
+        repoRoot,
+        'ui/styles/erp-table.css',
+      ),
       'persian-data-grid': path.resolve(repoRoot, 'publish/entry.ts'),
     },
   },

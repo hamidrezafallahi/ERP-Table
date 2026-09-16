@@ -22,15 +22,16 @@ function walkTsFiles(dir: string, out: string[] = []): string[] {
 }
 
 describe('PR-74 dead code / host-glue cleanup', () => {
-  it('DesktopTable comment matches resolveDesktopVirtualization (default off)', () => {
+  it('DesktopTable comment matches resolveDesktopVirtualization (default on)', () => {
     const desktop = readFileSync(join(root, 'ui/desktop/DesktopTable.tsx'), 'utf8');
     const resolve = readFileSync(
       join(root, 'ui/desktop/resolveDesktopVirtualization.ts'),
       'utf8',
     );
-    expect(resolve).toContain('virtualization === true && !!session');
-    expect(desktop).toMatch(/Off by default/i);
-    expect(desktop).not.toMatch(/Default true when `session` is present/);
+    expect(resolve).toContain('virtualization === false');
+    expect(resolve).toMatch(/Default \*\*on\*\*|default \*\*on\*\*|Default \*\*on\*\*/i);
+    expect(desktop).toMatch(/On by default/i);
+    expect(desktop).not.toMatch(/Off by default/i);
   });
 
   it('handleSelectAllRows is wired in the toolbar JSX', () => {

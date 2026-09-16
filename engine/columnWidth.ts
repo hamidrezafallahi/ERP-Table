@@ -45,8 +45,11 @@ export function resolveColumnWidth(
 export function columnSizeStyle(
   column: ColumnWidthHint & { fieldName: string },
   columnWidths: Record<string, number> | undefined,
+  layoutWidths?: Record<string, number>,
 ): { width: number; minWidth: number } {
-  const width = resolveColumnWidth(column, columnWidths);
+  const width =
+    layoutWidths?.[column.fieldName] ??
+    resolveColumnWidth(column, columnWidths);
   return { width, minWidth: width };
 }
 

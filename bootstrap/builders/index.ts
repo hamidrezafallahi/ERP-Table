@@ -28,6 +28,7 @@ import type { EventStore } from '../../application/ports/EventStore';
 import type { RemoteApi } from '../../application/ports/RemoteApi';
 import { TableRepository } from '../../application/ports/TableRepository';
 import { TableAppService } from '../../application/TableAppService';
+import { PasteCellsCommandHandler } from '../../application/handlers/pasteCellsCommandsHandler';
 import { Cell } from '../../domain/entities/Cell';
 import { Collection } from '../../domain/entities/Collection';
 import { Row } from '../../domain/entities/Row';
@@ -59,9 +60,13 @@ export const isInitiallyHidden = (
   inputRows: RowInput[] | Row[],
   activeCollection: string = "default"
 ): boolean => {
-  // شرط ۱: همیشه نمایش داده بشه
+  // شرط ۱: همیشه نمایش داده بشه (مگر ColumnDef.hide / schema.hidden صریح)
   if (col.visibility.kind === "always") {
-    return false;
+    return col.hidden === true;
+  }
+
+  if (col.visibility.kind === "never") {
+    return true;
   }
 
   // شرط ۴: ستون مختص این collection هست
@@ -84,7 +89,8 @@ export const isInitiallyHidden = (
       }
       // شرط ۲: مقدار داره و activeCollection برابر default
       if (activeCollection === "default") {
-        return !!domainRow.getCell(col.fieldName)?.getValue();
+        return domainRow.readValue(col.fieldName) != null &&
+          domainRow.readValue(col.fieldName) !== "";
       }
       return false;
     } else {
@@ -165,10 +171,12 @@ export async function buildRows(  collectionColumns: Map<string, Map<string, Col
   store: string,
   tableKey: string,
   remoteApi: RemoteApi,
+  options?: { skipPersistLoad?: boolean },
 ): Promise<{ rows: Map<number, Row>; table?: Table }> {
   let rowMap = new Map<number, Row>();
   // ---------- rows: ابتدا IndexedDB, fallback به ورودی ----------
-  const exist = await repo.exists(store, tableKey)
+  const exist =
+    options?.skipPersistLoad ? false : await repo.exists(store, tableKey)
   if (exist) {
     const persistedTable = await repo.getById(store, tableKey);
     rowMap = new Map<number, Row>(
@@ -187,16 +195,78 @@ export async function buildRows(  collectionColumns: Map<string, Map<string, Col
           `Collection '${rowCollection}' not found`
         );
       }
+
+      // PR-101: host `rowData` path — keep values on `r.data`, only allocate index.
+      const rowStateEarly =
+        ((r.values ?? {})["RowState"] as RowStateEnum | undefined) ??
+        RowStateEnum.Unchanged;
+      const canLazyHost =
+        r.data != null &&
+        typeof r.data === 'object' &&
+        rowStateEarly === RowStateEnum.Unchanged;
+      if (canLazyHost) {
+        let needsEager = false;
+        for (const [, schema] of columns) {
+          const colKey = `${schema.fieldCollection ?? 'default'}_${schema.fieldName}`;
+          const meta = columnMeta.get(colKey);
+          if (
+            (meta?.computed?.dependsOn &&
+              meta.computed.dependsOn.length > 0) ||
+            meta?.columnDef?.valueGetter
+          ) {
+            needsEager = true;
+            break;
+          }
+        }
+        if (!needsEager) {
+          const indexValue =
+            (r.values as Record<string, unknown> | undefined)?.index ??
+            (r.values as Record<string, unknown> | undefined)?.RowNum ??
+            idx + 1;
+          cells.set(
+            'index',
+            new Cell(
+              rowId,
+              ColumnId.for('index'),
+              indexValue,
+              indexValue,
+              indexValue,
+            ),
+          );
+          rowMap.set(
+            rowId.value,
+            new Row(
+              rowId,
+              cells,
+              new RowState(rowStateEarly),
+              new Set(),
+              {},
+              r.collection ?? r.rowType ?? rowCollection,
+              false,
+              r.data,
+              r.sourceId ?? String(r.id),
+            ),
+          );
+          continue;
+        }
+      }
+
       for (const [columnKey, schema] of columns) {
         const colKey = `${schema.fieldCollection ?? 'default'}_${schema.fieldName}`;
         const colId = schema.fieldName
         const meta = columnMeta.get(colKey);
         if (!meta) continue;
         const values = r.values ?? {};
-        const incoming =
-          meta.returnValue?.(values, colId) ??
-          (values as Record<string, unknown>)?.[colId] ??
-          null;
+        const hostData = r.data ?? values;
+        const getter = meta.columnDef?.valueGetter;
+        const incoming = getter
+          ? getter({ data: hostData })
+          : meta.returnValue?.(values, colId) ??
+            (values as Record<string, unknown>)?.[colId] ??
+            (hostData && typeof hostData === 'object'
+              ? (hostData as Record<string, unknown>)[colId]
+              : null) ??
+            null;
         const rowNum =
           (values as Record<string, unknown>)?.["RowNum"];
         const description =
@@ -220,6 +290,11 @@ export async function buildRows(  collectionColumns: Map<string, Map<string, Col
             | {}
             | null;
           display = value;
+        } else if (meta.columnDef?.valueFormatter) {
+          display = meta.columnDef.valueFormatter({
+            value,
+            data: hostData,
+          });
         } else if (incoming != null && schema.displayFormat) {
           display = schema.displayFormat(incoming) as {} | null;
         }
@@ -249,7 +324,9 @@ export async function buildRows(  collectionColumns: Map<string, Map<string, Col
           new Set(),
           visibilityCondition,
           r.collection ?? r.rowType ?? rowCollection,
-          false
+          false,
+          r.data,
+          r.sourceId ?? String(r.id),
         )
       );
     }
@@ -266,13 +343,12 @@ export function buildCollections(
     for (const [rowId, row] of rows) {
       if (row.collection !== collectionName)
         continue;
-      const cells = new Map<string, Cell>();
-      for (const [, column] of columns) {
-        const cell = row.getCell(column.fieldName);
-        if (cell) {
-          cells.set(column.fieldName, cell);
-        }
-      }
+      // PR-101: do not call getCell here — that would materialize every host
+      // field. Reuse the existing cell map (index-only for lazy rowData).
+      const cells = new Map(
+        (row as { cells: Map<string, Cell> }).cells.entries(),
+      );
+      void columns;
       collectionRows.set(
         row.id.value,
         new Row(
@@ -282,7 +358,9 @@ export function buildCollections(
           new Set(row.changeFields),
           row.getVisibilityCondition(),
           collectionName,
-          row.isSaveDescription
+          row.isSaveDescription,
+          row.data,
+          row.sourceId,
         )
       );
     }
@@ -298,11 +376,8 @@ export function buildCollections(
   return collectionMap;
 }
 
-
-
-
 export function createPermissionPolicy(
-  config: CreateERPTableConfig,
+  config: Pick<CreateERPTableConfig, 'rowAccess'>,
   columnMeta: Map<string, ColumnSchema>,
   table: Table,
   repo: TableRepository,
@@ -398,6 +473,11 @@ export function createTableAppService(
   const addNewRowsHandler = new AddNewRowsCommandHandler(repo, audit, permissionPolicy);
   const duplicateRowHandler = new DuplicateRowCommandHandler(repo, audit, permissionPolicy);
   const pasteRowHandler = new PasteRowCommandHandler(repo, audit, permissionPolicy);
+  const pasteCellsHandler = new PasteCellsCommandHandler(
+    repo,
+    audit,
+    permissionPolicy,
+  );
   const deleteRowHandler = new DeleteRowCommandHandler(repo, audit, permissionPolicy);
   const restoreAddedRowHandler = new RestoreAddedRowCommandHandler(
     repo,
@@ -427,6 +507,7 @@ export function createTableAppService(
     deleteTableHandler,
     resetTableHandler,
     applyDynamicProjection,
+    pasteCellsHandler,
     restoreAddedRowHandler,
     pasteRowHandler,
     reorderColumnHandler,

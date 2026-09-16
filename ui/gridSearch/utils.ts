@@ -1,5 +1,3 @@
-import { Row } from '../../domain/entities/Row';
-import { RowStateEnum } from '../../domain/value-objects';
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { GridSearchMatch } from './types';
 
@@ -20,29 +18,10 @@ export function findColumnMatches(
   columnId: string,
   query: string,
 ): GridSearchMatch[] {
-  const q = query.trim().toLowerCase();
+  const q = query.trim();
   if (!q) return [];
-
-  const rows = controller.getAllRows() ?? [];
-  const matches: GridSearchMatch[] = [];
-
-  for (const row of rows) {
-    if (row.rowState.value === RowStateEnum.Deleted) continue;
-    const text = getCellSearchText(controller, row.id.value, columnId).toLowerCase();
-    if (text.includes(q)) {
-      matches.push({ rowId: row.id.value, columnId });
-    }
-  }
-
-  return matches;
-}
-
-function sortRowsByIndex(rows: readonly Row[]): Row[] {
-  return [...rows].sort(
-    (a, b) =>
-      (Number(a.getCell('index')?.getValue()) || 0) -
-      (Number(b.getCell('index')?.getValue()) || 0),
-  );
+  // PR-99: QuickFilterIndex candidates + UI order (no O(n) getAllRows scan).
+  return controller.findColumnSearchMatches(columnId, q);
 }
 
 /** 0-based index in the same order as Desktop virtual body. */
@@ -50,8 +29,7 @@ export function getSortedRowAbsoluteIndex(
   controller: UITableController,
   rowId: number,
 ): number {
-  const sorted = sortRowsByIndex(controller.getAllRows() ?? []);
-  return sorted.findIndex((row) => row.id.value === rowId);
+  return controller.getUiRowAbsoluteIndex(rowId);
 }
 
 export function computeVirtualScrollOffset(

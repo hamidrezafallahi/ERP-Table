@@ -59,6 +59,18 @@ export class DefaultGridSession implements GridSession {
     return this.deps.engine;
   }
 
+  attachCopyCells(handler: () => Promise<boolean>): void {
+    this.keyboard.setCopyCells(handler);
+  }
+
+  attachPasteCells(handler: () => Promise<boolean>): void {
+    this.keyboard.setPasteCells(handler);
+  }
+
+  attachCutCells(handler: () => Promise<boolean>): void {
+    this.keyboard.setCutCells(handler);
+  }
+
   async dispatchViewIntent(intent: ViewIntent): Promise<void> {
     const { engine, store, tableKey, cellUndoStack } = this.deps;
 
@@ -117,6 +129,7 @@ export class DefaultGridSession implements GridSession {
           columnId: intent.columnId,
           direction: intent.direction,
         });
+        engine.syncCellRangeToActiveCell();
         return;
       case 'MOVE_ACTIVE_CELL_VERTICAL':
         await engine.dispatch({
@@ -127,6 +140,22 @@ export class DefaultGridSession implements GridSession {
           columnId: intent.columnId,
           direction: intent.direction,
         });
+        engine.syncCellRangeToActiveCell();
+        return;
+      case 'EXTEND_CELL_RANGE':
+        engine.extendCellRangeArrow(intent.direction);
+        return;
+      case 'EXTEND_CELL_RANGE_TO_EDGE':
+        engine.extendCellRangeToEdge(intent.direction);
+        return;
+      case 'JUMP_ACTIVE_CELL_ROW_EDGE':
+        engine.jumpActiveCellRowEdge(intent.edge);
+        return;
+      case 'JUMP_ACTIVE_CELL_GRID':
+        engine.jumpActiveCellGridCorner(intent.corner);
+        return;
+      case 'SELECT_ALL_CELLS':
+        engine.selectAllCells();
         return;
       case 'MOVE_VERTICAL_SELECTED_ROWS':
         await engine.dispatch({
@@ -253,6 +282,13 @@ export class DefaultGridSession implements GridSession {
 
   getViewport(): Viewport {
     return this.viewport;
+  }
+
+  subscribeViewport(listener: () => void): () => void {
+    this.viewportListeners.add(listener);
+    return () => {
+      this.viewportListeners.delete(listener);
+    };
   }
 
   getVisibleRange(totalRows?: number): VisibleRange {

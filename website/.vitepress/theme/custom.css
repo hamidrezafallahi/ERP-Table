@@ -1,0 +1,23 @@
+:root {
+  --vp-c-brand-1: #0f766e;
+  --vp-c-brand-2: #0d9488;
+  --vp-c-brand-3: #14b8a6;
+}
+
+.pdg-live-demo {
+  margin: 1.25rem 0 1.75rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 220px;
+  background: var(--vp-c-bg-soft);
+}
+
+.pdg-live-demo .erp-table,
+.pdg-live-demo .pdg-grid {
+  font-size: 13px;
+}
+
+html[dir='rtl'] .VPNavBarTitle .title {
+  font-family: Vazirmatn, Tahoma, sans-serif;
+}

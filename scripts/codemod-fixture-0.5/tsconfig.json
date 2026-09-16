@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "paths": {
+      "persian-data-grid": ["../../publish/entry.ts"],
+      "persian-data-grid/styles.css": ["../../ui/styles/erp-table.css"],
+      "persian-data-grid/plugins/excel": ["../../publish/plugins/excel.ts"],
+      "persian-data-grid/plugins/pdf": ["../../publish/plugins/pdf.ts"],
+      "persian-data-grid/adapters/arian-erp": ["../../publish/adapters/arian-erp.ts"],
+      "persian-data-grid/headless": ["../../publish/headless.ts"]
+    },
+    "baseUrl": "."
+  },
+  "include": ["src/**/*.tsx"]
+}

@@ -117,7 +117,7 @@ function MobileTableRowComponent({
               columnId={c.fieldName}
               meta={meta}
               controller={controller}
-              tabIndex={idx}
+              tabIndex={-1}
               mode="view"
             />
           </td>

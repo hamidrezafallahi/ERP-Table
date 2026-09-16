@@ -26,6 +26,7 @@ function createServiceWithStore() {
     deleteTable: makeMockHandler([]),
     resetTable: makeMockHandler([]),
     applyDynamicProjection: makeMockHandler([]),
+    pasteCells: makeMockHandler([]),
   };
 
   const service = new TableAppService(
@@ -43,6 +44,7 @@ function createServiceWithStore() {
     handlers.deleteTable as any,
     handlers.resetTable as any,
     handlers.applyDynamicProjection as any,
+    handlers.pasteCells as any,
   );
 
   const store = new InMemoryEventStore();
@@ -140,6 +142,7 @@ describe('TableAppService dual-write', () => {
       makeMockHandler([]) as any,
       makeMockHandler([]) as any,
       makeMockHandler([]) as any,
+      makeMockHandler([]) as any,
     );
 
     const result = await service.execute(
@@ -182,6 +185,7 @@ describe('TableAppService dual-write', () => {
       makeMockHandler(null) as any,
       makeMockHandler(null) as any,
       makeMockHandler(null) as any,
+      makeMockHandler([]) as any,
       makeMockHandler([]) as any,
       makeMockHandler([]) as any,
       makeMockHandler([]) as any,

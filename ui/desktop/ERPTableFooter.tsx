@@ -1,112 +1,91 @@
 import React, {
   ReactNode,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 
+import type { AggFuncName } from '../../domain/types/ColumnDef';
 import { columnSizeStyle } from '../../engine/columnWidth';
+import { isIndexColumn } from '../../engine/columnWidth';
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { ariaColIndex, ariaFooterRowIndex } from '../a11y/gridRoles';
-import { indexPinClassName, indexPinDataAttr } from '../columnPin';
-import { useLocale } from '../host';
+import { columnPinCellProps } from '../columnPin';
+import { useLocale, useTranslations } from '../host';
 import { valueParser } from '../helper';
+import { useColumnWindowOrAll } from '../virtual/columnWindow';
+import { ColumnWindowCells } from '../virtual/ColumnWindowCells';
+
+/** Multi-row footer aggregation chrome (PR-119 / RFC-002). */
+export type FooterRowDef = {
+  id: string;
+  label?: string;
+  /** Override column aggFunc for this row. */
+  aggFunc?: AggFuncName;
+};
 
 interface Props {
   controller: UITableController;
   footer?: boolean | ReactNode;
+  footerRows?: readonly FooterRowDef[];
   dataRowCount?: number;
+  pinnedTopCount?: number;
+  pinnedBottomCount?: number;
 }
 
-export function ERPTableFooter({controller, footer, dataRowCount}: Props) {
+const DEFAULT_FOOTER_ROWS: FooterRowDef[] = [{ id: 'default' }];
+
+function resolveFooterRows(
+  footer: boolean | ReactNode | undefined,
+  footerRows: readonly FooterRowDef[] | undefined,
+): FooterRowDef[] | null {
+  if (typeof footer !== 'boolean' || footer !== true) return null;
+  if (footerRows && footerRows.length > 0) return [...footerRows];
+  return DEFAULT_FOOTER_ROWS;
+}
+
+export function ERPTableFooter({
+  controller,
+  footer,
+  footerRows,
+  dataRowCount,
+  pinnedTopCount = 0,
+  pinnedBottomCount = 0,
+}: Props) {
   const locale = useLocale();
-  const [totals, setTotals] = useState<Record<string, number>>({});
+  const t = useTranslations();
+  const [aggs, setAggs] = useState<Record<string, unknown>>({});
   const table = controller.getViewState();
-  const calculateTotals = () => {
-    const view = controller.getViewState();
-    if (!view) return;
-    const data = controller.getSnapShot("active") as {
-      rows: Array<{ cells: Record<string, { value?: unknown } | unknown> }>;
-    } | null;
-    if (!data) return;
-    const result: Record<string, number> = {};
-    view.columns.forEach((column) => {
-      if (column.fieldType === "price" || column.fieldType === "number") {
-        result[column.fieldName] = data.rows.reduce((sum: number, row) => {
-          const cell = row.cells[column.fieldName];
-          const value = typeof cell === "object" && cell !== null && "value" in cell
-            ? (cell as { value?: unknown }).value
-            : cell;
-          return sum + (Number(value) || 0);
-        }, 0);
-      }
-    });
-    setTotals(result);
-  };
+  const rows = useMemo(
+    () => resolveFooterRows(footer, footerRows),
+    [footer, footerRows],
+  );
 
   useEffect(() => {
     const view = controller.getViewState();
-    if (!view) return;
-    calculateTotals();
-    const unsubscribes: (() => void)[] = [];
-    view.columns.forEach((column) => {
-      if (column.fieldType === "price" || column.fieldType === "number") {
-        const unsubscribe = controller.subscribeColumn<{ value?: unknown }>(
-          column.fieldName,
-          "active",
-          (values) => {
-            setTotals((prev) => ({
-              ...prev,
-              [column.fieldName]: values.reduce(
-                (sum, item) => sum + (Number(item.value) || 0),
-                0,
-              ),
-            }));
-          },
-        );
-
-        if (unsubscribe) unsubscribes.push(unsubscribe);
-      }
-    });
-
+    if (!view || !rows) return;
+    setAggs(controller.getColumnAggs());
+    const unsubscribe = controller.subscribeColumnAggs(setAggs);
     return () => {
-      unsubscribes.forEach((u) => u());
+      unsubscribe?.();
     };
-  }, [controller]);
+  }, [controller, rows]);
+
+  const colWindow = useColumnWindowOrAll(
+    table?.columns ?? [],
+    table?.columnWidths,
+  );
 
   if (!table || !table.columns) return null;
-  const visibleColumns = table.columns.filter((c) => !c.hidden);
-  const cols = visibleColumns.length;
-  const footerRowIndex = ariaFooterRowIndex(
-    dataRowCount ?? table.pagination.totalRows,
-  );
-  if (typeof footer === "boolean" && footer === true) {
-    return (
-      <tfoot role="rowgroup" className="erp-table-footer" data-erp-footer="">
-        <tr
-          role="row"
-          aria-rowindex={footerRowIndex}
-          className={`w-full border border-gray-gray5 bg-main-white !h-9 rounded `}
-        >
-          {visibleColumns.map((c, index) => (
-              <td
-                key={c.fieldName}
-                role="gridcell"
-                aria-colindex={ariaColIndex(index)}
-                className={indexPinClassName(c)}
-                data-erp-col-pin={indexPinDataAttr(c)}
-                style={columnSizeStyle(c, table.columnWidths)}
-              >
-                {c.fieldType === "price" ||
-                c.fieldType === "number" ||
-                c.fieldType === "static"
-                  ? valueParser(totals[c.fieldName], c.fieldType, locale)
-                  : null}
-              </td>
-            ))}
-        </tr>
-      </tfoot>
+  if (typeof footer !== 'boolean' || footer !== true) {
+    if (!footer) return null;
+    const visibleColumns = table.columns.filter((c) => !c.hidden);
+    const cols = visibleColumns.length;
+    const footerRowIndex = ariaFooterRowIndex(
+      dataRowCount ?? table.pagination.totalRows,
+      pinnedTopCount,
+      pinnedBottomCount,
     );
-  } else {
     return (
       <tfoot role="rowgroup" className="erp-table-footer" data-erp-footer="">
         <tr
@@ -126,4 +105,82 @@ export function ERPTableFooter({controller, footer, dataRowCount}: Props) {
       </tfoot>
     );
   }
+
+  if (!rows) return null;
+  const baseRowIndex = ariaFooterRowIndex(
+    dataRowCount ?? table.pagination.totalRows,
+    pinnedTopCount,
+    pinnedBottomCount,
+  );
+
+  return (
+    <tfoot role="rowgroup" className="erp-table-footer" data-erp-footer="">
+      {rows.map((rowDef, rowOffset) => (
+        <tr
+          key={rowDef.id}
+          role="row"
+          aria-rowindex={baseRowIndex + rowOffset}
+          data-pdg-footer-row={rowDef.id}
+          className={`w-full border border-gray-gray5 bg-main-white !h-9 rounded `}
+        >
+          <ColumnWindowCells
+            window={colWindow}
+            spacerElement="td"
+            spacerRole="presentation"
+            renderColumn={(c, index) => {
+              const pin = columnPinCellProps(
+                c,
+                colWindow.startPinOffsets,
+                colWindow.endPinOffsets,
+              );
+              let content: React.ReactNode = null;
+              if (isIndexColumn(c)) {
+                content =
+                  rowDef.label ??
+                  (rowDef.id === 'sum' || rowDef.id === 'default'
+                    ? t('general.footerTotal')
+                    : rowDef.id === 'avg'
+                      ? t('general.footerAvg')
+                      : (rowDef.label ?? rowDef.id));
+              } else if (rowDef.aggFunc) {
+                const value = controller.getColumnAggValue(
+                  c.fieldName,
+                  rowDef.aggFunc,
+                );
+                content =
+                  value == null
+                    ? null
+                    : valueParser(value, c.fieldType, locale);
+              } else {
+                const value = aggs[c.fieldName];
+                content =
+                  value == null
+                    ? null
+                    : valueParser(value, c.fieldType, locale);
+              }
+              return (
+                <td
+                  key={c.fieldName}
+                  role="gridcell"
+                  aria-colindex={ariaColIndex(index)}
+                  className={pin.className}
+                  data-erp-col-pin={pin['data-erp-col-pin']}
+                  style={{
+                    ...columnSizeStyle(
+                      c,
+                      table.columnWidths,
+                      colWindow.layoutWidths,
+                    ),
+                    ...pin.style,
+                  }}
+                >
+                  {content}
+                </td>
+              );
+            }}
+          />
+        </tr>
+      ))}
+    </tfoot>
+  );
 }

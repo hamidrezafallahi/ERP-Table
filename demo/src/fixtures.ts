@@ -454,6 +454,8 @@ export const VOUCHER_DATA_COLUMNS: ColumnSchema[] = [
     minWidth: 120,
     className: 'text-center justify-center',
     visibility: { kind: 'always' },
+    /** Custom filter UI registry key (PR-95) — see LiveGridPreview `filterComponents`. */
+    columnDef: { filter: 'roundAmount' },
     onChange: (_tableKey, rowId, _row, controller) => {
       void controller.dispatch({
         type: 'UI_CELL_CHANGE',

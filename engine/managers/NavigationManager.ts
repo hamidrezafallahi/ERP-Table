@@ -3,6 +3,7 @@
 import {
   Actor,
   ApplyDynamicProjectionCommand,
+  TableCommand,
 } from '../../application/commands';
 import { TableRepository } from '../../application/ports/TableRepository';
 import { TableAppService } from '../../application/TableAppService';
@@ -13,6 +14,7 @@ import {
   TableState,
   TableViewState,
 } from '../type';
+import type { SparseRowIndex } from '../SparseRowIndex';
 
 export class NavigationManager {
   constructor(
@@ -26,7 +28,9 @@ export class NavigationManager {
      * تا NavigationManager به ViewStateBuilder وابستگی مستقیم نداشته باشه
      */
     private readonly getViewState: () => TableViewState | undefined,
-    private readonly dispatch: (cmd: any) => Promise<void>,
+    private readonly dispatch: (cmd: TableCommand) => Promise<void>,
+    /** Ordered UI row index (PR-99) — O(1) vertical neighbor. */
+    private readonly getUiRowIndex: () => SparseRowIndex<number>,
   ) { }
 
   private getStore(tableKey: string) {
@@ -331,7 +335,8 @@ export class NavigationManager {
       }
 
 
-      const rowId = (newRow as any).rowId?.value;
+      const rowIdValue = (newRow as { rowId?: { value?: unknown } }).rowId?.value;
+      const rowId = typeof rowIdValue === 'number' ? rowIdValue : undefined;
 
       if (!rowId) {
 
@@ -353,6 +358,89 @@ export class NavigationManager {
     }
   }
 
+  private editableColumnsForRow(
+    table: TableState['table'],
+    row: Row,
+  ): ReturnType<typeof table.getActiveCollectionColumns> {
+    const disabledCols = Object.entries(row.getVisibilityCondition() ?? {})
+      .filter(([, value]) => value === false)
+      .map(([key]) => key);
+
+    return table
+      .getActiveCollectionColumns()
+      .filter(
+        (c) =>
+          !c.hidden &&
+          c.editable !== false &&
+          !disabledCols.includes(c.fieldName) &&
+          c.fieldName !== 'index' &&
+          c.fieldType !== 'index' &&
+          c.fieldType !== 'static',
+      );
+  }
+
+  jumpActiveCellRowEdge(cmd: {
+    tableKey: string;
+    rowId: number;
+    columnId: string;
+    edge: 'start' | 'end';
+  }): void {
+    const store = this.getStore(cmd.tableKey);
+    if (!store) return;
+
+    const { table } = store.getState();
+    const row = table.getRow(cmd.rowId);
+    if (!row) return;
+
+    const columns = this.editableColumnsForRow(table, row);
+    if (columns.length === 0) return;
+
+    const targetColumn =
+      cmd.edge === 'start'
+        ? columns[0]
+        : columns[columns.length - 1];
+
+    store.setState((prev) => ({
+      ...prev,
+      activeRowId: cmd.rowId,
+      activeCell: { rowId: cmd.rowId, columnId: targetColumn.fieldName },
+    }));
+  }
+
+  jumpActiveCellGridCorner(cmd: {
+    tableKey: string;
+    corner: 'first' | 'last';
+  }): void {
+    const store = this.getStore(cmd.tableKey);
+    if (!store) return;
+
+    const { table } = store.getState();
+    const index = this.getUiRowIndex();
+    const orderedIds = index.getOrderedIds();
+    if (orderedIds.length === 0) return;
+
+    const rowId =
+      cmd.corner === 'first'
+        ? orderedIds[0]
+        : orderedIds[orderedIds.length - 1];
+    const row = table.getRow(rowId);
+    if (!row || row.rowState.value === 'Delete') return;
+
+    const columns = this.editableColumnsForRow(table, row);
+    if (columns.length === 0) return;
+
+    const targetColumn =
+      cmd.corner === 'first'
+        ? columns[0]
+        : columns[columns.length - 1];
+
+    store.setState((prev) => ({
+      ...prev,
+      activeRowId: rowId,
+      activeCell: { rowId, columnId: targetColumn.fieldName },
+    }));
+  }
+
   async moveActiveCellVertical(cmd: {
     store: string;
     tableKey: string;
@@ -366,19 +454,13 @@ export class NavigationManager {
     const { table } = store.getState();
     if (!table) return;
 
-    // Full row order (not paginated view.rows) so VirtualList can navigate.
-    const navigable = [...table.getRows()]
-      .filter(r => r.rowState.value !== 'Delete')
-      .sort(
-        (a, b) =>
-          (Number(a.getCell('index')?.getValue()) || 0) -
-          (Number(b.getCell('index')?.getValue()) || 0),
-      );
-    const curIdx = navigable.findIndex(r => r.id.value === cmd.rowId);
-    if (curIdx === -1) return;
-
-    const nxtIdx = cmd.direction === 'down' ? curIdx + 1 : curIdx - 1;
-    if (nxtIdx < 0 || nxtIdx >= navigable.length) {
+    // PR-99: O(1) neighbor from ordered SparseRowIndex (filter/sort already applied).
+    const index = this.getUiRowIndex();
+    const nextId = index.neighbor(
+      cmd.rowId,
+      cmd.direction === 'down' ? 1 : -1,
+    );
+    if (nextId === undefined) {
       const view = this.getViewState();
       if (cmd.direction === 'down' && view?.pagination.canNext) {
         void this.dispatch({
@@ -398,13 +480,15 @@ export class NavigationManager {
       return;
     }
 
-    const nextRow = navigable[nxtIdx];
+    const nextRow = table.getRow(nextId);
+    if (!nextRow || nextRow.rowState.value === 'Delete') return;
+
     await this.fetchVisibilityCondition(cmd, nextRow);
 
     store.setState(prev => ({
       ...prev,
-      activeRowId: nextRow.id.value,
-      activeCell: { rowId: nextRow.id.value, columnId: cmd.columnId },
+      activeRowId: nextId,
+      activeCell: { rowId: nextId, columnId: cmd.columnId },
     }));
   }
 }

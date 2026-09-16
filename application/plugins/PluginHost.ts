@@ -13,7 +13,7 @@ import type {
 } from './GridPlugin';
 
 export type RequestExportOptions = {
-  format: 'xlsx' | 'pdf';
+  format: 'xlsx' | 'pdf' | 'csv';
   collectionScope?: ExportRequestedPayload['collectionScope'];
   correlationId?: string;
   fileName?: string;
@@ -116,12 +116,25 @@ export class PluginHost {
   async requestExport(options: RequestExportOptions): Promise<void> {
     const bus = this.createBus();
     const correlationId = options.correlationId ?? createEventId();
-    const pluginName = options.format === 'pdf' ? 'pdf-export' : 'excel-export';
+    const pluginName =
+      options.format === 'pdf'
+        ? 'pdf-export'
+        : options.format === 'csv'
+          ? 'csv-export'
+          : 'excel-export';
     const wait = this.has(pluginName);
     const successType =
-      options.format === 'pdf' ? 'PDF_EXPORT_COMPLETED' : 'XLSX_EXPORT_COMPLETED';
+      options.format === 'pdf'
+        ? 'PDF_EXPORT_COMPLETED'
+        : options.format === 'csv'
+          ? 'CSV_EXPORT_COMPLETED'
+          : 'XLSX_EXPORT_COMPLETED';
     const failType =
-      options.format === 'pdf' ? 'PDF_EXPORT_FAILED' : 'XLSX_EXPORT_FAILED';
+      options.format === 'pdf'
+        ? 'PDF_EXPORT_FAILED'
+        : options.format === 'csv'
+          ? 'CSV_EXPORT_FAILED'
+          : 'XLSX_EXPORT_FAILED';
 
     const finished = wait
       ? new Promise<void>((resolve, reject) => {

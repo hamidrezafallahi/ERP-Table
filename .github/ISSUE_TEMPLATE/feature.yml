@@ -1,0 +1,32 @@
+name: Feature request
+description: Ask for a Tier 0 / documented-roadmap capability.
+title: '[feat] '
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        New work follows `EXECUTION_PLAN.md`. Pivot, integrated charts, spreadsheet formulas, multi-level tree data, a full tool panel, and Angular/Vue wrappers need a new RFC.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What can you not do with the grid today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: API sketch or UX. Point at a PR-N in EXECUTION_PLAN.md if one already covers this.
+    validations:
+      required: true
+  - type: dropdown
+    id: already-planned
+    attributes:
+      label: Already on the plan?
+      options:
+        - 'No / not sure'
+        - 'Yes — there is a PR-N for this'
+    validations:
+      required: true

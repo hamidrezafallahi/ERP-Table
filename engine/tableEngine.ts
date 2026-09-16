@@ -24,9 +24,21 @@ import {
 } from '../infrastructure/Repositories/consoleAuditLogger';
 import { UIRow } from '../ui/type';
 import { EngineErrorHandler } from './EngineErrorHandler';
+import { CellRangeManager } from './managers/CellRangeManager';
 import { NavigationManager } from './managers/NavigationManager';
 import { RowManager } from './managers/RowManager';
 import { SelectionManager } from './managers/SelectionManager';
+import {
+  canSetColumnVisible,
+} from './dataOps/columnVisibility';
+import { canSetColumnPinned } from './dataOps/columnPinPolicy';
+import {
+  createEmptyCellRangeSelection,
+  extendCellRangeToEdge,
+  type ArrowDirection,
+  type CellRange,
+  type CellRangeSelection,
+} from './selection/cellRange';
 import { SparseRowIndex } from './SparseRowIndex';
 import { TableStore } from './tableStore';
 import {
@@ -39,12 +51,37 @@ import {
   ValidCell,
 } from './type';
 import { clampColumnWidth } from './columnWidth';
+import {
+  createCellEditSession,
+  dirtyDraftColumns,
+  isEditingCell,
+  leavesEditSession,
+  patchDraft,
+  readDraft,
+  DEFAULT_CELL_EDIT_OPTIONS,
+  type CellEditOptions,
+  type CellEditSession,
+  type CellEditValue,
+} from './dataOps/cellEditSession';
+import type { FilterModel } from './dataOps/filterModel';
+import type { RowModelType } from './dataOps/rowModel';
 import { ViewStateBuilder } from './ViewStateBuilder';
+import type { ColumnDef } from '../domain/types/ColumnDef';
+import { mapColumnSchemasToDefs } from '../infrastructure/columns/mapColumnDef';
+import {
+  applyHostRowDataToTable,
+  defaultGetRowId,
+  ensureIndexColumnDef,
+  type GetRowId,
+} from '../infrastructure/rows/mapRowData';
 
 export class TableEngine {
   // ─── internal state ────────────────────────────────────────────────────────
   private tableStore?: TableStore<TableState>;
   private tableKey?: string;
+  /** Durable command store id (for CHANGE_CELL_* on edit commit). */
+  private commandStore?: string;
+  private cellEditOptions: CellEditOptions = { ...DEFAULT_CELL_EDIT_OPTIONS };
   public readonly errors = new Map<string, CellError>();
   public readonly searchResult = new Map<string, CellError>();
   private readonly asyncCellCache = new Map<
@@ -57,9 +94,12 @@ export class TableEngine {
   // ─── collaborators ─────────────────────────────────────────────────────────
   private readonly errHandler: EngineErrorHandler;
   private readonly selection: SelectionManager;
+  private readonly cellRange: CellRangeManager;
   private readonly rowMgr: RowManager;
   private readonly nav: NavigationManager;
   private readonly viewBuilder: ViewStateBuilder;
+  /** Notifies host server/infinite row model after sort/filter/page (PR-96). */
+  private viewQueryListener?: () => void;
 
   constructor(
     private readonly app: TableAppService,
@@ -68,7 +108,16 @@ export class TableEngine {
     audit: ConsoleAuditLogger,
   ) {
     this.errHandler = new EngineErrorHandler(audit);
-    this.selection = new SelectionManager(() => this.tableStore, this.errHandler);
+    this.selection = new SelectionManager(
+      () => this.tableStore,
+      this.errHandler,
+      (rowId) => this.viewBuilder.getGroupNode(rowId)?.childRowIds,
+    );
+    this.cellRange = new CellRangeManager(
+      () => this.tableStore,
+      () => this.getCellRangeBounds(),
+      this.errHandler,
+    );
     this.rowMgr = new RowManager(() => this.tableStore, this.errHandler);
     this.viewBuilder = new ViewStateBuilder(() => this.tableStore, this.errHandler);
     this.nav = new NavigationManager(
@@ -79,6 +128,7 @@ export class TableEngine {
       this.errHandler,
       () => this.getViewState(),
       (cmd) => this.dispatch(cmd),
+      () => this.getUiRowIndex(),
     );
   }
 
@@ -89,6 +139,7 @@ export class TableEngine {
     table: Table;
   }): Promise<void> {
     const { store, table } = cmd;
+    this.commandStore = store;
     if (this.tableStore && this.tableKey === table.id) {
       const existsInRepo = await this.repo.exists(store, table.id);
       if (existsInRepo) return;
@@ -105,6 +156,17 @@ export class TableEngine {
       gridSearch: null,
       mobileEditor: null,
       columnWidths: {},
+      sortModel: [],
+      quickFilterText: '',
+      filterModel: {},
+      rowModelType: 'clientSide',
+      serverRowCount: null,
+      cellRangeSelection: createEmptyCellRangeSelection(),
+      collapsedColumnGroups: {},
+      rowGroupColumns: [],
+      groupDefaultExpanded: true,
+      rowGroupExpanded: {},
+      cellEdit: null,
     });
     this.tableKey = table.id;
     this.tableStore = tableStore;
@@ -169,6 +231,16 @@ export class TableEngine {
         gridSearch: null,
         mobileEditor: null,
         columnWidths: {},
+        sortModel: [],
+        quickFilterText: '',
+        filterModel: {},
+        serverRowCount: null,
+        cellRangeSelection: createEmptyCellRangeSelection(),
+        collapsedColumnGroups: {},
+        rowGroupColumns: [],
+        groupDefaultExpanded: true,
+        rowGroupExpanded: {},
+        cellEdit: null,
       }));
     } catch (e) {
       this.errHandler.handle(e, 'TableEngine.resetTable');
@@ -180,18 +252,39 @@ export class TableEngine {
   private shouldInvalidateUiRowIndex(command: ApplicationTableCommand): boolean {
     switch (command.type) {
       case 'ADD_EMPTY_ROW':
+      case 'ROW_DELETED': {
+        // Incremental patch skips group nodes — full rebuild when grouping (PR-120).
+        const state = this.getStore(command.tableKey)?.getState();
+        if ((state?.rowGroupColumns?.length ?? 0) > 0) {
+          this.viewBuilder.invalidateQuickFilterIndex();
+          return true;
+        }
+        return false;
+      }
       case 'ADD_NEW_ROWS':
       case 'DUPLICATE_ROW':
       case 'PASTE_ROW':
-      case 'ROW_DELETED':
       case 'RESTORE_ADDED_ROW':
       case 'TABLE_DELETED':
       case 'TABLE_RESET':
       case 'ROW_REORDERED':
       case 'SET_ACTIVE_COLLECTION':
+        this.viewBuilder.invalidateQuickFilterIndex();
         return true;
-      case 'CHANGE_CELL_VALUE':
-        return command.columnId === 'index';
+      case 'CHANGE_CELL_VALUE': {
+        if (command.columnId === 'index') return true;
+        const state = this.getStore(command.tableKey)?.getState();
+        const sortModel = state?.sortModel ?? [];
+        if (sortModel.some((item) => item.colId === command.columnId)) {
+          return true;
+        }
+        if (state?.filterModel?.[command.columnId]) return true;
+        if ((state?.rowGroupColumns?.length ?? 0) > 0) return true;
+        return Boolean(state?.quickFilterText?.trim());
+      }
+      case 'PASTE_CELLS':
+        this.viewBuilder.invalidateQuickFilterIndex();
+        return true;
       default:
         return false;
     }
@@ -213,6 +306,16 @@ export class TableEngine {
   private async executeAppCommand(command: ApplicationTableCommand): Promise<void> {
     let result: unknown;
 
+    const prevCellValue =
+      command.type === 'CHANGE_CELL_VALUE'
+        ? this.getStore(command.tableKey)
+            ?.getState()
+            .table.getRow(command.rowId)
+            ?.getCells()
+            .get(command.columnId)
+            ?.getValue()
+        : undefined;
+
     try {
       result = await this.app.execute(command, this.actor);
     } catch (e) {
@@ -222,10 +325,10 @@ export class TableEngine {
 
     try {
       const updated = await this.repo.getById(
-        (command as any).store,
-        (command as any).tableKey,
+        command.store,
+        command.tableKey,
       );
-      const store = this.getStore((command as any).tableKey);
+      const store = this.getStore(command.tableKey);
       if (!store || !updated) return;
       if (this.shouldInvalidateUiRowIndex(command)) {
         this.viewBuilder.invalidateUiRowIndex();
@@ -233,10 +336,28 @@ export class TableEngine {
       const prev = store.getState();
       store.setState(() => ({ ...prev, table: updated }));
 
+      if (command.type === 'CHANGE_CELL_VALUE') {
+        this.viewBuilder.patchQuickFilterRow(command.rowId);
+        this.viewBuilder.patchColumnTotal(
+          command.columnId,
+          prevCellValue,
+          command.newValue,
+        );
+      }
+
       if (command.type === 'ADD_EMPTY_ROW') {
         const addCommand = command as AddEmptyRowCommand;
         const rowAdded = result as RowAdded | null;
         const rowId = rowAdded?.rowId?.value;
+        const grouping =
+          (store.getState().rowGroupColumns?.length ?? 0) > 0;
+
+        if (rowId != null && !grouping) {
+          this.viewBuilder.patchQuickFilterRow(rowId);
+          this.viewBuilder.insertUiRow(rowId);
+        } else if (rowId != null) {
+          this.viewBuilder.patchQuickFilterRow(rowId);
+        }
 
         if (addCommand.autoActivate && rowId != null) {
           await this.nav.setActiveRow({
@@ -245,6 +366,21 @@ export class TableEngine {
             rowId,
           });
         }
+      }
+
+      if (command.type === 'ROW_DELETED') {
+        const grouping =
+          (store.getState().rowGroupColumns?.length ?? 0) > 0;
+        if (!grouping) {
+          this.viewBuilder.removeUiRow(command.rowId);
+        }
+      }
+
+      if (
+        command.type === 'CHANGE_PAGE' ||
+        command.type === 'CHANGE_PAGE_SIZE'
+      ) {
+        this.notifyViewQueryChanged();
       }
     } catch (e) {
       this.errHandler.handle(e, `TableEngine.dispatch.reload[${command.type}]`);
@@ -334,19 +470,25 @@ export class TableEngine {
     switch (command.type) {
       // ── Navigation ──────────────────────────────────────────────────────────
       case 'ACTIVE_CELL':
-        this.nav.setActiveCell(command);
+        await this.transitionActiveCell(command.rowId, command.columnId);
         return;
       case 'ACTIVE_ROW':
         await this.nav.setActiveRow(command);
         return;
       case 'MOVE_ACTIVE_CELL':
+        await this.commitCellEdit();
         await this.nav.moveActiveCell(command);
+        this.maybeStartEditForActiveCell();
         return;
       case 'MOVE_ACTIVE_CELL_VERTICAL':
+        await this.commitCellEdit();
         await this.nav.moveActiveCellVertical(command);
+        this.maybeStartEditForActiveCell();
         return;
       case 'ACTIVATE_FIRST_CELL':
+        await this.commitCellEdit();
         this.nav.activateFirstCell(command);
+        this.maybeStartEditForActiveCell();
         return;
 
       // ── Table lifecycle ──────────────────────────────────────────────────────
@@ -437,6 +579,33 @@ export class TableEngine {
       case 'RESIZE_COLUMN':
         this.resizeColumn(command);
         return;
+      case 'SET_COLUMN_VISIBLE':
+        this.setColumnVisible(command);
+        return;
+      case 'TOGGLE_COLUMN_GROUP':
+        this.toggleColumnGroup(command);
+        return;
+      case 'SET_COLUMN_PIN':
+        this.setColumnPinned(command);
+        return;
+      case 'SET_SORT_MODEL':
+        this.setSortModel(command);
+        return;
+      case 'SET_QUICK_FILTER_TEXT':
+        this.setQuickFilterText(command);
+        return;
+      case 'SET_FILTER_MODEL':
+        this.setFilterModel(command);
+        return;
+      case 'SET_ROW_GROUP_COLUMNS':
+        this.setRowGroupColumns(command);
+        return;
+      case 'SET_GROUP_DEFAULT_EXPANDED':
+        this.setGroupDefaultExpanded(command);
+        return;
+      case 'TOGGLE_ROW_GROUP':
+        this.toggleRowGroup(command);
+        return;
 
       // ── Delegate to AppService ───────────────────────────────────────────────
       default:
@@ -498,10 +667,240 @@ export class TableEngine {
     }));
   }
 
+  private setColumnPinned(command: {
+    tableKey: string;
+    columnId: string;
+    pinned: 'start' | 'end' | null;
+  }): void {
+    const store = this.getStore(command.tableKey);
+    if (!store) return;
+    const { table } = store.getState();
+    const schema = table
+      .getActiveCollectionColumns()
+      .find((c) => c.fieldName === command.columnId);
+    const check = canSetColumnPinned(schema, command.pinned);
+    if (!check.ok) return;
+    const changed = table.setColumnPinned(command.columnId, check.pinned);
+    if (!changed) return;
+    store.setState((prev) => ({ ...prev, table }));
+  }
+
+  private toggleColumnGroup(command: {
+    tableKey: string;
+    groupId: string;
+  }): void {
+    const store = this.getStore(command.tableKey);
+    if (!store) return;
+    store.setState((prev) => {
+      const collapsed = { ...(prev.collapsedColumnGroups ?? {}) };
+      if (collapsed[command.groupId]) delete collapsed[command.groupId];
+      else collapsed[command.groupId] = true;
+      return { ...prev, collapsedColumnGroups: collapsed };
+    });
+  }
+
+  private setColumnVisible(command: {
+    tableKey: string;
+    columnId: string;
+    visible: boolean;
+  }): void {
+    const store = this.getStore(command.tableKey);
+    if (!store) return;
+    const { table } = store.getState();
+    const schema = table
+      .getActiveCollectionColumns()
+      .find((c) => c.fieldName === command.columnId);
+    const check = canSetColumnVisible(schema, command.visible);
+    if (!check.ok) return;
+    const changed = table.setColumnHidden(command.columnId, check.hidden);
+    if (!changed) return;
+    store.setState((prev) => ({ ...prev, table }));
+  }
+
+  private setSortModel(command: {
+    tableKey: string;
+    sortModel: readonly { colId: string; sort: 'asc' | 'desc' }[];
+  }): void {
+    const store = this.getStore(command.tableKey);
+    if (!store) return;
+    const next = command.sortModel
+      .filter(
+        (item) =>
+          item &&
+          typeof item.colId === 'string' &&
+          item.colId.length > 0 &&
+          (item.sort === 'asc' || item.sort === 'desc'),
+      )
+      .map((item) => ({ colId: item.colId, sort: item.sort }));
+    store.setState((prev) => ({
+      ...prev,
+      sortModel: next,
+    }));
+    this.viewBuilder.invalidateUiRowIndex();
+    this.notifyViewQueryChanged();
+  }
+
+  private setQuickFilterText(command: {
+    tableKey: string;
+    quickFilterText: string;
+  }): void {
+    const store = this.getStore(command.tableKey);
+    if (!store) return;
+    const next =
+      typeof command.quickFilterText === 'string'
+        ? command.quickFilterText
+        : '';
+    store.setState((prev) => ({
+      ...prev,
+      quickFilterText: next,
+    }));
+    // Blobs stay cached — only re-apply the query (PR-93).
+    this.viewBuilder.invalidateUiRowIndex();
+  }
+
+  private setFilterModel(command: {
+    tableKey: string;
+    filterModel: FilterModel;
+  }): void {
+    const store = this.getStore(command.tableKey);
+    if (!store) return;
+    const next =
+      command.filterModel && typeof command.filterModel === 'object'
+        ? { ...command.filterModel }
+        : {};
+    store.setState((prev) => ({
+      ...prev,
+      filterModel: next,
+    }));
+    this.viewBuilder.invalidateUiRowIndex();
+    this.notifyViewQueryChanged();
+  }
+
+  private setRowGroupColumns(command: {
+    tableKey: string;
+    columns: readonly string[];
+  }): void {
+    const store = this.getStore(command.tableKey);
+    if (!store) return;
+    const next = command.columns
+      .filter((c) => typeof c === 'string' && c.trim() !== '')
+      .map((c) => c.trim());
+    store.setState((prev) => ({
+      ...prev,
+      rowGroupColumns: next,
+      rowGroupExpanded: {},
+    }));
+    this.viewBuilder.invalidateUiRowIndex();
+  }
+
+  private setGroupDefaultExpanded(command: {
+    tableKey: string;
+    expanded: boolean;
+  }): void {
+    const store = this.getStore(command.tableKey);
+    if (!store) return;
+    store.setState((prev) => ({
+      ...prev,
+      groupDefaultExpanded: Boolean(command.expanded),
+      rowGroupExpanded: {},
+    }));
+    this.viewBuilder.invalidateUiRowIndex();
+  }
+
+  private toggleRowGroup(command: {
+    tableKey: string;
+    groupKey: string;
+  }): void {
+    const store = this.getStore(command.tableKey);
+    if (!store) return;
+    const state = store.getState();
+    const key = command.groupKey;
+    const current = Object.prototype.hasOwnProperty.call(
+      state.rowGroupExpanded,
+      key,
+    )
+      ? state.rowGroupExpanded[key]!
+      : state.groupDefaultExpanded;
+    store.setState((prev) => ({
+      ...prev,
+      rowGroupExpanded: {
+        ...prev.rowGroupExpanded,
+        [key]: !current,
+      },
+    }));
+    this.viewBuilder.invalidateUiRowIndex();
+  }
+
+  /**
+   * Server/infinite row model hooks (PR-96).
+   * Listener runs after sort / filter / page changes.
+   */
+  bindViewQueryListener(listener: (() => void) | undefined): void {
+    this.viewQueryListener = listener;
+  }
+
+  setRowModelType(rowModelType: RowModelType): void {
+    const store = this.getStore();
+    if (!store) return;
+    store.setState((prev) => ({
+      ...prev,
+      rowModelType,
+    }));
+    this.viewBuilder.invalidateUiRowIndex();
+  }
+
+  setServerRowCount(count: number | null): void {
+    const store = this.getStore();
+    if (!store) return;
+    store.setState((prev) => ({
+      ...prev,
+      serverRowCount: count,
+    }));
+  }
+
+  private notifyViewQueryChanged(): void {
+    this.viewQueryListener?.();
+  }
+
   // ─── public read API ────────────────────────────────────────────────────────
 
   getViewState(): TableViewState | undefined {
     return this.viewBuilder.getViewState();
+  }
+
+  /**
+   * Diff `rowData` onto the live table without resetting it (PR-82).
+   * Unchanged domain rows keep identity so UI `React.memo` can skip them.
+   */
+  applyHostRowData<TRow>(
+    rowData: readonly TRow[],
+    columnDefs?: ColumnDef<TRow>[],
+    getRowId?: GetRowId<TRow>,
+  ): void {
+    const store = this.getStore();
+    if (!store) return;
+    const { table } = store.getState();
+    const defs = ensureIndexColumnDef(
+      columnDefs && columnDefs.length > 0
+        ? columnDefs
+        : mapColumnSchemasToDefs<TRow>(table.getColumns()),
+    );
+    const result = applyHostRowDataToTable(
+      table,
+      rowData,
+      defs,
+      getRowId ?? defaultGetRowId,
+    );
+    if (result.removedIds.length) {
+      this.viewBuilder.forgetUiRows(result.removedIds);
+    }
+    if (result.added === 0 && result.updated === 0 && result.removed === 0) {
+      return;
+    }
+    if (result.structureChanged) {
+      this.viewBuilder.invalidateUiRowIndex();
+    }
+    store.setState((prev) => ({ ...prev, table }));
   }
 
   getAllRows(): Row[] | null {
@@ -512,8 +911,225 @@ export class TableEngine {
     return this.viewBuilder.getAllUIRows();
   }
 
+  /** Flat group/leaf nodes (PR-120). */
+  getFlatUiNodes() {
+    return this.viewBuilder.getFlatUiNodes();
+  }
+
+  getGroupNode(rowId: number) {
+    return this.viewBuilder.getGroupNode(rowId);
+  }
+
+  /** Expand/collapse group for the active synthetic row (PR-121). */
+  toggleRowGroupById(rowId: number): boolean {
+    const node = this.viewBuilder.getGroupNode(rowId);
+    if (!node || !this.tableKey) return false;
+    this.toggleRowGroup({ tableKey: this.tableKey, groupKey: node.key });
+    return true;
+  }
+
   getUiRowIndex(): SparseRowIndex<number> {
     return this.viewBuilder.getUiRowIndex();
+  }
+
+  /** Absolute 0-based position in the filter/sort UI order (PR-99). */
+  getUiRowAbsoluteIndex(rowId: number): number {
+    return this.viewBuilder.getUiRowIndex().indexOf(rowId);
+  }
+
+  getCellRanges(): readonly CellRange[] {
+    if (!this.tableKey) return [];
+    return this.cellRange.getSelection(this.tableKey).ranges;
+  }
+
+  addCellRange(range: CellRange): void {
+    if (!this.tableKey) return;
+    this.cellRange.addRange(this.tableKey, range);
+  }
+
+  handleCellRangePointer(
+    rowId: number,
+    colId: string,
+    modifiers: { shiftKey: boolean; ctrlKey: boolean },
+  ): void {
+    if (!this.tableKey) return;
+    const rowIndex = this.getUiRowAbsoluteIndex(rowId);
+    if (rowIndex < 0) return;
+    this.cellRange.handlePointer({
+      tableKey: this.tableKey,
+      rowIndex,
+      colId,
+      shiftKey: modifiers.shiftKey,
+      ctrlKey: modifiers.ctrlKey,
+    });
+  }
+
+  extendCellRangeArrow(direction: ArrowDirection): void {
+    if (!this.tableKey) return;
+    const selection = this.cellRange.extendWithArrow(this.tableKey, direction);
+    this.syncActiveCellToRangeFocus(selection);
+  }
+
+  extendCellRangeToEdge(direction: ArrowDirection): void {
+    if (!this.tableKey) return;
+    const bounds = this.getCellRangeBounds();
+    const prev = this.cellRange.getSelection(this.tableKey);
+    const next = extendCellRangeToEdge(prev, direction, bounds);
+    this.cellRange.setSelection(this.tableKey, next);
+    this.syncActiveCellToRangeFocus(next);
+  }
+
+  jumpActiveCellRowEdge(edge: 'start' | 'end'): void {
+    if (!this.tableKey) return;
+    const store = this.tableStore;
+    if (!store) return;
+    const { activeCell } = store.getState();
+    if (!activeCell) return;
+    void this.commitCellEdit().then(() => {
+      if (!this.tableKey) return;
+      this.nav.jumpActiveCellRowEdge({
+        tableKey: this.tableKey,
+        rowId: activeCell.rowId,
+        columnId: activeCell.columnId,
+        edge,
+      });
+      this.syncCellRangeToActiveCell();
+      this.maybeStartEditForActiveCell();
+    });
+  }
+
+  jumpActiveCellGridCorner(corner: 'first' | 'last'): void {
+    if (!this.tableKey) return;
+    void this.commitCellEdit().then(() => {
+      if (!this.tableKey) return;
+      this.nav.jumpActiveCellGridCorner({
+        tableKey: this.tableKey,
+        corner,
+      });
+      this.syncCellRangeToActiveCell();
+      this.maybeStartEditForActiveCell();
+    });
+  }
+
+  private syncActiveCellToRangeFocus(selection: CellRangeSelection): void {
+    if (!this.tableKey) return;
+    const focus = selection.focus;
+    if (!focus) return;
+    const rowId = this.getUiRowIndex().getOrderedIds()[focus.rowIndex];
+    if (rowId === undefined) return;
+    this.nav.setActiveCell({
+      tableKey: this.tableKey,
+      rowId,
+      columnId: focus.colId,
+    });
+  }
+
+  selectAllCells(): void {
+    if (!this.tableKey) return;
+    const selection = this.cellRange.selectAll(this.tableKey);
+    const focus = selection.focus;
+    if (!focus) return;
+    const rowId = this.getUiRowIndex().getOrderedIds()[focus.rowIndex];
+    if (rowId === undefined) return;
+    this.nav.setActiveCell({
+      tableKey: this.tableKey,
+      rowId,
+      columnId: focus.colId,
+    });
+  }
+
+  syncCellRangeToActiveCell(): void {
+    if (!this.tableKey) return;
+    const store = this.tableStore;
+    if (!store) return;
+    const { activeCell } = store.getState();
+    if (!activeCell) return;
+    this.handleCellRangePointer(activeCell.rowId, activeCell.columnId, {
+      shiftKey: false,
+      ctrlKey: false,
+    });
+  }
+
+  private getCellRangeBounds() {
+    const store = this.tableStore;
+    if (!store) {
+      return { rowCount: 0, columnOrder: [] as readonly string[] };
+    }
+    const { table } = store.getState();
+    const columnOrder = table
+      .getColumns()
+      .filter((c) => !c.hidden)
+      .map((c) => c.fieldName);
+    return {
+      rowCount: this.getUiRowCount(),
+      columnOrder,
+    };
+  }
+
+  findColumnSearchMatches(
+    columnId: string,
+    query: string,
+  ): Array<{ rowId: number; columnId: string }> {
+    return this.viewBuilder.findColumnSearchMatches(columnId, query);
+  }
+
+  getColumnTotals(): Record<string, number> {
+    return this.viewBuilder.getColumnTotals();
+  }
+
+  getColumnAggs(): Record<string, unknown> {
+    return this.viewBuilder.getColumnAggs();
+  }
+
+  getColumnAggValue(
+    columnId: string,
+    overrideAgg?: import('../domain/types/ColumnDef').AggFunc,
+  ): unknown {
+    return this.viewBuilder.getColumnAggValue(columnId, overrideAgg);
+  }
+
+  subscribeColumnTotals(
+    cb: (totals: Record<string, number>) => void,
+  ): (() => void) | null {
+    const store = this.getStore();
+    if (!store) return null;
+    let prev = this.viewBuilder.getColumnTotals();
+    cb(prev);
+    return store.subscribe(() => {
+      const next = this.viewBuilder.getColumnTotals();
+      const keys = Object.keys(next);
+      const changed =
+        keys.length !== Object.keys(prev).length ||
+        keys.some((k) => next[k] !== prev[k]);
+      if (changed) {
+        prev = next;
+        cb(next);
+      }
+    });
+  }
+
+  subscribeColumnAggs(
+    cb: (aggs: Record<string, unknown>) => void,
+  ): (() => void) | null {
+    const store = this.getStore();
+    if (!store) return null;
+    let prev = this.viewBuilder.getColumnAggs();
+    cb(prev);
+    return store.subscribe(() => {
+      const next = this.viewBuilder.getColumnAggs();
+      const keys = new Set([...Object.keys(next), ...Object.keys(prev)]);
+      let changed = false;
+      for (const k of keys) {
+        if (next[k] !== prev[k]) {
+          changed = true;
+          break;
+        }
+      }
+      if (changed) {
+        prev = next;
+        cb(next);
+      }
+    });
   }
 
   getUiRowCount(): number {
@@ -542,6 +1158,243 @@ export class TableEngine {
 
   getActiveCell(): TableState['activeCell'] | null {
     return this.viewBuilder.getActiveCell();
+  }
+
+  /** Force a view-store tick so bound React rows re-read cells (PR-86). */
+  refreshView(): void {
+    const store = this.tableStore;
+    if (!store) return;
+    this.viewBuilder.invalidateUiRowIndex();
+    store.setState((prev) => ({ ...prev }));
+  }
+
+  setCellEditOptions(partial: Partial<CellEditOptions>): void {
+    this.cellEditOptions = {
+      ...this.cellEditOptions,
+      ...partial,
+    };
+  }
+
+  getCellEditOptions(): CellEditOptions {
+    return this.cellEditOptions;
+  }
+
+  getCellEdit(): CellEditSession | null {
+    return this.tableStore?.getState().cellEdit ?? null;
+  }
+
+  getEditDraft(rowId: number, columnId: string): CellEditValue | null {
+    return readDraft(this.getCellEdit(), rowId, columnId);
+  }
+
+  isEditingCell(rowId: number, columnId: string): boolean {
+    return isEditingCell(this.getCellEdit(), rowId, columnId);
+  }
+
+  /**
+   * Begin a session-only draft for the cell (or full row). Does not touch EventStore.
+   */
+  startCellEdit(rowId: number, columnId: string): void {
+    const store = this.tableStore;
+    if (!store || !this.tableKey) return;
+    const { table, cellEdit } = store.getState();
+    if (
+      cellEdit &&
+      cellEdit.rowId === rowId &&
+      (cellEdit.editType === 'fullRow' || cellEdit.columnId === columnId)
+    ) {
+      if (cellEdit.columnId !== columnId) {
+        store.setState((prev) => ({
+          ...prev,
+          cellEdit: prev.cellEdit
+            ? { ...prev.cellEdit, columnId }
+            : null,
+        }));
+      }
+      return;
+    }
+    const row = table.getRow(rowId);
+    if (!row) return;
+    const schema = table.getColumns().find((c) => c.fieldName === columnId);
+    if (schema && schema.editable === false) return;
+
+    const editType = this.cellEditOptions.editType;
+    const baseline: Record<string, CellEditValue> = {};
+    if (editType === 'fullRow') {
+      for (const col of table.getColumns()) {
+        if (col.fieldName === 'index') continue;
+        if (col.editable === false) continue;
+        const cell = row.getCell(col.fieldName);
+        baseline[col.fieldName] = {
+          value: cell?.getValue() ?? null,
+          display: cell?.getDisplay() ?? null,
+        };
+      }
+    } else {
+      const cell = row.getCell(columnId);
+      baseline[columnId] = {
+        value: cell?.getValue() ?? null,
+        display: cell?.getDisplay() ?? null,
+      };
+    }
+    if (!baseline[columnId] && editType === 'cell') {
+      baseline[columnId] = { value: null, display: null };
+    }
+
+    store.setState((prev) => ({
+      ...prev,
+      activeRowId: rowId,
+      activeCell: { rowId, columnId },
+      cellEdit: createCellEditSession({
+        rowId,
+        columnId,
+        editType,
+        baseline,
+      }),
+    }));
+  }
+
+  patchCellEdit(
+    rowId: number,
+    columnId: string,
+    patch: Partial<CellEditValue>,
+  ): void {
+    const store = this.tableStore;
+    if (!store) return;
+    const session = store.getState().cellEdit;
+    if (!session || session.rowId !== rowId) return;
+    if (session.editType === 'cell' && !(columnId in session.baseline)) {
+      // Allow late column focus within fullRow only; cell mode sticks to session cols.
+    }
+    if (session.editType === 'cell' && columnId !== session.columnId) {
+      // Still allow patch if baseline has the column (shouldn't happen).
+      if (!(columnId in session.drafts) && !(columnId in session.baseline)) {
+        return;
+      }
+    }
+    store.setState((prev) => {
+      if (!prev.cellEdit || prev.cellEdit.rowId !== rowId) return prev;
+      return {
+        ...prev,
+        cellEdit: patchDraft(prev.cellEdit, columnId, patch),
+      };
+    });
+  }
+
+  /** Discard drafts; restore UI to domain values. No EventStore write. */
+  cancelCellEdit(): void {
+    const store = this.tableStore;
+    if (!store) return;
+    if (!store.getState().cellEdit) return;
+    store.setState((prev) => ({ ...prev, cellEdit: null }));
+  }
+
+  /**
+   * Write dirty drafts via CHANGE_CELL_* then clear the session.
+   * @returns number of value-change commands dispatched
+   */
+  async commitCellEdit(): Promise<number> {
+    const store = this.tableStore;
+    const commandStore = this.commandStore;
+    const tableKey = this.tableKey;
+    if (!store || !commandStore || !tableKey) return 0;
+    const session = store.getState().cellEdit;
+    if (!session) return 0;
+    const dirty = dirtyDraftColumns(session);
+    store.setState((prev) => ({ ...prev, cellEdit: null }));
+    let writes = 0;
+    for (const colId of dirty) {
+      const draft = session.drafts[colId]!;
+      const base = session.baseline[colId];
+      if (!base || draft.value !== base.value) {
+        await this.dispatch({
+          type: 'CHANGE_CELL_VALUE',
+          store: commandStore,
+          tableKey,
+          rowId: session.rowId,
+          columnId: colId,
+          newValue: draft.value,
+        });
+        writes += 1;
+      }
+      if (!base || draft.display !== base.display) {
+        await this.dispatch({
+          type: 'CHANGE_CELL_DISPLAY_VALUE',
+          store: commandStore,
+          tableKey,
+          rowId: session.rowId,
+          columnId: colId,
+          newValue:
+            draft.display == null ? '' : String(draft.display),
+        });
+      }
+    }
+    return writes;
+  }
+
+  private async transitionActiveCell(
+    rowId: number,
+    columnId: string,
+  ): Promise<void> {
+    const store = this.tableStore;
+    if (!store || !this.tableKey) return;
+    const session = store.getState().cellEdit;
+    if (leavesEditSession(session, rowId, columnId)) {
+      await this.commitCellEdit();
+    } else if (session && session.editType === 'fullRow' && session.rowId === rowId) {
+      store.setState((prev) => ({
+        ...prev,
+        cellEdit: prev.cellEdit
+          ? { ...prev.cellEdit, columnId }
+          : null,
+      }));
+    }
+    this.nav.setActiveCell({
+      tableKey: this.tableKey,
+      rowId,
+      columnId,
+    });
+    if (this.cellEditOptions.singleClickEdit) {
+      this.startCellEdit(rowId, columnId);
+    }
+  }
+
+  private maybeStartEditForActiveCell(): void {
+    if (!this.cellEditOptions.singleClickEdit) return;
+    const active = this.getActiveCell();
+    if (!active) return;
+    this.startCellEdit(active.rowId, active.columnId);
+  }
+
+  /** Leave cell-edit / focus. Commits when stopEditingWhenCellsLoseFocus. */
+  async clearActiveCell(options?: { cancel?: boolean }): Promise<void> {
+    const store = this.tableStore;
+    if (!store) return;
+    const cancel = options?.cancel === true;
+    if (cancel) {
+      this.cancelCellEdit();
+    } else if (store.getState().cellEdit) {
+      if (this.cellEditOptions.stopEditingWhenCellsLoseFocus) {
+        await this.commitCellEdit();
+      } else {
+        this.cancelCellEdit();
+      }
+    }
+    store.setState((prev) => {
+      if (
+        prev.activeCell == null &&
+        prev.activeRowId === undefined &&
+        prev.cellEdit == null
+      ) {
+        return prev;
+      }
+      return {
+        ...prev,
+        activeCell: undefined,
+        activeRowId: undefined,
+        cellEdit: null,
+      };
+    });
   }
 
   getActiveRow(): number | null {
@@ -577,7 +1430,7 @@ export class TableEngine {
     return this.viewBuilder.isActiveRow(rowId);
   }
 
-  private validateCell(value: any, schema: ColumnSchema, caption: string, rowId: number): CellError | undefined {
+  private validateCell(value: unknown, schema: ColumnSchema, caption: string, rowId: number): CellError | undefined {
     const rules = schema?.rules ?? [];
     if (!rules.length) return undefined;
     for (const rule of rules) {
@@ -625,14 +1478,16 @@ export class TableEngine {
         }
         case "url": {
           try {
-            new URL(v);
+            new URL(String(v));
           } catch {
             return { caption, rowId, message: rule.message ?? `${schema.fieldCaption || caption} باید URL معتبر باشد` };
           }
           break;
         }
         case "date": {
-          const d = new Date(v);
+          const d = new Date(
+            typeof v === 'string' || typeof v === 'number' ? v : String(v),
+          );
           if (isNaN(d.getTime())) return { caption, rowId, message: rule.message ?? `${schema.fieldCaption || caption} تاریخ معتبر نیست` };
           break;
         }
@@ -917,7 +1772,7 @@ export class TableEngine {
       if (!cell) {
         return { isValid: true, cellError: { caption: "", rowId: NaN, message: "" } };
       }
-      const error = this.validateCell(cell.getValue() as any, schema, caption, rowId);
+      const error = this.validateCell(cell.getValue(), schema, caption, rowId);
       const cellId = `row-${rowIndex}-${caption}`;
       if (error) {
         this.asyncCellCache.delete(cellId);

@@ -101,7 +101,7 @@ export function MobileRowFormModal({
                     columnId={col.fieldName}
                     meta={meta}
                     controller={controller}
-                    tabIndex={idx}
+                    tabIndex={-1}
                     mode={col.editable === false ? "view" : "form"}
                   />
                 </div>

@@ -46,31 +46,35 @@ React Data Grid با هستهٔ event-sourced، ذخیره‌سازی IndexedDB�
 2. در `WORKLOG.md` بخش جدید با قالب انتهای آن فایل (فایل‌ها، هدف، انجام شد، **محدودیت آگاهانه**، اثر روی کارت امتیاز، Verify، بعدی).
 3. Current Snapshot را به PR بعدی عوض کن.
 4. Verify همان PR را اجرا کن و خروجی عددی را بنویس. قرمز = PR تمام نشده.
-5. یک خط در `CHANGELOG.md` (از `PR-78` به بعد که فایل ساخته شد).
+5. یک خط در `CHANGELOG.md`.
 
 ## زمینهٔ فنی که باید بدانی
 
 ### تناقض‌های شناخته‌شده (اشتباه نگیر)
 
-- **مجازی‌سازی پیش‌فرض خاموش است** — `ui/desktop/resolveDesktopVirtualization.ts:7-12` می‌گوید `virtualization === true && !!session`. کامنت `DesktopTable` در PR-74 با این رفتار هم‌خوان شد. رفتار در `PR-97` عوض می‌شود (D17).
-- **`persian-data-grid/styles.css` وجود دارد** (PR-76) ولی auto-inject هنوز روشن است — حذف تزریق خودکار در `PR-77`.
-- **`GridSearchPanel` فیلتر نیست** — find & navigate است و ردیف را حذف نمی‌کند. quick filter واقعی در `PR-93`.
+- **مجازی‌سازی پیش‌فرض روشن است** (PR-97 / D17) — `resolveDesktopVirtualization` وقتی session هست `true` می‌دهد مگر `virtualization={false}`.
+- **`persian-data-grid/styles.css` وجود دارد** (PR-76/77). تزریق خودکار حذف شده — مصرف‌کننده باید CSS را import کند یا `injectGridStyles()` را صدا بزند.
+- **`FetchRemoteApi` روی `.` نیست** — فقط `persian-data-grid/adapters/arian-erp`. IndexedDB پیش‌فرض `persian-data-grid-events:{store}` است؛ هاست 0.5.x باید `eventStoreName: 'erp-table-events'` بدهد.
+- **`GridSearchPanel` فیلتر نیست** — find & navigate است و ردیف را حذف نمی‌کند. quick filter واقعی (`quickFilterText`) در `PR-93` زنده است. اسکن O(n) جستجو در PR-99 با ایندکس حذف شد.
 
 ### تم
 
-توکن‌های نقش (`--erp-bg`, `--erp-accent`, …) روی `.erp-table`. CSS در **دو جا** تکرار شده: `ui/styles/injectStyles.ts` و `ui/styles/erp-table.css`. **تا `PR-77` هر دو را با هم عوض کن.** بعد از `PR-77` منبع حقیقت یکی می‌شود.
+توکن‌های نقش (`--pdg-bg`, `--pdg-accent`, …) روی `.pdg-grid` با alias `.erp-table` و `--erp-*`. منبع حقیقت **`ui/styles/erp-table.css`** است؛ `injectStyles.ts` با `yarn generate:inject-styles` از آن ساخته می‌شود. کپی دستی نکن.
 
 `GridTheme.withParams` + CSS variables؛ کپی `withPart` از AG Grid نساز. تم سفارشی دکمهٔ toggle را قفل می‌کند. `rowHeight` پیش‌فرض ۴۰ (D12).
 
 ### دستورات verify
 
 ```bash
-yarn test                 # ۵۲ فایل / ۲۲۸ تست (پایهٔ ۰٫۵٫۰)
+yarn test                 # ۱۱۸ فایل / ۶۳۷ تست (پس از PR-124)
 yarn typecheck:publish    # graph انتشار، strict
 yarn typecheck:host-ui     # کل ui/ با shims
+yarn lint:publish         # صفر `any` در publish graph
 yarn build                # tsup ESM+CJS+DTS
 yarn verify:dist
 yarn dev                  # دمو روی پورت 5175
 ```
 
 از `PR-72` به بعد همین‌ها در CI هم اجرا می‌شوند؛ لوکال سبز کافی نیست.
+
+**الان:** Phase 25 🔄 — `PR-136`…`PR-139` ✅. بعدی `PR-140` (Persian date/finance). `PR-132` فقط بعد از تصمیم **D22**. `release-gate` هنوز قرمز (diff ۸۶<۹۰، bundle>۶۰KB، نبود `packages/core`).

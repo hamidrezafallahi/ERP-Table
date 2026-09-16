@@ -1,4 +1,10 @@
 import { CustomButton } from '../primitives';
+import {
+  formatLocaleNumber,
+  useLocale,
+  useNumberingSystem,
+  useTranslations,
+} from '../host';
 
 interface Props {
   onClick: () => void;
@@ -11,6 +17,15 @@ export function MobileLoadMoreButton({
   visibleCount,
   totalRows,
 }: Props) {
+  const t = useTranslations();
+  const locale = useLocale();
+  const numberingSystem = useNumberingSystem();
+  const visible = formatLocaleNumber(visibleCount, {
+    locale,
+    numberingSystem,
+  });
+  const total = formatLocaleNumber(totalRows, { locale, numberingSystem });
+
   return (
     <div className="shrink-0 w-full py-3 border-gray-gray5 border-t bg-main-white">
       <CustomButton
@@ -19,8 +34,7 @@ export function MobileLoadMoreButton({
         className="w-full h-10 text-sm"
         onClick={onClick}
       >
-        نمایش بیشتر ({visibleCount.toLocaleString('fa-IR')} از{' '}
-        {totalRows.toLocaleString('fa-IR')})
+        {t('general.loadMore', { visible, total })}
       </CustomButton>
     </div>
   );

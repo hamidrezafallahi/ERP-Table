@@ -5,12 +5,18 @@ import React, {
 } from 'react';
 
 import { Pagination, CustomButton, InputText, LeftChevron, RightChevron } from '../primitives';
-import { useLocale, useRemoteQuery } from '../host';
+import { useDirection, useLocale, useRemoteQuery, useTranslations } from '../host';
 
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { IMultiSelectConfig } from '../type';
 import { MultiSelectListBody } from './body';
 import { MultiSelectListHeader } from './header';
+
+function asRowId(value: unknown): string | number | undefined {
+  return typeof value === 'string' || typeof value === 'number'
+    ? value
+    : undefined;
+}
 
 interface Props {
   controller: UITableController;
@@ -26,9 +32,13 @@ export default function MultiselectList({
   const { dynamicValue, fieldKey, detailFieldKey, onAdd, ListConfig } =
     multiSelectConfig;
   const locale = useLocale();
+  const direction = useDirection();
+  const t = useTranslations();
   const [pageNumber, setPageNumber] = useState(1);
   const [pageRecordCount, setPageRecordCount] = useState(8);
-  const [selectedRows, setSelectedRows] = useState<Map<any, any>>(new Map());
+  const [selectedRows, setSelectedRows] = useState<
+    Map<string | number, Record<string, unknown>>
+  >(new Map());
   const [searchInput, setSearchInput] = useState("");
   const [quickSearch, setQuickSearch] = useState("");
   const { endpoint, repoViewId, dependOn, ...bodyRequest } = dynamicValue;
@@ -64,7 +74,7 @@ export default function MultiselectList({
   const existBody = Object.fromEntries(
     Object.entries(body).filter(([, value]) => value !== null),
   );
-  const { data } = useRemoteQuery<any[]>({
+  const { data } = useRemoteQuery<Record<string, unknown>[]>({
     url: endpoint,
     body: existBody,
     skip: dependOn ? !hasDependValue(dependOn) : false,
@@ -79,8 +89,9 @@ export default function MultiselectList({
     return data?.Data ?? [];
   }, [data]);
 
-  const toggleRow = (row: any) => {
-    const id = row[fieldKey];
+  const toggleRow = (row: Record<string, unknown>) => {
+    const id = asRowId(row[fieldKey]);
+    if (id === undefined) return;
     setSelectedRows((prev) => {
       const newMap = new Map(prev);
 
@@ -95,17 +106,24 @@ export default function MultiselectList({
   };
 
   const toggleSelectAll = () => {
-    const allSelected = rows.every((r: Record<string, unknown>) =>
-      selectedRows.has(r[fieldKey]),
-    );
+    const allSelected = rows.every((r: Record<string, unknown>) => {
+      const id = asRowId(r[fieldKey]);
+      return id !== undefined && selectedRows.has(id);
+    });
 
     setSelectedRows((prev) => {
       const newMap = new Map(prev);
 
       if (allSelected) {
-        rows.forEach((r: Record<string, unknown>) => newMap.delete(r[fieldKey]));
+        rows.forEach((r: Record<string, unknown>) => {
+          const id = asRowId(r[fieldKey]);
+          if (id !== undefined) newMap.delete(id);
+        });
       } else {
-        rows.forEach((r: Record<string, unknown>) => newMap.set(r[fieldKey], r));
+        rows.forEach((r: Record<string, unknown>) => {
+          const id = asRowId(r[fieldKey]);
+          if (id !== undefined) newMap.set(id, r);
+        });
       }
 
       return newMap;
@@ -137,7 +155,7 @@ export default function MultiselectList({
     setPageNumber(page);
   };
 
-  const handlePageSizeChange = (_: any, size: number) => {
+  const handlePageSizeChange = (_page: number, size: number) => {
     setPageRecordCount(size);
     setPageNumber(1);
   };
@@ -158,7 +176,7 @@ export default function MultiselectList({
         <InputText
           value={searchInput}
           onChange={(e: { target: { value: string } }) => setSearchInput(e.target.value)}
-          placeholder="جستجو..."
+          placeholder={t('general.search')}
           className=" "
         />
         <table className="w-full border-collapse">
@@ -186,18 +204,18 @@ export default function MultiselectList({
           className="bg-main-black dark:bg-main-white text-gray-gray3 dark:text-gray-gray7"
           onClick={handleAdd}
         >
-          افزودن
+          {t('general.add')}
         </CustomButton>
 
         <Pagination
           prevIcon={
             <CustomButton className="m-0 p-0 rounded w-fit">
-              {locale === "fa" ? <RightChevron /> : <LeftChevron />}
+              {direction === "rtl" ? <RightChevron /> : <LeftChevron />}
             </CustomButton>
           }
           nextIcon={
             <CustomButton className="m-0 p-0 w-fit">
-              {locale === "fa" ? <LeftChevron /> : <RightChevron />}
+              {direction === "rtl" ? <LeftChevron /> : <RightChevron />}
             </CustomButton>
           }
           current={pageNumber}

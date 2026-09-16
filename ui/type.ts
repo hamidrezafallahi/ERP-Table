@@ -11,6 +11,14 @@ export interface UIRow {
   isExpanded: boolean;
   changeFields: readonly string[];
   visibilityCondition: Record<string, boolean>;
+  /** Infinite/server placeholder row (PR-103 skeleton). */
+  loading?: boolean;
+  /** Synthetic group row (PR-120). Absent / `'leaf'` = normal data row. */
+  rowKind?: 'group' | 'leaf';
+  groupField?: string;
+  groupKey?: string;
+  groupChildCount?: number;
+  groupExpanded?: boolean;
 }
 
 export type MultiSelectDependOn = {
@@ -25,15 +33,15 @@ export interface IMultiSelectConfig {
   };
   fieldKey: string;
   detailFieldKey: string;
-  onAdd: (e: any) => void;
+  onAdd: (rows: Record<string, unknown>[]) => void;
   ListConfig: {
     fieldName: string;
     fieldCaption: string;
     fieldType: FieldType;
     hidden?: boolean;
-    returnValue?: (row: Record<string, unknown>[], colId: string) => unknown;
+    returnValue?: (row: Record<string, unknown>, colId: string) => unknown;
     returnDisplayValue?: (
-      row: Record<string, unknown>[],
+      row: Record<string, unknown>,
       colId: string,
     ) => unknown;
   }[];

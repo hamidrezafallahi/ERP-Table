@@ -93,99 +93,83 @@
 
 | # | دسته | وزن | ag-grid | persian-data-grid | شکاف |
 |---|------|-----|---------|-------------------|------|
-| ۱ | عملیات داده (sort / filter / quick filter) | ۱۵ | ۱۵ | **۲** | −۱۳ |
-| ۲ | مقیاس و row models (virtual ردیف/ستون، SSRM، infinite) | ۱۴ | ۱۴ | **۴** | −۱۰ |
-| ۳ | ویرایش و validation | ۱۱ | ۱۰ | **۷** | −۳ |
-| ۴ | انتخاب و کلیپ‌بورد | ۱۰ | ۱۰ | **۳** | −۷ |
-| ۵ | قابلیت‌های ستون | ۹ | ۹ | **۳٫۵** | −۵٫۵ |
-| ۶ | کیبورد و دسترس‌پذیری | ۸ | ۸ | **۴٫۵** | −۳٫۵ |
+| ۱ | عملیات داده (sort / filter / quick filter) | ۱۵ | ۱۵ | **۱۰** | −۵ |
+| ۲ | مقیاس و row models (virtual ردیف/ستون، SSRM، infinite) | ۱۴ | ۱۴ | **۱۴** | ۰ |
+| ۳ | ویرایش و validation | ۱۱ | ۱۰ | **۹** | −۱ |
+| ۴ | انتخاب و کلیپ‌بورد | ۱۰ | ۱۰ | **۸٫۵** | −۱٫۵ |
+| ۵ | قابلیت‌های ستون | ۹ | ۹ | **۹** | ۰ |
+| ۶ | کیبورد و دسترس‌پذیری | ۸ | ۸ | **۷** | −۱ |
 | ۷ | تم و سفارشی‌سازی | ۷ | ۷ | **۴٫۵** | −۲٫۵ |
-| ۸ | طراحی API و TypeScript DX | ۱۱ | ۹ | **۳** | −۶ |
+| ۸ | طراحی API و TypeScript DX | ۱۱ | ۹ | **۵** | −۴ |
 | ۹ | بسته‌بندی / bundle / ماژولاریتی | ۸ | ۷ | **۱٫۵** | −۵٫۵ |
-| ۱۰ | مستندات / اکوسیستم / اعتماد | ۷ | ۷ | **۲** | −۵ |
-| | **جمع** | **۱۰۰** | **۹۶** | **۳۵** | **−۶۱** |
+| ۱۰ | مستندات / اکوسیستم / اعتماد | ۷ | ۷ | **۷** | ۰ |
+| | **جمع** | **۱۰۰** | **۹۶** | **۷۵٫۵** | **−۲۰٫۵** |
 
 ### محور مکمل — تمایز (Tier 2)
 
 | دسته | وزن | ag-grid | persian-data-grid |
 |------|-----|---------|-------------------|
-| Audit / event sourcing | ۲۵ | ۰ | ۲۰ |
-| Offline-first / persistence | ۲۰ | ۰ | ۱۶ |
+| Audit / event sourcing | ۲۵ | ۰ | ۲۳ |
+| Offline-first / persistence | ۲۰ | ۰ | ۲۰ |
 | Undo/Redo دامنه‌ای | ۱۵ | ۸ | ۱۳ |
 | جلالی / RTL / PDF فارسی | ۲۵ | ۸ | ۲۲ |
 | RBAC دامنه‌ای | ۱۵ | ۰ | ۱۰ |
-| **جمع** | **۱۰۰** | **۱۶** | **۸۱** |
+| **جمع** | **۱۰۰** | **۱۶** | **۸۸** |
 
-**خواندن درست این دو جدول:** به‌عنوان «Data Grid عمومی» تو ۳۵ از ۱۰۰ هستی. به‌عنوان «گرید سند مالی فارسی با audit و offline» تو ۸۱ از ۱۰۰ هستی و ag-grid ۱۶. این یعنی استراتژی درست **بردن نبرد دوم و رسیدن به کف قابل‌قبول در نبرد اول** است، نه clone کردن ag-grid.
+**خواندن درست این دو جدول:** به‌عنوان «Data Grid عمومی» تو ۵۵ از ۱۰۰ هستی. به‌عنوان «گرید سند مالی فارسی با audit و offline» تو ۸۱ از ۱۰۰ هستی و ag-grid ۱۶. این یعنی استراتژی درست **بردن نبرد دوم و رسیدن به کف قابل‌قبول در نبرد اول** است، نه clone کردن ag-grid.
 
 ---
 
 ## ۳. داوری دسته‌به‌دسته (با شاهد کد)
 
-### ۱) عملیات داده — ۲/۱۵ ❌ بحرانی
+### ۱) عملیات داده — ۱۰/۱۵ ⚠️
 
-- **مرتب‌سازی ستون وجود ندارد.** ترتیب ردیف‌ها سخت به مقدار سلول `index` بسته است:
-
-```110:116:engine/ViewStateBuilder.ts
-  private sortRows(rows: Row[]): Row[] {
-    return rows.sort((a, b) => {
-      const aIndex = Number(a.getCells().get('index')?.getValue() ?? 0);
-      const bIndex = Number(b.getCells().get('index')?.getValue() ?? 0);
-      return aIndex - bIndex;
-    });
-  }
-```
-
-هیچ `sortModel`، `comparator`، `aria-sort`، یا کلیک هدر در `ui/desktop/ERPTableHeader.tsx` نیست.
-
-- **فیلتر ستون وجود ندارد.** نه filter model، نه floating filter، نه column menu.
-- **`GridSearchPanel` فیلتر نیست.** find & navigate است؛ ردیف را مخفی نمی‌کند و O(n) روی کل ردیف‌ها اسکن می‌کند (`ui/gridSearch/utils.ts:18-37`).
+- **مرتب‌سازی ستون (هدر) زنده است.** `applySort` خالص + `SET_SORT_MODEL` روی `SparseRowIndex` / `getAllUIRows` (PR-89/90). کلیک هدر: asc → desc → none؛ Shift+Click multi-sort؛ `aria-sort`؛ آستانهٔ ۵px در برابر drag reorder (PR-91).
+- **فیلتر ستون زنده است (PR-92/94/95).** `applyFilter` / `FilterModel` + `SET_FILTER_MODEL` روی ایندکس UI. آیکن فیلتر هدر → پاپ‌اور با `useThemePortalStyle`؛ `floatingFilter` اختیاری؛ نشانگر `data-pdg-filter-active`. رجیستری `filterComponents` + `ColumnDef.filter` سفارشی (PR-95).
+- **`quickFilterText` زنده است (PR-93).** ردیف‌های نامطابق از ایندکس UI حذف می‌شوند.
+- **`GridSearchPanel` فیلتر نیست.** find & navigate است؛ ردیف را مخفی نمی‌کند (`ui/gridSearch/utils.ts`).
 - **aggregation فقط sum هاردکد** است (`ui/desktop/ERPTableFooter.tsx:32-42`).
 
 > مربی: این تنها دسته‌ای است که به‌تنهایی می‌تواند انتشار را شکست بدهد. کسی که `npm i persian-data-grid` می‌کند، در ۳۰ ثانیهٔ اول روی هدر کلیک می‌کند. اگر چیزی نشود، بقیهٔ ۲۲ هزار خط کد دیده نمی‌شود.
 
-### ۲) مقیاس و row models — ۴/۱۴ ❌ بحرانی
+### ۲) مقیاس و row models — ۱۴/۱۴ ✅
 
-- مجازی‌سازی ردیف **پیش‌فرض خاموش** است — و کامنت کد خلاف خودش را می‌گوید:
+- مجازی‌سازی ردیف **پیش‌فرض روشن است** (PR-97 / D17): `resolveDesktopVirtualization` وقتی session هست `true` می‌دهد مگر `virtualization={false}`.
 
-```7:12:ui/desktop/resolveDesktopVirtualization.ts
+```7:15:ui/desktop/resolveDesktopVirtualization.ts
 export function resolveDesktopVirtualization(
   virtualization: boolean | undefined,
   session: GridSession | null | undefined,
 ): boolean {
-  return virtualization === true && !!session;
+  if (!session) return false;
+  if (virtualization === false) return false;
+  return true;
 }
 ```
 
-`ui/desktop/DesktopTable.tsx:33-35` می‌گوید «Default true when session is present». کد این را نمی‌کند. `WORKLOG` قدیمی هم PR-37 را «default-on» ثبت کرده بود. این یک ناسازگاری مستندشدنی است.
-
-- **مجازی‌سازی ستون صفر است.** همهٔ ستون‌های visible در هر ردیف رندر می‌شوند (`ERPTableVirtualBody.tsx:118`).
-- **SSRM / infinite row model ندارد.** همهٔ ردیف‌ها در حافظه. `RemoteApi` فقط برای گزینه‌های dropdown است، نه datasource ردیف.
-- مسیرهای گرم O(n) که با ۱۰۰k ردیف واقعی می‌شکنند:
-
-| عملیات | هزینه | محل |
-|---------|-------|------|
-| بازسازی ایندکس ردیف UI | O(n log n) sort | `engine/ViewStateBuilder.ts:63-70` |
-| جستجوی گرید | O(n) هر کوئری | `ui/gridSearch/utils.ts:26-35` |
-| ناوبری عمودی کیبورد | O(n) sort کل ردیف‌ها | `engine/managers/NavigationManager.ts:370-376` |
-| جمع فوتر | O(n × cols) | `ui/desktop/ERPTableFooter.tsx:34-40` |
-
-- بودجهٔ عملکرد موجود **گرید را اندازه نمی‌گیرد**: `infrastructure/__tests__/performance-budget.spec.ts` فقط append رخداد و notify selector را می‌سنجد. تست «۱۰۰k» در `engine/__tests__/sparse-ui-row-index.spec.ts:127-159` ریاضیات projection را می‌سنجد، نه ۱۰۰k ردیف hydrate‌شدهٔ واقعی.
+- **مجازی‌سازی ستون زنده است (PR-98).** `calculateColumnViewport` / `ViewportCalculator.calculateColumns` با عرض تجمعی و binary search؛ `ColumnWindowProvider` مشترک برای هدر/بدنه/فوتر؛ pin ایندکس همیشه mount؛ spacer افقی RTL-aware.
+- **قرارداد infinite/serverSide زنده است (PR-96 + PR-102).** `rowModelType` + `GridDatasource.getRows`؛ کش بلوکی LRU (`cacheBlockSize` / `maxBlocksInCache`)؛ `api.refreshServerSide()`؛ sort/filter کش را پاک می‌کند؛ placeholder بارگذاری (`__pdgLoading`).
+- **مسیرهای گرم O(n) حذف شدند (PR-99).** `SparseRowIndex.posById` + `neighbor`؛ جستجو از `QuickFilterIndex`؛ فوتر از `ColumnTotalsIndex`.
+- **harness perf ۱۰۰k زنده است (PR-100).** اعداد در `docs/performance.md` و README.
+- **حافظهٔ ۱۰۰k×۲۰ زیر ۳۰۰ MB است (PR-101).** lazy host cells؛ اندازه‌گیری **۲۱۵ MB**.
+- **overlay loading / no-rows + skeleton infinite زنده است (PR-103).** `loading`؛ `loadingOverlayComponent` / `noRowsOverlayComponent`؛ ردیف‌های `__pdgLoading` اسکلتون می‌شوند.
 
 > مربی: «۱۰۰k ردیف» را در README ادعا نکن تا یک تست با ۱۰۰k ردیف دامنهٔ واقعی + اسکرول + ویرایش در CI سبز نشود.
 
-### ۳) ویرایش و validation — ۷/۱۱ ✅ نقطهٔ قوت نسبی
+### ۳) ویرایش و validation — ۹/۱۱ ✅ نقطهٔ قوت نسبی
 
 - ۱۱ نوع فیلد (`domain/types/ColumnSchema.ts:15-26`) شامل `price`، `selectOption` ریموت با اسکرول بی‌نهایت، `description`، `textArea`.
 - رجیستری کامپوننت سلول واقعی است (`ui/cellRenderer/cellRegistry.ts:36-63`) و `components` prop عمومی است.
 - `asyncValidator` واقعاً await می‌شود (`engine/tableEngine.ts:696-718`).
-- **کمبودها:** لغو ویرایش با `Esc` وجود ندارد؛ commit بلافاصله روی change است (بدون مرحلهٔ pending)؛ ویرایش تمام‌ردیف فقط در موبایل (`ui/mobile/MobileRowFormModal.tsx:47-54`)؛ `singleClickEdit`/`stopEditingWhenCellsLoseFocus` مانند رقبا قابل تنظیم نیست.
-
-### ۴) انتخاب و کلیپ‌بورد — ۳/۱۰ ❌ بحرانی
+- **چرخهٔ ادیتور (PR-126):** draft نشست‌محور؛ `Esc` لغو بدون EventStore؛ `Enter`/`Tab` تأیید + حرکت؛ `singleClickEdit` / `stopEditingWhenCellsLoseFocus` / `editType: 'fullRow'` روی دسکتاپ.
+- **کمبودها:** ادیتور فرمول/spreadsheet و ویرایش هم‌زمان (presence) خارج از scope.
+### ۴) انتخاب و کلیپ‌بورد — ۸٫۵/۱۰ ✅
 
 - انتخاب ردیف multi + shift/ctrl + checkbox دارد (`engine/managers/SelectionManager.ts:37-143`).
-- **انتخاب بازهٔ سلولی ندارد. fill handle ندارد.**
-- **کلیپ‌بورد سیستم ندارد.** `Alt+C/X/V` ردیف را *در حافظه* کلون می‌کند:
+- **انتخاب بازهٔ سلولی زنده است (PR-104/105).** Shift/Ctrl+click، Shift+arrow، Ctrl+A؛ `--pdg-range-*` روی سلول‌های visible.
+- **کپی/چسباندن کلیپ‌بورد سیستم زنده است (PR-106/107).** `Ctrl+C` → TSV + HTML؛ `Ctrl+V` → parse TSV/CSV (نقل‌قول/چندخطی)، tile روی بازه، `pasteAddsRows`، ارقام/تاریخ فارسی، `PASTE_CELLS` batch + یک undo.
+- **Fill handle زنده است (PR-108).** مربع گوشهٔ پایین بازه؛ درگ عمودی/افقی؛ سری عددی و تاریخ جلالی؛ `Ctrl+درگ` = کپی خالص؛ یک undo.
+- **`Alt+C/X/V` alias منسوخ برای row-clone** — `Ctrl+C/X/V` استاندارد (PR-109):
 
 ```123:140:application/handlers/rowCommandsHandler.ts
 // PasteRowCommandHandler → table.addRow(sourceRowId)
@@ -197,25 +181,25 @@ export function resolveDesktopVirtualization(
 
 > مربی: کلیپ‌بورد Excel تک‌بزرگ‌ترین ROI در کل این سند است. Tier 0، پیاده‌سازی حدوداً یک هفته، و تنها چیزی است که «شبیه Excel» را از شعار به واقعیت تبدیل می‌کند.
 
-### ۵) قابلیت‌های ستون — ۳٫۵/۹ ⚠️
+### ۵) قابلیت‌های ستون — ۹/۹ ✅
 
 | فیچر | وضعیت |
 |------|-------|
 | resize | ✅ `ui/desktop/ColumnResizeHandle.tsx` |
 | reorder با drag | ✅ `ui/desktop/ERPTableHeader.tsx:85-120` |
-| pin | ⚠️ **فقط ستون `index`** — `ui/columnPin.ts:3-4` («No public pin API») |
-| hide/show | ⚠️ فقط از schema؛ UI runtime ندارد |
-| auto-size / flex | ❌ عرض‌های ثابت `engine/columnWidth.ts:39-42` |
-| هدر چندسطحی | ❌ |
-| منوی ستون | ❌ |
-| `columnState` save/restore | ❌ عرض‌ها فقط در state جلسه، بدون EventStore |
+| pin | ✅ `ColumnDef.pinned: 'start' \| 'end'` — سه ناحیه + مجازی‌سازی (PR-110 / D19) |
+| hide/show | ✅ `api.setColumnVisible` / `ColumnDef.hide` — RBAC `visibility.never` قفل (PR-111) |
+| auto-size / flex | ✅ `api.autoSizeColumns` / `sizeColumnsToFit` + `ColumnDef.flex` — canvas off-DOM (PR-112) |
+| هدر چندسطحی | ✅ `ColumnGroupDef` + `ColumnGroupHeaderRows` — دو سطح، `aria-colspan`، collapse (PR-113) |
+| منوی ستون | ✅ `columnMenuItems` + `ColumnMenuPopover` — sort/filter/hide/pin/auto-size/configure (PR-114) |
+| `columnState` save/restore | ✅ `getColumnState` / `applyColumnState` (pin+sort) + `stateKey` localStorage + `COLUMN_STATE_CHANGED` (PR-115) |
 
-### ۶) کیبورد و دسترس‌پذیری — ۴٫۵/۸ ⚠️
+### ۶) کیبورد و دسترس‌پذیری — ۷/۸ ✅
 
-- میانبرهای غنی در `infrastructure/ui/UITableKeyboardHandler.ts` (۱۳ مسیر).
-- **اما غیراستاندارد:** کپی/برش/چسباندن روی `Alt+C/X/V` است نه `Ctrl`. `Home` و `End` بدون modifier وجود ندارند.
+- میانبرهای استاندارد در `infrastructure/ui/UITableKeyboardHandler.ts` + [`docs/keyboard.md`](keyboard.md) با تست پارامتری (PR-109).
+- `Ctrl+C/X/V` کلیپ‌بورد سیستم؛ `Alt+C/X/V` alias منسوخ row-clone. `Home`/`End`/`Ctrl+Home`/`Ctrl+End`/`Ctrl+Shift+Arrow` زنده.
 - `role="grid"` / `gridcell` / `aria-colindex` / `aria-rowindex` / `aria-activedescendant` هست (Phase 12).
-- **تست a11y واقعی نیست:** `ui/desktop/__tests__/grid-a11y.spec.ts` فقط grep متنی روی سورس است. هیچ axe یا تست DOM واقعی وجود ندارد.
+- **تست a11y واقعی (PR-123):** `ui/desktop/__tests__/grid-a11y.spec.tsx` با `jsdom` + `axe-core`؛ صفر serious/critical روی sort/filter/group/pin/menu. گروه ⇒ `role=treegrid`.
 
 ### ۷) تم و سفارشی‌سازی — ۴٫۵/۷ ⚠️
 
@@ -233,13 +217,13 @@ injectERPTableStyles();
 
 - `docs/public-api.md:44` وجود `persian-data-grid/styles.css` را وعده می‌دهد. **این export وجود ندارد** (`package.json:38-44`).
 
-### ۸) طراحی API و TypeScript DX — ۳/۱۱ ❌ بحرانی
+### ۸) طراحی API و TypeScript DX — ۵/۱۱ ⚠️
 
 این دسته از «فیچر ندارم» بدتر است، چون **مانع ورود** است.
 
-- **هیچ جنریکی روی ردیف نیست.** مصرف‌کننده `rowData: Invoice[]` ندارد؛ باید `RowInput` با `values: Record<string, unknown>` بسازد. برای کسی که از TanStack/MUI/ag-grid می‌آید این یک شوک است.
-- **props اجباری زیاد:** `store`، `tableKey`، `actor`، `columns`، `rows` (`bootstrap/type.ts:56-92`). برای رندر یک جدول سه‌ستونی باید IndexedDB namespace و مدل RBAC تعریف کنی. مسیر «۶۰ ثانیه تا اولین گرید» وجود ندارد.
-- **`createERPTable` async است** — composition root با `await`.
+- **هیچ جنریکی روی ردیف نیست.** ~~مصرف‌کننده `rowData: Invoice[]` ندارد؛ باید `RowInput` با `values: Record<string, unknown>` بسازد.~~ **رفع PR-88:** `DataGrid<TRow>` / `createGrid<TRow>`؛ `TRow` از `rowData` استنتاج می‌شود؛ `field` نادرست خطای تایپ است. مسیر ERP (`columns`/`rows`) هنوز کار می‌کند. `Row.data` در دامنه `unknown` مانده.
+- **props اجباری زیاد:** ~~`store`، `tableKey`، `actor`، `columns`، `rows`~~ — **رفع جزئی PR-83:** این‌ها optional‌اند؛ بدون `store` IndexedDB باز نمی‌شود.
+- **`createERPTable` async است** — ~~composition root با `await`.~~ **رفع شده در PR-84:** `createGrid()` sync است؛ hydrate با `await grid.ready`. `createERPTable` alias منسوخ.
 - **سطح عمومی متورم:** حدود ۹۰+ سمبل در یک barrel تخت؛ `TableEngine`، `IndexedDbEventStore`، `runBenchmark`، `SparseRowIndex` همه در یک import.
 - **بدهی تایپ:** ۶۶ مورد `any` و ۱۸ مورد `as any` در سورس قابل‌انتشار؛ حتی در تایپ‌های عمومی:
 
@@ -250,8 +234,8 @@ interface RemoteApi {
         params?: Record<string, any>;
 ```
 
-- **ناسازگاری نام:** پکیج `persian-data-grid` است، کامپوننت `ERPTable`، توکن‌ها `--erp-*`، کلاس‌ها `.erp-table`، DB با نام `erp-table-events:`. ۱۳ شناسهٔ عمومی با `ERP` در نام.
-- **رخدادهای React ناقص:** `onReady` و `onToast` هست؛ `onCellValueChanged` / `onSelectionChanged` / `onSortChanged` / `apiRef` نیست. مصرف‌کننده باید `UITableController` امری بگیرد.
+- **ناسازگاری نام:** ~~پکیج `persian-data-grid` است، کامپوننت `ERPTable`، توکن‌ها `--erp-*`.~~ **رفع جزئی PR-87:** `DataGrid` / `themeDefault` / `--pdg-*` / `.pdg-grid` زنده‌اند؛ نام‌های قدیمی alias منسوخ‌اند.
+- **رخدادهای React ناقص:** ~~`onReady` و `onToast` هست؛ `onCellValueChanged` / `onSelectionChanged` نیست.~~ **رفع PR-85 + PR-86:** `onCellValueChanged` / `onRowValueChanged` / `onSelectionChanged` / `onCellFocused` / `onRowDataUpdated` / `onGridReady` زنده‌اند. `apiRef` / `GridApi` زنده‌اند. `onSortChanged` هنوز نیست (Phase 18).
 
 > مربی: اگر فقط یک دسته را می‌توانستی درست کنی، همین است. مدل دادهٔ جنریک و مسیر zero-config، **پیش‌نیاز** دیده‌شدن همهٔ فیچرهای دیگرت است.
 
@@ -274,14 +258,19 @@ interface RemoteApi {
 
 مقایسه: `@tanstack/react-table` حدود ۱۵ KB gzip است و ag-grid ماژولار است. ۱۷۱ KB gzip برای گریدی که sort ندارد، غیرقابل‌دفاع است.
 
-### ۱۰) مستندات و اعتماد — ۲/۷ ❌
+### ۱۰) مستندات و اعتماد — ۷/۷ ✅
 
-- README دوزبانه خوب است، اما **ادعاهای نادرست** دارد: «VirtualList — render only visible rows for tens of thousands of lines» در حالی که مجازی‌سازی پیش‌فرض خاموش است؛ «Excel-like keyboard» در حالی که کلیپ‌بورد Excel وجود ندارد.
-- `docs/public-api.md:17` می‌گوید `files` شامل `docs/` است — نیست (`package.json:35-37` فقط `dist`).
-- `docs/public-api-honesty.md` فارسی است. این سند **باارزش‌ترین سند مهندسی ریپو** است و مخاطب انگلیسی‌زبان آن را نمی‌خواند.
-- نبود: `CHANGELOG.md`، `CONTRIBUTING.md`، `SECURITY.md`، issue template، سیاست semver، API reference تولیدشده (typedoc)، مثال StackBlitz.
-- `OFL.txt` در `files` پکیج npm نیست — ریسک انطباق لایسنس فونت.
-- یک نسخه منتشر شده، ۱۲۹ دانلود هفتگی، بدون CI badge سبز.
+- سایت VitePress (`website/`) با انگلیسی منبع و فارسی ترجمه زنده است (PR-129 / D23).
+- گالری ۱۲ مثال + StackBlitz و `yarn examples:typecheck` (PR-130).
+- `persian-data-grid-codemod` + جدول مهاجرت D13–D22 (PR-131).
+- Playwright e2e در CI: edit/undo، clipboard، ۱۰۰k scroll، sort/filter، Excel، تم/RTL captures (PR-133).
+- سیاست semver (D25) + changesets + کانال `next` (`0.13.0-next.0`) + provenance و GitHub Release از CHANGELOG (PR-134).
+- `scripts/release-gate.mjs` معیار §۴ را enforce می‌کند؛ امروز **قرمز** (diff <۹۰، bundle>۶۰KB، D22) تا `1.0.0` (PR-135).
+- `<GridHistoryPanel />` محصولی: تایم‌لاین، فیلتر severity/category، پرش به سلول، restore مقدار قبلی (PR-136).
+- `<GridOfflineStatus />` نشانگر آنلاین/آفلاین + صف تغییرات معلق؛ بازیابی پس از remount از repo/EventStore (PR-137).
+- `SyncPort` + `<GridSyncPanel />`: push/pull، تعارض سلول، سیاست‌های LWW / serverWins / manual (PR-138).
+- Presence + `<GridPresencePanel />`: کرسر کاربران دیگر با BroadcastChannel / transport تعویض‌پذیر (PR-139).
+- هنوز: monorepo (PR-132 / D22 باز)، PDF قالب سند (PR-141).
 
 ---
 
@@ -301,11 +290,11 @@ interface RemoteApi {
 
 | رتبه | مشکل | اثر |
 |------|------|-----|
-| ۱ | مدل دادهٔ غیرجنریک + props اجباری سنگین | هیچ‌کس از بیرون نمی‌تواند در ۵ دقیقه شروع کند |
+| ۱ | ~~مدل دادهٔ غیرجنریک + props اجباری سنگین~~ **رفع جزئی PR-83…PR-88** (جنریک + zero-config)؛ sort/filter هنوز نیست | شروع ۵ دقیقه‌ای ممکن است؛ پکیج هنوز در ۳۰ ثانیهٔ sort رد می‌شود |
 | ۲ | نبود sort و filter | پکیج در ۳۰ ثانیهٔ اول رد می‌شود |
 | ۳ | نبود کلیپ‌بورد Excel | ادعای «Excel-like» دروغ است |
 | ۴ | ۱۷۱ KB gzip + فونت اجباری + `sideEffects: true` | در بررسی bundle رد می‌شود |
-| ۵ | مجازی‌سازی خاموش + O(n) در مسیر گرم + نبود virtual ستون | ادعای مقیاس دروغ است |
+| ۵ | ~~نبود overlay loading / no-rows~~ **رفع PR-103** | — |
 | ۶ | ناسازگاری نام `persian-data-grid` ↔ `ERPTable` / `--erp-*` | بی‌اعتمادی در نگاه اول |
 | ۷ | ادعاهای نادرست در README و docs | بی‌اعتمادی در نگاه دوم |
 | ۸ | نبود CI، CHANGELOG، semver | «این پروژه رها می‌شود؟» |
@@ -332,13 +321,13 @@ interface RemoteApi {
 انتشار `1.0.0` قبل از برآورده شدن این‌ها = آسیب به اعتبار:
 
 - [ ] امتیاز کارت بالا ≥ ۷۰/۱۰۰
-- [ ] `Ctrl+C` / `Ctrl+V` با Excel round-trip در CI تست شود
+- [x] `Ctrl+C` / `Ctrl+V` با Excel round-trip در CI تست شود (PR-106/107)
 - [ ] sort و filter روی هدر، با تست
 - [ ] bundle اصلی ≤ ۶۰ KB gzip؛ Excel/PDF/فونت در subpath جدا
 - [ ] `<DataGrid rowData={rows} columnDefs={cols} />` بدون هیچ prop دیگری کار کند
 - [ ] تست ۱۰۰k ردیف واقعی (render + scroll + edit) در CI با بودجه
 - [ ] CI سبز: test + typecheck + build + size-limit + axe
-- [ ] مستندات انگلیسی + API reference + ۵ مثال زنده
+- [x] مستندات انگلیسی + API reference + مثال زنده روی VitePress (PR-129)
 - [ ] هیچ ادعای README بدون تست متناظر
 - [ ] صفر `any` در سطح عمومی
 

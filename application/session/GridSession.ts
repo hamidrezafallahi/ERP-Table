@@ -52,6 +52,8 @@ export interface GridSession {
   getUiRowCount(): number;
   /** Visible UI rows for the current viewport — O(window), not O(n). */
   projectVisibleUiRows(): NonNullable<ReturnType<TableEngine['getRowView']>>[];
+  /** Notify when virtual viewport scroll/size changes (PR-102 block fetch). */
+  subscribeViewport(listener: () => void): () => void;
 }
 
 

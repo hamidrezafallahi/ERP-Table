@@ -70,12 +70,7 @@ export function MobileTableHeader({
               handleNavigateToError(value.rowId);
             }}
           >
-            {`
-            در سطر
-            ${Index}
-            در ستون
-            ${value.caption} :
-            ${value.message}`}
+            {`${t('general.validationInRow')} ${Index} ${t('general.validationInColumn')} ${value.caption} : ${value.message}`}
           </button>
         ),
       };
@@ -89,7 +84,7 @@ export function MobileTableHeader({
         <CustomDropdownButton
           placement="bottom"
           className="top-1 z-10 absolute flex m-0 p-0 rounded start-1"
-          items={items as any}
+          items={items}
         >
           <span className="bg-red-600 border rounded-full w-2 h-2"></span>
         </CustomDropdownButton>

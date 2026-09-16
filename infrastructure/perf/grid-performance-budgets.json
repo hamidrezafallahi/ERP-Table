@@ -1,0 +1,10 @@
+{
+  "rowCount": 100000,
+  "columnCount": 8,
+  "hydrateMaxMs": 15000,
+  "firstWindowMaxMs": 50,
+  "scroll1000MaxMs": 1000,
+  "edit100MaxMs": 5000,
+  "sortMaxMs": 8000,
+  "filterMaxMs": 4000
+}

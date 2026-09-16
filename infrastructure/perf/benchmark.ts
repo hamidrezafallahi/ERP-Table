@@ -92,4 +92,11 @@ export const DEFAULT_PERFORMANCE_BUDGETS = {
     maxAvgMs: 5,
     maxMaxMs: 20,
   },
+  /** PR-99: one arrow-key neighbor lookup on a 100k SparseRowIndex. */
+  arrowNeighbor100k: {
+    name: 'arrowNeighbor100k',
+    maxAvgMs: 2,
+    // Single-iteration spikes from GC under the 100k harness (PR-100).
+    maxMaxMs: 20,
+  },
 } as const satisfies Record<string, PerformanceBudget>;

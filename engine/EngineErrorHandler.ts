@@ -15,7 +15,7 @@ export class EngineErrorHandler {
   handle(error: unknown, context?: string): void {
     if (error instanceof DomainError) {
       this.audit.log({
-        type: error.code as any,
+        type: error.code,
         message: error.message,
         payload: { details: error.details, context },
       });

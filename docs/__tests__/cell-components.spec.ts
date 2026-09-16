@@ -22,6 +22,8 @@ describe('PR-57 cell-components host guide', () => {
     expect(doc).toContain('shouldSkipGridNavigation');
     expect(doc).toContain('highlightIfCurrentSearch');
     expect(doc).toContain('returnDisplayValue');
+    expect(doc).toContain('filterComponents');
+    expect(doc).toContain('FilterComponent');
     expect(doc).toMatch(/without.*CellRenderer/i);
     expect(doc).toContain('Do not');
     expect(doc).toContain('Fork `CellRenderer`');

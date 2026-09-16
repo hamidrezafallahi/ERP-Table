@@ -45,6 +45,7 @@ const HISTORY_CLASSIFICATIONS: Record<string, HistoryClassification> = {
   VALIDATION_FAILED: { category: 'data', severity: 'error' },
   CELL_EDIT_CONFLICTED: { category: 'data', severity: 'error' },
   COLUMN_REORDERED: { category: 'structure', severity: 'info' },
+  COLUMN_STATE_CHANGED: { category: 'structure', severity: 'info' },
   UNIT_COLUMN_ADDED: { category: 'structure', severity: 'info' },
   ACTIVE_COLLECTION_CHANGED: { category: 'structure', severity: 'info' },
   PAGE_CHANGED: { category: 'view', severity: 'info' },
@@ -130,6 +131,14 @@ function describeEntry(entry: ChangelogEntry): Pick<HistoryItem, 'title' | 'desc
         title: 'Columns reordered',
         description: `Columns moved from ${formatValue(payload?.sourceIndex)} to ${formatValue(payload?.destIndex)}.`,
       };
+    case 'COLUMN_STATE_CHANGED': {
+      const cols = payload?.columns;
+      const count = Array.isArray(cols) ? cols.length : 0;
+      return {
+        title: 'Column state changed',
+        description: `Column layout updated (${count} columns).`,
+      };
+    }
     case 'ROW_DESCRIPTION_SAVED':
       return {
         title: 'Description saved',

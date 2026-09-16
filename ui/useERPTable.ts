@@ -1,13 +1,22 @@
 // hooks/useERPTable.ts
 import {
   useEffect,
+  useMemo,
+  useRef,
   useState,
 } from 'react';
 
 import type { GridSession } from '../application/session/GridSession';
 import type { PluginHost } from '../application/plugins/PluginHost';
-import { createERPTable } from '../bootstrap';
+import type { EventStore } from '../application/ports/EventStore';
+import { createGrid } from '../bootstrap';
+import {
+  createGridTableKey,
+  DEFAULT_MEMORY_STORE,
+  isPersistentStore,
+} from '../bootstrap/defaults';
 import type { CreateERPTableConfig } from '../bootstrap/type';
+import { flattenColDefOrGroup } from '../infrastructure/columns/flattenColumnDefs';
 import type { TableSnapShot } from '../engine/type';
 import type {
   HistoryItem,
@@ -17,17 +26,22 @@ import type {
   ChangelogEntry,
   ChangelogQuery,
 } from '../infrastructure/projections/ChangelogProjection';
+import type { GridApi } from '../infrastructure/ui/createGridApi';
 import {
   UITableController,
 } from '../infrastructure/ui/UITableController';
 
-export type UseERPTableResult =
+export type UseGridResult<TRow = unknown> =
   | { ready: false }
   | {
     ready: true;
     controller: UITableController;
+    api: GridApi<TRow>;
     session: GridSession;
     pluginHost: PluginHost;
+    eventStore: EventStore;
+    store: string;
+    tableKey: string;
     rows: TableSnapShot;
     changelog: ChangelogEntry[];
     changelogCount: number;
@@ -65,11 +79,23 @@ export type UseERPTableResult =
     redo: () => Promise<boolean>;
   };
 
-export function useERPTable(
-  config: CreateERPTableConfig
-): UseERPTableResult {
+/** @deprecated Use {@link UseGridResult}. Removed in 1.0.0. */
+export type UseERPTableResult<TRow = unknown> = UseGridResult<TRow>;
+
+export function useGrid<TRow = unknown>(
+  config: CreateERPTableConfig<TRow>
+): UseGridResult<TRow> {
+  const generatedKeyRef = useRef<string | undefined>(undefined);
+  if (config.tableKey) {
+    generatedKeyRef.current = config.tableKey;
+  } else if (!generatedKeyRef.current) {
+    generatedKeyRef.current = createGridTableKey();
+  }
+  const tableKey = generatedKeyRef.current;
+
   const [controller, setController] =
     useState<UITableController | null>(null);
+  const [api, setApi] = useState<GridApi<TRow> | null>(null);
   const [session, setSession] = useState<GridSession | null>(null);
   const [pluginHost, setPluginHost] = useState<PluginHost | null>(null);
   const [rows, setRows] = useState<TableSnapShot | null>(null);
@@ -78,17 +104,24 @@ export function useERPTable(
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [changelog, setChangelog] = useState<ChangelogEntry[]>([]);
 
+  const grid = useMemo(
+    () => createGrid({ ...config, tableKey }),
+    [tableKey, config.columns, config.columnDefs, config.store],
+  );
+
   // ---------- bootstrap ----------
   useEffect(() => {
     let cancelled = false;
     setController(null);
+    setApi(null);
     setSession(null);
     setPluginHost(null);
     setRows(null);
 
-    createERPTable(config).then((result: Awaited<ReturnType<typeof createERPTable>>) => {
+    void grid.ready.then((result) => {
       if (!cancelled) {
         setController(result.controller);
+        setApi(result.api);
         setSession(result.session);
         setPluginHost(result.pluginHost);
       }
@@ -97,7 +130,50 @@ export function useERPTable(
     return () => {
       cancelled = true;
     };
-  }, [config.tableKey, config.columns]);
+  }, [grid]);
+
+  useEffect(() => {
+    if (!controller || config.rowData === undefined) return;
+    controller.applyHostRowData(
+      config.rowData,
+      config.columnDefs,
+      config.getRowId,
+    );
+  }, [controller, config.rowData, config.columnDefs, config.getRowId]);
+
+  useEffect(() => {
+    if (!controller || !config.columnDefs) return;
+    for (const def of flattenColDefOrGroup(config.columnDefs)) {
+      if (def.hide === undefined) continue;
+      const colId =
+        typeof def.colId === 'string' && def.colId.length > 0
+          ? def.colId
+          : typeof def.field === 'string'
+            ? def.field
+            : null;
+      if (!colId) continue;
+      controller.setColumnVisible(colId, !def.hide);
+    }
+  }, [controller, config.columnDefs]);
+
+  useEffect(() => {
+    if (!controller || config.quickFilterText === undefined) return;
+    controller.setQuickFilterText(config.quickFilterText);
+  }, [controller, config.quickFilterText]);
+
+  useEffect(() => {
+    if (!controller || config.groupBy === undefined) return;
+    const cols =
+      typeof config.groupBy === 'string'
+        ? [config.groupBy]
+        : [...config.groupBy];
+    controller.setRowGroupColumns(cols);
+  }, [controller, config.groupBy]);
+
+  useEffect(() => {
+    if (!controller || config.groupDefaultExpanded === undefined) return;
+    controller.setGroupDefaultExpanded(config.groupDefaultExpanded);
+  }, [controller, config.groupDefaultExpanded]);
 
   // Snapshot equality skips selection / active-row / expand because those live
   // on view state, not TableSnapShot. Bump viewVersion on every store tick so
@@ -162,15 +238,19 @@ export function useERPTable(
     };
   }, [controller]);
 
-  if (!controller || !session || !pluginHost || !controller.getViewState()) {
+  if (!controller || !api || !session || !pluginHost || !controller.getViewState()) {
     return { ready: false };
   }
 
   return {
     ready: true,
     controller,
+    api,
     session,
     pluginHost,
+    eventStore: grid.eventStore,
+    store: isPersistentStore(config.store) ? config.store : DEFAULT_MEMORY_STORE,
+    tableKey,
     rows: rows ?? (controller.getSnapShot('active') as TableSnapShot),
     changelog,
     changelogCount: changelog.length,
@@ -203,3 +283,6 @@ export function useERPTable(
     redo: () => controller.redo(),
   };
 }
+
+/** @deprecated Use {@link useGrid}. Removed in 1.0.0. */
+export const useERPTable = useGrid;

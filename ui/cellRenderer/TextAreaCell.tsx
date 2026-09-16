@@ -32,7 +32,7 @@ export function TextAreaCell(ctx: CellRenderContext) {
       disabled={disabled}
       value={text}
       rows={2}
-      className={`w-full min-h-9 py-1 text-xs bg-transparent outline-none resize-none ${
+      className={`pdg-cell-editor w-full min-h-9 py-1 text-xs bg-transparent resize-none ${
         ctx.isDeleted ? 'cursor-not-allowed' : ''
       }`}
       onChange={(e) => ctx.dispatchChangeValue(e.target.value)}

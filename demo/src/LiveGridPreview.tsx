@@ -11,6 +11,7 @@ import {
   ExcelImportPlugin,
   themeErp,
   type CellComponentMap,
+  type FilterComponentMap,
   type IMultiSelectConfig,
   type UITableController,
 } from 'persian-data-grid';
@@ -50,6 +51,57 @@ const checkboxHostComponents: CellComponentMap = {
       />
     </label>
   ),
+};
+
+/** PR-95: custom filter — keep rows whose Bed is a round million. */
+const demoFilterComponents: FilterComponentMap = {
+  roundAmount: ({ current, apply, close }) => {
+    const active =
+      current?.filterType === 'custom' && current.type === 'roundAmount';
+    return (
+      <div
+        className="pdg-filter-form"
+        data-pdg-filter-demo="roundAmount"
+        dir="rtl"
+      >
+        <p style={{ margin: 0, fontSize: 12 }}>
+          فقط ردیف‌هایی که بدهکار مضرب ۱٬۰۰۰٬۰۰۰ است.
+        </p>
+        <div className="pdg-filter-actions">
+          <button
+            type="button"
+            className="pdg-filter-btn"
+            data-pdg-filter-apply-round
+            onClick={() =>
+              apply({
+                filterType: 'custom',
+                type: 'roundAmount',
+                customFilter: (value) => {
+                  if (value === '' || value == null) return false;
+                  const n = Number(value);
+                  return Number.isFinite(n) && n !== 0 && n % 1_000_000 === 0;
+                },
+              })
+            }
+          >
+            فقط مبالغ رُند
+          </button>
+          <button
+            type="button"
+            className="pdg-filter-btn"
+            data-pdg-filter-clear-round
+            disabled={!active}
+            onClick={() => {
+              apply(null);
+              close();
+            }}
+          >
+            پاک کردن
+          </button>
+        </div>
+      </div>
+    );
+  },
 };
 
 function faNum(n: number) {
@@ -133,13 +185,14 @@ export function LiveGridPreview({
   const [controller, setController] = useState<UITableController | null>(null);
   const [rowCount, setRowCount] = useState<(typeof ROW_COUNTS)[number]>(50);
   const [pageSize, setPageSize] = useState(recordPerPage);
-  const [virtualization, setVirtualization] = useState(false);
+  const [virtualization, setVirtualization] = useState(true);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [searchColumn, setSearchColumn] = useState(SEARCH_COLUMNS[0]?.fieldName ?? 'DetailDesc');
   const [searchQuery, setSearchQuery] = useState('');
+  const [quickFilterText, setQuickFilterText] = useState('');
   const [qaAccent, setQaAccent] = useState(false);
   const [qaTallRows, setQaTallRows] = useState(false);
   const [matchIndex, setMatchIndex] = useState(-1);
@@ -533,6 +586,36 @@ export function LiveGridPreview({
             </button>
           </div>
 
+          <div className={`${styles.demoToolbar} ${styles.searchBar}`} data-demo-quick-filter>
+            <span className={styles.liveToolbarLabel}>فیلتر سریع</span>
+            <input
+              className={styles.demoSearchInput}
+              placeholder="ردیف‌های نامطابق حذف می‌شوند…"
+              value={quickFilterText}
+              onChange={(e) => {
+                const next = e.target.value;
+                setQuickFilterText(next);
+                controller?.setQuickFilterText(next);
+                pushLog(`quickFilter ${next || '(پاک)'}`);
+              }}
+            />
+            <button
+              type="button"
+              className={styles.demoToggle}
+              disabled={!controller || !quickFilterText}
+              onClick={() => {
+                setQuickFilterText('');
+                controller?.setQuickFilterText('');
+                pushLog('quickFilter پاک شد');
+              }}
+            >
+              پاک کردن فیلتر
+            </button>
+            <span className={styles.liveToolbarLabel}>
+              (جدا از «جستجو» که فقط پیمایش می‌کند)
+            </span>
+          </div>
+
           <div className={`${styles.demoToolbar} ${styles.searchBar}`}>
             <span className={styles.liveToolbarLabel}>جستجو</span>
             <select
@@ -602,6 +685,10 @@ export function LiveGridPreview({
           </div>
 
           {status ? <p className={styles.demoHint}>{status}</p> : null}
+          <p className={styles.demoHint} data-demo-sort-hint>
+            مرتب‌سازی: کلیک روی هدر ستون‌هایی مثل «شرح ردیف» یا «بدهکار» (asc → desc → none).
+            Shift+کلیک برای multi-sort با نشانگر اولویت.
+          </p>
         </div>
       ) : null}
 
@@ -629,8 +716,10 @@ export function LiveGridPreview({
         multiSelectConfig={multiSelectConfig}
         theme={qaTheme}
         components={checkboxHostComponents}
+        filterComponents={demoFilterComponents}
         plugins={plugins}
         footer={true}
+        floatingFilter
         onReady={setController}
       />
 

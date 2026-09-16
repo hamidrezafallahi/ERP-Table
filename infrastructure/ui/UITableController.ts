@@ -9,6 +9,8 @@ import {
 } from '../../domain/entities/Table';
 import { TableActions } from '../../domain/value-objects';
 import { TableEngine } from '../../engine/tableEngine';
+import type { FilterModel } from '../../engine/dataOps/filterModel';
+import type { CellRange } from '../../engine/selection/cellRange';
 import { MOBILE_PAGE_SIZE } from '../../engine/type';
 import type {
   GridSearchState,
@@ -29,11 +31,47 @@ import type {
 } from '../history/HistoryPanelViewModel';
 import type { CellUndoStack } from '../../application/undo/CellUndoStack';
 import type { GridSession } from '../../application/session/GridSession';
+import type {
+  Connectivity,
+  OfflineStatus,
+  PendingChange,
+} from '../../application/offline/OfflineStatus';
+import type {
+  ManualResolution,
+  SyncConflict,
+  SyncConflictPolicy,
+  SyncPort,
+  SyncResult,
+} from '../../application/ports/SyncPort';
+import type {
+  PresencePeer,
+  PresencePort,
+} from '../../application/ports/PresencePort';
 import { UIRow } from '../../ui/type';
 import { UITableCommand } from './uiEvents';
+import type { ColumnDef } from '../../domain/types/ColumnDef';
+import type { GetRowId } from '../../infrastructure/rows/mapRowData';
+import {
+  DEFAULT_GRID_CLIPBOARD_OPTIONS,
+  type GridClipboardRuntimeOptions,
+  type PasteGridResult,
+} from './gridClipboard';
+import { applyFillHandleDrag } from './gridFillHandle';
+import {
+  autoSizeColumnWidths,
+} from '../../engine/dataOps/columnAutoSize';
+import { sizeColumnsToFitWidths } from '../../engine/dataOps/columnLayout';
+import { isIndexColumn } from '../../engine/columnWidth';
+import { createCanvasMeasureText } from './columnMeasure';
 
 export class UITableController {
   private disposed = false;
+  private layoutViewportWidth = 1024;
+  private clipboardOptions: GridClipboardRuntimeOptions = {
+    ...DEFAULT_GRID_CLIPBOARD_OPTIONS,
+  };
+  private syncPort?: SyncPort;
+  private presencePort?: PresencePort;
   constructor(
     private readonly engine: TableEngine,
     private readonly store: string,
@@ -44,10 +82,156 @@ export class UITableController {
     private readonly cellUndoStack?: CellUndoStack,
     private readonly session?: GridSession,
     private readonly remoteApi?: RemoteApi,
+    private readonly offlineStatus?: OfflineStatus,
   ) {}
 
   getRemoteApi(): RemoteApi | undefined {
     return this.remoteApi;
+  }
+
+  getOfflineStatus(): OfflineStatus | undefined {
+    return this.offlineStatus;
+  }
+
+  getSyncPort(): SyncPort | undefined {
+    return this.syncPort;
+  }
+
+  setSyncPort(port: SyncPort | undefined): void {
+    this.syncPort = port;
+  }
+
+  getPresencePort(): PresencePort | undefined {
+    return this.presencePort;
+  }
+
+  setPresencePort(port: PresencePort | undefined): void {
+    this.presencePort = port;
+  }
+
+  getPresencePeers(): readonly PresencePeer[] {
+    return this.presencePort?.getPeers() ?? [];
+  }
+
+  subscribePresencePeers(
+    cb: (peers: readonly PresencePeer[]) => void,
+  ): () => void {
+    if (!this.presencePort) {
+      cb([]);
+      return () => {};
+    }
+    return this.presencePort.subscribe(cb);
+  }
+
+  /** Broadcast local active cell to peers (no-op without presence). */
+  publishPresenceCell(rowId: number | null, columnId: string | null): void {
+    this.presencePort?.setActiveCell(rowId, columnId);
+  }
+
+  getConnectivity(): Connectivity {
+    return this.offlineStatus?.getConnectivity() ?? 'online';
+  }
+
+  getPendingChangeCount(): number {
+    return this.offlineStatus?.getPendingCount() ?? 0;
+  }
+
+  getPendingChanges(): readonly PendingChange[] {
+    return this.offlineStatus?.getPendingChanges() ?? [];
+  }
+
+  markPendingSynced(eventIds?: readonly string[]): void {
+    this.offlineStatus?.markSynced(eventIds);
+  }
+
+  subscribeConnectivity(cb: (state: Connectivity) => void): () => void {
+    if (!this.offlineStatus) {
+      cb('online');
+      return () => {};
+    }
+    return this.offlineStatus.subscribeConnectivity(cb);
+  }
+
+  subscribePendingChanges(
+    cb: (items: readonly PendingChange[]) => void,
+  ): () => void {
+    if (!this.offlineStatus) {
+      cb([]);
+      return () => {};
+    }
+    return this.offlineStatus.subscribePending(cb);
+  }
+
+  getSyncPolicy(): SyncConflictPolicy | undefined {
+    return this.syncPort?.getPolicy();
+  }
+
+  setSyncPolicy(policy: SyncConflictPolicy): void {
+    this.syncPort?.setPolicy(policy);
+  }
+
+  getOpenSyncConflicts(): readonly SyncConflict[] {
+    return this.syncPort?.getOpenConflicts() ?? [];
+  }
+
+  subscribeSyncConflicts(
+    cb: (conflicts: readonly SyncConflict[]) => void,
+  ): () => void {
+    if (!this.syncPort) {
+      cb([]);
+      return () => {};
+    }
+    return this.syncPort.subscribeConflicts(cb);
+  }
+
+  async syncNow(): Promise<SyncResult | null> {
+    if (!this.syncPort) return null;
+    return this.syncPort.sync();
+  }
+
+  async resolveSyncConflict(
+    conflictId: string,
+    choice: ManualResolution,
+  ): Promise<void> {
+    await this.syncPort?.resolveConflict(conflictId, choice);
+  }
+
+  /** Apply a remote cell value (used by SyncPort; dual-writes via engine). */
+  async applySyncedCellValue(
+    rowId: number,
+    columnId: string,
+    value: unknown,
+  ): Promise<void> {
+    await this.engine.dispatch({
+      type: 'CHANGE_CELL_VALUE',
+      store: this.store,
+      tableKey: this.tableKey,
+      rowId,
+      columnId,
+      newValue: value,
+    });
+  }
+
+  configureClipboard(options: Partial<GridClipboardRuntimeOptions>): void {
+    this.clipboardOptions = { ...this.clipboardOptions, ...options };
+  }
+
+  getClipboardOptions(): GridClipboardRuntimeOptions {
+    return this.clipboardOptions;
+  }
+
+  async applyFillHandleDrag(
+    extendTo: { rowIndex: number; colIndex: number },
+    copyOnly: boolean,
+  ): Promise<PasteGridResult> {
+    return applyFillHandleDrag(
+      this.engine,
+      this.store,
+      this.tableKey,
+      extendTo,
+      copyOnly,
+      this.clipboardOptions,
+    );
   }
 
   // ─── private dispatch helpers ───────────────────────────────────────
@@ -74,6 +258,11 @@ export class UITableController {
   }
 
   private onCellChange(rowId: number, columnId: string, value: unknown): void {
+    if (this.engine.isEditingCell(rowId, columnId)) {
+      this.engine.patchCellEdit(rowId, columnId, { value });
+      return;
+    }
+    // No session (e.g. programmatic / custom cell before activate): write through.
     this.engine.dispatch({ type: 'CHANGE_CELL_VALUE', store: this.store, tableKey: this.tableKey, rowId, columnId, newValue: value });
   }
 
@@ -82,13 +271,27 @@ export class UITableController {
   }
 
   private onCellDisplayChange(rowId: number, columnId: string, value: string): void {
+    if (this.engine.isEditingCell(rowId, columnId)) {
+      this.engine.patchCellEdit(rowId, columnId, { display: value });
+      return;
+    }
     this.engine.dispatch({ type: 'CHANGE_CELL_DISPLAY_VALUE', store: this.store, tableKey: this.tableKey, rowId, columnId, newValue: value });
   }
 
   private setActiveCell(rowId: number, columnId: string): void {
     const prev = this.engine.getActiveCell();
-    if (prev?.rowId === rowId && prev?.columnId === columnId) return;
+    if (prev?.rowId === rowId && prev?.columnId === columnId) {
+      if (
+        this.engine.getCellEditOptions().singleClickEdit &&
+        !this.engine.getCellEdit()
+      ) {
+        this.engine.startCellEdit(rowId, columnId);
+      }
+      this.publishPresenceCell(rowId, columnId);
+      return;
+    }
     this.engine.dispatch({ type: 'ACTIVE_CELL', tableKey: this.tableKey, rowId, columnId });
+    this.publishPresenceCell(rowId, columnId);
   }
 
   private setActiveRow(rowId: number): void {
@@ -208,10 +411,186 @@ export class UITableController {
     this.engine.dispatch({ type: 'RESIZE_COLUMN', tableKey: this.tableKey, columnId, width });
   }
 
+  setColumnVisible(columnId: string, visible: boolean): void {
+    this.engine.dispatch({
+      type: 'SET_COLUMN_VISIBLE',
+      tableKey: this.tableKey,
+      columnId,
+      visible,
+    });
+  }
+
+  setLayoutViewportWidth(width: number): void {
+    if (Number.isFinite(width) && width > 0) {
+      this.layoutViewportWidth = width;
+    }
+  }
+
+  getLayoutViewportWidth(): number {
+    return this.layoutViewportWidth;
+  }
+
+  /** Measure header + cell text off-DOM and resize columns (PR-112). */
+  autoSizeColumns(colIds?: string[]): void {
+    const view = this.getViewState();
+    if (!view) return;
+    const measure = createCanvasMeasureText();
+    const visible = view.columns.filter((c) => !c.hidden);
+    const targets = colIds?.length
+      ? visible.filter((c) => colIds.includes(c.fieldName))
+      : visible.filter((c) => !isIndexColumn(c));
+    const widths = autoSizeColumnWidths(targets, view.rows, measure, colIds);
+    for (const [columnId, width] of Object.entries(widths)) {
+      this.resizeColumn(columnId, width);
+    }
+  }
+
+  setColumnPinned(columnId: string, pinned: 'start' | 'end' | null): void {
+    this.engine.dispatch({
+      type: 'SET_COLUMN_PIN',
+      tableKey: this.tableKey,
+      columnId,
+      pinned,
+    });
+  }
+
+  toggleColumnGroup(groupId: string): void {
+    this.engine.dispatch({
+      type: 'TOGGLE_COLUMN_GROUP',
+      tableKey: this.tableKey,
+      groupId,
+    });
+  }
+
+  /** Scale column widths to fit the last known scrollport width (PR-112). */
+  sizeColumnsToFit(containerWidth?: number): void {
+    const view = this.getViewState();
+    if (!view) return;
+    const width = containerWidth ?? this.layoutViewportWidth;
+    const widths = sizeColumnsToFitWidths(view.columns, view.columnWidths, width);
+    for (const [columnId, w] of Object.entries(widths)) {
+      this.resizeColumn(columnId, w);
+    }
+  }
+
+  /** Session-only sort (PR-90). Empty model restores document `index` order. */
+  setSortModel(
+    sortModel: readonly { colId: string; sort: 'asc' | 'desc' }[],
+  ): void {
+    this.safe(
+      () =>
+        this.engine.dispatch({
+          type: 'SET_SORT_MODEL',
+          tableKey: this.tableKey,
+          sortModel,
+        }),
+      'setSortModel',
+    );
+  }
+
+  /** Session-only quick filter (PR-93). Empty string shows all rows. */
+  setQuickFilterText(quickFilterText: string): void {
+    this.safe(
+      () =>
+        this.engine.dispatch({
+          type: 'SET_QUICK_FILTER_TEXT',
+          tableKey: this.tableKey,
+          quickFilterText,
+        }),
+      'setQuickFilterText',
+    );
+  }
+
+  getQuickFilterText(): string {
+    return this.safe(
+      () => this.engine.getViewState()?.quickFilterText ?? '',
+      'getQuickFilterText',
+    ) ?? '';
+  }
+
+  /** Session-only column filter model (PR-94). */
+  setFilterModel(filterModel: FilterModel): void {
+    this.safe(
+      () =>
+        this.engine.dispatch({
+          type: 'SET_FILTER_MODEL',
+          tableKey: this.tableKey,
+          filterModel,
+        }),
+      'setFilterModel',
+    );
+  }
+
+  /** Session-only row grouping (PR-120). Only the first column is active. */
+  setRowGroupColumns(columns: readonly string[]): void {
+    this.safe(
+      () =>
+        this.engine.dispatch({
+          type: 'SET_ROW_GROUP_COLUMNS',
+          tableKey: this.tableKey,
+          columns,
+        }),
+      'setRowGroupColumns',
+    );
+  }
+
+  getRowGroupColumns(): string[] {
+    return (
+      this.safe(
+        () => this.engine.getViewState()?.rowGroupColumns ?? [],
+        'getRowGroupColumns',
+      ) ?? []
+    );
+  }
+
+  setGroupDefaultExpanded(expanded: boolean): void {
+    this.safe(
+      () =>
+        this.engine.dispatch({
+          type: 'SET_GROUP_DEFAULT_EXPANDED',
+          tableKey: this.tableKey,
+          expanded,
+        }),
+      'setGroupDefaultExpanded',
+    );
+  }
+
+  toggleRowGroup(groupKey: string): void {
+    this.safe(
+      () =>
+        this.engine.dispatch({
+          type: 'TOGGLE_ROW_GROUP',
+          tableKey: this.tableKey,
+          groupKey,
+        }),
+      'toggleRowGroup',
+    );
+  }
+
+  getFilterModel(): FilterModel {
+    return (
+      this.safe(
+        () => this.engine.getViewState()?.filterModel ?? {},
+        'getFilterModel',
+      ) ?? {}
+    );
+  }
+
   // ─── public read API ────────────────────────────────────────────────
 
   getViewState() {
     return this.safe(() => this.engine.getViewState(), 'getViewState');
+  }
+
+  applyHostRowData<TRow>(
+    rowData: readonly TRow[],
+    columnDefs?: ColumnDef<TRow>[],
+    getRowId?: GetRowId<TRow>,
+  ): void {
+    this.safe(
+      () => this.engine.applyHostRowData(rowData, columnDefs, getRowId),
+      'applyHostRowData',
+    );
   }
 
   getMobileViewState(): MobileTableViewState | null | undefined {
@@ -231,6 +610,48 @@ export class UITableController {
 
   getAllUIRows() {
     return this.safe(() => this.engine.getAllUIRows(), 'getAllUIRows');
+  }
+
+  getUiRowAbsoluteIndex(rowId: number): number {
+    return this.safe(
+      () => this.engine.getUiRowAbsoluteIndex(rowId),
+      'getUiRowAbsoluteIndex',
+    ) ?? -1;
+  }
+
+  findColumnSearchMatches(columnId: string, query: string) {
+    return (
+      this.safe(
+        () => this.engine.findColumnSearchMatches(columnId, query),
+        'findColumnSearchMatches',
+      ) ?? []
+    );
+  }
+
+  getColumnTotals(): Record<string, number> {
+    return this.safe(() => this.engine.getColumnTotals(), 'getColumnTotals') ?? {};
+  }
+
+  getColumnAggs(): Record<string, unknown> {
+    return this.safe(() => this.engine.getColumnAggs(), 'getColumnAggs') ?? {};
+  }
+
+  getColumnAggValue(
+    columnId: string,
+    overrideAgg?: import('../../domain/types/ColumnDef').AggFunc,
+  ): unknown {
+    return this.safe(
+      () => this.engine.getColumnAggValue(columnId, overrideAgg),
+      'getColumnAggValue',
+    );
+  }
+
+  subscribeColumnTotals(cb: (totals: Record<string, number>) => void) {
+    return this.safe(() => this.engine.subscribeColumnTotals(cb), 'subscribeColumnTotals');
+  }
+
+  subscribeColumnAggs(cb: (aggs: Record<string, unknown>) => void) {
+    return this.safe(() => this.engine.subscribeColumnAggs(cb), 'subscribeColumnAggs');
   }
 
   getSnapShot(collectionScope?: CollectionScope) {
@@ -346,6 +767,50 @@ export class UITableController {
   getActiveCell() {
     return this.safe(() => this.engine.getActiveCell(), 'getActiveCell');
   }
+
+  refreshView(): void {
+    this.safe(() => this.engine.refreshView(), 'refreshView');
+  }
+
+  clearActiveCell(cancel?: boolean): Promise<void> {
+    return (
+      this.safe(
+        () => this.engine.clearActiveCell({ cancel: cancel === true }),
+        'clearActiveCell',
+      ) ?? Promise.resolve()
+    );
+  }
+
+  startCellEdit(rowId: number, columnId: string): void {
+    this.safe(() => this.engine.startCellEdit(rowId, columnId), 'startCellEdit');
+  }
+
+  cancelCellEdit(): void {
+    this.safe(() => this.engine.cancelCellEdit(), 'cancelCellEdit');
+  }
+
+  commitCellEdit(): Promise<number> {
+    return (
+      this.safe(() => this.engine.commitCellEdit(), 'commitCellEdit') ??
+      Promise.resolve(0)
+    );
+  }
+
+  getEditDraft(rowId: number, columnId: string) {
+    return this.safe(
+      () => this.engine.getEditDraft(rowId, columnId),
+      'getEditDraft',
+    );
+  }
+
+  isEditingCell(rowId: number, columnId: string) {
+    return (
+      this.safe(
+        () => this.engine.isEditingCell(rowId, columnId),
+        'isEditingCell',
+      ) ?? false
+    );
+  }
   getMobileEditor(){
     return this.safe(() => this.engine.getMobileEditor(), 'getMobileEditor');
   }
@@ -451,11 +916,21 @@ export class UITableController {
     this.engine.dispatch({ type: 'ROW_SELECTION_TOGGLED', tableKey: this.tableKey, rowId });
   }
 
+  getCellRanges() {
+    return this.engine.getCellRanges();
+  }
+
+  addCellRange(range: CellRange): void {
+    this.engine.addCellRange(range);
+  }
+
   // ─── lifecycle ───────────────────────────────────────────────────────
 
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.presencePort?.dispose();
+    this.presencePort = undefined;
     this.engine.dispatch({ type: 'TABLE_DISPOSED', store: this.store, tableKey: this.tableKey });
   }
 
@@ -524,6 +999,10 @@ export class UITableController {
         this.activateFirstEditableCell(command.rowId);
         return;
       case 'UI_ACTIVE_CELL':
+        this.engine.handleCellRangePointer(command.rowId, command.columnId, {
+          shiftKey: Boolean(command.shiftKey),
+          ctrlKey: Boolean(command.ctrlKey),
+        });
         this.setActiveCell(command.rowId, command.columnId);
         return;
       case 'UI_MOVE_ACTIVE_CELL':
@@ -576,6 +1055,27 @@ export class UITableController {
         return;
       case 'UI_RESIZE_COLUMN':
         this.resizeColumn(command.columnId, command.width);
+        return;
+      case 'UI_SET_COLUMN_VISIBLE':
+        this.setColumnVisible(command.columnId, command.visible);
+        return;
+      case 'UI_SET_SORT_MODEL':
+        this.setSortModel(command.sortModel);
+        return;
+      case 'UI_SET_QUICK_FILTER_TEXT':
+        this.setQuickFilterText(command.quickFilterText);
+        return;
+      case 'UI_SET_FILTER_MODEL':
+        this.setFilterModel(command.filterModel);
+        return;
+      case 'UI_SET_ROW_GROUP_COLUMNS':
+        this.setRowGroupColumns(command.columns);
+        return;
+      case 'UI_SET_GROUP_DEFAULT_EXPANDED':
+        this.setGroupDefaultExpanded(command.expanded);
+        return;
+      case 'UI_TOGGLE_ROW_GROUP':
+        this.toggleRowGroup(command.groupKey);
         return;
       default: {
         const _exhaustive: never = command;

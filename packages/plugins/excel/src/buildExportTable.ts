@@ -10,6 +10,10 @@ export type ExportTable = {
   columns: Array<{ fieldName: string; caption: string }>;
   /** Parallel to columns; already stringified cell text */
   rows: string[][];
+  /** Parallel to rows (PR-122). Absent ⇒ all leaf. */
+  rowKinds?: Array<'group' | 'leaf' | 'total'>;
+  /** Excel outlineLevel per data row (PR-122). */
+  outlineLevels?: number[];
 };
 
 const hasMeaningfulValue = (value: unknown) =>
@@ -45,6 +49,10 @@ export function buildExportTable(source: ExportSource): ExportTable {
     })),
     rows: source.rows.map((row) =>
       columnsWithData.map((col) => cellText(row, col)),
+    ),
+    rowKinds: source.rows.map((row) => row.kind ?? 'leaf'),
+    outlineLevels: source.rows.map((row) =>
+      typeof row.outlineLevel === 'number' ? row.outlineLevel : 0,
     ),
   };
 }

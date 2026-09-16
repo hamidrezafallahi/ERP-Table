@@ -1,4 +1,10 @@
-export { GridTheme, themeErp, themeErpDark } from './GridTheme';
+export {
+  GridTheme,
+  themeDefault,
+  themeDark,
+  themeErp,
+  themeErpDark,
+} from './GridTheme';
 export type { ThemeCssVars, ThemeParams } from './GridTheme';
 export {
   isStockDarkTheme,

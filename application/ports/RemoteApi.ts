@@ -1,9 +1,9 @@
 //application/ports
 
 export interface RemoteApi {
-  request<TResponse = any>(input: {
+  request<TResponse = unknown>(input: {
     endpoint: string;
-    params?: Record<string, any>;
+    params?: Record<string, unknown>;
     method?: 'GET' | 'POST';
   }): Promise<TResponse>;
 }

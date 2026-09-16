@@ -20,21 +20,13 @@ describe('grid search navigation helpers', () => {
     expect(isVirtualScrollRoot(null)).toBe(false);
   });
 
-  it('getSortedRowAbsoluteIndex uses index cell order', () => {
-    const rows = [
-      {
-        id: { value: 2 },
-        getCell: (k: string) =>
-          k === 'index' ? { getValue: () => 2 } : undefined,
-      },
-      {
-        id: { value: 1 },
-        getCell: (k: string) =>
-          k === 'index' ? { getValue: () => 1 } : undefined,
-      },
-    ];
+  it('getSortedRowAbsoluteIndex uses UI row index (PR-99)', () => {
+    const order = new Map<number, number>([
+      [1, 0],
+      [2, 1],
+    ]);
     const controller = {
-      getAllRows: () => rows,
+      getUiRowAbsoluteIndex: (rowId: number) => order.get(rowId) ?? -1,
     } as any;
 
     expect(getSortedRowAbsoluteIndex(controller, 1)).toBe(0);
@@ -65,12 +57,7 @@ describe('grid search navigation helpers', () => {
         }),
         dispatchViewIntent,
       }),
-      getAllRows: () =>
-        Array.from({ length: 30 }, (_, i) => ({
-          id: { value: i + 1 },
-          getCell: (k: string) =>
-            k === 'index' ? { getValue: () => i + 1 } : undefined,
-        })),
+      getUiRowAbsoluteIndex: (rowId: number) => rowId - 1,
       dispatch,
     } as any;
 
@@ -103,12 +90,7 @@ describe('grid search navigation helpers', () => {
       }),
       getTableKey: () => 't-page',
       getSession: () => undefined,
-      getAllRows: () =>
-        Array.from({ length: 25 }, (_, i) => ({
-          id: { value: i + 1 },
-          getCell: (k: string) =>
-            k === 'index' ? { getValue: () => i + 1 } : undefined,
-        })),
+      getUiRowAbsoluteIndex: (rowId: number) => rowId - 1,
       dispatch,
     } as any;
 

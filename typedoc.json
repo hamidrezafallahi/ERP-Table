@@ -1,0 +1,18 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["publish/entry.ts"],
+  "tsconfig": "tsconfig.publish.json",
+  "out": "website/public/api",
+  "name": "persian-data-grid",
+  "readme": "none",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "skipErrorChecking": true,
+  "validation": {
+    "notExported": false,
+    "invalidLink": false,
+    "notDocumented": false
+  },
+  "exclude": ["**/*+(.spec).ts", "**/__tests__/**"]
+}

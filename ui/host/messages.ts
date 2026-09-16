@@ -1,86 +1,47 @@
-export type ERPTableLocale = 'fa' | 'en';
+import {
+  getLocalePack,
+  type ERPTableLocale,
+  type ERPTableMessages,
+} from '../locales';
 
-export type ERPTableMessages = Record<string, string>;
+export type { ERPTableLocale, ERPTableMessages } from '../locales';
+export {
+  arMessages,
+  enMessages,
+  faMessages,
+  formatLocaleDate,
+  formatLocaleNumber,
+  getLocalePack,
+  LOCALE_META,
+  LOCALE_PACKS,
+  resolveDirection,
+  resolveLocaleMeta,
+} from '../locales';
+export type { LocaleMeta, NumberingSystem } from '../locales';
 
-export const FA_MESSAGES: ERPTableMessages = {
-  'general.addNewRow': 'افزودن سطر',
-  'general.copy': 'کپی',
-  'general.cut': 'برش',
-  'general.paste': 'چسباندن',
-  'general.delete': 'حذف',
-  'general.chooseFromList': 'انتخاب از لیست',
-  'general.toggle': 'انتخاب همه',
-  'general.exportToExcel': 'خروجی اکسل',
-  'general.exportToExcelSuccess': 'خروجی اکسل با موفقیت انجام شد',
-  'general.exportToExcelError': 'خروجی اکسل ناموفق بود',
-  'general.exportToPdf': 'خروجی PDF',
-  'general.exportToPdfSuccess': 'خروجی PDF با موفقیت انجام شد',
-  'general.exportToPdfError': 'خروجی PDF ناموفق بود',
-  'general.importFromExcel': 'ورود از اکسل',
-  'general.importFromExcelSuccess': 'ورود اکسل با موفقیت انجام شد',
-  'general.importFromExcelError': 'ورود اکسل ناموفق بود',
-  'general.selected': 'انتخاب شده',
-  'general.search': 'جستجو',
-  'general.selectField': 'انتخاب کنید',
-  'general.choice': 'انتخاب ستون',
-  'general.prev': 'قبلی',
-  'general.next': 'بعدی',
-  'general.noData': 'داده‌ای وجود ندارد',
-  'general.replicateRow': 'تکثیر سطر',
-  'general.edit': 'ویرایش',
-  'general.rowEdit': 'ویرایش سطر',
-  'general.row': 'سطر',
-  'general.selectRow': 'انتخاب سطر',
-  'general.save': 'ذخیره',
-  'general.notActive': 'غیرفعال',
-  'general.add': 'افزودن',
-  'general.themeDark': 'تم تیره',
-  'general.themeLight': 'تم روشن',
-  'general.toolbar': 'نوار عملیات',
-};
-
-export const EN_MESSAGES: ERPTableMessages = {
-  'general.addNewRow': 'Add row',
-  'general.copy': 'Copy',
-  'general.cut': 'Cut',
-  'general.paste': 'Paste',
-  'general.delete': 'Delete',
-  'general.chooseFromList': 'Choose from list',
-  'general.toggle': 'Select all',
-  'general.exportToExcel': 'Export to Excel',
-  'general.exportToExcelSuccess': 'Excel export succeeded',
-  'general.exportToExcelError': 'Excel export failed',
-  'general.exportToPdf': 'Export to PDF',
-  'general.exportToPdfSuccess': 'PDF export succeeded',
-  'general.exportToPdfError': 'PDF export failed',
-  'general.importFromExcel': 'Import from Excel',
-  'general.importFromExcelSuccess': 'Excel import succeeded',
-  'general.importFromExcelError': 'Excel import failed',
-  'general.selected': 'Selected',
-  'general.search': 'Search',
-  'general.selectField': 'Select',
-  'general.choice': 'Choose column',
-  'general.prev': 'Previous',
-  'general.next': 'Next',
-  'general.noData': 'No data',
-  'general.replicateRow': 'Duplicate row',
-  'general.edit': 'Edit',
-  'general.rowEdit': 'Edit row',
-  'general.row': 'Row',
-  'general.selectRow': 'Select row',
-  'general.save': 'Save',
-  'general.notActive': 'Inactive',
-  'general.add': 'Add',
-  'general.themeDark': 'Dark theme',
-  'general.themeLight': 'Light theme',
-  'general.toolbar': 'Toolbar',
-};
+/** @deprecated Prefer `faMessages` from `persian-data-grid/locales/fa`. */
+export const FA_MESSAGES: ERPTableMessages = getLocalePack('fa');
+/** @deprecated Prefer `enMessages` from `persian-data-grid/locales/en`. */
+export const EN_MESSAGES: ERPTableMessages = getLocalePack('en');
+/** Arabic pack alias (PR-127). */
+export const AR_MESSAGES: ERPTableMessages = getLocalePack('ar');
 
 export function translate(
   key: string,
   locale: ERPTableLocale,
   overrides?: Partial<ERPTableMessages>,
 ): string {
-  const pack = locale === 'en' ? EN_MESSAGES : FA_MESSAGES;
+  const pack = getLocalePack(locale);
   return overrides?.[key] ?? pack[key] ?? key;
+}
+
+/** Replace `{name}` tokens in a message template (PR-125). */
+export function formatMessage(
+  template: string,
+  vars: Record<string, string | number>,
+): string {
+  return template.replace(/\{(\w+)\}/g, (_, name: string) => {
+    const value = vars[name];
+    return value == null ? `{${name}}` : String(value);
+  });
 }

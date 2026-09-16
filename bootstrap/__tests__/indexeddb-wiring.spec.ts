@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { TableRepository } from '../../application/ports/TableRepository';
 import type { Table } from '../../domain/entities/Table';
 import type { AuditLogger } from '../../application/ports/AuditLogger';
@@ -40,6 +40,10 @@ class SilentAuditLogger implements AuditLogger {
 }
 
 describe('createERPTable with IndexedDbEventStore', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
   it('accepts injected durable event store and dual-writes cell changes', async () => {
     const { createERPTable } = await import('../index');
     const eventStore = IndexedDbEventStore.inMemory();
@@ -79,5 +83,71 @@ describe('createERPTable with IndexedDbEventStore', () => {
 
     const stored = await eventStore.read('table:table-idb');
     expect(stored.some((e) => e.type === 'CELL_CHANGED')).toBe(true);
+  });
+
+  it('opens IndexedDB as persian-data-grid-events:{store} by default', async () => {
+    const store = IndexedDbEventStore.inMemory();
+    const open = vi
+      .spyOn(IndexedDbEventStore, 'open')
+      .mockResolvedValue(store);
+    vi.stubGlobal('indexedDB', {});
+    const { createERPTable } = await import('../index');
+
+    const result = await createERPTable({
+      store: 'my-store',
+      tableKey: 'table-idb',
+      actor: { userId: 'u1', roles: ['admin'] },
+      tableType: 'default',
+      activeCollection: 'default',
+      repo: new MemoryTableRepository(),
+      audit: new SilentAuditLogger(),
+      remoteApi: { request: async () => null } as any,
+      columns: [
+        {
+          fieldName: 'name',
+          fieldCaption: 'Name',
+          fieldType: 'text',
+          fieldCollection: 'default',
+          visibility: { kind: 'always' },
+        },
+      ],
+      rows: [{ id: 1, collection: 'default', values: { name: 'alpha' } }],
+    });
+
+    expect(open).toHaveBeenCalledWith('persian-data-grid-events:my-store');
+    expect(result.eventStore).toBe(store);
+  });
+
+  it('honors eventStoreName so 0.5.x IndexedDB data keeps working', async () => {
+    const store = IndexedDbEventStore.inMemory();
+    const open = vi
+      .spyOn(IndexedDbEventStore, 'open')
+      .mockResolvedValue(store);
+    vi.stubGlobal('indexedDB', {});
+    const { createERPTable } = await import('../index');
+
+    await createERPTable({
+      store: 'my-store',
+      tableKey: 'table-idb',
+      actor: { userId: 'u1', roles: ['admin'] },
+      tableType: 'default',
+      activeCollection: 'default',
+      repo: new MemoryTableRepository(),
+      audit: new SilentAuditLogger(),
+      remoteApi: { request: async () => null } as any,
+      eventStoreName: 'erp-table-events',
+      columns: [
+        {
+          fieldName: 'name',
+          fieldCaption: 'Name',
+          fieldType: 'text',
+          fieldCollection: 'default',
+          visibility: { kind: 'always' },
+        },
+      ],
+      rows: [{ id: 1, collection: 'default', values: { name: 'alpha' } }],
+    });
+
+    expect(open).toHaveBeenCalledWith('erp-table-events:my-store');
   });
 });

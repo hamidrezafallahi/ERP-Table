@@ -1,6 +1,6 @@
 {
   "name": "persian-data-grid",
-  "version": "0.5.0",
+  "version": "0.13.0-next.0",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -8,32 +8,33 @@
   "types": "./dist/index.d.ts",
   "author": "hamidreza fallahi",
   "keywords": [
-    "persian-data-grid",
+    "react",
+    "datagrid",
     "data-grid",
-    "data grid",
-    "react-data-grid",
-    "react table",
-    "headless-data-grid",
-    "erp",
-    "erp grid",
-    "event-sourcing",
-    "cqrs",
-    "indexeddb",
-    "offline-first",
-    "excel-like",
-    "keyboard-navigation",
-    "virtual-scroll",
+    "data-table",
+    "react-table",
+    "headless",
+    "typescript",
     "rtl",
     "persian",
+    "farsi",
     "jalali",
     "shamsi",
-    "ddd",
-    "typescript",
-    "react"
+    "event-sourcing",
+    "offline-first",
+    "indexeddb",
+    "undo-redo",
+    "audit-trail",
+    "excel-export",
+    "pdf-export",
+    "virtualization",
+    "accessibility"
   ],
   "description": "Persian / Jalali data grid for React — event-sourced, IndexedDB storage, cell keyboard navigation, RTL, reactive cells via host-injected API. TypeScript, optional virtual scroll, Excel/PDF plugins.",
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "OFL.txt"
   ],
   "exports": {
     ".": {
@@ -46,10 +47,25 @@
       "import": "./dist/headless.js",
       "require": "./dist/headless.cjs"
     },
+    "./presence": {
+      "types": "./dist/presence.d.ts",
+      "import": "./dist/presence.js",
+      "require": "./dist/presence.cjs"
+    },
+    "./sync": {
+      "types": "./dist/sync.d.ts",
+      "import": "./dist/sync.js",
+      "require": "./dist/sync.cjs"
+    },
     "./plugins/excel": {
       "types": "./dist/plugins/excel.d.ts",
       "import": "./dist/plugins/excel.js",
       "require": "./dist/plugins/excel.cjs"
+    },
+    "./plugins/csv": {
+      "types": "./dist/plugins/csv.d.ts",
+      "import": "./dist/plugins/csv.js",
+      "require": "./dist/plugins/csv.cjs"
     },
     "./plugins/pdf": {
       "types": "./dist/plugins/pdf.d.ts",
@@ -66,18 +82,73 @@
       "import": "./dist/adapters/arian-erp.js",
       "require": "./dist/adapters/arian-erp.cjs"
     },
+    "./locales": {
+      "types": "./dist/locales/index.d.ts",
+      "import": "./dist/locales/index.js",
+      "require": "./dist/locales/index.cjs"
+    },
+    "./locales/fa": {
+      "types": "./dist/locales/fa.d.ts",
+      "import": "./dist/locales/fa.js",
+      "require": "./dist/locales/fa.cjs"
+    },
+    "./locales/en": {
+      "types": "./dist/locales/en.d.ts",
+      "import": "./dist/locales/en.js",
+      "require": "./dist/locales/en.cjs"
+    },
+    "./locales/ar": {
+      "types": "./dist/locales/ar.d.ts",
+      "import": "./dist/locales/ar.js",
+      "require": "./dist/locales/ar.cjs"
+    },
+    "./date-picker-jalali": {
+      "types": "./dist/date-picker-jalali.d.ts",
+      "import": "./dist/date-picker-jalali.js",
+      "require": "./dist/date-picker-jalali.cjs"
+    },
     "./styles.css": "./dist/styles.css"
   },
   "typesVersions": {
     "*": {
-      "headless": ["dist/headless.d.ts"],
-      "plugins/excel": ["dist/plugins/excel.d.ts"],
-      "plugins/pdf": ["dist/plugins/pdf.d.ts"],
-      "plugins/pdf/fonts/vazirmatn": ["dist/plugins/pdf/fonts/vazirmatn.d.ts"],
-      "adapters/arian-erp": ["dist/adapters/arian-erp.d.ts"]
+      "headless": [
+        "dist/headless.d.ts"
+      ],
+      "plugins/excel": [
+        "dist/plugins/excel.d.ts"
+      ],
+      "plugins/csv": [
+        "dist/plugins/csv.d.ts"
+      ],
+      "plugins/pdf": [
+        "dist/plugins/pdf.d.ts"
+      ],
+      "plugins/pdf/fonts/vazirmatn": [
+        "dist/plugins/pdf/fonts/vazirmatn.d.ts"
+      ],
+      "adapters/arian-erp": [
+        "dist/adapters/arian-erp.d.ts"
+      ],
+      "locales": [
+        "dist/locales/index.d.ts"
+      ],
+      "locales/fa": [
+        "dist/locales/fa.d.ts"
+      ],
+      "locales/en": [
+        "dist/locales/en.d.ts"
+      ],
+      "locales/ar": [
+        "dist/locales/ar.d.ts"
+      ],
+      "date-picker-jalali": [
+        "dist/date-picker-jalali.d.ts"
+      ]
     }
   },
-  "sideEffects": true,
+  "sideEffects": [
+    "**/*.css"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hamidrezafallahi/ERP-Table.git"
@@ -97,17 +168,38 @@
     "build:demo": "vite build --config demo/vite.config.ts",
     "preview:demo": "vite preview --config demo/vite.config.ts",
     "deploy:demo": "gh-pages -d demo/dist",
-    "test": "vitest run domain/__tests__ application/__tests__ infrastructure/__tests__ bootstrap/__tests__ engine/__tests__ ui/virtual/__tests__ ui/desktop/__tests__ ui/cellRenderer/__tests__ ui/keyboard/__tests__ ui/gridSearch/__tests__ ui/styles/__tests__ ui/theme/__tests__ docs/__tests__ packages/plugins/excel/__tests__ packages/plugins/pdf/__tests__",
+    "docs:api": "typedoc --options typedoc.json",
+    "docs:dev": "yarn docs:api && vitepress dev website",
+    "docs:build": "yarn docs:api && vitepress build website && node ./scripts/check-docs-links.mjs",
+    "docs:preview": "vitepress preview website",
+    "deploy:docs": "yarn docs:build && gh-pages -d website/.vitepress/dist",
+    "examples:typecheck": "tsc -p examples/gallery/tsconfig.json --noEmit",
+    "codemod": "node ./packages/codemod/cli.mjs",
+    "e2e": "playwright test -c e2e/playwright.config.ts",
+    "e2e:ui": "playwright test -c e2e/playwright.config.ts --ui",
+    "e2e:update-snapshots": "playwright test -c e2e/playwright.config.ts --update-snapshots",
+    "e2e:flake": "node ./scripts/e2e-flake-check.mjs",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish",
+    "release:notes": "node ./scripts/extract-changelog.mjs",
+    "release:next:dry": "node ./scripts/release-next-dry.mjs",
+    "release:gate": "node ./scripts/release-gate.mjs",
+    "test": "vitest run domain/__tests__ application/__tests__ infrastructure/__tests__ infrastructure/date/__tests__ bootstrap/__tests__ engine/__tests__ ui/virtual/__tests__ ui/desktop/__tests__ ui/a11y/__tests__ ui/cellRenderer/__tests__ ui/filters/__tests__ ui/keyboard/__tests__ ui/gridSearch/__tests__ ui/history/__tests__ ui/offline/__tests__ ui/sync/__tests__ ui/presence/__tests__ ui/overlays/__tests__ ui/styles/__tests__ ui/theme/__tests__ ui/locales/__tests__ docs/__tests__ packages/plugins/excel/__tests__ packages/plugins/pdf/__tests__ packages/plugins/csv/__tests__",
     "typecheck:publish": "tsc -p tsconfig.publish.json --noEmit",
     "typecheck:host-ui": "tsc -p tsconfig.json --noEmit",
-    "build": "tsup --config tsup.config.ts",
+    "lint:publish": "eslint --max-warnings=0",
+    "generate:inject-styles": "node ./scripts/generate-inject-styles.mjs",
+    "build": "node ./scripts/generate-inject-styles.mjs && tsup --config tsup.config.ts && node ./scripts/prepend-pdf-ofl-banner.mjs",
     "verify:dist": "node ./scripts/verify-dist.mjs",
+    "pack:dry": "npm pack --dry-run",
     "size": "size-limit",
-    "prepublishOnly": "npm run typecheck:publish && npm run typecheck:host-ui && npm run build && npm run verify:dist && npm run size && npm test"
+    "prepublishOnly": "npm run typecheck:publish && npm run typecheck:host-ui && npm run lint:publish && npm run build && npm run verify:dist && npm run size && npm test"
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
-    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
+    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0",
+    "react-persian-range-picker": "^1.1.1"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -115,28 +207,41 @@
     },
     "react-dom": {
       "optional": false
+    },
+    "react-persian-range-picker": {
+      "optional": true
     }
   },
   "devDependencies": {
+    "@changesets/cli": "2.29.7",
+    "@playwright/test": "^1.63.0",
     "@size-limit/file": "^13.0.3",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react-swc": "^3.11.0",
+    "axe-core": "^4.13.0",
+    "eslint": "^10.10.0",
     "gh-pages": "^5.0.0",
+    "jsdom": "^30.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.2.8",
     "react-persian-range-picker": "^1.1.1",
     "size-limit": "^13.0.3",
     "tsup": "^8.5.0",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.13.0",
     "typescript": "^5.8.2",
+    "typescript-eslint": "^8.70.0",
     "vite": "^5.4.21",
+    "vitepress": "^1.6.4",
     "vitest": "^4.1.10"
   },
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
-    "fflate": "^0.8.3",
-    "react-persian-range-picker": "^1.1.1"
+    "fflate": "^0.8.3"
   }
 }

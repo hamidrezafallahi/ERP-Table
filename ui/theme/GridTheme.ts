@@ -16,6 +16,17 @@ export type ThemeParams = {
 
 export type ThemeCssVars = Record<string, string>;
 
+/** `--erp-*` mirrors `--pdg-*` for one version (PR-87 / D13). */
+function aliasErpTokens(vars: ThemeCssVars): ThemeCssVars {
+  const out: ThemeCssVars = {};
+  for (const [key, value] of Object.entries(vars)) {
+    if (key.startsWith('--pdg-')) {
+      out[`--erp-${key.slice('--pdg-'.length)}`] = value;
+    }
+  }
+  return out;
+}
+
 export class GridTheme {
   constructor(
     readonly params: ThemeParams,
@@ -32,27 +43,32 @@ export class GridTheme {
 
   toCssVars(): ThemeCssVars {
     const p = this.params;
+    const roles: ThemeCssVars = {
+      '--pdg-bg': p.backgroundColor,
+      '--pdg-fg': p.foregroundColor,
+      '--pdg-accent': p.accentColor,
+      '--pdg-header-bg': p.headerBackgroundColor,
+      '--pdg-row-stripe': p.rowStripeColor,
+      '--pdg-row-selected': p.rowSelectedColor,
+      '--pdg-border': p.borderColor,
+      '--pdg-danger': p.dangerColor,
+      '--pdg-search-match': p.searchMatchColor,
+      '--pdg-font': p.fontFamily,
+      '--pdg-row-height': `${p.rowHeight}px`,
+      '--pdg-font-size': `${p.cellFontSize}px`,
+      '--pdg-radius': p.borderRadius,
+    };
     return {
-      '--erp-bg': p.backgroundColor,
-      '--erp-fg': p.foregroundColor,
-      '--erp-accent': p.accentColor,
-      '--erp-header-bg': p.headerBackgroundColor,
-      '--erp-row-stripe': p.rowStripeColor,
-      '--erp-row-selected': p.rowSelectedColor,
-      '--erp-border': p.borderColor,
-      '--erp-danger': p.dangerColor,
-      '--erp-search-match': p.searchMatchColor,
-      '--erp-font': p.fontFamily,
-      '--erp-row-height': `${p.rowHeight}px`,
-      '--erp-font-size': `${p.cellFontSize}px`,
-      '--erp-radius': p.borderRadius,
+      ...roles,
+      ...aliasErpTokens(roles),
       ...this.extraCssVars,
+      ...aliasErpTokens(this.extraCssVars),
     };
   }
 }
 
-/** Default ERP chrome — same computed colors as the CSS palette aliases. */
-export const themeErp = new GridTheme({
+/** Default grid chrome — same computed colors as the CSS palette aliases. */
+export const themeDefault = new GridTheme({
   backgroundColor: '#fff',
   foregroundColor: '#292929',
   accentColor: '#0658b0',
@@ -68,36 +84,39 @@ export const themeErp = new GridTheme({
   borderRadius: '0.25rem',
 });
 
-/** Dark ERP chrome. Palette extras keep leftover `--erp-gray-*` utilities readable. */
+/** @deprecated Use {@link themeDefault}. Removed in 1.0.0. */
+export const themeErp = themeDefault;
+
+/** Dark chrome. Palette extras keep leftover gray utilities readable. */
 const DARK_PALETTE_VARS: ThemeCssVars = {
-  '--erp-main-white': '#171717',
-  '--erp-main-black': '#f4f4f4',
-  '--erp-gray-3': '#262626',
-  '--erp-gray-5': '#404040',
-  '--erp-gray-6': '#525252',
-  '--erp-gray-7': '#a3a3a3',
-  '--erp-gray-8': '#d4d4d4',
-  '--erp-gray-85': '#d4d4d4',
-  '--erp-gray-9': '#e5e5e5',
-  '--erp-gray-10': '#f5f5f5',
-  '--erp-gray-11': '#fafafa',
-  '--erp-black-6': '#f4f4f4',
-  '--erp-blue-6': '#60a5fa',
-  '--erp-blue-11': '#1e3a5f',
-  '--erp-blue-100': '#1e3a8a',
-  '--erp-red-100': '#7f1d1d',
-  '--erp-red-300': '#fca5a5',
-  '--erp-red-600': '#f87171',
-  '--erp-yellow-200': '#854d0e',
-  '--erp-yellow-400': '#eab308',
-  '--erp-zinc-200': '#3f3f46',
-  '--erp-neutral-500': '#a3a3a3',
-  '--erp-gray-100': '#27272a',
-  '--erp-scrollbar': '#525252',
-  '--erp-overlay': 'rgba(0, 0, 0, 0.55)',
+  '--pdg-main-white': '#171717',
+  '--pdg-main-black': '#f4f4f4',
+  '--pdg-gray-3': '#262626',
+  '--pdg-gray-5': '#404040',
+  '--pdg-gray-6': '#525252',
+  '--pdg-gray-7': '#a3a3a3',
+  '--pdg-gray-8': '#d4d4d4',
+  '--pdg-gray-85': '#d4d4d4',
+  '--pdg-gray-9': '#e5e5e5',
+  '--pdg-gray-10': '#f5f5f5',
+  '--pdg-gray-11': '#fafafa',
+  '--pdg-black-6': '#f4f4f4',
+  '--pdg-blue-6': '#60a5fa',
+  '--pdg-blue-11': '#1e3a5f',
+  '--pdg-blue-100': '#1e3a8a',
+  '--pdg-red-100': '#7f1d1d',
+  '--pdg-red-300': '#fca5a5',
+  '--pdg-red-600': '#f87171',
+  '--pdg-yellow-200': '#854d0e',
+  '--pdg-yellow-400': '#eab308',
+  '--pdg-zinc-200': '#3f3f46',
+  '--pdg-neutral-500': '#a3a3a3',
+  '--pdg-gray-100': '#27272a',
+  '--pdg-scrollbar': '#525252',
+  '--pdg-overlay': 'rgba(0, 0, 0, 0.55)',
 };
 
-export const themeErpDark = themeErp
+export const themeDark = themeDefault
   .withParams({
     backgroundColor: '#171717',
     foregroundColor: '#f4f4f4',
@@ -110,3 +129,6 @@ export const themeErpDark = themeErp
     searchMatchColor: '#eab308',
   })
   .withExtraCssVars(DARK_PALETTE_VARS);
+
+/** @deprecated Use {@link themeDark}. Removed in 1.0.0. */
+export const themeErpDark = themeDark;

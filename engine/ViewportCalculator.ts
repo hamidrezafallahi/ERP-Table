@@ -1,8 +1,21 @@
 import { Viewport, type VisibleRange } from '../domain/value-objects/Viewport';
+import {
+  calculateColumnViewport,
+  projectColumnSlice,
+  type ColumnVisibleRange,
+} from './ColumnViewport';
+
+export type { ColumnVisibleRange } from './ColumnViewport';
+export {
+  buildCumulativeWidths,
+  calculateColumnViewport,
+  projectColumnSlice,
+} from './ColumnViewport';
 
 /**
  * Pure virtual-window calculator — no DOM / window / document.
- * Input: totalRows + Viewport → VisibleRange for Adapter rendering.
+ * Vertical: totalRows + Viewport → VisibleRange.
+ * Horizontal (PR-98): scrollable widths + scroll → ColumnVisibleRange.
  */
 export class ViewportCalculator {
   static calculate(totalRows: number, viewport: Viewport): VisibleRange {
@@ -71,5 +84,31 @@ export class ViewportCalculator {
       if (row !== undefined) out.push(row);
     }
     return out;
+  }
+
+  /** Horizontal column window (PR-98). */
+  static calculateColumns(
+    scrollableWidths: readonly number[],
+    scrollOffset: number,
+    viewportSize: number,
+    pinnedStartWidth = 0,
+    overscan = 1,
+    pinnedEndWidth = 0,
+  ): ColumnVisibleRange {
+    return calculateColumnViewport(
+      scrollableWidths,
+      scrollOffset,
+      viewportSize,
+      pinnedStartWidth,
+      overscan,
+      pinnedEndWidth,
+    );
+  }
+
+  static projectColumns<T>(
+    items: readonly T[],
+    range: ColumnVisibleRange,
+  ): T[] {
+    return projectColumnSlice(items, range);
   }
 }

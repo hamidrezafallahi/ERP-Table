@@ -1,4 +1,9 @@
-import { useTranslations } from '../host';
+import {
+  formatLocaleNumber,
+  useLocale,
+  useNumberingSystem,
+  useTranslations,
+} from '../host';
 import {
   CustomCheckbox,
   EditPencil,
@@ -25,6 +30,8 @@ export function MobileIndexCol({
   meta,
 }: MobileIndexColProps) {
   const t = useTranslations();
+  const locale = useLocale();
+  const numberingSystem = useNumberingSystem();
 
   const handleDeleteRow = () => {
     controller.dispatch({ type: "ROW_DELETED", rowId: row.id });
@@ -54,7 +61,9 @@ export function MobileIndexCol({
             aria-label={`${t("general.selectRow")} ${idx + 1}`}
           />
         )}
-        <div className="w-[20px] text-xs text-center">{(idx + 1).toLocaleString('fa-IR')}</div>
+        <div className="w-[20px] text-xs text-center">
+          {formatLocaleNumber(idx + 1, { locale, numberingSystem })}
+        </div>
 
         {!isDeleted && (
           <button

@@ -1,0 +1,26 @@
+{
+  "name": "persian-data-grid-codemod",
+  "version": "0.5.0",
+  "description": "Codemod for persian-data-grid migrations (D13–D21)",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "persian-data-grid-codemod": "./cli.mjs"
+  },
+  "files": [
+    "cli.mjs",
+    "index.mjs",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hamidrezafallahi/ERP-Table.git",
+    "directory": "packages/codemod"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

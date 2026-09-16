@@ -2,6 +2,7 @@
 
 import { Table } from '../../domain/entities/Table';
 import { TableActions } from '../../domain/value-objects';
+import type { FilterModel } from '../../engine/dataOps/filterModel';
 import type {
   GridSearchState,
 } from '../../engine/type';
@@ -51,6 +52,8 @@ export interface UIActiveCellEvent extends UICommandBase {
   readonly type: 'UI_ACTIVE_CELL';
   readonly rowId: number;
   readonly columnId: string;
+  readonly shiftKey?: boolean;
+  readonly ctrlKey?: boolean;
 }
 
 
@@ -202,6 +205,45 @@ export interface ResizeColumnUiCommand extends UICommandBase {
   readonly width: number;
 }
 
+export interface SetColumnVisibleUiCommand extends UICommandBase {
+  readonly type: 'UI_SET_COLUMN_VISIBLE';
+  readonly columnId: string;
+  readonly visible: boolean;
+}
+
+export interface SetSortModelUiCommand {
+  readonly type: 'UI_SET_SORT_MODEL';
+  readonly sortModel: readonly {
+    readonly colId: string;
+    readonly sort: 'asc' | 'desc';
+  }[];
+}
+
+export interface SetQuickFilterTextUiCommand {
+  readonly type: 'UI_SET_QUICK_FILTER_TEXT';
+  readonly quickFilterText: string;
+}
+
+export interface SetFilterModelUiCommand {
+  readonly type: 'UI_SET_FILTER_MODEL';
+  readonly filterModel: FilterModel;
+}
+
+export interface SetRowGroupColumnsUiCommand {
+  readonly type: 'UI_SET_ROW_GROUP_COLUMNS';
+  readonly columns: readonly string[];
+}
+
+export interface SetGroupDefaultExpandedUiCommand {
+  readonly type: 'UI_SET_GROUP_DEFAULT_EXPANDED';
+  readonly expanded: boolean;
+}
+
+export interface ToggleRowGroupUiCommand {
+  readonly type: 'UI_TOGGLE_ROW_GROUP';
+  readonly groupKey: string;
+}
+
 /* ---------- Union ---------- */
 
 export type UITableCommand =
@@ -237,4 +279,11 @@ export type UITableCommand =
   | OpenMobileAddUiCommand
   | OpenMobileEditUiCommand
   | CloseMobileEditorUiCommand
-  | ResizeColumnUiCommand;
+  | ResizeColumnUiCommand
+  | SetColumnVisibleUiCommand
+  | SetSortModelUiCommand
+  | SetQuickFilterTextUiCommand
+  | SetFilterModelUiCommand
+  | SetRowGroupColumnsUiCommand
+  | SetGroupDefaultExpandedUiCommand
+  | ToggleRowGroupUiCommand;

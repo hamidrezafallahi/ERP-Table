@@ -9,8 +9,16 @@ import React, {
   type ReactNode,
 } from 'react';
 
+import type { DateAdapter } from '../../application/ports/DateAdapter';
 import type { RemoteApi } from '../../application/ports/RemoteApi';
+import type { ColumnMenuItemsConfig } from '../../engine/dataOps/columnMenu';
+import {
+  gregorianAdapter,
+  jalaliAdapter,
+} from '../../infrastructure/date';
 import type { CellComponentMap } from '../cellRenderer/cellRegistry';
+import type { ColumnMenuActionEvent } from '../desktop/ColumnMenuPopover';
+import type { FilterComponentMap } from '../filters';
 import {
   GridTheme,
   rememberThemeVars,
@@ -18,8 +26,11 @@ import {
   themeToStyle,
 } from '../theme';
 import {
+  formatMessage,
+  resolveDirection,
   type ERPTableLocale,
   type ERPTableMessages,
+  type NumberingSystem,
   translate,
 } from './messages';
 
@@ -28,6 +39,13 @@ export type ERPTableToastKind = 'success' | 'error';
 export type ERPTableHostValue = {
   locale: ERPTableLocale;
   direction: 'rtl' | 'ltr';
+  /** Intl digit system (PR-127). Default from locale meta. */
+  numberingSystem?: NumberingSystem;
+  /**
+   * Calendar port (PR-128 / D21). Default: `jalaliAdapter` for `fa`,
+   * otherwise `gregorianAdapter`.
+   */
+  dateAdapter?: DateAdapter;
   remoteApi?: RemoteApi;
   messages?: Partial<ERPTableMessages>;
   onToast?: (kind: ERPTableToastKind, message: string, detail?: unknown) => void;
@@ -36,11 +54,22 @@ export type ERPTableHostValue = {
   themeLocked?: boolean;
   onToggleTheme?: () => void;
   components?: CellComponentMap;
+  /** Custom column filter UIs (PR-95). Keys match `ColumnDef.filter`. */
+  filterComponents?: FilterComponentMap;
+  /** Column header menu items (PR-114). */
+  columnMenuItems?: ColumnMenuItemsConfig;
+  /** Custom column menu action handler (PR-114). */
+  onColumnMenuAction?: (event: ColumnMenuActionEvent) => void;
 };
+
+function defaultDateAdapter(locale: ERPTableLocale): DateAdapter {
+  return locale === 'fa' ? jalaliAdapter : gregorianAdapter;
+}
 
 const ERPTableHostContext = createContext<ERPTableHostValue>({
   locale: 'fa',
   direction: 'rtl',
+  dateAdapter: jalaliAdapter,
   theme: themeErp,
   themeToggle: true,
   themeLocked: false,
@@ -50,6 +79,8 @@ export function ERPTableHostProvider({
   children,
   locale = 'fa',
   direction,
+  numberingSystem,
+  dateAdapter,
   remoteApi,
   messages,
   onToast,
@@ -58,11 +89,16 @@ export function ERPTableHostProvider({
   themeLocked = false,
   onToggleTheme,
   components,
+  filterComponents,
+  columnMenuItems,
+  onColumnMenuAction,
 }: ERPTableHostValue & { children: ReactNode }) {
   const value = useMemo<ERPTableHostValue>(
     () => ({
       locale,
-      direction: direction ?? (locale === 'fa' ? 'rtl' : 'ltr'),
+      direction: resolveDirection(locale, direction),
+      numberingSystem,
+      dateAdapter: dateAdapter ?? defaultDateAdapter(locale),
       remoteApi,
       messages,
       onToast,
@@ -71,8 +107,27 @@ export function ERPTableHostProvider({
       themeLocked,
       onToggleTheme,
       components,
+      filterComponents,
+      columnMenuItems,
+      onColumnMenuAction,
     }),
-    [locale, direction, remoteApi, messages, onToast, theme, themeToggle, themeLocked, onToggleTheme, components],
+    [
+      locale,
+      direction,
+      numberingSystem,
+      dateAdapter,
+      remoteApi,
+      messages,
+      onToast,
+      theme,
+      themeToggle,
+      themeLocked,
+      onToggleTheme,
+      components,
+      filterComponents,
+      columnMenuItems,
+      onColumnMenuAction,
+    ],
   );
 
   useEffect(() => {
@@ -102,11 +157,22 @@ export function useThemePortalStyle(extra?: CSSProperties): CSSProperties {
 
 export function useTranslations() {
   const { locale, messages } = useERPTableHost();
-  return (key: string) => translate(key, locale, messages);
+  return (key: string, vars?: Record<string, string | number>) => {
+    const raw = translate(key, locale, messages);
+    return vars ? formatMessage(raw, vars) : raw;
+  };
 }
 
 export function useLocale(): ERPTableLocale {
   return useERPTableHost().locale;
+}
+
+export function useNumberingSystem(): NumberingSystem | undefined {
+  return useERPTableHost().numberingSystem;
+}
+
+export function useDateAdapter(): DateAdapter {
+  return useERPTableHost().dateAdapter ?? jalaliAdapter;
 }
 
 export function useDirection(): 'rtl' | 'ltr' {

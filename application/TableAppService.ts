@@ -11,6 +11,7 @@ import {
   ChangeCellValueHandler,
   SaveDescriptionHandler,
 } from './handlers/cellCommandsHandler';
+import { PasteCellsCommandHandler } from './handlers/pasteCellsCommandsHandler';
 import {
   AddNewRowCommandHandler,
   AddNewRowsCommandHandler,
@@ -56,6 +57,7 @@ export class TableAppService {
     private readonly deleteTable: DeleteTableCommandHandler,
     private readonly resetTable: ResetTableCommandHandler,
     private readonly applyDynamicProjection: ApplyDynamicProjectionHandler,
+    private readonly pasteCells: PasteCellsCommandHandler,
     private readonly restoreAddedRow?: RestoreAddedRowCommandHandler,
     private readonly pasteRow?: PasteRowCommandHandler,
     private readonly reorderColumn?: ReorderColumnCommandHandler,
@@ -130,6 +132,8 @@ export class TableAppService {
           throw new Error('PASTE_ROW handler is not configured');
         }
         return this.pasteRow.execute(command, actor);
+      case 'PASTE_CELLS':
+        return this.pasteCells.execute(command, actor);
       case 'ROW_DELETED':
         return this.deleteRow.execute(command, actor);
       case 'RESTORE_ADDED_ROW':
@@ -155,7 +159,7 @@ export class TableAppService {
       case 'SET_ACTIVE_COLLECTION':
         return this.setActiveCollection.execute(command, actor);
       default:
-        throw new Error(`Unhandled command: ${(command as any).type}`);
+        throw new Error(`Unhandled command: ${JSON.stringify(command)}`);
     }
   }
 
@@ -273,7 +277,7 @@ export class TableAppService {
     const events = this.normalizeResult(result);
     if (events.length === 0) return;
 
-    const tableId = (command as any).tableKey ?? '';
+    const tableId = command.tableKey ?? '';
     const streamId = `table:${tableId}`;
 
     const gridEvents: GridEvent[] = events.map((evt) => ({
@@ -306,7 +310,7 @@ export class TableAppService {
   private normalizeResult(result: unknown): TableEvent[] {
     if (!result) return [];
     if (Array.isArray(result)) return result;
-    if (typeof result === 'object' && 'type' in (result as any)) {
+    if (typeof result === 'object' && result !== null && 'type' in result) {
       return [result as TableEvent];
     }
     return [];

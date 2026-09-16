@@ -1,4 +1,9 @@
-import { useLocale, useTranslations } from '../host';
+import {
+  formatLocaleNumber,
+  useLocale,
+  useNumberingSystem,
+  useTranslations,
+} from '../host';
 import {
   CustomDropdownButton,
   CustomCheckbox,
@@ -7,6 +12,7 @@ import {
   Expand,
   RedTrashBin,
   Undo,
+  type DropdownItem,
 } from '../primitives';
 
 import { ColumnSchema } from '../../bootstrap/type';
@@ -31,6 +37,7 @@ export const IndexCol: React.FC<IndexColProps> = ({
 }) => {
   const t = useTranslations();
   const locale = useLocale();
+  const numberingSystem = useNumberingSystem();
 
   const handleDeleteRow = () => {
     controller.dispatch({ type: "ROW_DELETED", rowId: row.id });
@@ -44,7 +51,9 @@ export const IndexCol: React.FC<IndexColProps> = ({
     void controller.dispatch({ type: "ADD_EMPTY_ROW" });
   };
 
-  const items = [
+  const extraItems = (meta.indexOptions?.(tableKey, row.id, row, controller) ??
+    []) as DropdownItem[];
+  const items: DropdownItem[] = [
     {
       key: "1",
       label: (
@@ -66,7 +75,7 @@ export const IndexCol: React.FC<IndexColProps> = ({
     {
       type: "divider",
     },
-    ...(meta.indexOptions?.(tableKey, row.id, row, controller) || []),
+    ...extraItems,
   ];
 
   const handleExpandRow = () => {
@@ -98,7 +107,7 @@ export const IndexCol: React.FC<IndexColProps> = ({
           />
         )}
         <div className="w-[20px] text-xs text-center">
-          {(idx + 1).toLocaleString(locale === 'fa' ? 'fa-IR' : 'en-US')}
+          {formatLocaleNumber(idx + 1, { locale, numberingSystem })}
         </div>
 
         {meta.enableMoveButton && !isDeleted && (
@@ -149,7 +158,7 @@ export const IndexCol: React.FC<IndexColProps> = ({
         <CustomDropdownButton
           placement="bottom"
           className="flex m-0 p-0 rounded"
-          items={items as any}
+          items={items}
         >
           <a className="cursor-pointer" onClick={(e) => e.preventDefault()}>
             <Dots config={{ width: 18, height: 18 }} />

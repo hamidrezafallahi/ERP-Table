@@ -6,6 +6,11 @@ import {
   RowStateEnum,
   TableActions,
 } from '../domain/value-objects';
+import type { SortModel } from './dataOps/sortModel';
+import type { FilterModel } from './dataOps/filterModel';
+import type { RowModelType } from './dataOps/rowModel';
+import type { CellEditSession } from './dataOps/cellEditSession';
+import type { CellRange, CellRangeSelection } from './selection/cellRange';
 import { UIRow } from '../ui/type';
 
 export const MOBILE_PAGE_SIZE = 50;
@@ -52,6 +57,24 @@ export type TableViewState = {
   mobileEditor: MobileEditorState;
   /** Session-only column widths (px). Not EventStore. */
   columnWidths: Record<string, number>;
+  /** Session-only sort (PR-90). Empty ⇒ document `index` order. Not EventStore. */
+  sortModel: SortModel;
+  /**
+   * Session-only quick filter (PR-93). Hides non-matching rows (unlike
+   * `gridSearch` find-and-navigate). Not EventStore.
+   */
+  quickFilterText: string;
+  /** Session-only column filters (PR-94). Not EventStore. */
+  filterModel: FilterModel;
+  /** Cell-range selection (PR-105). Session-only. */
+  cellRanges: readonly CellRange[];
+  /** Collapsed column group ids (PR-113). */
+  collapsedColumnGroups: Record<string, true>;
+  /** Active row-group columns (PR-120). */
+  rowGroupColumns: string[];
+  groupDefaultExpanded: boolean;
+  /** Session-only cell edit draft (PR-126). */
+  cellEdit: CellEditSession | null;
 };
 
 export type MobileTableViewState = {
@@ -91,6 +114,37 @@ export type TableState = {
   gridSearch: GridSearchState;
   mobileEditor: MobileEditorState;
   columnWidths: Record<string, number>;
+  /** Session-only sort model (PR-90). Not EventStore. */
+  sortModel: SortModel;
+  /** Session-only quick filter text (PR-93). Not EventStore. */
+  quickFilterText: string;
+  /** Session-only column filter model (PR-94). Not EventStore. */
+  filterModel: FilterModel;
+  /**
+   * Row model mode (PR-96). Default `clientSide`.
+   * When `infinite` / `serverSide`, local sort/filter are skipped.
+   */
+  rowModelType: RowModelType;
+  /**
+   * Total rows from the last `GridDatasource.getRows().lastRow` (PR-96).
+   * `null` = unknown / use loaded row count.
+   */
+  serverRowCount: number | null;
+  /** Cell-range selection state (PR-105). Session-only. */
+  cellRangeSelection: CellRangeSelection;
+  /** Collapsed column group ids (PR-113). Session-only. */
+  collapsedColumnGroups: Record<string, true>;
+  /**
+   * Row group column ids (PR-120). Only the first is active in 0.12.0.
+   * Session-only — not EventStore (RFC-002).
+   */
+  rowGroupColumns: string[];
+  /** Default expand state for row groups (PR-120). */
+  groupDefaultExpanded: boolean;
+  /** Per-group expand overrides keyed by normalizeGroupKey (PR-120). */
+  rowGroupExpanded: Record<string, boolean>;
+  /** Session-only cell edit draft (PR-126). Not EventStore. */
+  cellEdit: CellEditSession | null;
 };
 
 
@@ -133,7 +187,7 @@ export type ValidationCallback = (result: ValidationCallbackResult) => void;
 export type ValidationCallbackResult = {
   valid: boolean,
   errors?: Map<string, CellError>,
-  data?: any
+  data?: unknown
 }
 export interface CellError {
   rowId: number;

@@ -9,6 +9,9 @@ export class SelectionManager {
   constructor(
     private readonly readStore: () => TableStore<TableState> | undefined,
     private readonly err: EngineErrorHandler,
+    private readonly getGroupChildren?: (
+      rowId: number,
+    ) => readonly number[] | undefined,
   ) {}
 
   private getStore(tableKey: string) {
@@ -22,14 +25,28 @@ export class SelectionManager {
   setSelectRow(cmd: { tableKey: string; rowId: number }): void {
     const store = this.getStore(cmd.tableKey);
     if (!store) return;
+    const children = this.getGroupChildren?.(cmd.rowId);
 
     store.setState(prev => {
-      const isSelected = !!prev.selectedRows[cmd.rowId];
+      const targets = children?.length
+        ? [cmd.rowId, ...children]
+        : [cmd.rowId];
+      const allOn = targets.every((id) => prev.selectedRows[id]);
 
+      if (allOn) {
+        return {
+          ...prev,
+          selectedRows: {},
+          rangeAnchorRowId: undefined,
+        };
+      }
+
+      const nextSelected: Record<number, true> = {};
+      for (const id of targets) nextSelected[id] = true;
       return {
         ...prev,
-        selectedRows: isSelected ? {} : { [cmd.rowId]: true },
-         rangeAnchorRowId: isSelected ? undefined : cmd.rowId,
+        selectedRows: nextSelected,
+        rangeAnchorRowId: cmd.rowId,
       };
     });
   }
@@ -37,16 +54,19 @@ export class SelectionManager {
   toggleRowSelection(cmd: { tableKey: string; rowId: number }): void {
     const store = this.getStore(cmd.tableKey);
     if (!store) return;
+    const children = this.getGroupChildren?.(cmd.rowId);
 
     store.setState(prev => {
-      const isSelected = !!prev.selectedRows[cmd.rowId];
-
+      const targets = children?.length
+        ? [cmd.rowId, ...children]
+        : [cmd.rowId];
+      const allOn = targets.every((id) => prev.selectedRows[id]);
       const nextSelected = { ...prev.selectedRows };
 
-      if (isSelected) {
-        delete nextSelected[cmd.rowId];
+      if (allOn) {
+        for (const id of targets) delete nextSelected[id];
       } else {
-        nextSelected[cmd.rowId] = true;
+        for (const id of targets) nextSelected[id] = true;
       }
 
       return { ...prev, selectedRows: nextSelected };

@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 
-import { useDirection, useHostToast, useTranslations } from '../host';
+import {
+  formatLocaleNumber,
+  useDirection,
+  useHostToast,
+  useLocale,
+  useNumberingSystem,
+  useTranslations,
+} from '../host';
 import {
   ClipboardCheck,
   ClipboardIcon,
@@ -40,6 +47,8 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
 }) => {
   const t = useTranslations();
   const direction = useDirection();
+  const locale = useLocale();
+  const numberingSystem = useNumberingSystem();
   const { success, error } = useHostToast();
   const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -196,7 +205,8 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
       <ThemeToggleButton />
 
       <span className="px-2 text-black-black6 text-xs">
-        {t("general.selected")} {count.toLocaleString(direction === 'rtl' ? 'fa-IR' : 'en-US')}
+        {t("general.selected")}{' '}
+        {formatLocaleNumber(count, { locale, numberingSystem })}
       </span>
     </div>
   );

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { GridTheme, themeErp, themeErpDark } from '../GridTheme';
+import {
+  GridTheme,
+  themeDark,
+  themeDefault,
+  themeErp,
+  themeErpDark,
+} from '../GridTheme';
 
 describe('GridTheme', () => {
   it('withParams returns a new instance and does not mutate the original', () => {
@@ -12,21 +18,28 @@ describe('GridTheme', () => {
     expect(next.params.fontFamily).toBe(themeErp.params.fontFamily);
   });
 
-  it('toCssVars maps params to --erp-* role tokens', () => {
+  it('themeErp / themeErpDark are deprecated aliases of themeDefault / themeDark', () => {
+    expect(themeErp).toBe(themeDefault);
+    expect(themeErpDark).toBe(themeDark);
+  });
+
+  it('toCssVars maps params to --pdg-* role tokens and --erp-* aliases', () => {
     const vars = themeErp.toCssVars();
+    expect(vars['--pdg-bg']).toBe('#fff');
+    expect(vars['--pdg-fg']).toBe('#292929');
+    expect(vars['--pdg-accent']).toBe('#0658b0');
+    expect(vars['--pdg-header-bg']).toBe('#f4f4f4');
+    expect(vars['--pdg-row-stripe']).toBe('#ddecfd');
+    expect(vars['--pdg-row-selected']).toBe('#dbeafe');
+    expect(vars['--pdg-border']).toBe('#ececec');
+    expect(vars['--pdg-danger']).toBe('#dc2626');
+    expect(vars['--pdg-search-match']).toBe('#facc15');
+    expect(vars['--pdg-font']).toBe('IRANSans, Tahoma, sans-serif');
+    expect(vars['--pdg-row-height']).toBe('40px');
+    expect(vars['--pdg-font-size']).toBe('12px');
+    expect(vars['--pdg-radius']).toBe('0.25rem');
     expect(vars['--erp-bg']).toBe('#fff');
-    expect(vars['--erp-fg']).toBe('#292929');
     expect(vars['--erp-accent']).toBe('#0658b0');
-    expect(vars['--erp-header-bg']).toBe('#f4f4f4');
-    expect(vars['--erp-row-stripe']).toBe('#ddecfd');
-    expect(vars['--erp-row-selected']).toBe('#dbeafe');
-    expect(vars['--erp-border']).toBe('#ececec');
-    expect(vars['--erp-danger']).toBe('#dc2626');
-    expect(vars['--erp-search-match']).toBe('#facc15');
-    expect(vars['--erp-font']).toBe('IRANSans, Tahoma, sans-serif');
-    expect(vars['--erp-row-height']).toBe('40px');
-    expect(vars['--erp-font-size']).toBe('12px');
-    expect(vars['--erp-radius']).toBe('0.25rem');
   });
 
   it('can be constructed independently of themeErp', () => {
@@ -34,12 +47,14 @@ describe('GridTheme', () => {
       ...themeErp.params,
       accentColor: '#111',
     });
+    expect(custom.toCssVars()['--pdg-accent']).toBe('#111');
     expect(custom.toCssVars()['--erp-accent']).toBe('#111');
   });
 
   it('withParams keeps extraCssVars (dark palette extras)', () => {
     const next = themeErpDark.withParams({ accentColor: '#3b82f6' });
-    expect(next.extraCssVars['--erp-main-black']).toBe('#f4f4f4');
+    expect(next.extraCssVars['--pdg-main-black']).toBe('#f4f4f4');
+    expect(next.toCssVars()['--pdg-accent']).toBe('#3b82f6');
     expect(next.toCssVars()['--erp-accent']).toBe('#3b82f6');
     expect(next.toCssVars()['--erp-overlay']).toBe('rgba(0, 0, 0, 0.55)');
   });
@@ -47,6 +62,7 @@ describe('GridTheme', () => {
   it('themeErpDark maps semantic tokens and leftover palette vars', () => {
     const vars = themeErpDark.toCssVars();
     expect(themeErpDark.params.rowHeight).toBe(40);
+    expect(vars['--pdg-bg']).toBe('#171717');
     expect(vars['--erp-bg']).toBe('#171717');
     expect(vars['--erp-fg']).toBe('#f4f4f4');
     expect(vars['--erp-main-white']).toBe('#171717');

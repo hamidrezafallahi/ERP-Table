@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
@@ -28,10 +28,54 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Read package version
+        id: pkg
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Detect dist-tag
+        id: dist
+        run: |
+          VERSION="${{ steps.pkg.outputs.version }}"
+          if [[ "$VERSION" == *-* ]]; then
+            echo "tag=next" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Assert tag matches package.json
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG="${{ steps.pkg.outputs.version }}"
+          if [[ "$TAG" != "$PKG" ]]; then
+            echo "Tag v$TAG does not match package.json version $PKG"
+            exit 1
+          fi
+
       - name: Prepublish gate
         run: yarn prepublishOnly
 
       - name: Publish with provenance
-        run: npm publish --provenance --access public
+        run: npm publish --provenance --access public --tag ${{ steps.dist.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Build release notes from CHANGELOG
+        id: notes
+        run: |
+          {
+            echo "body<<EOF"
+            node ./scripts/extract-changelog.mjs "${{ steps.pkg.outputs.version }}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: persian-data-grid@${{ steps.pkg.outputs.version }}
+          body: ${{ steps.notes.outputs.body }}
+          prerelease: ${{ steps.dist.outputs.prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

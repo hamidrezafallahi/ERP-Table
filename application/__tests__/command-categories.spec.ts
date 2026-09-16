@@ -22,6 +22,7 @@ const APPLICATION_TYPES = [
   'ADD_NEW_ROWS',
   'DUPLICATE_ROW',
   'PASTE_ROW',
+  'PASTE_CELLS',
   'ROW_DELETED',
   'RESTORE_ADDED_ROW',
   'TABLE_DELETED',
@@ -61,6 +62,10 @@ const ENGINE_TYPES_WITH_CASE = [
   'SET_GRID_SEARCH',
   'SET_MOBILE_EDITOR',
   'RESIZE_COLUMN',
+  'SET_COLUMN_VISIBLE',
+  'TOGGLE_COLUMN_GROUP',
+  'SET_COLUMN_PIN',
+  'SET_SORT_MODEL',
 ] as const;
 
 describe('command categories', () => {
