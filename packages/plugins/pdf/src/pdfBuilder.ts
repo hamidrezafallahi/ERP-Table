@@ -39,6 +39,14 @@ export class PdfBuilder {
     return this.objects.length;
   }
 
+  /** Raw stream (e.g. JPEG with `/Filter /DCTDecode`). `dict` is a full `<< … >>`. */
+  addRawStream(data: Uint8Array, dict: string): number {
+    const header = encoder.encode(`${dict}\nstream\n`);
+    const tail = encoder.encode('\nendstream\n');
+    this.objects.push(concat([header, data, tail]));
+    return this.objects.length;
+  }
+
   build(): Uint8Array {
     const parts: Uint8Array[] = [encoder.encode('%PDF-1.4\n%\x80\x80\x80\x80\n')];
     const offsets = [0];

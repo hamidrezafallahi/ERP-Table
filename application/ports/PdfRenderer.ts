@@ -1,12 +1,20 @@
+/**
+ * Port so PDF libraries stay out of Core.
+ * Host or plugin package injects a concrete renderer.
+ */
 import type { ExportSource } from '../plugins/GridPlugin';
 
 /**
- * Port so PDF libraries (jsPDF, etc.) stay out of Core.
- * Host or plugin package injects a concrete renderer.
+ * Options bag for {@link PdfRenderer}.
+ * `template` is defined by `persian-data-grid/plugins/pdf` (`DocumentPdfTemplate`).
  */
+export type PdfRenderOptions = {
+  title?: string;
+  direction?: 'rtl' | 'ltr';
+  /** Opaque to Core — interpreted by VazirmatnPdfRenderer (PR-141). */
+  template?: unknown;
+};
+
 export interface PdfRenderer {
-  render(
-    source: ExportSource,
-    options?: { title?: string; direction?: 'rtl' | 'ltr' },
-  ): Promise<Blob>;
+  render(source: ExportSource, options?: PdfRenderOptions): Promise<Blob>;
 }

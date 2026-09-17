@@ -15,6 +15,8 @@ import HistoryAuditExample from './examples/historyAudit';
 import OfflineStatusExample from './examples/offlineStatus';
 import SyncConflictsExample from './examples/syncConflicts';
 import PresencePeersExample from './examples/presencePeers';
+import DocumentFinanceExample from './examples/documentFinance';
+import DocumentPdfExample from './examples/documentPdf';
 
 export const EXAMPLES = [
   { id: 'basic', title: '01 · Basic', Component: BasicExample },
@@ -44,6 +46,16 @@ export const EXAMPLES = [
   { id: 'offline-status', title: '13 · Offline status', Component: OfflineStatusExample },
   { id: 'sync-conflicts', title: '14 · Sync conflicts', Component: SyncConflictsExample },
   { id: 'presence-peers', title: '15 · Presence peers', Component: PresencePeersExample },
+  {
+    id: 'document-finance',
+    title: '16 · Document / finance',
+    Component: DocumentFinanceExample,
+  },
+  {
+    id: 'document-pdf',
+    title: '17 · Document PDF',
+    Component: DocumentPdfExample,
+  },
 ] as const;
 
 function App() {

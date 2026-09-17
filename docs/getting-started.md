@@ -85,7 +85,7 @@ await grid.ready;
 
 Default `remoteApi` is `NoopRemoteApi`. For arianERP (`_auth`, `persist:arianERP`, `Defaults`), inject `FetchRemoteApi` from `persian-data-grid/adapters/arian-erp` — [`host-arian-erp.md`](../examples/host-arian-erp/host-arian-erp.md).
 
-Date cells use `react-persian-range-picker`.
+Date cells use the built-in `DateAdapter` editor. For a calendar popup / range UI, import `PersianRangeDateCell` from `persian-data-grid/date-picker-jalali` (no peer dependency). Money helpers live on `persian-data-grid/finance`.
 
 ## ColumnDef, rowData, events, apiRef
 

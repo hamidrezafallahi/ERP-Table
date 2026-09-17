@@ -101,6 +101,12 @@ export const arMessages: ERPTableMessages = {
   'sync.remote': 'خادم',
   'sync.keepLocal': 'الإبقاء على المحلي',
   'sync.keepRemote': 'الإبقاء على الخادم',
+  'date.pickDate': 'اختر تاريخاً',
+  'date.pickRange': 'اختر نطاقاً',
+  'date.clear': 'مسح',
+  'date.calendar': 'تقويم جلالي',
+  'date.prevMonth': 'الشهر السابق',
+  'date.nextMonth': 'الشهر التالي',
 };
 
 export default arMessages;

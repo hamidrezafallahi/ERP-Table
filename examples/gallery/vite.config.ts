@@ -26,8 +26,28 @@ export default defineConfig({
         replacement: resolve(root, 'publish/plugins/pdf.ts'),
       },
       {
+        find: 'persian-data-grid/plugins/pdf/fonts/vazirmatn',
+        replacement: resolve(root, 'publish/plugins/pdf-fonts-vazirmatn.ts'),
+      },
+      {
         find: 'persian-data-grid/date-picker-jalali',
         replacement: resolve(root, 'publish/date-picker-jalali.ts'),
+      },
+      {
+        find: 'persian-data-grid/finance',
+        replacement: resolve(root, 'publish/finance.ts'),
+      },
+      {
+        find: 'persian-data-grid/presence',
+        replacement: resolve(root, 'publish/presence.ts'),
+      },
+      {
+        find: 'persian-data-grid/sync',
+        replacement: resolve(root, 'publish/sync.ts'),
+      },
+      {
+        find: 'persian-data-grid/headless',
+        replacement: resolve(root, 'publish/headless.ts'),
       },
       {
         find: /^persian-data-grid$/,

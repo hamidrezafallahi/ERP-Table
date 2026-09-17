@@ -977,16 +977,16 @@ describe('PR-75 README / public-api honesty', () => {
     expect(load('ui/index.tsx')).toContain('export const ERPTable');
     expect(load('ui/desktop/pagination.tsx').length).toBeGreaterThan(0);
     expect(load('ui/desktop/indexCol.tsx').length).toBeGreaterThan(0);
-    expect(load('ui/primitives/DatePicker.tsx')).toContain(
-      'react-persian-range-picker',
+    expect(load('ui/primitives/DatePicker.tsx')).toContain('useDateAdapter');
+    expect(load('ui/date/PersianRangeDatePicker.tsx')).not.toContain(
+      "from 'react-persian-range-picker'",
     );
 
     // RTL-native
     expect(byLabel['RTL-native']).toBeTruthy();
     expect(load('ui/host/ERPTableHost.tsx')).toMatch(/direction|rtl/i);
-    expect(load('ui/primitives/DatePicker.tsx')).toContain(
-      'react-persian-range-picker',
-    );
+    expect(load('ui/primitives/DatePicker.tsx')).toContain('DateAdapter');
+    expect(load('package.json')).not.toContain('react-persian-range-picker');
 
     // Cell keyboard navigation (honest — Excel clipboard round-trip)
     expect(byLabel['Cell keyboard navigation']).toBeTruthy();

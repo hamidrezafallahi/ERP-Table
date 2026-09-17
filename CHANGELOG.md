@@ -7,9 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **D22 locked (deferred):** monorepo / `@persian-data-grid/core` postponed until after `1.0.0`; release-gate waives `monorepo-core` and treats §۴ 60 KB as stretch (hard ceiling remains 65 KB per D15)
+
 ### Added
 
-- (none yet — next stable after `0.13.0-next.0`)
+- Document PDF template on `VazirmatnPdfRenderer` / `PdfExportPlugin({ template })`: header, footer, JPEG logo, page numbers, repeating table header, signature, stamp, per-page totals (PR-141)
+- Gallery example `17 · Document PDF` (PR-141)
+- Internal Jalali single/range calendar on `persian-data-grid/date-picker-jalali` (`PersianRangeDateCell` / `JalaliCalendar`); removes `react-persian-range-picker` peer (PR-140)
+- `persian-data-grid/finance`: Rial↔Toman, `formatPrice`, `numberToPersianWords`, Iranian FY periods, official holidays, `nextBusinessDay` (PR-140)
+- `ColumnDef.currencyUnit` (`rial` | `toman`) for default price display (canonical storage remains integer rials) (PR-140)
+- Gallery example `16 · Document / finance` (PR-140)
+
+### Removed
+
+- Optional peer dependency `react-persian-range-picker` (PR-140)
 
 ## [0.13.0-next.0] — 2026-09-16
 

@@ -20,7 +20,9 @@
       "persian-data-grid/plugins/excel": ["../../publish/plugins/excel.ts"],
       "persian-data-grid/plugins/csv": ["../../publish/plugins/csv.ts"],
       "persian-data-grid/plugins/pdf": ["../../publish/plugins/pdf.ts"],
-      "persian-data-grid/date-picker-jalali": ["../../publish/date-picker-jalali.ts"]
+      "persian-data-grid/plugins/pdf/fonts/vazirmatn": ["../../publish/plugins/pdf-fonts-vazirmatn.ts"],
+      "persian-data-grid/date-picker-jalali": ["../../publish/date-picker-jalali.ts"],
+      "persian-data-grid/finance": ["../../publish/finance.ts"]
     },
     "baseUrl": "."
   },

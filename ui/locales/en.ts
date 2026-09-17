@@ -101,6 +101,12 @@ export const enMessages: ERPTableMessages = {
   'sync.remote': 'Remote',
   'sync.keepLocal': 'Keep local',
   'sync.keepRemote': 'Keep remote',
+  'date.pickDate': 'Pick a date',
+  'date.pickRange': 'Pick a range',
+  'date.clear': 'Clear',
+  'date.calendar': 'Jalali calendar',
+  'date.prevMonth': 'Previous month',
+  'date.nextMonth': 'Next month',
 };
 
 export default enMessages;

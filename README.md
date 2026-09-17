@@ -33,7 +33,7 @@ A **Data Grid** for enterprise forms: voucher lines, money columns, Jalali date 
 ## Features
 
 - **Grid** — published React chrome (pagination, row index/actions, Jalali date cells)
-- **RTL-native** layout and Shamsi / Jalali date cells (`react-persian-range-picker`)
+- **RTL-native** layout and Shamsi / Jalali date cells (internal calendar; optional enhanced UI via `persian-data-grid/date-picker-jalali`)
 - **Cell keyboard navigation** — arrows, Tab, Enter, Home/End; **Ctrl+C/X/V** Excel clipboard round-trip; fill handle on range corner (numeric + Jalali series, one undo). See [`docs/keyboard.md`](docs/keyboard.md).
 - **VirtualList** — row window on by default (`session` present); pass `virtualization={false}` for pagination
 - **Event-sourced session** with IndexedDB and cell undo

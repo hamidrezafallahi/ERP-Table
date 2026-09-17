@@ -73,6 +73,12 @@ export interface ColumnDef<TRow = unknown, TValue = unknown> {
    */
   aggFunc?: AggFunc<TValue>;
   /**
+   * Display unit for `type: 'price'` (PR-140).
+   * Stored values remain integer **rials**; `toman` only affects default formatting
+   * (÷10). Prefer `valueFormatter` / `valueGetter` for edit UX in تومان.
+   */
+  currencyUnit?: 'rial' | 'toman';
+  /**
    * Source `ColumnSchema` when this def was produced by `toColumnDef`.
    * `toColumnSchema` copies ERP-only fields (visibility, resolveOn, …) from it.
    */
@@ -99,4 +105,5 @@ export interface ColumnDefBridge {
   sortable?: boolean;
   filter?: FilterDef | false;
   aggFunc?: AggFunc;
+  currencyUnit?: 'rial' | 'toman';
 }

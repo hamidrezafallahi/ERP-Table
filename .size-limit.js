@@ -19,6 +19,8 @@ const ALL_BUDGETS = [
     limit: '100 KB',
   },
   { name: './adapters/arian-erp', path: 'dist/adapters/arian-erp.js', limit: '20 KB' },
+  { name: './date-picker-jalali', path: 'dist/date-picker-jalali.js', limit: '25 KB' },
+  { name: './finance', path: 'dist/finance.js', limit: '15 KB' },
   { name: './styles.css', path: 'dist/styles.css', limit: '30 KB' },
 ];
 

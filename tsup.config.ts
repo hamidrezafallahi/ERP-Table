@@ -21,6 +21,7 @@ export default defineConfig({
     'locales/en': 'publish/locales/en.ts',
     'locales/ar': 'publish/locales/ar.ts',
     'date-picker-jalali': 'publish/date-picker-jalali.ts',
+    finance: 'publish/finance.ts',
   },
   format: ['esm', 'cjs'],
   dts: true,
@@ -38,7 +39,6 @@ export default defineConfig({
     'react',
     'react-dom',
     'react/jsx-runtime',
-    'react-persian-range-picker',
     'fflate',
   ],
   esbuildOptions(options) {

@@ -1,6 +1,6 @@
 # Example gallery (PR-130)
 
-Fifteen copy-pasteable demos for `persian-data-grid`. English source (D23).
+Seventeen copy-pasteable demos for `persian-data-grid`. English source (D23).
 
 ## Run locally
 
@@ -32,6 +32,8 @@ Open the gallery (GitHub import). Append `?example=<id>` to jump to one demo:
 | 13 | Offline status | [Open](https://stackblitz.com/github/hamidrezafallahi/ERP-Table/tree/master/examples/gallery?file=src%2Fexamples%2FofflineStatus.tsx) |
 | 14 | Sync conflicts | [Open](https://stackblitz.com/github/hamidrezafallahi/ERP-Table/tree/master/examples/gallery?file=src%2Fexamples%2FsyncConflicts.tsx) |
 | 15 | Presence peers | [Open](https://stackblitz.com/github/hamidrezafallahi/ERP-Table/tree/master/examples/gallery?file=src%2Fexamples%2FpresencePeers.tsx) |
+| 16 | Document / finance | [Open](https://stackblitz.com/github/hamidrezafallahi/ERP-Table/tree/master/examples/gallery?file=src%2Fexamples%2FdocumentFinance.tsx) |
+| 17 | Document PDF | [Open](https://stackblitz.com/github/hamidrezafallahi/ERP-Table/tree/master/examples/gallery?file=src%2Fexamples%2FdocumentPdf.tsx) |
 
 CodeSandbox: use **Import from GitHub** → `hamidrezafallahi/ERP-Table` → folder `examples/gallery`.
 

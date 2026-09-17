@@ -1,6 +1,7 @@
 import type { ColumnDef, ColumnDefBridge } from '../../domain/types/ColumnDef';
 import type { ColDefOrGroup } from '../../domain/types/ColumnGroupDef';
 import type { ColumnSchema } from '../../domain/types/ColumnSchema';
+import { formatPrice } from '../finance/currency';
 import { flattenColDefOrGroup } from './flattenColumnDefs';
 
 const DEFAULT_FIELD_TYPE: ColumnSchema['fieldType'] = 'text';
@@ -48,6 +49,23 @@ function pickBridge<TRow, TValue>(def: ColumnDef<TRow, TValue>): ColumnDefBridge
   if (def.filter !== undefined) bridge.filter = def.filter;
   if (def.aggFunc !== undefined) {
     bridge.aggFunc = def.aggFunc as ColumnDefBridge['aggFunc'];
+  }
+  if (def.currencyUnit !== undefined) {
+    bridge.currencyUnit = def.currencyUnit;
+  }
+  if (def.currencyUnit && !def.valueFormatter) {
+    const displayUnit = def.currencyUnit;
+    bridge.valueFormatter = ({ value }) => {
+      if (value == null || value === '') return '';
+      const n = Number(value);
+      if (!Number.isFinite(n)) return String(value);
+      return formatPrice(n, {
+        unit: 'rial',
+        displayUnit,
+        withLabel: true,
+        persianDigits: true,
+      });
+    };
   }
   return Object.keys(bridge).length > 0 ? bridge : undefined;
 }
@@ -146,6 +164,9 @@ export function toColumnDef<TRow = unknown, TValue = unknown>(
   if (bridge?.filter !== undefined) def.filter = bridge.filter;
   if (bridge?.aggFunc !== undefined) {
     def.aggFunc = bridge.aggFunc as ColumnDef<TRow, TValue>['aggFunc'];
+  }
+  if (bridge?.currencyUnit !== undefined) {
+    def.currencyUnit = bridge.currencyUnit;
   }
   if (schema.columnGroup) def.columnGroup = schema.columnGroup;
 

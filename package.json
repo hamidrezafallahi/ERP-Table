@@ -107,6 +107,11 @@
       "import": "./dist/date-picker-jalali.js",
       "require": "./dist/date-picker-jalali.cjs"
     },
+    "./finance": {
+      "types": "./dist/finance.d.ts",
+      "import": "./dist/finance.js",
+      "require": "./dist/finance.cjs"
+    },
     "./styles.css": "./dist/styles.css"
   },
   "typesVersions": {
@@ -143,6 +148,9 @@
       ],
       "date-picker-jalali": [
         "dist/date-picker-jalali.d.ts"
+      ],
+      "finance": [
+        "dist/finance.d.ts"
       ]
     }
   },
@@ -185,7 +193,7 @@
     "release:notes": "node ./scripts/extract-changelog.mjs",
     "release:next:dry": "node ./scripts/release-next-dry.mjs",
     "release:gate": "node ./scripts/release-gate.mjs",
-    "test": "vitest run domain/__tests__ application/__tests__ infrastructure/__tests__ infrastructure/date/__tests__ bootstrap/__tests__ engine/__tests__ ui/virtual/__tests__ ui/desktop/__tests__ ui/a11y/__tests__ ui/cellRenderer/__tests__ ui/filters/__tests__ ui/keyboard/__tests__ ui/gridSearch/__tests__ ui/history/__tests__ ui/offline/__tests__ ui/sync/__tests__ ui/presence/__tests__ ui/overlays/__tests__ ui/styles/__tests__ ui/theme/__tests__ ui/locales/__tests__ docs/__tests__ packages/plugins/excel/__tests__ packages/plugins/pdf/__tests__ packages/plugins/csv/__tests__",
+    "test": "vitest run domain/__tests__ application/__tests__ infrastructure/__tests__ infrastructure/date/__tests__ infrastructure/finance/__tests__ bootstrap/__tests__ engine/__tests__ ui/virtual/__tests__ ui/desktop/__tests__ ui/a11y/__tests__ ui/cellRenderer/__tests__ ui/filters/__tests__ ui/keyboard/__tests__ ui/gridSearch/__tests__ ui/history/__tests__ ui/offline/__tests__ ui/sync/__tests__ ui/presence/__tests__ ui/date/__tests__ ui/overlays/__tests__ ui/styles/__tests__ ui/theme/__tests__ ui/locales/__tests__ docs/__tests__ packages/plugins/excel/__tests__ packages/plugins/pdf/__tests__ packages/plugins/csv/__tests__",
     "typecheck:publish": "tsc -p tsconfig.publish.json --noEmit",
     "typecheck:host-ui": "tsc -p tsconfig.json --noEmit",
     "lint:publish": "eslint --max-warnings=0",
@@ -198,8 +206,7 @@
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
-    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0",
-    "react-persian-range-picker": "^1.1.1"
+    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -207,9 +214,6 @@
     },
     "react-dom": {
       "optional": false
-    },
-    "react-persian-range-picker": {
-      "optional": true
     }
   },
   "devDependencies": {
@@ -227,7 +231,6 @@
     "jsdom": "^30.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.2.8",
-    "react-persian-range-picker": "^1.1.1",
     "size-limit": "^13.0.3",
     "tsup": "^8.5.0",
     "typedoc": "^0.28.20",

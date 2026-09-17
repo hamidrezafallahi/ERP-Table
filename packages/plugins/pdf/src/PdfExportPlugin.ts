@@ -7,12 +7,15 @@ import type {
   GridPluginContext,
 } from '../../../../application/plugins/GridPlugin';
 import type { PdfRenderer } from '../../../../application/ports/PdfRenderer';
+import type { DocumentPdfTemplate } from './documentTemplate';
 import { TextPdfRenderer } from './TextPdfRenderer';
 import { downloadBlob } from '../../excel/src/buildXlsxBlob';
 
 export type PdfExportPluginOptions = {
   renderer?: PdfRenderer;
   download?: boolean;
+  /** Document chrome for VazirmatnPdfRenderer (PR-141). */
+  template?: DocumentPdfTemplate;
   onBlob?: (blob: Blob, meta: { fileName: string; rowCount: number }) => void;
 };
 
@@ -54,7 +57,9 @@ export class PdfExportPlugin implements GridPlugin {
     if (payload.format !== 'pdf') return;
 
     try {
-      const source = ctx.query.getExportSource(payload.collectionScope ?? 'active');
+      const source = ctx.query.getExportSource(
+        payload.collectionScope ?? 'active',
+      );
       if (!source) {
         throw new Error('NO_EXPORT_SOURCE');
       }
@@ -62,6 +67,7 @@ export class PdfExportPlugin implements GridPlugin {
       const blob = await this.renderer.render(source, {
         title: payload.fileName ?? 'Export',
         direction: payload.direction,
+        template: this.options.template,
       });
 
       const fileName =

@@ -140,7 +140,8 @@ npm test
 | `locale` / `direction` / `numberingSystem` | prop | `fa` \| `en` \| `ar` (PR-127). `dir` defaults from locale; override with `direction`. Digits via Intl `numberingSystem`. |
 | `persian-data-grid/locales/{fa,en,ar}` | subpath | Message packs + `formatLocaleNumber` / `formatLocaleDate` (PR-127). |
 | `dateAdapter` / `jalaliAdapter` / `gregorianAdapter` | prop / export | Pluggable calendar (PR-128 / D21). Default jalali for `fa`. |
-| `persian-data-grid/date-picker-jalali` | subpath | Optional UI on `react-persian-range-picker` peer (PR-128). |
+| `persian-data-grid/date-picker-jalali` | subpath | Internal Jalali single/range calendar UI (PR-140). No peer dependency. |
+| `persian-data-grid/finance` | subpath | Rial/Toman, Persian number-words, FY periods, Iran holidays (PR-140). |
 | `GridApi.setRowGroupColumns` / `getRowGroupColumns` / `toggleRowGroup` / `setGroupDefaultExpanded` | method | Imperative grouping + expand/collapse (PR-120). |
 | `SET_ROW_GROUP_COLUMNS` / `TOGGLE_ROW_GROUP` | command | Engine session commands for grouping (PR-120). |
 | `ERPTableGroupRow` / group chevron | UI | Group row with `aria-expanded` / `aria-level`, leaf indent; ArrowLeft/Right toggle; selecting a group selects children (PR-121). |
@@ -156,7 +157,8 @@ npm test
 | `SnapshotStrategy` / `InMemorySnapshotStore` | class | Opt-in aggregate snapshots via `snapshotStore` |
 | `EVENT_CATALOG` | const | Plugin-friendly event tokens |
 | `ExcelExportPlugin` / `PdfExportPlugin` | class | Prefer `persian-data-grid/plugins/*`. Root re-exports are deprecated (PR-76). PDF default is legacy `TextPdfRenderer`; Persian = `createVazirmatnPdfExportPlugin` from fonts/vazirmatn. |
-| `VazirmatnPdfRenderer` | class | Persian table PDF (Vazirmatn OFL, RTL). Requires font bytes from `./plugins/pdf/fonts/vazirmatn`. |
+| `VazirmatnPdfRenderer` | class | Persian table PDF (Vazirmatn OFL, RTL). Requires font bytes from `./plugins/pdf/fonts/vazirmatn`. Optional `DocumentPdfTemplate` (PR-141): header/footer/logo/page#/signature/stamp/page totals. |
+| `DocumentPdfTemplate` | type | Document chrome for `VazirmatnPdfRenderer` / `PdfExportPlugin({ template })` (PR-141). |
 | `TextPdfRenderer` | class | Legacy Helvetica PDF (8×40). Opt-in via `PdfExportPlugin({ renderer })`. |
 | `PluginHost` | class | Register plugins + `requestExport` |
 | `NoopRemoteApi` | class | Default remote (no fetch). arianERP injects `FetchRemoteApi` from `./adapters/arian-erp`. |

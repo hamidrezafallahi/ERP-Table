@@ -12,30 +12,37 @@ export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/ERP-Table/' : '/',
   plugins: [react()],
   resolve: {
-    alias: {
-      'persian-data-grid/plugins/excel': path.resolve(
-        repoRoot,
-        'publish/plugins/excel.ts',
-      ),
-      'persian-data-grid/plugins/pdf': path.resolve(
-        repoRoot,
-        'publish/plugins/pdf.ts',
-      ),
-      'persian-data-grid/plugins/pdf/fonts/vazirmatn': path.resolve(
-        repoRoot,
-        'publish/plugins/pdf-fonts-vazirmatn.ts',
-      ),
-      'persian-data-grid/adapters/arian-erp': path.resolve(
-        repoRoot,
-        'publish/adapters/arian-erp.ts',
-      ),
-      'persian-data-grid/headless': path.resolve(repoRoot, 'publish/headless.ts'),
-      'persian-data-grid/styles.css': path.resolve(
-        repoRoot,
-        'ui/styles/erp-table.css',
-      ),
-      'persian-data-grid': path.resolve(repoRoot, 'publish/entry.ts'),
-    },
+    alias: [
+      // More-specific subpaths must come before their parents (Vite prefix match).
+      {
+        find: 'persian-data-grid/plugins/pdf/fonts/vazirmatn',
+        replacement: path.resolve(repoRoot, 'publish/plugins/pdf-fonts-vazirmatn.ts'),
+      },
+      {
+        find: 'persian-data-grid/plugins/excel',
+        replacement: path.resolve(repoRoot, 'publish/plugins/excel.ts'),
+      },
+      {
+        find: 'persian-data-grid/plugins/pdf',
+        replacement: path.resolve(repoRoot, 'publish/plugins/pdf.ts'),
+      },
+      {
+        find: 'persian-data-grid/adapters/arian-erp',
+        replacement: path.resolve(repoRoot, 'publish/adapters/arian-erp.ts'),
+      },
+      {
+        find: 'persian-data-grid/headless',
+        replacement: path.resolve(repoRoot, 'publish/headless.ts'),
+      },
+      {
+        find: 'persian-data-grid/styles.css',
+        replacement: path.resolve(repoRoot, 'ui/styles/erp-table.css'),
+      },
+      {
+        find: 'persian-data-grid',
+        replacement: path.resolve(repoRoot, 'publish/entry.ts'),
+      },
+    ],
   },
   publicDir: path.resolve(rootDir, 'public'),
   build: {

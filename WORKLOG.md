@@ -27,9 +27,9 @@
 ## Current Snapshot
 
 - **نسخهٔ منتشرشده روی npm:** `persian-data-grid@0.5.0` (۱۰ سپتامبر ۲۰۲۶) — track محلی `0.13.0-next.0` (PR-134؛ کانال `next` با تگ `v0.13.0-next.0`)
-- **طرح فعال:** `EXECUTION_PLAN.md` v2 — **Phase 25** (خندق رقابتی)
-- **PR بعدی برای ایجنت:** `PR-140` (تاریخ/مالی فارسی) یا `PR-132` ⏸ **D22 هنوز باز — بپرس**
-- **آخرین PR تمام‌شده:** `PR-139` — Presence + `<GridPresencePanel />`
+- **طرح فعال:** `EXECUTION_PLAN.md` v2 — **Phase 16–25 ✅ تمام** (طرح اجرایی فیچر بسته)
+- **PR بعدی برای ایجنت:** هیچ PR تیک‌نخورده‌ای در مسیر v2 نیست. `PR-132` ⏸ تعویق D22. کار بعدی فقط تگ `1.0.0` (اگر gate سبز) یا فاز/RFC جدید.
+- **آخرین PR تمام‌شده:** `PR-141` — قالب PDF سند؛ بعد: قفل **D22 تعویق**
 - **گِیت اجباری:** `PR-72` … `PR-75` ✅
 - **Phase 16:** ✅ PR-72 … PR-80 (نسخهٔ npm هنوز `0.5.0` تا انتشار 0.6.0)
 - **Phase 17:** ✅ PR-81 … PR-88
@@ -39,9 +39,9 @@
 - **Phase 21:** ✅ PR-110 … PR-116
 - **Phase 22:** ✅ PR-117 … PR-122 — **RFC-002 Accepted**
 - **Phase 23:** ✅ PR-123 … PR-128
-- **Phase 24:** ✅ PR-129…131 + PR-133…135 — PR-132 ⏸ D22
-- **Phase 25:** 🔄 PR-136…139 ✅ — بعدی PR-140
-- **بلوکر:** `D22` قبل از PR-132 بپرس. `release-gate` هنوز قرمز است (diff <۹۰، bundle>۶۰KB، monorepo).
+- **Phase 24:** ✅ PR-129…131 + PR-133…135 — PR-132 ⏸ تعویق D22
+- **Phase 25:** ✅ PR-136…141
+- **بلوکر:** ندارد. `D22` قفلِ تعویق. `release-gate` باید سبز باشد (سقف ۶۵KB؛ بدون اجبار monorepo).
 
 
 ### تصمیم‌های قفل‌شدهٔ ۱۴۰۵/۰۶/۲۰ (خلاصه — جزئیات در `EXECUTION_PLAN.md`)
@@ -57,7 +57,7 @@
 | D19 | pin هر ستون (`start`/`end` با آگاهی RTL) — جانشین D10 |
 | D20 | `aggFunc` + grouping تک‌سطحی **باز** با گِیت RFC-002؛ pivot/chart/tree چندسطحی بسته |
 | D21 | `DateAdapter` تعویض‌پذیر؛ جلالی پیش‌فرض، Gregorian ارائه شود |
-| D22 | **باز** — monorepo، قبل از `PR-132` بپرس |
+| D22 | **قفل تعویق** — monorepo تا پس از `1.0.0`؛ تک‌پکیج React می‌ماند |
 | D23 | مستندات انگلیسی منبع، فارسی ترجمه |
 | D24 | `createGrid()` sync + `grid.ready`؛ `createERPTable()` alias منسوخ |
 | D25 | `0.6 … 0.13` با CHANGELOG و MIGRATION؛ `1.0.0` فقط با `release-gate` سبز |
@@ -68,7 +68,7 @@
 | محور | امتیاز | مرجع |
 |------|--------|------|
 | Data Grid عمومی (در برابر ag-grid = ۹۶) | **۷۵٫۵ / ۱۰۰** | `docs/ag-grid-gap-analysis.md` §۲ |
-| تمایز سازمانی/فارسی (در برابر ag-grid = ۱۶) | **۸۸ / ۱۰۰** | همان §۲ |
+| تمایز سازمانی/فارسی (در برابر ag-grid = ۱۶) | **۹۲ / ۱۰۰** | همان §۲ |
 
 هدف `1.0.0`: محور اول ≥ ۷۰، محور دوم ≥ ۹۰.
 
@@ -1614,4 +1614,56 @@ sort، filter، کلیپ‌بورد سیستم، ویرایش تمام‌ردی�
   - `yarn examples:typecheck` → پاس
   - `yarn test` → ۱۳۵ فایل / ۶۹۳ تست — پاس
 - **بعدی:** `PR-140` اکوسیستم تاریخ و مالی فارسی
+
+### PR-140 — اکوسیستم تاریخ و مالی فارسی (۱۷ سپتامبر ۲۰۲۶)
+
+- **هدف:** تقویم/بازهٔ جلالی داخلی بدون peer؛ دورهٔ مالی؛ تعطیلات؛ ریال/تومان؛ حروف‌نویسی فارسی؛ دمو سند
+- **فایل‌ها:** `infrastructure/finance/*`, `infrastructure/date/jalaliCalendarModel.ts`, `ui/date/*`, `publish/finance.ts`, `publish/date-picker-jalali.ts`, gallery `documentFinance.tsx`, locales `date.*`
+- **انجام شد:**
+  - `persian-data-grid/finance`: `formatPrice` / `rialToToman` / `numberToPersianWords` / FY / holidays / `nextBusinessDay`
+  - `persian-data-grid/date-picker-jalali`: `JalaliCalendar` + `PersianRangeDatePicker` / `PersianRangeDateCell` (بدون `react-persian-range-picker`)
+  - `ColumnDef.currencyUnit` با formatter پیش‌فرض تومان/ریال
+  - مثال گالری `16 · Document / finance`
+- **محدودیت آگاهانه / نشد:** تعطیلات قمری متغیر سال‌به‌سال کامل نیستند (فقط ثابت شمسی + `extra`)؛ قالب PDF سند = PR-141؛ D22 باز
+- **اثر روی کارت امتیاز:** جلالی/RTL/PDF ۲۲ → **۲۴**؛ تمایز ۸۸ → **۹۰**؛ عمومی **۷۵٫۵**
+- **Verify:**
+  - `yarn vitest run infrastructure/finance ui/date infrastructure/date docs/__tests__/subpath-exports docs/__tests__/public-api-honesty` → ۱۰۳ پاس
+  - `yarn size` → main **۶۴٫۶۷ KB** gzip؛ `/finance` ۱٫۵۸ KB؛ `/date-picker-jalali` ۳٫۲۵ KB
+  - `yarn examples:typecheck` / `yarn typecheck:publish` → پاس
+  - `yarn verify:dist` → صفر `react-persian-range-picker` در `.`
+- **بعدی:** `PR-141` قالب PDF سند
+
+### PR-141 — قالب PDF سند (۱۷ سپتامبر ۲۰۲۶)
+
+- **هدف:** ارتقای `VazirmatnPdfRenderer` به موتور قالب سند ERP (سربرگ/پابرگ/لوگو/شماره صفحه/تکرار هدر/امضا/مهر/جمع صفحه)
+- **فایل‌ها:** `packages/plugins/pdf/src/documentTemplate.ts`, `VazirmatnPdfRenderer.ts`, `pdfBuilder.ts`, `PdfExportPlugin.ts`, `publish/plugins/pdf.ts`, gallery `documentPdf.tsx`, `__tests__/document-template.spec.ts`
+- **انجام شد:**
+  - `DocumentPdfTemplate` + `PdfExportPlugin({ template })`
+  - لوگو JPEG (`/DCTDecode` XObject)، شمارهٔ صفحه، تکرار هدر جدول، جعبهٔ امضا/مهر، جمع ستونی در هر صفحه
+  - تست snapshot با SHA-256 پایدار روی بایت‌های PDF + مارکرهای ساختاری
+  - مثال گالری `17 · Document PDF`
+- **محدودیت آگاهانه / نشد:** لوگو فقط JPEG (نه PNG)؛ مهر تصویری واقعی نیست (جعبهٔ برچسب‌دار)؛ D22/PR-132 باز
+- **اثر روی کارت امتیاز:** جلالی/RTL/PDF ۲۴ → **۲۶**؛ تمایز ۹۰ → **۹۲**؛ عمومی **۷۵٫۵**
+- **Verify:**
+  - `yarn vitest run packages/plugins/pdf/__tests__` → ۸ پاس
+  - بازرسی چشمی (content stream): لوگو `/Im1 Do`، دو صفحه، خطوط امضا، جمع صفحه، شمارهٔ صفحه — ثبت در تست SHA-256 پایدار
+  - `yarn examples:typecheck` / `yarn typecheck:publish` → پاس
+  - `yarn size` → main **۶۴٫۶۴ KB** gzip (سقف ۶۵)
+  - `yarn verify:dist` → پاس
+- **بعدی:** `PR-132` فقط پس از تصمیم **D22** (بپرس)
+
+### D22 — تعویق monorepo (۱۷ سپتامبر ۲۰۲۶ / ۱۴۰۵/۰۶/۲۶)
+
+- **هدف:** قفل تصمیم باز؛ بستن بلوکر طرح v2 بدون شکستن ساختار فعلی
+- **فایل‌ها:** `EXECUTION_PLAN.md`, `WORKLOG.md`, `docs/agent-handoff.md`, `MIGRATION.md`, `scripts/release-gate.mjs`, `docs/__tests__/release-gate.spec.ts`, `docs/ag-grid-gap-analysis.md`
+- **انجام شد:**
+  - کاربر: monorepo فعلاً نه؛ تک‌پکیج React می‌ماند؛ headless جدا = بدهی بعدی
+  - `PR-132` ⏸ تعویق تا پس از `1.0.0`
+  - `release-gate`: `monorepo-core` waived؛ سقف سخت = ۶۵ KB (D15)؛ §۴ ۶۰ KB stretch waived
+- **محدودیت آگاهانه / نشد:** `engine/type.ts` هنوز به `ui/type` وابسته است؛ `@persian-data-grid/core` ساخته نشد؛ تگ واقعی `1.0.0` روی npm جداگانه است
+- **اثر روی کارت امتیاز:** بدون تغییر عددی (عمومی **۷۵٫۵**؛ تمایز **۹۲**)
+- **Verify:**
+  - `yarn release:gate` → **GREEN** — همهٔ چک‌ها PASS (monorepo waived؛ ۶۰KB stretch waived؛ ۶۵KB پاس)
+  - `yarn vitest run docs/__tests__/release-gate.spec.ts` → ۲ پاس
+- **بعدی:** تگ `1.0.0` اختیاری (نیاز `NPM_TOKEN`)؛ `PR-132` فقط اگر کاربر از تعویق D22 خارج کند
 

@@ -29,6 +29,7 @@ describe('PR-76 subpath export contract', () => {
       './locales/en',
       './locales/ar',
       './date-picker-jalali',
+      './finance',
       './styles.css',
     ]) {
       expect(pkg.exports[key], key).toBeTruthy();
@@ -51,6 +52,7 @@ describe('PR-76 subpath export contract', () => {
       'locales/en.js',
       'locales/ar.js',
       'date-picker-jalali.js',
+      'finance.js',
       'styles.css',
     ]) {
       expect(existsSync(join(root, 'dist', rel)), rel).toBe(true);

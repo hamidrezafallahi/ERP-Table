@@ -23,18 +23,18 @@ describe('PR-135 release-gate (D25)', () => {
     expect(load('.github/workflows/ci.yml')).toContain('release:gate');
   });
 
-  it('is red on today\'s tree with precise failing reasons', () => {
+  it('is green after Phase 25 + D22 deferral (65 KB / no monorepo required)', () => {
     const result = spawnSync(
       process.execPath,
       [join(root, 'scripts/release-gate.mjs')],
       { cwd: root, encoding: 'utf8' },
     );
-    expect(result.status, result.stdout + result.stderr).not.toBe(0);
     const out = result.stdout + result.stderr;
-    expect(out).toContain('release-gate RED');
-    // Known blockers until Phase 25 / D22 / §۴ 60 KB:
-    expect(out).toMatch(/FAIL\s+scorecard-diff/);
-    expect(out).toMatch(/FAIL\s+bundle-60kb/);
-    expect(out).toMatch(/FAIL\s+monorepo-core/);
+    expect(result.status, out).toBe(0);
+    expect(out).toContain('release-gate GREEN');
+    expect(out).toMatch(/PASS\s+scorecard-diff/);
+    expect(out).toMatch(/PASS\s+bundle-65kb/);
+    expect(out).toMatch(/PASS\s+monorepo-core/);
+    expect(out).toMatch(/D22 deferred|waived/i);
   });
 });

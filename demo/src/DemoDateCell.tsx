@@ -1,31 +1,28 @@
-import { DatePicker, type DatePickerValue } from 'react-persian-range-picker';
+import {
+  PersianRangeDatePicker,
+} from '../../publish/date-picker-jalali';
 
 type Props = {
   value: unknown;
   onCommit: (isoOrEmpty: string) => void;
 };
 
-/** Jalali DatePicker with keyboard mask for the demo date column. */
+/** Jalali date cell for the demo — internal picker (PR-140). */
 export function DemoDateCell({ value, onCommit }: Props) {
-  const parsed: DatePickerValue =
-    value == null || value === ''
-      ? null
-      : typeof value === 'number'
-        ? value
-        : String(value);
-
   return (
-    <DatePicker
-      calendarType="jalali"
-      exportType="IsoString"
-      showMask
-      allowClear
-      value={parsed}
+    <PersianRangeDatePicker
+      value={value}
       onChange={(next) => {
-        onCommit(next == null ? '' : String(next).slice(0, 10));
+        if (next == null || next === '') {
+          onCommit('');
+          return;
+        }
+        if (typeof next === 'number') {
+          onCommit(new Date(next).toISOString().slice(0, 10));
+          return;
+        }
+        onCommit(String(next).slice(0, 10));
       }}
-      primaryColor="#1a6b55"
-      highlightColor="#e8f5f0"
     />
   );
 }

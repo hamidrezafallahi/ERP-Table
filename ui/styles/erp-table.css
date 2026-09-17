@@ -720,9 +720,11 @@
 .erp-table-date {
   width: 100%;
   height: 100%;
+  position: relative;
 }
 .erp-table-date .erp-table-select__control,
-.erp-table-date input {
+.erp-table-date input,
+.erp-table-date .pdg-date-range__trigger {
   height: 2.25rem;
   width: 100%;
   background: var(--erp-header-bg);
@@ -730,6 +732,98 @@
   border-radius: 0.125rem;
   font-size: var(--erp-font-size);
   padding: 0 0.5rem;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+/* Internal Jalali calendar / range picker (PR-140) */
+.pdg-date-range__popover {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 2px);
+  inset-inline-start: 0;
+  min-width: 16rem;
+  padding: 0.5rem;
+  background: var(--pdg-bg);
+  border: 1px solid var(--pdg-border);
+  border-radius: 0.375rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+.pdg-date-range__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.35rem;
+}
+.pdg-date-range__clear {
+  background: transparent;
+  border: 0;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: var(--pdg-accent);
+  padding: 0.25rem 0.5rem;
+}
+.pdg-jalali-cal {
+  font-size: 0.75rem;
+  user-select: none;
+}
+.pdg-jalali-cal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+  gap: 0.25rem;
+}
+.pdg-jalali-cal__title {
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+}
+.pdg-jalali-cal__nav {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--pdg-fg);
+}
+.pdg-jalali-cal__nav:hover {
+  background: var(--pdg-row-stripe);
+}
+.pdg-jalali-cal__weekdays,
+.pdg-jalali-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.pdg-jalali-cal__wd {
+  text-align: center;
+  opacity: 0.65;
+  padding: 0.15rem 0;
+}
+.pdg-jalali-cal__day {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  aspect-ratio: 1;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--pdg-fg);
+}
+.pdg-jalali-cal__day.is-outside {
+  opacity: 0.35;
+}
+.pdg-jalali-cal__day.is-holiday:not(.is-selected) {
+  color: var(--pdg-danger);
+  font-weight: 600;
+}
+.pdg-jalali-cal__day.is-today:not(.is-selected) {
+  outline: 1px solid var(--pdg-accent);
+}
+.pdg-jalali-cal__day:hover:not(.is-selected) {
+  background: var(--pdg-row-stripe);
 }
 
 .erp-table-desktop__toolbar {

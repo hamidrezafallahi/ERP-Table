@@ -24,7 +24,7 @@ node packages/codemod/cli.mjs src/
 | D19 | pin left/right (if any) | `pinned: 'start' \| 'end' \| null` | manual |
 | D20 | no grouping API | `groupBy` + `aggFunc` (RFC-002) | n/a additive |
 | D21 | hard Jalali picker peer | `DateAdapter` + optional `/date-picker-jalali` | manual |
-| D22 | single package | monorepo packages | **باز — ask before PR-132** |
+| D22 | single package | monorepo packages | **تعویق تا پس از 1.0** — بدون تغییر API الان |
 | D24 | `await createERPTable(cfg)` | `const grid = createGrid(cfg); await grid.ready` | ✅ await form |
 | D24 | `injectERPTableStyles` | `injectGridStyles` | ✅ |
 
@@ -456,4 +456,43 @@ import { enMessages } from 'persian-data-grid/locales/en';
 import { DataGrid, gregorianAdapter } from 'persian-data-grid';
 
 <DataGrid locale="en" dateAdapter={gregorianAdapter} />
+```
+
+## Unreleased — PR-141 Document PDF template
+
+| Before | After |
+|--------|-------|
+| Title + table only | `DocumentPdfTemplate`: header/footer/logo/page#/repeat header/signature/stamp/page totals |
+| — | `PdfExportPlugin({ template })` or `renderer.render(source, { template })` |
+
+```tsx
+import { createVazirmatnPdfExportPlugin } from 'persian-data-grid/plugins/pdf/fonts/vazirmatn';
+import type { DocumentPdfTemplate } from 'persian-data-grid/plugins/pdf';
+
+const template: DocumentPdfTemplate = {
+  header: { title: 'فاکتور', subtitle: 'شرکت نمونه', meta: ['شماره: 1'] },
+  footer: { text: 'محرمانه', showPageNumber: true },
+  signature: { label: 'امضا' },
+  stamp: { label: 'مهر' },
+  pageTotals: { columns: ['price'], label: 'جمع صفحه' },
+};
+
+<DataGrid plugins={[createVazirmatnPdfExportPlugin({ template })]} … />
+```
+
+## Unreleased — PR-140 Persian date/finance (no peer)
+
+| Before | After |
+|--------|-------|
+| Optional peer `react-persian-range-picker` | **Removed** — internal Jalali calendar on `/date-picker-jalali` |
+| `components={{ date: PersianRangeDatePicker }}` | `components={{ date: PersianRangeDateCell }}` (context adapter) |
+| Price = grouped number only | `currencyUnit: 'rial' \| 'toman'` + `persian-data-grid/finance` helpers |
+
+```tsx
+import { PersianRangeDateCell } from 'persian-data-grid/date-picker-jalali';
+import { numberToPersianWords, formatPrice } from 'persian-data-grid/finance';
+
+<DataGrid components={{ date: PersianRangeDateCell }} columnDefs={[
+  { field: 'amount', type: 'price', currencyUnit: 'toman' },
+]} />
 ```

@@ -7,4 +7,13 @@ export { PdfExportPlugin } from '../../packages/plugins/pdf/src/PdfExportPlugin'
 export type { PdfExportPluginOptions } from '../../packages/plugins/pdf/src/PdfExportPlugin';
 export { TextPdfRenderer } from '../../packages/plugins/pdf/src/TextPdfRenderer';
 export { VazirmatnPdfRenderer } from '../../packages/plugins/pdf/src/VazirmatnPdfRenderer';
-export type { PdfRenderer } from '../../application/ports/PdfRenderer';
+export type { PdfRenderer, PdfRenderOptions } from '../../application/ports/PdfRenderer';
+export type {
+  DocumentPdfTemplate,
+  DocumentPdfHeader,
+  DocumentPdfFooter,
+  DocumentPdfLogo,
+  DocumentPdfSignature,
+  DocumentPdfStamp,
+  DocumentPdfPageTotals,
+} from '../../packages/plugins/pdf/src/documentTemplate';

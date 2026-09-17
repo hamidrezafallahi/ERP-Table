@@ -13,7 +13,7 @@ Before any feature, refactor, or "continue the table":
 4. Read `EXECUTION_PLAN.md` from **Active Track** — first unchecked `PR-N` in Phase 16+.
 5. Do not reopen Phase 1–15 (PR-1 … PR-71) except bugfix. Details are archived in `docs/worklog-archive-v0.5.md` and `docs/execution-plan-archive-v0.5.md`.
 6. `PR-72` … `PR-75` are the mandatory gate: finish them before any feature PR.
-7. Open Decisions `D13 … D21` and `D23 … D25` are **قفل** (locked 1405/06/20) — execute them, do not re-ask. Only **`D22` (monorepo)** is still **باز**: ask before `PR-132`.
+7. Open Decisions `D13 … D25` are **قفل**. **`D22` = monorepo deferred until after `1.0.0`** (single React package). Do not start `PR-132` unless the user explicitly lifts the deferral.
 8. Out of scope without a new RFC: pivot, integrated charts, spreadsheet formulas, multi-level tree data, full tool panel, Angular/Vue wrappers. Grouping and single-level aggregation are approved (D20) but gated behind RFC-002 (`PR-117`).
 8b. Every deprecated alias introduced by D13/D14/D18/D24 needs all four of: `@deprecated` tag, a test proving both paths work, a `MIGRATION.md` row, and a codemod entry.
 9. After a PR: check the box, append `WORKLOG.md` using the template at the end of that file, run that PR's Verify commands, record numeric output.

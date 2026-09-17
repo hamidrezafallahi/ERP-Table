@@ -101,6 +101,12 @@ export const faMessages: ERPTableMessages = {
   'sync.remote': 'سرور',
   'sync.keepLocal': 'نگه‌داشتن محلی',
   'sync.keepRemote': 'نگه‌داشتن سرور',
+  'date.pickDate': 'انتخاب تاریخ',
+  'date.pickRange': 'انتخاب بازه',
+  'date.clear': 'پاک کردن',
+  'date.calendar': 'تقویم جلالی',
+  'date.prevMonth': 'ماه قبل',
+  'date.nextMonth': 'ماه بعد',
 };
 
 export default faMessages;
