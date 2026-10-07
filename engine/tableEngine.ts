@@ -5,7 +5,11 @@ import {
   isApplicationTableCommand,
   TableCommand,
 } from '../application/commands';
-import { TableRepository } from '../application/ports/TableRepository';
+import {
+  isWindowedRepository,
+  PersistedRowRecord,
+  TableRepository,
+} from '../application/ports/TableRepository';
 import { TableAppService } from '../application/TableAppService';
 import { ColumnSchema } from '../bootstrap/type';
 import { Cell } from '../domain/entities/Cell';
@@ -106,6 +110,12 @@ export class TableEngine {
     private readonly repo: TableRepository,
     private readonly actor: Actor,
     audit: ConsoleAuditLogger,
+    /**
+     * متای زندهٔ ستون‌ها از کانفیگ (دارای resolveOn / dynamicSource که در
+     * IndexedDB serialize نمی‌شوند). NavigationManager برای تشخیص ستون‌های
+     * شرطیِ فعال‌شدن سطر (APPLY_ROW_VISIBILITY) به آن نیاز دارد.
+     */
+    private readonly columnMeta?: Map<string, ColumnSchema>,
   ) {
     this.errHandler = new EngineErrorHandler(audit);
     this.selection = new SelectionManager(
@@ -129,6 +139,7 @@ export class TableEngine {
       () => this.getViewState(),
       (cmd) => this.dispatch(cmd),
       () => this.getUiRowIndex(),
+      columnMeta,
     );
   }
 
@@ -195,7 +206,12 @@ export class TableEngine {
   }
 
   private disposeTable(cmd: { store: string; tableKey: string }): void {
-    this.repo.delete(cmd.store, cmd.tableKey);
+    if (isWindowedRepository(this.repo)) {
+      // Keep IndexedDB as source of truth; only drop the RAM page window
+      this.repo.clearLocal(cmd.store, cmd.tableKey);
+    } else {
+      this.repo.delete(cmd.store, cmd.tableKey);
+    }
     if (this.tableKey === cmd.tableKey) {
       this.tableStore = undefined;
       this.tableKey = undefined;
@@ -250,6 +266,21 @@ export class TableEngine {
   // ─── private helper ─────────────────────────────────────────────────────────
 
   private shouldInvalidateUiRowIndex(command: ApplicationTableCommand): boolean {
+    if (isWindowedRepository(this.repo)) {
+      // Page-window: the RAM rows are swapped wholesale from IndexedDB, so the
+      // flat UI index can never be patched incrementally for these commands.
+      switch (command.type) {
+        case 'ADD_EMPTY_ROW':
+        case 'ROW_DELETED':
+        case 'ROWS_DELETED':
+        case 'CHANGE_PAGE':
+        case 'CHANGE_PAGE_SIZE':
+          this.viewBuilder.invalidateQuickFilterIndex();
+          return true;
+        default:
+          break;
+      }
+    }
     switch (command.type) {
       case 'ADD_EMPTY_ROW':
       case 'ROW_DELETED': {
@@ -345,24 +376,32 @@ export class TableEngine {
         );
       }
 
-      if (command.type === 'ADD_EMPTY_ROW') {
-        const addCommand = command as AddEmptyRowCommand;
+      if (command.type === 'ADD_EMPTY_ROW' || command.type === 'DUPLICATE_ROW') {
         const rowAdded = result as RowAdded | null;
         const rowId = rowAdded?.rowId?.value;
-        const grouping =
-          (store.getState().rowGroupColumns?.length ?? 0) > 0;
+        const shouldActivate =
+          command.type === 'DUPLICATE_ROW' ||
+          (command as AddEmptyRowCommand).autoActivate;
 
-        if (rowId != null && !grouping) {
-          this.viewBuilder.patchQuickFilterRow(rowId);
-          this.viewBuilder.insertUiRow(rowId);
-        } else if (rowId != null) {
-          this.viewBuilder.patchQuickFilterRow(rowId);
+        if (command.type === 'ADD_EMPTY_ROW' && !updated.isPageWindow()) {
+          const grouping =
+            (store.getState().rowGroupColumns?.length ?? 0) > 0;
+          if (rowId != null && !grouping) {
+            this.viewBuilder.patchQuickFilterRow(rowId);
+            this.viewBuilder.insertUiRow(rowId);
+          } else if (rowId != null) {
+            this.viewBuilder.patchQuickFilterRow(rowId);
+          }
         }
 
-        if (addCommand.autoActivate && rowId != null) {
+        if (shouldActivate && rowId != null) {
           await this.nav.setActiveRow({
-            store: addCommand.store,
-            tableKey: addCommand.tableKey,
+            store: (command as any).store,
+            tableKey: (command as any).tableKey,
+            rowId,
+          });
+          this.nav.activateFirstCell({
+            tableKey: (command as any).tableKey,
             rowId,
           });
         }
@@ -467,6 +506,15 @@ export class TableEngine {
   // ─── public dispatch ────────────────────────────────────────────────────────
 
   async dispatch(command: TableCommand): Promise<void> {
+    // Ignore commands after dispose (no store), except (re)register
+    if (
+      !this.tableStore &&
+      command.type !== 'TABLE_REGISTERED' &&
+      command.type !== 'TABLE_DISPOSED'
+    ) {
+      return;
+    }
+
     switch (command.type) {
       // ── Navigation ──────────────────────────────────────────────────────────
       case 'ACTIVE_CELL':
@@ -527,12 +575,49 @@ export class TableEngine {
         return;
 
       // ── Row selection ────────────────────────────────────────────────────────
-      case 'ROWS_DELETED':
-        this.selection.deleteAll(command.tableKey);
+      case 'ROWS_DELETED': {
+        if (!isWindowedRepository(this.repo)) {
+          this.selection.deleteAll(command.tableKey);
+          return;
+        }
+        const store = this.getStore(command.tableKey);
+        if (!store) return;
+        const selected = store.getState().selectedRows;
+        const rowIds = Object.keys(selected)
+          .map(Number)
+          .filter(id => Number.isFinite(id));
+        await this.executeAppCommand({ ...command, rowIds });
+        store.setState(prev => ({
+          ...prev,
+          selectedRows: {},
+          rangeAnchorRowId: undefined,
+        }));
         return;
-      case 'TOGGLE_SELECT_ALL_ROWS':
-        this.selection.toggleSelectAllRows(command);
+      }
+      case 'TOGGLE_SELECT_ALL_ROWS': {
+        try {
+          let rowIds: number[];
+          if (isWindowedRepository(this.repo)) {
+            // Page-window: ids come from IndexedDB (SoT), not the RAM window
+            rowIds = await this.repo.getAllRowIds(
+              command.store,
+              command.tableKey,
+              'active',
+            );
+          } else {
+            const st = this.getStore(command.tableKey);
+            if (!st) return;
+            rowIds = st.getState().table.getRows('active').map(r => r.id.value);
+          }
+          this.selection.toggleSelectAllRows({
+            tableKey: command.tableKey,
+            rowIds,
+          });
+        } catch (e) {
+          this.errHandler.handle(e, 'TableEngine.TOGGLE_SELECT_ALL_ROWS');
+        }
         return;
+      }
       case 'TOGGLE_SELECT_PAGE_ROWS':
         this.selection.toggleSelectPageRows(command);
         return;
@@ -1152,6 +1237,125 @@ export class TableEngine {
     return this.viewBuilder.getSnapShot(collectionScope);
   }
 
+  /**
+   * Full dataset snapshot from IndexedDB (source of truth).
+   * Use for server save / export — not the RAM page window.
+   */
+  async getFullSnapShot(
+    store: string,
+    collectionScope: CollectionScope = 'active',
+  ): Promise<TableSnapShot | null> {
+    if (!this.tableKey) return null;
+    try {
+      const rows = await this.loadAllRows(store, collectionScope);
+      const hasMeaningfulValue = (value: unknown) =>
+        value !== undefined && value !== null && value !== '';
+
+      return {
+        rows: rows
+          .filter(row =>
+            Array.from(row.getCells().entries()).some(
+              ([key, cell]) => key !== 'index' && hasMeaningfulValue(cell.getValue()),
+            ),
+          )
+          .map(row => ({
+            id: row.id.value,
+            changeFields: row.getSnapshotChangeFields(),
+            cells: Object.fromEntries(
+              [...row.getCells()].map(([k, c]) => [k, c.getValue()]),
+            ),
+            rowState: row.rowState.value,
+            collection: row.getCollection(),
+            rowType: row.getCollection(),
+            isSaveDescription: row.isSaveDescription,
+          })),
+      };
+    } catch (e) {
+      this.errHandler.handle(e, 'TableEngine.getFullSnapShot');
+      return null;
+    }
+  }
+
+  async getAllRowsFromDb(
+    store: string,
+    collectionScope: CollectionScope = 'active',
+  ): Promise<Row[] | null> {
+    if (!this.tableKey) return null;
+    try {
+      return await this.loadAllRows(store, collectionScope);
+    } catch (e) {
+      this.errHandler.handle(e, 'TableEngine.getAllRowsFromDb');
+      return null;
+    }
+  }
+
+  /**
+   * Stream serialized row records from IndexedDB in bounded batches.
+   * Heap holds one batch at a time — never the whole dataset.
+   * Return false from onBatch to stop early.
+   */
+  async iterateRowsFromDb(
+    store: string,
+    collectionScope: CollectionScope,
+    onBatch: (
+      records: PersistedRowRecord[],
+      ordinalBase: number,
+    ) => Promise<boolean | void>,
+    batchSize?: number,
+  ): Promise<void> {
+    if (!this.tableKey) return;
+    try {
+      if (isWindowedRepository(this.repo)) {
+        await this.repo.iterateRowRecords(
+          store,
+          this.tableKey,
+          collectionScope,
+          onBatch,
+          batchSize,
+        );
+        return;
+      }
+      // Default (event-sourced) mode: every row already lives in RAM, so the
+      // same batched contract is served from the in-memory table.
+      const rows = this.viewBuilder.getAllRows(collectionScope) ?? [];
+      const size = Math.max(1, batchSize ?? 500);
+      for (let base = 0; base < rows.length; base += size) {
+        const slice = rows.slice(base, base + size);
+        const records: PersistedRowRecord[] = slice.map((row, i) => ({
+          rowId: row.id.value,
+          collection: row.getCollection(),
+          sortIndex: Number(row.getCell('index')?.getValue() ?? base + i) || 0,
+          rowState: row.rowState.value,
+          cells: Object.fromEntries(
+            [...row.getCells()].map(([k, c]) => [
+              k,
+              {
+                value: c.getValue(),
+                originalValue: c.getOriginalValue().value,
+                display: c.getDisplay(),
+              },
+            ]),
+          ),
+        }));
+        const cont = await onBatch(records, base);
+        if (cont === false) return;
+      }
+    } catch (e) {
+      this.errHandler.handle(e, 'TableEngine.iterateRowsFromDb');
+    }
+  }
+
+  /** Windowed: IndexedDB (SoT). Default mode: the in-memory table. */
+  private async loadAllRows(
+    store: string,
+    collectionScope: CollectionScope,
+  ): Promise<Row[]> {
+    if (isWindowedRepository(this.repo) && this.tableKey) {
+      return this.repo.getAllRows(store, this.tableKey, collectionScope);
+    }
+    return this.viewBuilder.getAllRows(collectionScope) ?? [];
+  }
+
   getExpandedRowData(rowId: number): Record<string, unknown> | null {
     return this.viewBuilder.getExpandedRowData(rowId);
   }
@@ -1442,7 +1646,7 @@ export class TableEngine {
         (Array.isArray(v) && v.length === 0);
 
       // Required
-      if (rule.required) {
+      if (rule.required && (!rule.requiredIf || rule.requiredIf())) {
         if (isEmpty) return { caption, rowId, message: rule.message ?? `${schema.fieldCaption || caption} الزامی است` };
       }
 
@@ -1846,41 +2050,125 @@ export class TableEngine {
     }
   }
 
+  /**
+   * Streamed column subscription (Memory Iron Rule compliant).
+   * Consumes the dataset through `iterateRowRecords` in bounded batches and
+   * folds every non-deleted item into a small caller-owned accumulator via
+   * `reducer` — never materializes rows with getAllRows and never
+   * JSON.stringify's the whole dataset. Heap = one batch + the accumulator
+   * (O(batch) in RAM, independent of total row count).
+   * Change detection uses an incrementally-maintained double-hash signature
+   * (O(1) heap) instead of a full JSON signature.
+   * `cb` fires with the folded accumulator on the initial emit and afterwards
+   * only when the column's data actually changed. Reads are async.
+   */
   subscribeColumn<T = unknown>(
     columnId: string,
     collections: CollectionScope,
-    cb: (items: Array<{ id: number; rowNum: unknown; value: T }>) => void,
+    reducer: (acc: T, item: { id: number; rowNum: unknown; value: unknown }) => T,
+    seed: T,
+    cb: (acc: T) => void,
+    store?: string,
   ): (() => void) | null {
-    const store = this.getStore();
-    if (!store) return null;
+    const tableStore = this.getStore();
+    if (!tableStore) return null;
 
-    const buildItems = () =>
-      (this.viewBuilder.getAllRows(collections) ?? [])
-        .filter(r => r.rowState.value !== RowStateEnum.Deleted)
-        .map(r => ({
-          id: r.id.value,
-          rowNum: r.getCell('index')?.getValue(),
-          value: r.getCell(columnId)?.getValue() as T,
-        }));
-
-    let prev = buildItems();
-
-    return store.subscribe(() => {
-      const next = buildItems();
-
-      const changed =
-        next.length !== prev.length ||
-        next.some(
-          (item, i) =>
-            item.id !== prev[i].id ||
-            item.rowNum !== prev[i].rowNum ||
-            item.value !== prev[i].value,
-        );
-
-      if (changed) {
-        prev = next;
-        cb(next);
+    // Two independent FNV-style hashes over a per-item token — O(1) heap.
+    const mixHash = (h1: number, h2: number, token: string): [number, number] => {
+      for (let i = 0; i < token.length; i++) {
+        const c = token.charCodeAt(i);
+        h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
+        h2 = Math.imul(h2 ^ c, 2654435761) >>> 0;
       }
+      return [h1, h2];
+    };
+
+    let cancelled = false;
+    let prev = '';
+    let inFlight = false;
+    let pending = false;
+
+    const notify = async (): Promise<void> => {
+      if (cancelled) return;
+      if (inFlight) {
+        pending = true;
+        return;
+      }
+      inFlight = true;
+      try {
+        let acc = seed;
+        let hash: [number, number] = [2166136261, 5381];
+        let sawAny = false;
+
+        if (store && isWindowedRepository(this.repo)) {
+          // Stream from IndexedDB (source of truth): heap holds ONE batch.
+          await this.repo.iterateRowRecords(
+            store,
+            this.tableKey ?? '',
+            collections,
+            async records => {
+              for (const rec of records) {
+                if (rec.rowState === RowStateEnum.Deleted) continue;
+                sawAny = true;
+                const item = {
+                  id: rec.rowId,
+                  rowNum: rec.cells['index']?.value ?? rec.sortIndex,
+                  value: rec.cells[columnId]?.value,
+                };
+                acc = reducer(acc, item);
+                hash = mixHash(
+                  hash[0],
+                  hash[1],
+                  `${item.id}:${String(item.rowNum)}:${String(item.value)}`,
+                );
+              }
+            },
+          );
+        } else {
+          // No store bound (tests / RAM-only usage) → page-window fallback
+          const rows = this.viewBuilder.getAllRows(collections) ?? [];
+          for (const r of rows) {
+            if (r.rowState.value === RowStateEnum.Deleted) continue;
+            sawAny = true;
+            const item = {
+              id: r.id.value,
+              rowNum: r.getCell('index')?.getValue(),
+              value: r.getCell(columnId)?.getValue(),
+            };
+            acc = reducer(acc, item);
+            hash = mixHash(
+              hash[0],
+              hash[1],
+              `${item.id}:${String(item.rowNum)}:${String(item.value)}`,
+            );
+          }
+        }
+        if (cancelled) return;
+        const sig = sawAny ? `${hash[0]}:${hash[1]}` : 'empty';
+        if (sig !== prev) {
+          prev = sig;
+          cb(acc);
+        }
+      } catch (e) {
+        this.errHandler.handle(e, 'TableEngine.subscribeColumn');
+      } finally {
+        inFlight = false;
+        if (pending && !cancelled) {
+          pending = false;
+          void notify();
+        }
+      }
+    };
+
+    const unsubscribe = tableStore.subscribe(() => {
+      void notify();
     });
+    // Initial full-dataset emit (async)
+    void notify();
+
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
   }
 }

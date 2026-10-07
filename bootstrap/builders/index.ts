@@ -2,6 +2,7 @@
 
 import {
   ApplyDynamicProjectionHandler,
+  ApplyRowVisibilityHandler,
   ChangeCellDisplayValueHandler,
   ChangeCellValueHandler,
   SaveDescriptionHandler,
@@ -10,6 +11,7 @@ import {
   AddNewRowCommandHandler,
   AddNewRowsCommandHandler,
   DeleteRowCommandHandler,
+  DeleteRowsCommandHandler,
   DuplicateRowCommandHandler,
   PasteRowCommandHandler,
   ReorderRowCommandHandler,
@@ -26,7 +28,10 @@ import {
 import { AuditLogger } from '../../application/ports/AuditLogger';
 import type { EventStore } from '../../application/ports/EventStore';
 import type { RemoteApi } from '../../application/ports/RemoteApi';
-import { TableRepository } from '../../application/ports/TableRepository';
+import {
+  isWindowedRepository,
+  TableRepository,
+} from '../../application/ports/TableRepository';
 import { TableAppService } from '../../application/TableAppService';
 import { PasteCellsCommandHandler } from '../../application/handlers/pasteCellsCommandsHandler';
 import { Cell } from '../../domain/entities/Cell';
@@ -55,6 +60,32 @@ import {
    helpers
    ====================================================== */
 
+/**
+ * بازسازی visibilityCondition یک سطر از روی مقادیر فعلی سلول‌هایش.
+ * کلیدها fieldName ستون‌های whenFieldTruthy (مقدارِ ستون منبع) و
+ * whenRemoteFlag (ستون خودش) هستند — دقیقاً همان کلیدهایی که UI
+ * (cellRenderer / MobileRowFormModal) و isInitiallyHidden چک می‌کنند.
+ * Only rows of the column's OWN collection are consulted — no cross-collection leak.
+ */
+export function rebuildRowVisibilityCondition(
+  row: Row,
+  columnMeta: Map<string, ColumnSchema>,
+): void {
+  const rowCollection = row.getCollection() ?? 'default';
+  const condition: Record<string, boolean> = {};
+  for (const colCfg of columnMeta.values()) {
+    if ((colCfg.fieldCollection ?? 'default') !== rowCollection) continue;
+    const v = colCfg.visibility;
+    if (v?.kind === 'whenFieldTruthy') {
+      condition[colCfg.fieldName] = !!row.readValue(v.fieldName);
+    } else if (v?.kind === 'whenRemoteFlag') {
+      // فلگ ریموت در دسترس نیست؛ «محتوا داشتن» خودش دلیل کافی برای نمایش است.
+      condition[colCfg.fieldName] = !!row.readValue(colCfg.fieldName);
+    }
+  }
+  row.setVisibilityCondition(condition);
+}
+
 export const isInitiallyHidden = (
   col: ColumnSchema,
   inputRows: RowInput[] | Row[],
@@ -79,28 +110,39 @@ export const isInitiallyHidden = (
     return false;
   }
 
-  // شرط ۲ و ۳: بررسی مقدار و visibilityCondition
+  // شرط ۲ و ۳: بررسی مقدار و visibilityCondition — فقط بین سطرهای کالکشن خودِ ستون.
+  // A dependent column that holds data becomes visible ONLY in its OWN
+  // collection (fieldCollection, falling back to the active collection).
+  // The value scan must never cross collections: a value in one tab must
+  // not unhide the same-named column in other tabs.
+  const scopeCollection = col.fieldCollection ?? activeCollection ?? "default";
   const isVisibleByCondition = inputRows.some(r => {
     if (r instanceof Row) {
       const domainRow = r as Row;
+      // فقط سطرهای کالکشن خود ستون
+      if (domainRow.getCollection() !== scopeCollection) return false;
       // شرط ۳: visibilityCondition با true
       if (domainRow.getVisibilityCondition()?.[col.fieldName] === true) {
         return true;
       }
-      // شرط ۲: مقدار داره و activeCollection برابر default
-      if (activeCollection === "default") {
-        return domainRow.readValue(col.fieldName) != null &&
-          domainRow.readValue(col.fieldName) !== "";
+      // whenRemoteFlag: فلگ ریموت در دسترس نیست؛ محتوا داشتنِ سلول خود ستون
+      // (در کالکشن خودش) کافی است تا ستون در ویرایش نمایان شود.
+      if (
+        col.visibility?.kind === "whenRemoteFlag" &&
+        !!domainRow.readValue(col.fieldName)
+      ) {
+        return true;
       }
-      return false;
+      // شرط ۲: مقدار داره
+      return !!domainRow.readValue(col.fieldName);
     } else {
       const inputRow = r as RowInput;
-      // شرط ۲: مقدار داره و activeCollection برابر default
-      if (activeCollection === "default") {
-        return inputRow.values?.[col.fieldName] != null &&
-          inputRow.values?.[col.fieldName] !== "";
-      }
-      return false;
+      // فقط سطرهای کالکشن خود ستون
+      const rowCollection = inputRow.collection ?? inputRow.rowType ?? "default";
+      if (rowCollection !== scopeCollection) return false;
+      // شرط ۲: مقدار داره
+      return inputRow.values?.[col.fieldName] != null &&
+        inputRow.values?.[col.fieldName] !== "";
     }
   });
 
@@ -182,6 +224,14 @@ export async function buildRows(  collectionColumns: Map<string, Map<string, Col
     rowMap = new Map<number, Row>(
       persistedTable.getRows().map(r => [r.id.value, r])
     );
+    // سطرهای بازخوانی‌شده از IndexedDB با visibilityCondition خالی از ذخیره‌ی
+    // ران قبل می‌آیند (ویرایش): visibilityCondition هر سطر باید از روی مقادیر
+    // فعلی خودش بازسازی شود تا ستون‌های شرطیِ whenFieldTruthy / whenRemoteFlag
+    // که محتوا دارند در بارگذاری اولیه نمایان شوند — قرارداد: ستون وابسته‌ای
+    // که محتوا دارد فقط در کالکشن خودش قابل رویت است.
+    for (const row of rowMap.values()) {
+      rebuildRowVisibilityCondition(row, columnMeta);
+    }
     return { rows: rowMap, table: persistedTable };
   } else {
     const rows = inputRows.sort((a, b) => a.id - b.id)
@@ -404,13 +454,14 @@ export function createPermissionPolicy(
   ): boolean => {
     const meta = columnMeta.get(columnId);
     if (!meta?.colAccess) return true;
-    const row = table.getRow(rowId);
-    if (!row) return false;
     const { allowRoles, denyRoles, rule } = meta.colAccess;
     if (!checkRoleAccess(actor, allowRoles, denyRoles)) {
       return false;
     }
     if (rule) {
+      // Page-window: bootstrap `table` may be stale after loadPage
+      const row = table.getRow(rowId);
+      if (!row) return true;
       return rule({ actor, row, table });
     }
     return true;
@@ -420,8 +471,9 @@ export function createPermissionPolicy(
     actor: Actor,
     rowId?: number
   ): boolean => {
+    const rowAccess = config.rowAccess;
+
     if (!rowId) {
-      const rowAccess = config.rowAccess;
       if (!rowAccess) return true;
       const { allowRoles, denyRoles, rule } = rowAccess;
       if (!checkRoleAccess(actor, allowRoles, denyRoles)) {
@@ -431,20 +483,25 @@ export function createPermissionPolicy(
         return rule({ actor, table });
       }
       return true;
-    } else {
-      const row = table.getRow(rowId);
-      if (!row) return false;
-      const rowAccess = config.rowAccess;
-      if (!rowAccess) return true;
-      const { allowRoles, denyRoles, rule } = rowAccess;
-      if (!checkRoleAccess(actor, allowRoles, denyRoles)) {
-        return false;
-      }
-      if (rule) {
-        return rule({ actor, row, table });
-      }
-      return true;
     }
+
+    // Page-window: `table` closed over at bootstrap may be a stale page snapshot
+    // after loadPage. Do NOT deny solely because the row isn't on that snapshot.
+    if (!rowAccess) return true;
+
+    const { allowRoles, denyRoles, rule } = rowAccess;
+    if (!checkRoleAccess(actor, allowRoles, denyRoles)) {
+      return false;
+    }
+    if (rule) {
+      const row = table.getRow(rowId);
+      if (!row) {
+        // Roles already passed; row may live on another page / newer Table instance
+        return true;
+      }
+      return rule({ actor, row, table });
+    }
+    return true;
   };
 
   return {
@@ -467,6 +524,7 @@ export function createTableAppService(
 ): TableAppService {
   const changeCellHandler = new ChangeCellValueHandler(repo, audit, permissionPolicy, { columnMeta, remoteApi });
   const applyDynamicProjection = new ApplyDynamicProjectionHandler(repo, audit, permissionPolicy, { columnMeta, remoteApi });
+  const applyRowVisibility = new ApplyRowVisibilityHandler(repo, audit, permissionPolicy, { columnMeta, remoteApi });
   const changeCellDisplayHandler = new ChangeCellDisplayValueHandler(repo, audit, permissionPolicy);
   const saveDescriptionHandler = new SaveDescriptionHandler(repo, audit, permissionPolicy);
   const addNewRowHandler = new AddNewRowCommandHandler(repo, audit, permissionPolicy);
@@ -484,6 +542,9 @@ export function createTableAppService(
     audit,
     permissionPolicy,
   );
+  const deleteRowsHandler = isWindowedRepository(repo)
+    ? new DeleteRowsCommandHandler(repo, audit, permissionPolicy)
+    : undefined;
   const deleteTableHandler = new DeleteTableCommandHandler(repo, audit, permissionPolicy);
   const resetTableHandler = new ResetTableCommandHandler(repo, audit, permissionPolicy);
   const reorderRowHandler = new ReorderRowCommandHandler(repo, audit, permissionPolicy);
@@ -511,6 +572,8 @@ export function createTableAppService(
     restoreAddedRowHandler,
     pasteRowHandler,
     reorderColumnHandler,
+    applyRowVisibility,
+    deleteRowsHandler,
   );
 
   appService.setRepository(repo);

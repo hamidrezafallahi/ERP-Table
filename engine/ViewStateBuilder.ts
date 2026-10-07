@@ -674,13 +674,18 @@ export class ViewStateBuilder {
         table.getRows().filter((row) => row.collection === activeName),
       );
       const server = isServerRowModel(rowModelType);
+      const pageWindow = table.isPageWindow();
+      // Page-window mode: totals come from Pagination (IndexedDB meta), not the
+      // RAM window size.
       const totalRows = server
         ? (serverRowCount ?? sortedActive.length)
-        : this.getUiRowCount();
+        : pageWindow
+          ? pagination.totalRows
+          : this.getUiRowCount();
 
       const totalPages = Math.max(
         1,
-        Math.ceil(totalRows / pagination.pageSize),
+        Math.ceil(totalRows / Math.max(1, pagination.pageSize)),
       );
 
       const collapsed = collapsedColumnGroups ?? {};
@@ -693,9 +698,11 @@ export class ViewStateBuilder {
           this.mapRowToUIRow(row, columns, expandedRows),
         );
       } else {
-        const start = (pagination.page - 1) * pagination.pageSize;
-        const end = start + pagination.pageSize;
-        const ids = this.getUiRowIndex().getOrderedIds().slice(start, end);
+        // Page-window mode: the RAM Maps already hold ONLY the current page.
+        const orderedIds = this.getUiRowIndex().getOrderedIds();
+        const start = pageWindow ? 0 : (pagination.page - 1) * pagination.pageSize;
+        const end = pageWindow ? orderedIds.length : start + pagination.pageSize;
+        const ids = orderedIds.slice(start, end);
         pageRows = [];
         for (const id of ids) {
           const view = this.getRowView(id);
@@ -776,8 +783,8 @@ export class ViewStateBuilder {
       const allRows = this.getRenderableMobileRows(table.getRows('active'), mobileEditor);
       const pageSize = Math.max(MOBILE_PAGE_SIZE, pagination.pageSize);
       const visibleRows = allRows.slice(0, pageSize);
-      const totalRows = allRows.length;
-      const visibleCount = Math.min(pageSize, totalRows);
+      const totalRows = table.isPageWindow() ? pagination.totalRows : allRows.length;
+      const visibleCount = Math.min(pageSize, allRows.length);
 
       return {
         rows: this.mapRowsToUIRows(visibleRows, columns, expandedRows),

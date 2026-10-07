@@ -18,7 +18,7 @@ import {
 import { TableEvent } from '../events';
 import { AuditLogger } from '../ports/AuditLogger';
 import { RemoteApi } from '../ports/RemoteApi';
-import { TableRepository } from '../ports/TableRepository';
+import { isWindowedRepository, TableRepository } from '../ports/TableRepository';
 
 type DynamicConfig = {
   columnMeta: Map<string, ColumnSchema>;
@@ -40,11 +40,16 @@ export class ChangePageCommandHandler {
     actor: Actor
   ): Promise<TableEvent[]> {
     try {
-      const table = await this.repo.getById(command.store, command.tableKey);
-
-      table.changePage(command.page);
-
-      await this.repo.save(command.store, table);
+      if (!command.tableKey) return [];
+      if (isWindowedRepository(this.repo)) {
+        // Replace RAM window with the requested page from IndexedDB
+        const loaded = await this.repo.loadPage(command.store, command.tableKey, command.page);
+        if (!loaded) return [];
+      } else {
+        const table = await this.repo.getById(command.store, command.tableKey);
+        table.changePage(command.page);
+        await this.repo.save(command.store, table);
+      }
 
       const out: TableEvent = {
         type: 'PAGE_CHANGED',
@@ -92,10 +97,29 @@ export class ChangePageSizeCommandHandler {
     command: ChangePageSizeCommand,
     actor: Actor
   ): Promise<TableEvent[]> {
-    const table = await this.repo.getById(command.store, command.tableKey);
     try {
-      table.changePageSize(command.pageSize);
-      await this.repo.save(command.store, table);
+      if (!command.tableKey) return [];
+      if (isWindowedRepository(this.repo)) {
+        // Keep the current page when only pageSize changes (don't jump to page 1)
+        let page = 1;
+        try {
+          const current = await this.repo.getById(command.store, command.tableKey);
+          page = current.getPagination().page || 1;
+        } catch {
+          page = 1;
+        }
+        const loaded = await this.repo.loadPage(
+          command.store,
+          command.tableKey,
+          page,
+          command.pageSize,
+        );
+        if (!loaded) return [];
+      } else {
+        const table = await this.repo.getById(command.store, command.tableKey);
+        table.changePageSize(command.pageSize);
+        await this.repo.save(command.store, table);
+      }
       const out: TableEvent = {
         type: 'PAGE_SIZE_CHANGED',
         tableId: command.tableKey,
@@ -250,6 +274,25 @@ private async applyVisibility(input: {
         visibility.tableType === command.activeCollection)
     ) {
       colCfg.hidden = false;
+      return;
+    }
+
+    // ستون‌های شرطی محتوا دار (whenFieldTruthy / whenRemoteFlag) باید هنگام
+    // سوییچ تب، در کالکشن خودشان نمایان شوند — همان قراردادِ بارگذاری اولیه:
+    // "ستون وابسته‌ای که محتوا دارد فقط در کالکشن مربوطه نمایش داده شود".
+    // بدون این، فلگ اشتباه ذخیره‌شده از ران قبلی (مثلاً hidden=true از
+    // bootstrap وقتی تب دیگری فعال بود) تا باز شدن مجدد صفحه می‌ماند.
+    if (
+      visibility?.kind === 'whenFieldTruthy' ||
+      visibility?.kind === 'whenRemoteFlag'
+    ) {
+      const rows = collection.getRows();
+      const hasValue = Array.from(rows.values()).some(
+        row => !!row.getCell(colCfg.fieldName)?.getValue(),
+      );
+      if (hasValue) {
+        colCfg.hidden = false;
+      }
     }
   });
 }
@@ -258,11 +301,46 @@ private async applyVisibility(input: {
     command: SetActiveCollectionCommand,
     actor: Actor
   ): Promise<TableEvent[]> {
-    const table = await this.repo.getById(command.store, command.tableKey);
+    const repo = this.repo;
+    if (!isWindowedRepository(repo)) {
+      const table = await repo.getById(command.store, command.tableKey);
+      try {
+        table.setActiveCollection(command.activeCollection);
+        this.applyVisibility({ table, command });
+        await this.repo.save(command.store, table);
+        const out: TableEvent = {
+          type: 'ACTIVE_COLLECTION_CHANGED',
+          tableId: command.tableKey,
+        };
+        this.audit.log({ type: out.type, message: out.type, payload: out.tableId });
+        return [out];
+      } catch (error) {
+        return this.handleSetActiveError(error);
+      }
+    }
+    // First persist pending edits of the current window, then swap the RAM
+    // window with page 1 of the requested collection from IndexedDB.
+    // (A plain setActiveCollection + save here used to persist an EMPTY window
+    // for the new collection, wiping the rows of every other collection.)
+    await repo.getById(command.store, command.tableKey);
+    const loaded = await repo.setActiveCollection(
+      command.store,
+      command.tableKey,
+      command.activeCollection,
+    );
     try {
-      table.setActiveCollection(command.activeCollection)
-       this.applyVisibility({table,command});
-      await this.repo.save(command.store, table);
+      if (!loaded) {
+        const out: TableEvent = {
+          type: 'ACTIVE_COLLECTION_CHANGED',
+          tableId: command.tableKey,
+        };
+        this.audit.log({ type: out.type, message: out.type, payload: out.tableId });
+        return [out];
+      }
+
+      loaded.setActiveCollection(command.activeCollection);
+      this.applyVisibility({ table: loaded, command });
+      await this.repo.save(command.store, loaded);
       const out: TableEvent = {
         type: 'ACTIVE_COLLECTION_CHANGED',
         tableId: command.tableKey,
@@ -273,20 +351,25 @@ private async applyVisibility(input: {
         payload: out.tableId
       }); return [out];
     } catch (error) {
-      if (error instanceof DomainError) {
-        this.audit.log({
-          type: error.code,
-          message: error.message,
-          payload: error.details
-        });
-      } else {
-        this.audit.log({
-          type: 'INVARIANT_VIOLATION',
-          message: 'Unexpected error',
-          payload: { error }
-        });
-      } return []
+      return this.handleSetActiveError(error);
     }
+  }
+
+  private handleSetActiveError(error: unknown): TableEvent[] {
+    if (error instanceof DomainError) {
+      this.audit.log({
+        type: error.code,
+        message: error.message,
+        payload: error.details
+      });
+    } else {
+      this.audit.log({
+        type: 'INVARIANT_VIOLATION',
+        message: 'Unexpected error',
+        payload: { error }
+      });
+    }
+    return [];
   }
 }
 

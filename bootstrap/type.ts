@@ -127,6 +127,18 @@ export type CreateERPTableConfig<TRow = unknown> = {
    */
   getRowId?: GetRowId<NoInfer<TRow>>;
   repo?: TableRepository;
+  /**
+   * Persistence strategy (requires `store`).
+   * - `'event-sourced'` (default): whole table in RAM, durable log in the
+   *   EventStore, optional virtualization, sort/filter over every row.
+   * - `'paged-idb'`: arianERP document-grid mode. IndexedDB holds EVERY row
+   *   (one record per row); RAM holds exactly one page window (heap is
+   *   O(page), never O(rows)); pagination drives loading; delete-selected /
+   *   select-all / search / save-snapshot stream from IndexedDB. Sort / filter
+   *   / virtualization act on the current page only; for unbounded sets use
+   *   `rowModelType: 'infinite'`.
+   */
+  persistence?: 'event-sourced' | 'paged-idb';
   audit?: AuditLogger;
   permissionPolicy?: PermissionPolicy;
   tableHeight?: number;

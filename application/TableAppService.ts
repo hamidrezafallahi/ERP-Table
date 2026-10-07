@@ -7,6 +7,7 @@ import {
 import { CellChangedEvent, TableEvent } from './events';
 import {
   ApplyDynamicProjectionHandler,
+  ApplyRowVisibilityHandler,
   ChangeCellDisplayValueHandler,
   ChangeCellValueHandler,
   SaveDescriptionHandler,
@@ -16,6 +17,7 @@ import {
   AddNewRowCommandHandler,
   AddNewRowsCommandHandler,
   DeleteRowCommandHandler,
+  DeleteRowsCommandHandler,
   DuplicateRowCommandHandler,
   PasteRowCommandHandler,
   ReorderRowCommandHandler,
@@ -61,6 +63,9 @@ export class TableAppService {
     private readonly restoreAddedRow?: RestoreAddedRowCommandHandler,
     private readonly pasteRow?: PasteRowCommandHandler,
     private readonly reorderColumn?: ReorderColumnCommandHandler,
+    /** Page-window (paged-idb) mode only. */
+    private readonly applyRowVisibility?: ApplyRowVisibilityHandler,
+    private readonly deleteRows?: DeleteRowsCommandHandler,
   ) {}
 
   setEventStore(eventStore: EventStore): void {
@@ -119,6 +124,9 @@ export class TableAppService {
         return this.saveDescription.execute(command, actor);
       case 'APPLY_DYNAMIC_PROJECTION':
         return this.applyDynamicProjection.execute(command, actor);
+      case 'APPLY_ROW_VISIBILITY':
+        if (!this.applyRowVisibility) return [];
+        return this.applyRowVisibility.execute(command, actor);
       case 'CHANGE_CELL_DISPLAY_VALUE':
         return this.changeCellDisplayValue.execute(command, actor);
       case 'ADD_EMPTY_ROW':
@@ -141,6 +149,11 @@ export class TableAppService {
           throw new Error('RESTORE_ADDED_ROW handler is not configured');
         }
         return this.restoreAddedRow.execute(command, actor);
+      case 'ROWS_DELETED':
+        if (!this.deleteRows) {
+          throw new Error('ROWS_DELETED handler is not configured');
+        }
+        return this.deleteRows.execute(command, actor);
       case 'TABLE_RESET':
         return this.resetTable.execute(command, actor);
       case 'TABLE_DELETED':

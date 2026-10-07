@@ -164,6 +164,8 @@ export interface RestoreAddedRowCommand extends BaseTableCommand {
 
 export interface DeleteRowsCommand extends BaseTableCommand {
   readonly type: 'ROWS_DELETED';
+  /** Selected row ids (may include rows not in the RAM page window). Filled by engine if omitted. */
+  readonly rowIds?: number[];
 }
 export interface ExpandRowCommand {
   readonly type: 'ROW_EXPANDED';
@@ -208,10 +210,8 @@ export interface RowReorderedCommand extends BaseTableCommand {
 
 export interface SelectAllRowsCommand {
   readonly type: 'TOGGLE_SELECT_ALL_ROWS';
+  readonly store: string;
   readonly tableKey: string;
-
-
-
 }
 export interface SelectPageRowsCommand {
   readonly type: 'TOGGLE_SELECT_PAGE_ROWS';
@@ -293,6 +293,16 @@ export interface ApplyDynamicProjectionCommand extends BaseTableCommand {
   readonly rowId: number;
   readonly columnId: string;
 
+}
+
+/**
+ * اعمال مجدد شروط visibility ریموت برای یک سطر مشخص (مثلاً هنگام active شدن سطر
+ * در حالت ویرایش) بدون تغییر RowState یا پاک‌کردن سلول‌های وابسته.
+ */
+export interface ApplyRowVisibilityCommand extends BaseTableCommand {
+  readonly type: 'APPLY_ROW_VISIBILITY';
+  readonly tableKey: string;
+  readonly rowId: number;
 }
 
 /* ---------- UI overlay state (engine-managed) ---------- */
@@ -435,7 +445,9 @@ export type ApplicationTableCommand =
   | ColumnReorderedCommand
   | ChangePageCommand
   | ChangePageSizeCommand
-  | ApplyDynamicProjectionCommand;
+  | ApplyDynamicProjectionCommand
+  | ApplyRowVisibilityCommand
+  | DeleteRowsCommand;
 
 export type TableCommand =
   | EngineTableCommand
@@ -460,6 +472,7 @@ const applicationCommandTypes = new Set<TableCommand['type']>([
   'CHANGE_PAGE',
   'CHANGE_PAGE_SIZE',
   'APPLY_DYNAMIC_PROJECTION',
+  'APPLY_ROW_VISIBILITY',
 ]);
 
 export function isApplicationTableCommand(

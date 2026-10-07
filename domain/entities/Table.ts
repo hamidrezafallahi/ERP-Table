@@ -37,6 +37,22 @@ export class Table {
     private activeCollection: string = 'default'
   ) { }
 
+  /**
+   * Page-window mode (persistence 'paged-idb'): the Collection row Maps hold
+   * ONLY the current page; Pagination.totalRows is the source of truth for
+   * totals. In the default mode the Maps hold every row and pagination slices.
+   */
+  private pageWindow = false;
+
+  isPageWindow(): boolean {
+    return this.pageWindow;
+  }
+
+  setPageWindow(enabled: boolean): this {
+    this.pageWindow = enabled;
+    return this;
+  }
+
   // ─── Collection accessor helper ───────────────────────────────────────────
 
   private getActiveCollection(): Collection {
@@ -311,7 +327,7 @@ export class Table {
     return new RowAdded(newRowId);
   }
 
-  addNewRow(data?: KeyValue[]): RowAdded {
+  addNewRow(data?: KeyValue[], nextIndex?: number): RowAdded {
     const col = this.getActiveCollection();
     const newRowId = new RowId(Math.floor((1 + Math.random()) * 0x10000000000000000));
     const rowId = new RowId(newRowId.value);
@@ -328,18 +344,23 @@ export class Table {
       let value: unknown = null;
       let display: unknown = null;
       if (columnId === "index") {
-        const rows = Array.from(col.getRows().values());
+        if (nextIndex != null) {
+          value = nextIndex;
+          display = value;
+        } else {
+          const rows = Array.from(col.getRows().values());
 
-        const maxIndex = rows.length
-          ? Math.max(
-            ...rows.map(r =>
-              Number(r.getCell("index")?.getValue() ?? 0)
+          const maxIndex = rows.length
+            ? Math.max(
+              ...rows.map(r =>
+                Number(r.getCell("index")?.getValue() ?? 0)
+              )
             )
-          )
-          : 0;
+            : 0;
 
-        value = maxIndex + 1;
-        display = value;
+          value = maxIndex + 1;
+          display = value;
+        }
       } else if (dataMap?.has(columnId)) {
         const item = dataMap.get(columnId);
         value = item?.value;
@@ -363,9 +384,16 @@ export class Table {
 
     col.getRows().set(newRowId.value, newRow);
 
-    const totalRows = col.getRows().size;
-    const lastPage = Math.ceil(totalRows / this.pagination.pageSize);
-    this.changePage(lastPage);
+    if (this.pageWindow) {
+      // totalRows lives in Pagination (IndexedDB meta), not Map.size of the page window
+      const totalRows = this.pagination.totalRows + 1;
+      const lastPage = Math.max(1, Math.ceil(totalRows / this.pagination.pageSize));
+      this.pagination = new Pagination(lastPage, this.pagination.pageSize, totalRows);
+    } else {
+      const totalRows = col.getRows().size;
+      const lastPage = Math.ceil(totalRows / this.pagination.pageSize);
+      this.changePage(lastPage);
+    }
 
     return new RowAdded(newRowId);
   }
@@ -530,8 +558,14 @@ export class Table {
     this.pagination = this.pagination.changePageSize(size).changePage(1);
   }
 
+  /**
+   * Rows currently held in RAM for the active collection.
+   * With page-window storage the Collection Map already contains only the
+   * current page — do not slice by pagination offsets.
+   */
   getVisibleRows(): Row[] {
     const filteredRows = this.getRows().filter(r => r.collection === this.activeCollection);
+    if (this.pageWindow) return filteredRows;
     const start = (this.pagination.page - 1) * this.pagination.pageSize;
     return filteredRows.slice(start, start + this.pagination.pageSize);
   }
@@ -619,6 +653,12 @@ export class Table {
     return new RowAdded(rowId);
   }
 
+  /**
+   * Delete semantics:
+   * - `Added` → hard-remove from the table (physically gone).
+   * - `Deleted` → restore (قابل برگرداندن).
+   * - otherwise (`Unchanged` / `Modified`) → soft-delete (`rowState = Deleted`).
+   */
   deleteRow(
     rowId: RowId
   ): RowDeleted | RowRestored | RowRemoved | MinimumRowConstraintViolated | null {
@@ -626,31 +666,34 @@ export class Table {
     const rows = col.getRows();
     const row = rows.get(rowId.value);
     if (!row) return null;
-    if (row.rowState.value === RowStateEnum.Added && rows.size === 1) {
-      rows.delete(rowId.value);
-      this.addNewRow();
-      return new MinimumRowConstraintViolated(rowId);
-    }
 
-    if (row.rowState.value === RowStateEnum.Added && rows.size > 1) {
+    // Added → complete removal
+    if (row.rowState.value === RowStateEnum.Added) {
+      if (rows.size === 1) {
+        rows.delete(rowId.value);
+        this.addNewRow();
+        return new MinimumRowConstraintViolated(rowId);
+      }
       rows.delete(rowId.value);
       return new RowRemoved(rowId);
     }
 
-    if (row.rowState.value === RowStateEnum.Unchanged) {
-      row.rowState = new RowState(RowStateEnum.Deleted);
+    // Already soft-deleted → restore
+    if (row.rowState.value === RowStateEnum.Deleted) {
+      const otherChanges = row
+        .getChangeFields()
+        .filter(field => field !== 'RowState');
+      row.rowState = new RowState(
+        otherChanges.length > 0 ? RowStateEnum.Modified : RowStateEnum.Unchanged,
+      );
       row.updateChangeFields(new ColumnId('RowState'));
-      return new RowDeleted(rowId);
+      return new RowRestored(rowId);
     }
 
-    // Modified or Deleted → restore
-    if (row.getChangeFields().length > 0) {
-      row.rowState = new RowState(RowStateEnum.Modified);
-    } else {
-      row.rowState = new RowState(RowStateEnum.Unchanged);
-    }
+    // Unchanged / Modified → soft-delete (قابل برگرداندن)
+    row.rowState = new RowState(RowStateEnum.Deleted);
     row.updateChangeFields(new ColumnId('RowState'));
-    return new RowRestored(rowId);
+    return new RowDeleted(rowId);
   }
   // ─── Reorder ──────────────────────────────────────────────────────────────
   reorderRows(
@@ -753,6 +796,6 @@ export class Table {
       this.pagination,
       this.action,
       this.activeCollection
-    );
+    ).setPageWindow(this.pageWindow);
   }
 }

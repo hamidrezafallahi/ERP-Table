@@ -290,6 +290,16 @@ export class UITableController {
       this.publishPresenceCell(rowId, columnId);
       return;
     }
+    if (prev?.rowId !== rowId) {
+      // سطر عوض شد: شروط visibility ریموتِ سطر تازه‌فعال‌شده دوباره گرفته می‌شود
+      // (در حالت ویرایش سطری که مقدار تعیین‌کننده دارد visibilityCondition می‌سازد).
+      void this.engine.dispatch({
+        type: 'APPLY_ROW_VISIBILITY',
+        store: this.store,
+        tableKey: this.tableKey,
+        rowId,
+      });
+    }
     this.engine.dispatch({ type: 'ACTIVE_CELL', tableKey: this.tableKey, rowId, columnId });
     this.publishPresenceCell(rowId, columnId);
   }
@@ -367,7 +377,11 @@ export class UITableController {
   }
 
   private async toggleRowSelect(): Promise<void> {
-    await this.engine.dispatch({ type: 'TOGGLE_SELECT_ALL_ROWS', tableKey: this.tableKey });
+    await this.engine.dispatch({
+      type: 'TOGGLE_SELECT_ALL_ROWS',
+      store: this.store,
+      tableKey: this.tableKey,
+    });
   }
 
   private async togglePageRowSelect(): Promise<void> {
@@ -658,6 +672,74 @@ export class UITableController {
     return this.safe(() => this.engine.getSnapShot(collectionScope ?? "active"), 'getSnapShot');
   }
 
+  /** Full IndexedDB snapshot for server save / export. */
+  async getFullSnapShot(collectionScope?: CollectionScope) {
+    try {
+      return await this.engine.getFullSnapShot(
+        this.store,
+        collectionScope ?? 'active',
+      );
+    } catch (e) {
+      this.audit.log({
+        type: 'ERROR',
+        message: 'getFullSnapShot failed',
+        payload: e,
+      });
+      return null;
+    }
+  }
+
+  /** All domain rows from IndexedDB (not just the RAM page window). */
+  async getAllRowsFromDb(collectionScope?: CollectionScope) {
+    try {
+      return await this.engine.getAllRowsFromDb(
+        this.store,
+        collectionScope ?? 'active',
+      );
+    } catch (e) {
+      this.audit.log({
+        type: 'ERROR',
+        message: 'getAllRowsFromDb failed',
+        payload: e,
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Stream serialized row records from IndexedDB in bounded batches (no full
+   * load). Heap holds one batch at a time. Return false from onBatch to stop.
+   */
+  async iterateRowsFromDb(
+    collectionScope: CollectionScope,
+    onBatch: (
+      records: {
+        rowId: number;
+        collection: string;
+        sortIndex: number;
+        rowState: string;
+        cells: Record<string, { value: unknown; originalValue: unknown; display: unknown }>;
+      }[],
+      ordinalBase: number,
+    ) => Promise<boolean | void>,
+    batchSize?: number,
+  ): Promise<void> {
+    try {
+      await this.engine.iterateRowsFromDb(
+        this.store,
+        collectionScope,
+        onBatch,
+        batchSize,
+      );
+    } catch (e) {
+      this.audit.log({
+        type: 'ERROR',
+        message: 'iterateRowsFromDb failed',
+        payload: e,
+      });
+    }
+  }
+
   getCell(rowId: number, columnId: string) {
     return this.safe(() => this.engine.getCell(rowId, columnId), 'getCell');
   }
@@ -884,8 +966,62 @@ export class UITableController {
     return this.tableKey;
   }
 
-  subscribeColumn<T>(columnId: string, collections: CollectionScope, cb: (values: T[]) => void) {
-    return this.engine.subscribeColumn(columnId, collections, cb as (values: unknown[]) => void);
+  /**
+   * Streamed column subscription (Memory Iron Rule compliant): every row's
+   * {id, rowNum, value} is folded into  via  (heap = one batch,
+   * never the full dataset);  fires only when the column data changed.
+   *
+   * Legacy form  (cb receives the
+   * item array) is still supported.
+   */
+  subscribeColumn<T>(
+    columnId: string,
+    collections: CollectionScope,
+    reducer: (acc: T, item: { id: number; rowNum: unknown; value: unknown }) => T,
+    seed: T,
+    cb: (acc: T) => void,
+  ): (() => void) | null;
+  subscribeColumn<T>(
+    columnId: string,
+    collections: CollectionScope,
+    cb: (values: Array<{ id: number; rowNum: unknown; value: T }>) => void,
+  ): (() => void) | null;
+  subscribeColumn(
+    columnId: string,
+    collections: CollectionScope,
+    ...rest: unknown[]
+  ): (() => void) | null {
+    if (rest.length === 1 && typeof rest[0] === 'function') {
+      const legacyCb = rest[0] as (
+        values: Array<{ id: number; rowNum: unknown; value: unknown }>,
+      ) => void;
+      return this.engine.subscribeColumn<
+        Array<{ id: number; rowNum: unknown; value: unknown }>
+      >(
+        columnId,
+        collections,
+        (acc, item) => {
+          acc.push(item);
+          return acc;
+        },
+        [] as Array<{ id: number; rowNum: unknown; value: unknown }>,
+        legacyCb,
+        this.store,
+      );
+    }
+    const [reducer, seed, cb] = rest as [
+      (acc: unknown, item: { id: number; rowNum: unknown; value: unknown }) => unknown,
+      unknown,
+      (acc: unknown) => void,
+    ];
+    return this.engine.subscribeColumn(
+      columnId,
+      collections,
+      reducer,
+      seed,
+      cb,
+      this.store,
+    );
   }
   validation: () => (callback: (result: ValidationCallbackResult) => void) => void = () => (callback) => {
     this.engine.validation((result) => {
@@ -931,12 +1067,13 @@ export class UITableController {
     this.disposed = true;
     this.presencePort?.dispose();
     this.presencePort = undefined;
-    this.engine.dispatch({ type: 'TABLE_DISPOSED', store: this.store, tableKey: this.tableKey });
+    void this.engine.dispatch({ type: 'TABLE_DISPOSED', store: this.store, tableKey: this.tableKey });
   }
 
   // ─── main dispatch ───────────────────────────────────────────────────
 
   async dispatch(command: UITableCommand): Promise<void> {
+    if (this.disposed) return;
     try {
       await this.dispatchInternal(command);
     } catch (error) {

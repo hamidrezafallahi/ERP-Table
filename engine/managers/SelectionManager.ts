@@ -73,15 +73,21 @@ export class SelectionManager {
     });
   }
 
-  toggleSelectAllRows(cmd: { tableKey: string }): void {
+  /**
+   * Toggle selection of every row in the dataset (ids from IndexedDB SoT).
+   * Does not use the RAM page window — `rowIds` must be the full id list.
+   */
+  toggleSelectAllRows(cmd: { tableKey: string; rowIds: number[] }): void {
     const store = this.getStore(cmd.tableKey);
     if (!store) return;
 
     const state = store.getState();
-    const allRows = state.table.getRows();
-
+    const ids = cmd.rowIds;
+    const selectedCount = Object.keys(state.selectedRows).length;
     const allSelected =
-      Object.keys(state.selectedRows).length === allRows.length;
+      ids.length > 0 &&
+      selectedCount === ids.length &&
+      ids.every(id => state.selectedRows[id]);
 
     store.setState(prev => {
       if (allSelected) {
@@ -89,10 +95,9 @@ export class SelectionManager {
       }
 
       const nextSelected: Record<number, true> = {};
-
-      allRows.forEach(row => {
-        nextSelected[row.id.value] = true;
-      });
+      for (const id of ids) {
+        nextSelected[id] = true;
+      }
 
       return { ...prev, selectedRows: nextSelected };
     });

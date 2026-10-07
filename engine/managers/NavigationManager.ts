@@ -4,9 +4,11 @@ import {
   Actor,
   ApplyDynamicProjectionCommand,
   TableCommand,
+  ApplyRowVisibilityCommand,
 } from '../../application/commands';
 import { TableRepository } from '../../application/ports/TableRepository';
 import { TableAppService } from '../../application/TableAppService';
+import { ColumnSchema } from '../../bootstrap/type';
 import { Row } from '../../domain/entities/Row';
 import { EngineErrorHandler } from '../EngineErrorHandler';
 import { TableStore } from '../tableStore';
@@ -31,6 +33,12 @@ export class NavigationManager {
     private readonly dispatch: (cmd: TableCommand) => Promise<void>,
     /** Ordered UI row index (PR-99) — O(1) vertical neighbor. */
     private readonly getUiRowIndex: () => SparseRowIndex<number>,
+    /**
+     * متای زندهٔ ستون‌ها از کانفیگ (دارای resolveOn / dynamicSource). در حالت
+     * page-window ستون‌های RAM از IndexedDB می‌آیند و توابع را ندارند؛ پس برای
+     * تشخیص ستون‌های شرطیِ فعال‌شدن سطر لازم است. optional.
+     */
+    private readonly columnMeta?: Map<string, ColumnSchema>,
   ) { }
 
   private getStore(tableKey: string) {
@@ -132,7 +140,15 @@ export class NavigationManager {
     const { table } = store.getState();
     if (!table) return;
 
-    const columns = table.getColumns();
+    // ستون‌های جدول RAM پس از معماری page-window از متای ذخیره‌شدهٔ IndexedDB
+    // ساخته می‌شوند که توابع (resolveOn / dynamicSource) را serialize نمی‌کند؛
+    // پس منبع تشخیص باید columnMeta زندهٔ کانفیگ باشد، نه ستون‌های RAM.
+    const columns: ColumnSchema[] = this.columnMeta
+      ? Array.from(this.columnMeta.values()).filter(
+          col => (col.fieldCollection ?? 'default') ===
+            (table.getActiveCollectionName() ?? 'default'),
+        )
+      : table.getColumns();
     const cellDependency = new Set<string>();
 
     columns
@@ -148,6 +164,35 @@ export class NavigationManager {
           cellDependency.add(dep);
         }
       });
+
+    /* ستون‌های دارای resolveOn تعیین‌کنندهٔ visibilityCondition ریموت سطرند؛
+       هنگام فعال‌شدن سطر (مثلاً در حالت ویرایش) باید visibilityCondition
+       از روی مقادیر فعلی آن‌ها دوباره گرفته شود. */
+    const resolveOnFields = new Set(
+      columns
+        .filter(col => col.resolveOn != null)
+        .map(col => col.resolveOn!.fieldName)
+        .filter(f => !!f),
+    );
+
+    for (const col of resolveOnFields) {
+      const cell = row.getCell(col);
+      if (!cell) continue;
+      const val = cell.getValue();
+      if (val == null || val === '') continue;
+
+      const command: ApplyRowVisibilityCommand = {
+        type: 'APPLY_ROW_VISIBILITY',
+        store: cmd.store,
+        tableKey: cmd.tableKey,
+        rowId: cmd.rowId,
+      };
+      try {
+        await this.app.execute(command, this.actor);
+      } catch (e) {
+        this.err.handle(e, 'NavigationManager.fetchVisibilityCondition.applyRowVisibility');
+      }
+    }
 
     for (const col of cellDependency) {
       const cell = row.getCell(col);
@@ -199,7 +244,6 @@ export class NavigationManager {
     const table = state.table;
 
     const row = table.getRow(cmd.rowId);
-
     if (!row) {
       this.err.notFound('Row not found in moveActiveCell', `${cmd.rowId}`);
 
@@ -224,13 +268,13 @@ export class NavigationManager {
           c.fieldType !== 'static',
       );
 
+
     const currentColIndex = columns.findIndex(c => c.fieldName === cmd.columnId);
     if (currentColIndex === -1) return;
 
     const nextColIndex =
       cmd.direction === 'next' ? currentColIndex + 1 : currentColIndex - 1;
     const nextColumn = columns[nextColIndex];
-
     // حرکت در همان سطر
     if (nextColumn !== undefined) {
       store.setState(prev => ({
@@ -238,10 +282,8 @@ export class NavigationManager {
         activeRowId: cmd.rowId,
         activeCell: { rowId: cmd.rowId, columnId: nextColumn.fieldName },
       }));
-      await this.repo.save(cmd.store, store.getState().table);
       return;
     }
-
     // رسیدیم به انتهای ستون‌های سطر جاری
     const allRows = table.getRows();
     const currentRowIndex = allRows.findIndex(r => r.id.value === cmd.rowId);
@@ -269,7 +311,6 @@ export class NavigationManager {
           activeRowId: nextRowId,
           activeCell: { rowId: nextRowId, columnId: columns[0].fieldName },
         }));
-        await this.repo.save(cmd.tableKey, store.getState().table);
         return;
       }
 
@@ -296,7 +337,6 @@ export class NavigationManager {
           activeRowId: prevRowId,
           activeCell: { rowId: prevRowId, columnId: lastColumn.fieldName },
         }));
-        await this.repo.save(cmd.tableKey, store.getState().table);
       }
     }
   }

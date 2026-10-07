@@ -187,14 +187,17 @@ describe('table domain behavior', () => {
     expect(table.getRows()).toHaveLength(1);
   });
 
-  it('restores a modified row instead of deleting it permanently', () => {
+  it('soft-deletes a modified row (arianERP parity), then restores it on the next delete', () => {
     const table = createTable([createRow({ rowId: 1, index: 1, name: 'alpha' })]);
     table.changeCell(new RowId(1), new ColumnId('name'), 'beta');
 
-    const event = table.deleteRow(new RowId(1));
+    const deleted = table.deleteRow(new RowId(1));
     const row = table.getRow(1)!;
+    expect(deleted?.type).toBe('ROW_DELETED');
+    expect(row.rowState.value).toBe(RowStateEnum.Deleted);
 
-    expect(event?.type).toBe('ROW_RESTORED');
+    const restored = table.deleteRow(new RowId(1));
+    expect(restored?.type).toBe('ROW_RESTORED');
     expect(row.rowState.value).toBe(RowStateEnum.Modified);
     expect(row.getChangeFields()).toEqual(['name']);
   });

@@ -12,6 +12,11 @@ import {
 import {
   LocalTableRepository,
 } from '../infrastructure/Repositories/localTableRepository';
+import { PagedCachedTableRepository } from '../infrastructure/Repositories/paged/PagedCachedTableRepository';
+import {
+  isWindowedRepository,
+  WindowedTableRepository,
+} from '../application/ports/TableRepository';
 import {
   ConsoleAuditLogger,
 } from '../infrastructure/Repositories/consoleAuditLogger';
@@ -140,6 +145,78 @@ function resolveHostRows<TRow>(
   );
 }
 
+/**
+ * Page-window seeding (persistence 'paged-idb'): first open pushes the full
+ * seed to IndexedDB (replaceAll) and keeps ONE page in RAM; re-open reuses the
+ * persisted window. Conditional (whenFieldTruthy / whenRemoteFlag) columns that
+ * hold data are unhidden in their own collection.
+ */
+async function seedWindowedTable(args: {
+  repo: WindowedTableRepository;
+  store: string;
+  tableKey: string;
+  table: Table;
+  loadedTable?: Table;
+  columns: Map<string, ColumnSchema>;
+  columnMeta: Map<string, ColumnSchema>;
+  page: number;
+  pageSize: number;
+  activeRowCount: number;
+}): Promise<Table> {
+  const { repo, store, tableKey, loadedTable, columns, columnMeta, page, pageSize } =
+    args;
+  let table = args.table;
+
+  if (loadedTable) {
+    table.setColumns(Array.from(columns.values()));
+    // ویرایش (باز شدن مجدد جدول از IndexedDB): ستون‌های شرطیِ محتوا دار باید
+    // در کالکشن خودشان نمایان شوند — حتی کالکشن‌هایی که سطرشان در پنجرهٔ RAM
+    // نیست. اسکن مقدار، per-collection روی متای ستون‌ها انجام می‌شود.
+    const activeName = table.getActiveCollectionName() ?? 'default';
+    const conditionByCollection = new Map<string, Map<string, boolean>>();
+    for (const row of table.getCollections().get(activeName)?.getRows().values() ?? []) {
+      const cond = row.getVisibilityCondition() ?? {};
+      for (const [fieldName, flag] of Object.entries(cond)) {
+        if (flag !== true) continue;
+        const colCfg =
+          columnMeta.get(`${activeName}_${fieldName}`) ?? columnMeta.get(fieldName);
+        const coll = colCfg?.fieldCollection ?? activeName;
+        (
+          conditionByCollection.get(coll) ??
+          conditionByCollection.set(coll, new Map()).get(coll)!
+        ).set(fieldName, true);
+      }
+    }
+    for (const cfg of columnMeta.values()) {
+      const coll = cfg.fieldCollection ?? activeName;
+      if (conditionByCollection.get(coll)?.get(cfg.fieldName) !== true) continue;
+      const target = table.getCollections().get(coll);
+      const cur = target?.getColumns().get(cfg.fieldName);
+      if (target && cur) {
+        target.getColumns().set(cfg.fieldName, { ...cur, hidden: false });
+      }
+    }
+    const loadedActiveCount =
+      table.getCollections().get(table.getActiveCollectionName())?.getRows().size ?? 0;
+    const totalRows =
+      loadedActiveCount > 0
+        ? Math.max(table.getPagination().totalRows, loadedActiveCount)
+        : table.getPagination().totalRows;
+    table.setPagination(new Pagination(page, pageSize, totalRows));
+    await repo.save(store, table);
+  } else {
+    table.setColumns(Array.from(columns.values()));
+    table.setPagination(new Pagination(page, pageSize, args.activeRowCount));
+    // Full dataset → IndexedDB source of truth; RAM kept to page 1 only
+    await repo.replaceAll(store, table);
+  }
+
+  // Always bind the engine to the RAM page window (not the full dataset)
+  const pageWindow = await repo.loadPage(store, tableKey, page, pageSize);
+  if (pageWindow) table = pageWindow;
+  return table.setPageWindow(true);
+}
+
 async function assembleGrid<TRow>(
   config: CreateERPTableConfig<TRow>,
 ): Promise<CreateERPTableResult<TRow>> {
@@ -152,9 +229,23 @@ async function assembleGrid<TRow>(
   };
 
   // ---------- infra ----------
+  const pagedIdb = config.persistence === 'paged-idb';
+  if (pagedIdb && !persist) {
+    throw new Error(
+      "[createGrid] persistence 'paged-idb' requires a non-empty `store`",
+    );
+  }
+  if (pagedIdb && !config.tableKey) {
+    throw new Error("[createGrid] persistence 'paged-idb' requires `tableKey`");
+  }
   const repo =
     config.repo ??
-    (persist ? new CachedTableRepository() : new LocalTableRepository());
+    (pagedIdb
+      ? new PagedCachedTableRepository()
+      : persist
+        ? new CachedTableRepository()
+        : new LocalTableRepository());
+  const windowed = isWindowedRepository(repo);
   const audit = config.audit ?? new ConsoleAuditLogger();
   const remoteApi = config.remoteApi ?? new NoopRemoteApi();
   const eventStore = await resolveEventStore(resolved, persist);
@@ -215,7 +306,7 @@ async function assembleGrid<TRow>(
     store,
     tableKey,
     remoteApi,
-    { skipPersistLoad: usingRowData || !persist },
+    { skipPersistLoad: windowed ? false : usingRowData || !persist },
   );
   const initialCollection = buildCollections(
     collectionColumns,
@@ -233,14 +324,36 @@ async function assembleGrid<TRow>(
     }
   }
   // ---------- table ----------
-  const table = loadedTable || new Table(
+  // Pagination total = ACTIVE collection's own row count (windowed mode):
+  // rows.size spans every collection on multi-collection pages.
+  const activeRowCount = windowed
+    ? initialCollection.get(activeCollection ?? 'default')?.getRows().size ??
+      rows.size
+    : pageSize;
+  let table = loadedTable || new Table(
     tableKey,
     initialCollection,
-    new Pagination(page, pageSize, pageSize),
+    new Pagination(page, pageSize, activeRowCount),
     null,
     activeCollection ?? 'default'
   );
-  if (loadedTable) {
+  if (windowed) {
+    table.setPageWindow(true);
+    await seedWindowedTable({
+      repo: repo as WindowedTableRepository,
+      store,
+      tableKey,
+      table,
+      loadedTable,
+      columns,
+      columnMeta,
+      page,
+      pageSize,
+      activeRowCount,
+    }).then((w) => {
+      table = w;
+    });
+  } else if (loadedTable) {
     table.setColumns(Array.from(columns.values()));
     table.setPagination(new Pagination(page, pageSize, pageSize)); await repo.save(store, table);
   } else {
@@ -255,7 +368,7 @@ async function assembleGrid<TRow>(
   }
 
   // ---------- engine & session & controller ----------
-  const engine = new TableEngine(app, repo, actor, audit);
+  const engine = new TableEngine(app, repo, actor, audit, columnMeta);
   engineRef.current = engine;
   const session = new DefaultGridSession({
     engine,
