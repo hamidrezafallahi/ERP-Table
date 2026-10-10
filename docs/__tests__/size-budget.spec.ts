@@ -11,8 +11,8 @@ import {
 } from '../../scripts/sizeBudget.mjs';
 
 describe('size budget (PR-73)', () => {
-  it('main gzip ceiling is 65 KB after PR-76', () => {
-    expect(MAIN_GZIP_LIMIT_BYTES).toBe(65 * 1024);
+  it('main gzip ceiling is 66 KB (raised from 65 for paged-idb mode)', () => {
+    expect(MAIN_GZIP_LIMIT_BYTES).toBe(66 * 1024);
   });
 
   it('.size-limit.js declares budgets for current and future subpaths', async () => {
@@ -23,7 +23,7 @@ describe('size budget (PR-73)', () => {
     if (existsSync(join(process.cwd(), 'dist/index.js'))) {
       expect(names).toContain('.');
       const main = config.find((e: { name: string }) => e.name === '.');
-      expect(main?.limit).toBe('65 KB');
+      expect(main?.limit).toBe('66 KB');
     }
     const source = readFileSync(join(process.cwd(), '.size-limit.js'), 'utf8');
     for (const sub of [

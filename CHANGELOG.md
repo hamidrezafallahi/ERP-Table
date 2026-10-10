@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Main entry gzip ceiling raised **65 → 66 KB** (D15 amended) to budget the paged-idb mode (+0.5 KB measured).
+
 - **Behaviour change:** `Table.deleteRow` now soft-deletes a *modified* row (`RowState = Delete`) and restores only a row that is already deleted (it used to restore a modified row). Matches the arianERP host table.
 - `isInitiallyHidden` scopes the "has data" check to the column's own collection (no cross-collection unhide).
 
@@ -45,7 +47,7 @@ Phase 16–24 pre-`1.0.0` channel (D25 / PR-134). Install with `npm i persian-da
 - `SyncPort` / `GridSyncService` / `<GridSyncPanel />`: push pending events, pull remote, cell conflict policies `lastWriteWins` / `serverWins` / `manual`; UI on `persian-data-grid/sync`; hub on `/headless` (PR-138)
 - Presence / `<GridPresencePanel />`: peer cursors via BroadcastChannel or injectable transport; UI on `persian-data-grid/presence` (PR-139)
 - CI on Node 18 / 20 / 22 and a provenance publish workflow (PR-72)
-- `size-limit` gzip budget; main entry ceiling 65 KB after the split (PR-73, PR-76)
+- `size-limit` gzip budget; main entry ceiling 66 KB after the split (PR-73, PR-76)
 - Subpath exports: `headless`, `plugins/excel`, `plugins/pdf`, `plugins/pdf/fonts/vazirmatn`, `adapters/arian-erp`, `styles.css` (PR-76 / D15)
 - `injectGridStyles()` for hosts without a CSS bundler (PR-77 / D16)
 - `LICENSE` and Vazirmatn `OFL.txt` in the npm tarball; `CONTRIBUTING.md`, `SECURITY.md`, GitHub issue templates (PR-78)

@@ -5,7 +5,7 @@
  * `docs/ag-grid-gap-analysis.md` §۴ plus the PR-135 verify list.
  * Exit 0 only when every check passes.
  * D22 deferred (single package): `monorepo-core` is waived.
- * D15 locks main at ≤65 KB gzip; §۴ 60 KB is a stretch goal, not a hard fail.
+ * D15 locks main at ≤66 KB gzip; §۴ 60 KB is a stretch goal, not a hard fail.
  *
  * Usage: node ./scripts/release-gate.mjs
  */
@@ -17,7 +17,7 @@ import { MAIN_GZIP_LIMIT_BYTES } from './sizeBudget.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** §۴ “آماده برای انتشار جدی” still uses 60 KB; D15/PR-76 publish ceiling is 65 KB. */
+/** §۴ “آماده برای انتشار جدی” still uses 60 KB; D15/PR-76 publish ceiling is 66 KB. */
 const SERIOUS_RELEASE_GZIP_LIMIT_BYTES = 60 * 1024;
 const MIN_GENERAL_SCORE = 70;
 const MIN_DIFF_SCORE = 90;
@@ -114,26 +114,26 @@ check(
   `differentiation score ${scores.diff} (need ≥ ${MIN_DIFF_SCORE} for 1.0.0)`,
 );
 
-// 2) Bundle ≤ 65 KB gzip (PR-135 / D15)
+// 2) Bundle ≤ 66 KB gzip (PR-135 / D15)
 const mainPath = join(root, 'dist/index.js');
 if (!existsSync(mainPath)) {
-  check('bundle-65kb', false, 'dist/index.js missing — run yarn build');
+  check('bundle-66kb', false, 'dist/index.js missing — run yarn build');
   check('bundle-60kb', false, 'dist/index.js missing — run yarn build');
 } else {
   const raw = readFileSync(mainPath);
   const gzipBytes = gzipSync(raw, { level: 9 }).length;
   check(
-    'bundle-65kb',
+    'bundle-66kb',
     gzipBytes <= MAIN_GZIP_LIMIT_BYTES,
-    `main gzip ${gzipBytes} B (limit ${MAIN_GZIP_LIMIT_BYTES} = 65 KB)`,
+    `main gzip ${gzipBytes} B (limit ${MAIN_GZIP_LIMIT_BYTES} = 66 KB)`,
   );
-  // §۴ 60 KB stretch — waived for 1.0.0; D15 hard ceiling is 65 KB (above).
+  // §۴ 60 KB stretch — waived for 1.0.0; D15 hard ceiling is 66 KB (above).
   check(
     'bundle-60kb',
     true,
     gzipBytes <= SERIOUS_RELEASE_GZIP_LIMIT_BYTES
       ? `main gzip ${gzipBytes} B (≤ §۴ 60 KB)`
-      : `main gzip ${gzipBytes} B — §۴ 60 KB stretch waived (D15 limit 65 KB)`,
+      : `main gzip ${gzipBytes} B — §۴ 60 KB stretch waived (D15 limit 66 KB)`,
   );
 }
 

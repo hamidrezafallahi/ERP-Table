@@ -23,7 +23,7 @@ describe('PR-135 release-gate (D25)', () => {
     expect(load('.github/workflows/ci.yml')).toContain('release:gate');
   });
 
-  it('is green after Phase 25 + D22 deferral (65 KB / no monorepo required)', () => {
+  it('is green after Phase 25 + D22 deferral (66 KB / no monorepo required)', () => {
     const result = spawnSync(
       process.execPath,
       [join(root, 'scripts/release-gate.mjs')],
@@ -33,7 +33,7 @@ describe('PR-135 release-gate (D25)', () => {
     expect(result.status, out).toBe(0);
     expect(out).toContain('release-gate GREEN');
     expect(out).toMatch(/PASS\s+scorecard-diff/);
-    expect(out).toMatch(/PASS\s+bundle-65kb/);
+    expect(out).toMatch(/PASS\s+bundle-66kb/);
     expect(out).toMatch(/PASS\s+monorepo-core/);
     expect(out).toMatch(/D22 deferred|waived/i);
   });

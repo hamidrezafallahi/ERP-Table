@@ -4,7 +4,7 @@
 import { gzipSync } from 'node:zlib';
 
 /** Today's main-bundle gzip ceiling (PR-76 / D15). */
-export const MAIN_GZIP_LIMIT_BYTES = 65 * 1024;
+export const MAIN_GZIP_LIMIT_BYTES = 66 * 1024;
 
 /** Raw floor — rejects legacy stub builds. */
 export const MIN_RAW_BYTES = 5_000;

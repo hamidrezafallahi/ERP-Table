@@ -1,12 +1,12 @@
 /**
  * Size budgets for the published package (PR-76 / D15).
- * Main `.` ceiling is 65 KB gzip. Subpath limits measured after first build.
+ * Main `.` ceiling is 66 KB gzip. Subpath limits measured after first build.
  */
 import { existsSync } from 'node:fs';
 
 /** @type {Array<{ name: string; path: string; limit: string }>} */
 const ALL_BUDGETS = [
-  { name: '.', path: 'dist/index.js', limit: '65 KB' },
+  { name: '.', path: 'dist/index.js', limit: '66 KB' },
   { name: './headless', path: 'dist/headless.js', limit: '100 KB' },
   { name: './presence', path: 'dist/presence.js', limit: '20 KB' },
   { name: './sync', path: 'dist/sync.js', limit: '20 KB' },
