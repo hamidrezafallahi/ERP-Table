@@ -5,6 +5,8 @@ import { CustomDropdownButton, CustomCheckbox } from '../primitives';
 import { overlayStoredColumnWidth } from '../../engine/columnWidth';
 import { ValidationCallbackResult } from '../../engine/type';
 import { UITableController } from '../../infrastructure/ui/UITableController';
+import { useRevalidateRevision } from '../hooks/useRevalidateRevision';
+import { revealRow } from '../gridSearch/utils';
 import {
   ARIA_HEADER_ROW_INDEX,
   ariaColIndex,
@@ -30,12 +32,19 @@ export function MobileTableHeader({
       errors: new Map(),
     });
 
+  const validationRevision = useRevalidateRevision();
+
   useEffect(() => {
     const validation = controller.validation();
     validation((res) => {
       setValidationResult(res);
     });
-  }, [controller, table?.activeCell?.columnId, table?.activeCell?.rowId]);
+  }, [
+    controller,
+    table?.activeCell?.columnId,
+    table?.activeCell?.rowId,
+    validationRevision,
+  ]);
 
   if (!table || !table.columns) return null;
 
@@ -49,12 +58,7 @@ export function MobileTableHeader({
 
   const allRows = controller.getAllRows() ?? [];
   const handleNavigateToError = (rowId: number) => {
-    const currentTable = controller.getViewState();
-    if (!currentTable || allRows.length === 0) return;
-    const rowIndex = allRows.findIndex((r) => r.id.value == rowId) + 1;
-    const { pageSize } = currentTable.pagination;
-    const targetPage = Math.ceil(rowIndex / pageSize);
-    controller.dispatch({ type: "CHANGE_PAGE", page: targetPage });
+    void revealRow(controller, rowId);
   };
 
   const items = Array.from((validationResult.errors ?? new Map()).entries()).map(

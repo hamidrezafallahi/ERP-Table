@@ -11,6 +11,22 @@ export {
 } from './ERPTableHost';
 export { useMediaQuery } from './useMediaQuery';
 export { useRemoteQuery } from './useRemoteQuery';
+export {
+  buildDependencyBody,
+  getDependFieldName,
+  getStaticDependValue,
+  hasDependValue,
+  useHostDependOn,
+  useStaticDependOn,
+} from './dependOn';
+export type {
+  DependOn,
+  DependOnItem,
+  DependValueResolver,
+  UseDependOnHook,
+  UseDependOnOptions,
+  UseDependOnResult,
+} from './dependOn';
 export { showErrorToast, showSuccessToast, useHostToast } from './toast';
 export type { ERPTableHostValue, ERPTableToastKind } from './ERPTableHost';
 export type {

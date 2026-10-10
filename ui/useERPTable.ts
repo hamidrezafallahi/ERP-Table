@@ -104,9 +104,18 @@ export function useGrid<TRow = unknown>(
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [changelog, setChangelog] = useState<ChangelogEntry[]>([]);
 
+  // Page-window mode ('paged-idb'): an empty `tableKey` means "page left /
+  // not mounted yet" — never build (or rebuild IndexedDB for) a grid then.
+  const pagedIdb = config.persistence === 'paged-idb';
+  const disabled = pagedIdb && !config.tableKey;
+  // Bumped when a paged grid is disposed so the next effect run builds a
+  // fresh instance (StrictMode / tableKey changes) instead of reusing a
+  // disposed controller.
+  const [generation, setGeneration] = useState(0);
+
   const grid = useMemo(
-    () => createGrid({ ...config, tableKey }),
-    [tableKey, config.columns, config.columnDefs, config.store],
+    () => (disabled ? null : createGrid({ ...config, tableKey })),
+    [tableKey, disabled, generation, config.columns, config.columnDefs, config.store],
   );
 
   // ---------- bootstrap ----------
@@ -118,19 +127,25 @@ export function useGrid<TRow = unknown>(
     setPluginHost(null);
     setRows(null);
 
+    if (!grid) return undefined;
+
     void grid.ready.then((result) => {
-      if (!cancelled) {
-        setController(result.controller);
-        setApi(result.api);
-        setSession(result.session);
-        setPluginHost(result.pluginHost);
-      }
+      if (cancelled) return;
+      setController(result.controller);
+      setApi(result.api);
+      setSession(result.session);
+      setPluginHost(result.pluginHost);
     });
 
     return () => {
       cancelled = true;
+      if (pagedIdb) {
+        // Drop the RAM page window only (IndexedDB stays the source of truth).
+        void grid.ready.then((result) => result.controller.dispose());
+        setGeneration((g) => g + 1);
+      }
     };
-  }, [grid]);
+  }, [grid, pagedIdb]);
 
   useEffect(() => {
     if (!controller || config.rowData === undefined) return;
@@ -184,8 +199,12 @@ export function useGrid<TRow = unknown>(
     let cancelled = false;
     const syncView = () => {
       if (cancelled) return;
-      const snapshot = controller.getSnapShot('active');
-      if (snapshot) setRows(snapshot);
+      // Re-render only in page-window mode — never rebuild a row snapshot on
+      // every keystroke; server save uses getFullSnapShot().
+      if (!controller.isPagedWindow()) {
+        const snapshot = controller.getSnapShot('active');
+        if (snapshot) setRows(snapshot);
+      }
       setViewVersion((version) => version + 1);
     };
 
@@ -238,7 +257,7 @@ export function useGrid<TRow = unknown>(
     };
   }, [controller]);
 
-  if (!controller || !api || !session || !pluginHost || !controller.getViewState()) {
+  if (!grid || !controller || !api || !session || !pluginHost || !controller.getViewState()) {
     return { ready: false };
   }
 

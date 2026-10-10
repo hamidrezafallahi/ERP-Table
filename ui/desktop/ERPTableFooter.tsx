@@ -64,6 +64,20 @@ export function ERPTableFooter({
   useEffect(() => {
     const view = controller.getViewState();
     if (!view || !rows) return;
+    if (controller.isPagedWindow()) {
+      // Page-window mode: RAM holds ONE page, so totals must fold over the
+      // whole dataset streamed from IndexedDB (O(batch) heap, never the full
+      // row array). Footer totals are sums; other aggFuncs use the window.
+      let off: (() => void) | undefined;
+      let cancelled = false;
+      void import('./pagedFooterTotals').then(({ subscribePagedTotals }) => {
+        if (!cancelled) off = subscribePagedTotals(controller, view.columns ?? [], setAggs);
+      });
+      return () => {
+        cancelled = true;
+        off?.();
+      };
+    }
     setAggs(controller.getColumnAggs());
     const unsubscribe = controller.subscribeColumnAggs(setAggs);
     return () => {

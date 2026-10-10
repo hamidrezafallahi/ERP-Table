@@ -302,54 +302,33 @@ private async applyVisibility(input: {
     actor: Actor
   ): Promise<TableEvent[]> {
     const repo = this.repo;
-    if (!isWindowedRepository(repo)) {
-      const table = await repo.getById(command.store, command.tableKey);
-      try {
+    try {
+      let table: Table | null;
+      if (isWindowedRepository(repo)) {
+        // Persist pending edits of the current window first, then swap the RAM
+        // window with page 1 of the requested collection from IndexedDB.
+        // (A plain setActiveCollection + save used to persist an EMPTY window
+        // for the new collection, wiping the rows of every other collection.)
+        await repo.getById(command.store, command.tableKey);
+        table = await repo.setActiveCollection(
+          command.store,
+          command.tableKey,
+          command.activeCollection,
+        );
+      } else {
+        table = await repo.getById(command.store, command.tableKey);
+      }
+      if (table) {
         table.setActiveCollection(command.activeCollection);
         this.applyVisibility({ table, command });
-        await this.repo.save(command.store, table);
-        const out: TableEvent = {
-          type: 'ACTIVE_COLLECTION_CHANGED',
-          tableId: command.tableKey,
-        };
-        this.audit.log({ type: out.type, message: out.type, payload: out.tableId });
-        return [out];
-      } catch (error) {
-        return this.handleSetActiveError(error);
+        await repo.save(command.store, table);
       }
-    }
-    // First persist pending edits of the current window, then swap the RAM
-    // window with page 1 of the requested collection from IndexedDB.
-    // (A plain setActiveCollection + save here used to persist an EMPTY window
-    // for the new collection, wiping the rows of every other collection.)
-    await repo.getById(command.store, command.tableKey);
-    const loaded = await repo.setActiveCollection(
-      command.store,
-      command.tableKey,
-      command.activeCollection,
-    );
-    try {
-      if (!loaded) {
-        const out: TableEvent = {
-          type: 'ACTIVE_COLLECTION_CHANGED',
-          tableId: command.tableKey,
-        };
-        this.audit.log({ type: out.type, message: out.type, payload: out.tableId });
-        return [out];
-      }
-
-      loaded.setActiveCollection(command.activeCollection);
-      this.applyVisibility({ table: loaded, command });
-      await this.repo.save(command.store, loaded);
       const out: TableEvent = {
         type: 'ACTIVE_COLLECTION_CHANGED',
         tableId: command.tableKey,
       };
-      this.audit.log({
-        type: out.type,
-        message: out.type,
-        payload: out.tableId
-      }); return [out];
+      this.audit.log({ type: out.type, message: out.type, payload: out.tableId });
+      return [out];
     } catch (error) {
       return this.handleSetActiveError(error);
     }

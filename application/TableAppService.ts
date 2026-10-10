@@ -7,17 +7,17 @@ import {
 import { CellChangedEvent, TableEvent } from './events';
 import {
   ApplyDynamicProjectionHandler,
-  ApplyRowVisibilityHandler,
   ChangeCellDisplayValueHandler,
   ChangeCellValueHandler,
   SaveDescriptionHandler,
 } from './handlers/cellCommandsHandler';
+import type { DeleteRowsCommandHandler } from './handlers/deleteRowsCommandHandler';
+import type { ApplyRowVisibilityHandler } from './handlers/applyRowVisibilityHandler';
 import { PasteCellsCommandHandler } from './handlers/pasteCellsCommandsHandler';
 import {
   AddNewRowCommandHandler,
   AddNewRowsCommandHandler,
   DeleteRowCommandHandler,
-  DeleteRowsCommandHandler,
   DuplicateRowCommandHandler,
   PasteRowCommandHandler,
   ReorderRowCommandHandler,
@@ -64,9 +64,16 @@ export class TableAppService {
     private readonly pasteRow?: PasteRowCommandHandler,
     private readonly reorderColumn?: ReorderColumnCommandHandler,
     /** Page-window (paged-idb) mode only. */
-    private readonly applyRowVisibility?: ApplyRowVisibilityHandler,
-    private readonly deleteRows?: DeleteRowsCommandHandler,
+    /** Lazy loader (module is fetched on first row activation with `resolveOn`). */
+    private readonly applyRowVisibility?: () => Promise<ApplyRowVisibilityHandler>,
   ) {}
+
+  private deleteRows?: DeleteRowsCommandHandler;
+
+  /** Page-window mode only (lazy module): bulk delete of the selected rows. */
+  setDeleteRowsHandler(handler: DeleteRowsCommandHandler): void {
+    this.deleteRows = handler;
+  }
 
   setEventStore(eventStore: EventStore): void {
     this.eventStore = eventStore;
@@ -116,7 +123,7 @@ export class TableAppService {
     return result;
   }
 
-  private dispatch(command: ApplicationTableCommand, actor: Actor) {
+  private async dispatch(command: ApplicationTableCommand, actor: Actor) {
     switch (command.type) {
       case 'CHANGE_CELL_VALUE':
         return this.changeCellValue.execute(command, actor);
@@ -126,7 +133,7 @@ export class TableAppService {
         return this.applyDynamicProjection.execute(command, actor);
       case 'APPLY_ROW_VISIBILITY':
         if (!this.applyRowVisibility) return [];
-        return this.applyRowVisibility.execute(command, actor);
+        return (await this.applyRowVisibility()).execute(command, actor);
       case 'CHANGE_CELL_DISPLAY_VALUE':
         return this.changeCellDisplayValue.execute(command, actor);
       case 'ADD_EMPTY_ROW':

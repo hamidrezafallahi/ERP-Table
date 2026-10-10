@@ -2,7 +2,12 @@
 
 import React, { FC, useEffect, useMemo, useState } from 'react';
 
-import { useRemoteQuery, useTranslations } from '../host';
+import {
+  buildDependencyBody,
+  hasDependValue,
+  useRemoteQuery,
+  useTranslations,
+} from '../host';
 import { Reload, Select } from '../primitives';
 import type { SelectOption as UiSelectOption } from '../primitives/Select';
 
@@ -121,20 +126,9 @@ export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
     return undefined;
   };
 
-  const hasDependValue = (dependency: DependOn | DependOn[] | undefined) => {
-    if (!dependency) return true;
-    if (Array.isArray(dependency)) {
-      return dependency.every((item) => item.value !== null && item.value !== undefined);
-    }
-    return dependency.value !== null && dependency.value !== undefined;
-  };
-
   const dependencySource = asDependOn(dependOn ?? dependsOn);
-  const dependencyBody = Array.isArray(dependencySource)
-    ? Object.fromEntries(dependencySource.map((item: DependOn) => [item.fieldName, item.value]))
-    : dependencySource
-      ? { [dependencySource.fieldName]: dependencySource.value }
-      : {};
+  const isReady = hasDependValue(dependencySource);
+  const dependencyBody = buildDependencyBody(dependencySource);
 
   const body = {
     ...bodyRequest,
@@ -151,13 +145,13 @@ export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
   const { data, isFetching, refetch } = useRemoteQuery<RemoteSelectOption[]>({
     url: endpoint,
     body: existBody,
-    skip: dependencySource ? !hasDependValue(dependencySource) : false,
+    skip: !isReady,
     noCache,
   });
 
   const handleRefetch = () => {
     setPageNumber(1);
-    if (!(dependencySource && !hasDependValue(dependencySource))) {
+    if (isReady) {
       void refetch();
     }
   };

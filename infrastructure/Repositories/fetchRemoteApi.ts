@@ -1,7 +1,7 @@
 import { EngineErrorHandler } from '../../engine/EngineErrorHandler';
 import { RemoteApi } from '../../application/ports/RemoteApi';
 
-type ErpDefaults = {
+export type ErpDefaults = {
   PlaceId?: { id?: number };
   YearId?: { id?: number };
   LanguageId?: { id?: number };
@@ -43,10 +43,20 @@ function joinUrl(baseUrl: string, endpoint: string): string {
  * (relative URLs work on the ERP host).
  * See `examples/host-arian-erp/host-arian-erp.md`.
  */
+export type FetchRemoteApiOptions = {
+  baseUrl?: string;
+  /** Inject the bearer token (e.g. from the host's auth store). Default: cookie `_auth`. */
+  getToken?: () => string | undefined | null;
+  /** Inject ERP defaults (e.g. from Redux). Default: localStorage `persist:arianERP`. */
+  getDefaults?: () => ErpDefaults;
+  /** Custom fetch (tests, interceptors, token refresh). Default: global `fetch`. */
+  fetcher?: typeof fetch;
+};
+
 export class FetchRemoteApi implements RemoteApi {
   constructor(
     private readonly err?: EngineErrorHandler,
-    private readonly options: { baseUrl?: string } = {},
+    private readonly options: FetchRemoteApiOptions = {},
   ) {}
 
   async request<TResponse = unknown>(input: {
@@ -55,8 +65,10 @@ export class FetchRemoteApi implements RemoteApi {
     method?: 'GET' | 'POST';
   }): Promise<TResponse> {
     try {
-      const defaults = readErpDefaults();
-      const token = readCookie('_auth');
+      const defaults = this.options.getDefaults?.() ?? readErpDefaults();
+      const token = this.options.getToken
+        ? (this.options.getToken() ?? '')
+        : readCookie('_auth');
       const method = input.method ?? 'POST';
       const url = joinUrl(this.options.baseUrl ?? '', input.endpoint);
       const payload =
@@ -78,7 +90,7 @@ export class FetchRemoteApi implements RemoteApi {
       };
       if (token) headers.Authorization = `Bearer ${token}`;
 
-      const res = await fetch(url, {
+      const res = await (this.options.fetcher ?? fetch)(url, {
         method,
         headers,
         body: payload ? JSON.stringify(payload) : undefined,

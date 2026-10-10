@@ -126,7 +126,13 @@ export function GridSearchPanel({
     const trimmedQuery = query.trim();
     if (!columnId || !trimmedQuery) return;
 
-    const matches = findColumnMatches(controller, columnId, trimmedQuery);
+    // Page-window mode streams from IndexedDB (lazy module); otherwise the
+    // in-memory QuickFilterIndex answers synchronously.
+    const matches = controller.isPagedWindow?.()
+      ? await (
+          await import('./pagedSearch')
+        ).findPagedColumnMatches(controller, columnId, trimmedQuery)
+      : findColumnMatches(controller, columnId, trimmedQuery);
     setHasSearched(true);
 
     if (!matches.length) {

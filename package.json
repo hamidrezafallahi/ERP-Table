@@ -193,7 +193,7 @@
     "release:notes": "node ./scripts/extract-changelog.mjs",
     "release:next:dry": "node ./scripts/release-next-dry.mjs",
     "release:gate": "node ./scripts/release-gate.mjs",
-    "test": "vitest run domain/__tests__ application/__tests__ infrastructure/__tests__ infrastructure/date/__tests__ infrastructure/finance/__tests__ bootstrap/__tests__ engine/__tests__ ui/virtual/__tests__ ui/desktop/__tests__ ui/a11y/__tests__ ui/cellRenderer/__tests__ ui/filters/__tests__ ui/keyboard/__tests__ ui/gridSearch/__tests__ ui/history/__tests__ ui/offline/__tests__ ui/sync/__tests__ ui/presence/__tests__ ui/date/__tests__ ui/overlays/__tests__ ui/styles/__tests__ ui/theme/__tests__ ui/locales/__tests__ docs/__tests__ packages/plugins/excel/__tests__ packages/plugins/pdf/__tests__ packages/plugins/csv/__tests__",
+    "test": "vitest run domain/__tests__ application/__tests__ infrastructure/__tests__ infrastructure/document/__tests__ infrastructure/Repositories/paged/__tests__ infrastructure/date/__tests__ infrastructure/finance/__tests__ bootstrap/__tests__ engine/__tests__ ui/virtual/__tests__ ui/desktop/__tests__ ui/a11y/__tests__ ui/cellRenderer/__tests__ ui/filters/__tests__ ui/keyboard/__tests__ ui/gridSearch/__tests__ ui/history/__tests__ ui/offline/__tests__ ui/sync/__tests__ ui/presence/__tests__ ui/date/__tests__ ui/overlays/__tests__ ui/styles/__tests__ ui/theme/__tests__ ui/locales/__tests__ docs/__tests__ packages/plugins/excel/__tests__ packages/plugins/pdf/__tests__ packages/plugins/csv/__tests__",
     "typecheck:publish": "tsc -p tsconfig.publish.json --noEmit",
     "typecheck:host-ui": "tsc -p tsconfig.json --noEmit",
     "lint:publish": "eslint --max-warnings=0",

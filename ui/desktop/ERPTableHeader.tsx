@@ -20,6 +20,7 @@ import {
 } from '../../engine/dataOps/sortModel';
 import { ValidationCallbackResult } from '../../engine/type';
 import { UITableController } from '../../infrastructure/ui/UITableController';
+import { useRevalidateRevision } from '../hooks/useRevalidateRevision';
 import { revealRow } from '../gridSearch/utils';
 import {
   resolveFilterComponent,
@@ -148,12 +149,19 @@ export function ERPTableHeader({
       errors: new Map(),
     });
 
+  const validationRevision = useRevalidateRevision();
+
   useEffect(() => {
     const validation = controller.validation();
     validation((res) => {
       setValidationResult(res);
     });
-  }, [controller, table?.activeCell?.columnId, table?.activeCell?.rowId]);
+  }, [
+    controller,
+    table?.activeCell?.columnId,
+    table?.activeCell?.rowId,
+    validationRevision,
+  ]);
 
   const displayColumns = table?.columns ?? [];
   const collapsedGroups = table?.collapsedColumnGroups ?? {};

@@ -2,7 +2,6 @@
 
 import {
   ApplyDynamicProjectionHandler,
-  ApplyRowVisibilityHandler,
   ChangeCellDisplayValueHandler,
   ChangeCellValueHandler,
   SaveDescriptionHandler,
@@ -11,7 +10,6 @@ import {
   AddNewRowCommandHandler,
   AddNewRowsCommandHandler,
   DeleteRowCommandHandler,
-  DeleteRowsCommandHandler,
   DuplicateRowCommandHandler,
   PasteRowCommandHandler,
   ReorderRowCommandHandler,
@@ -59,32 +57,6 @@ import {
 /* ======================================================
    helpers
    ====================================================== */
-
-/**
- * بازسازی visibilityCondition یک سطر از روی مقادیر فعلی سلول‌هایش.
- * کلیدها fieldName ستون‌های whenFieldTruthy (مقدارِ ستون منبع) و
- * whenRemoteFlag (ستون خودش) هستند — دقیقاً همان کلیدهایی که UI
- * (cellRenderer / MobileRowFormModal) و isInitiallyHidden چک می‌کنند.
- * Only rows of the column's OWN collection are consulted — no cross-collection leak.
- */
-export function rebuildRowVisibilityCondition(
-  row: Row,
-  columnMeta: Map<string, ColumnSchema>,
-): void {
-  const rowCollection = row.getCollection() ?? 'default';
-  const condition: Record<string, boolean> = {};
-  for (const colCfg of columnMeta.values()) {
-    if ((colCfg.fieldCollection ?? 'default') !== rowCollection) continue;
-    const v = colCfg.visibility;
-    if (v?.kind === 'whenFieldTruthy') {
-      condition[colCfg.fieldName] = !!row.readValue(v.fieldName);
-    } else if (v?.kind === 'whenRemoteFlag') {
-      // فلگ ریموت در دسترس نیست؛ «محتوا داشتن» خودش دلیل کافی برای نمایش است.
-      condition[colCfg.fieldName] = !!row.readValue(colCfg.fieldName);
-    }
-  }
-  row.setVisibilityCondition(condition);
-}
 
 export const isInitiallyHidden = (
   col: ColumnSchema,
@@ -229,6 +201,7 @@ export async function buildRows(  collectionColumns: Map<string, Map<string, Col
     // فعلی خودش بازسازی شود تا ستون‌های شرطیِ whenFieldTruthy / whenRemoteFlag
     // که محتوا دارند در بارگذاری اولیه نمایان شوند — قرارداد: ستون وابسته‌ای
     // که محتوا دارد فقط در کالکشن خودش قابل رویت است.
+    const { rebuildRowVisibilityCondition } = await import('../rebuildRowVisibility');
     for (const row of rowMap.values()) {
       rebuildRowVisibilityCondition(row, columnMeta);
     }
@@ -524,7 +497,11 @@ export function createTableAppService(
 ): TableAppService {
   const changeCellHandler = new ChangeCellValueHandler(repo, audit, permissionPolicy, { columnMeta, remoteApi });
   const applyDynamicProjection = new ApplyDynamicProjectionHandler(repo, audit, permissionPolicy, { columnMeta, remoteApi });
-  const applyRowVisibility = new ApplyRowVisibilityHandler(repo, audit, permissionPolicy, { columnMeta, remoteApi });
+  let rowVisibilityHandler: Promise<import('../../application/handlers/applyRowVisibilityHandler').ApplyRowVisibilityHandler> | undefined;
+  const applyRowVisibility = () =>
+    (rowVisibilityHandler ??= import('../../application/handlers/applyRowVisibilityHandler').then(
+      (m) => new m.ApplyRowVisibilityHandler(repo, audit, permissionPolicy, { columnMeta, remoteApi }),
+    ));
   const changeCellDisplayHandler = new ChangeCellDisplayValueHandler(repo, audit, permissionPolicy);
   const saveDescriptionHandler = new SaveDescriptionHandler(repo, audit, permissionPolicy);
   const addNewRowHandler = new AddNewRowCommandHandler(repo, audit, permissionPolicy);
@@ -542,9 +519,6 @@ export function createTableAppService(
     audit,
     permissionPolicy,
   );
-  const deleteRowsHandler = isWindowedRepository(repo)
-    ? new DeleteRowsCommandHandler(repo, audit, permissionPolicy)
-    : undefined;
   const deleteTableHandler = new DeleteTableCommandHandler(repo, audit, permissionPolicy);
   const resetTableHandler = new ResetTableCommandHandler(repo, audit, permissionPolicy);
   const reorderRowHandler = new ReorderRowCommandHandler(repo, audit, permissionPolicy);
@@ -573,7 +547,6 @@ export function createTableAppService(
     pasteRowHandler,
     reorderColumnHandler,
     applyRowVisibility,
-    deleteRowsHandler,
   );
 
   appService.setRepository(repo);

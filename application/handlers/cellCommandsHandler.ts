@@ -17,7 +17,6 @@ import {
 } from '../../domain/value-objects';
 import {
   ApplyDynamicProjectionCommand,
-  ApplyRowVisibilityCommand,
   ChangeCellDisplayValueCommand,
   ChangeCellValueCommand,
   SaveDescriptionCommand,
@@ -27,14 +26,14 @@ import { AuditLogger } from '../ports/AuditLogger';
 import { RemoteApi } from '../ports/RemoteApi';
 import { TableRepository } from '../ports/TableRepository';
 
-type DynamicConfig = {
+export type DynamicConfig = {
   columnMeta: Map<string, ColumnSchema>;
   remoteApi: RemoteApi;
 };
 
 /* ─── shared helper ──────────────────────────────────────────────── */
 
-function logError(audit: AuditLogger, error: unknown, context?: string): void {
+export function logError(audit: AuditLogger, error: unknown, context?: string): void {
   if (error instanceof DomainError) {
     audit.log({
       type: error.code,
@@ -59,6 +58,107 @@ function logError(audit: AuditLogger, error: unknown, context?: string): void {
 /* ======================================================
    ChangeCellValueHandler
    ====================================================== */
+
+/**
+ * Remote visibility (`resolveOn`) projection shared by the cell-change, dynamic
+ * re-projection and row-activation handlers.
+ */
+export async function applyRemoteVisibilityRules(
+dynamic: DynamicConfig | undefined,
+input: {
+table: Table;
+rowId: RowId;
+changedColumnId: ColumnId;
+newValue: unknown;
+/** When false (e.g. row activate / re-project), keep existing dependent cell values. */
+clearDependents?: boolean;
+},
+): Promise<void> {
+const {
+  table,
+  rowId,
+  changedColumnId,
+  newValue,
+  clearDependents = true,
+} = input;
+
+const meta = dynamic?.columnMeta;
+if (!meta) return;
+const colKey = `${table.getActiveCollectionName() ?? 'default'}_${changedColumnId.value}`;
+const changedMeta = meta.get(colKey) ?? meta.get(changedColumnId.value);
+const resolveOn = changedMeta?.resolveOn;
+if (!resolveOn) return;
+if (resolveOn.fieldName !== changedColumnId.value) return;
+
+const row = table.getRows().find(r => r.id.value === rowId.value);
+if (!row) return;
+
+const rowValues: Record<string, unknown> = {};
+for (const [colId, cell] of row.getCells().entries()) {
+  rowValues[colId] = cell.getValue();
+}
+if (newValue == null || newValue === '') return;
+const params =
+  typeof resolveOn.buildParams === 'function'
+    ? resolveOn.buildParams(rowValues)
+    : { value: newValue };
+const response = await dynamic!.remoteApi.request({
+  endpoint: resolveOn.endpoint,
+  params,
+  method: 'POST',
+});
+
+resolveOn.getResponse?.(response, row);
+const flags: Record<string, boolean> = resolveOn.mapFlags?.(response) ?? {};
+
+const toShow: ColumnSchema[] = [];
+const visibilityCondition: Record<string, boolean> = {};
+const activeCollection = table.getActiveCollectionName() ?? 'default';
+
+meta.forEach(colCfg => {
+  // Collection guard — same rationale as applyDynamicProjection: configs of
+  // other collections must not react to this collection's cell changes.
+  if ((colCfg.fieldCollection ?? 'default') !== activeCollection) return;
+  const v = colCfg.visibility;
+
+  if (
+    v?.kind === 'whenRemoteFlag' &&
+    v.sourceFieldName === changedColumnId.value
+  ) {
+    const colId = new ColumnId(colCfg.fieldName);
+    const schema = table.getColumnSchema(colId);
+    const flagValue = flags[v.flag] ?? false;
+
+    // کلید visibilityCondition باید fieldName باشد چون UI (cellRenderer /
+    // moveActiveCell / isInitiallyHidden) با col.fieldName چک می‌کند.
+    visibilityCondition[colCfg.fieldName] = flagValue;
+
+    if (flagValue && schema) {
+      toShow.push({ ...schema, hidden: false });
+    }
+  }
+
+  const dependency = colCfg.dynamicSource?.dependsOn;
+  if (
+    clearDependents &&
+    dependency &&
+    dependency.includes(changedColumnId.value) &&
+    !Object.hasOwn(visibilityCondition, colCfg.fieldName) &&
+    colCfg.visibility?.kind !== 'whenTableType' &&
+    colCfg.visibility?.kind !== 'whenCollection'
+  ) {
+    const cell = row.getCell(colCfg.fieldName);
+    cell?.changeValue(null);
+    cell?.changeDisplay(null);
+  }
+});
+
+if (toShow.length > 0) {
+  table.addColumns(toShow);
+}
+
+row.setVisibilityCondition(visibilityCondition);
+}
 
 export class ChangeCellValueHandler {
   constructor(
@@ -175,98 +275,8 @@ export class ChangeCellValueHandler {
 
   /* ── helpers ─────────────────────────────────────────────────────── */
 
-  private async applyRemoteVisibilityRules(input: {
-    table: Table;
-    rowId: RowId;
-    changedColumnId: ColumnId;
-    newValue: unknown;
-    /** When false (e.g. row activate / re-project), keep existing dependent cell values. */
-    clearDependents?: boolean;
-  }): Promise<void> {
-    const {
-      table,
-      rowId,
-      changedColumnId,
-      newValue,
-      clearDependents = true,
-    } = input;
-
-    const meta = this.dynamic?.columnMeta;
-    if (!meta) return;
-    const colKey = `${table.getActiveCollectionName() ?? 'default'}_${changedColumnId.value}`;
-    const changedMeta = meta.get(colKey) ?? meta.get(changedColumnId.value);
-    const resolveOn = changedMeta?.resolveOn;
-    if (!resolveOn) return;
-    if (resolveOn.fieldName !== changedColumnId.value) return;
-
-    const row = table.getRows().find(r => r.id.value === rowId.value);
-    if (!row) return;
-
-    const rowValues: Record<string, unknown> = {};
-    for (const [colId, cell] of row.getCells().entries()) {
-      rowValues[colId] = cell.getValue();
-    }
-    if (newValue == null || newValue === '') return;
-    const params =
-      typeof resolveOn.buildParams === 'function'
-        ? resolveOn.buildParams(rowValues)
-        : { value: newValue };
-    const response = await this.dynamic!.remoteApi.request({
-      endpoint: resolveOn.endpoint,
-      params,
-      method: 'POST',
-    });
-
-    resolveOn.getResponse?.(response, row);
-    const flags: Record<string, boolean> = resolveOn.mapFlags?.(response) ?? {};
-
-    const toShow: ColumnSchema[] = [];
-    const visibilityCondition: Record<string, boolean> = {};
-    const activeCollection = table.getActiveCollectionName() ?? 'default';
-
-    meta.forEach(colCfg => {
-      // Collection guard — same rationale as applyDynamicProjection: configs of
-      // other collections must not react to this collection's cell changes.
-      if ((colCfg.fieldCollection ?? 'default') !== activeCollection) return;
-      const v = colCfg.visibility;
-
-      if (
-        v?.kind === 'whenRemoteFlag' &&
-        v.sourceFieldName === changedColumnId.value
-      ) {
-        const colId = new ColumnId(colCfg.fieldName);
-        const schema = table.getColumnSchema(colId);
-        const flagValue = flags[v.flag] ?? false;
-
-        // کلید visibilityCondition باید fieldName باشد چون UI (cellRenderer /
-        // moveActiveCell / isInitiallyHidden) با col.fieldName چک می‌کند.
-        visibilityCondition[colCfg.fieldName] = flagValue;
-
-        if (flagValue && schema) {
-          toShow.push({ ...schema, hidden: false });
-        }
-      }
-
-      const dependency = colCfg.dynamicSource?.dependsOn;
-      if (
-        clearDependents &&
-        dependency &&
-        dependency.includes(changedColumnId.value) &&
-        !Object.hasOwn(visibilityCondition, colCfg.fieldName) &&
-        colCfg.visibility?.kind !== 'whenTableType' &&
-        colCfg.visibility?.kind !== 'whenCollection'
-      ) {
-        const cell = row.getCell(colCfg.fieldName);
-        cell?.changeValue(null);
-        cell?.changeDisplay(null);
-      }
-    });
-
-    if (toShow.length > 0) {
-      table.addColumns(toShow);
-    }
-
-    row.setVisibilityCondition(visibilityCondition);
+  private applyRemoteVisibilityRules(input: Parameters<typeof applyRemoteVisibilityRules>[1]): Promise<void> {
+    return applyRemoteVisibilityRules(this.dynamic, input);
   }
 
   private async applyComputedColumns(input: {
@@ -650,95 +660,8 @@ export class ApplyDynamicProjectionHandler {
 
   /* ── helpers (identical to ChangeCellValueHandler) ───────────────── */
 
-  private async applyRemoteVisibilityRules(input: {
-    table: Table;
-    rowId: RowId;
-    changedColumnId: ColumnId;
-    newValue: unknown;
-    /** When false (e.g. row activate / re-project), keep existing dependent cell values. */
-    clearDependents?: boolean;
-  }): Promise<void> {
-    const {
-      table,
-      rowId,
-      changedColumnId,
-      newValue,
-      clearDependents = true,
-    } = input;
-    const meta = this.dynamic?.columnMeta;
-    if (!meta) return;
-
-    const colKey = `${table.getActiveCollectionName() ?? 'default'}_${changedColumnId.value}`;
-    const changedMeta = meta.get(colKey) ?? meta.get(changedColumnId.value);
-    const resolveOn = changedMeta?.resolveOn;
-    if (!resolveOn) return;
-    if (resolveOn.fieldName !== changedColumnId.value) return;
-
-    const row = table.getRows().find(r => r.id.value === rowId.value);
-    if (!row) return;
-
-    const rowValues: Record<string, unknown> = {};
-    for (const [colId, cell] of row.getCells().entries()) {
-      rowValues[colId] = cell.getValue();
-    }
-
-    if (newValue == null || newValue === '') return;
-
-    const params =
-      typeof resolveOn.buildParams === 'function'
-        ? resolveOn.buildParams(rowValues)
-        : { value: newValue };
-    const response = await this.dynamic!.remoteApi.request({
-      endpoint: resolveOn.endpoint,
-      params,
-      method: 'POST',
-    });
-
-    resolveOn.getResponse?.(response, row);
-    const flags: Record<string, boolean> = resolveOn.mapFlags?.(response) ?? {};
-
-    const toShow: ColumnSchema[] = [];
-    const visibilityCondition: Record<string, boolean> = {};
-    const activeCollection = table.getActiveCollectionName() ?? 'default';
-
-    meta.forEach(colCfg => {
-      // Collection guard — same rationale as applyDynamicProjection: configs of
-      // other collections must not react to this collection's cell changes.
-      if ((colCfg.fieldCollection ?? 'default') !== activeCollection) return;
-      const v = colCfg.visibility;
-
-      if (
-        v?.kind === 'whenRemoteFlag' &&
-        v.sourceFieldName === changedColumnId.value
-      ) {
-        const schema = table.getColumnSchema(new ColumnId(colCfg.fieldName));
-        const flagValue = flags[v.flag] ?? false;
-        // کلید visibilityCondition باید fieldName باشد چون UI با col.fieldName چک می‌کند.
-        visibilityCondition[colCfg.fieldName] = flagValue;
-        if (flagValue && schema) {
-          toShow.push({ ...schema, hidden: false });
-        }
-      }
-
-      const dependency = colCfg.dynamicSource?.dependsOn;
-      if (
-        clearDependents &&
-        dependency &&
-        dependency.includes(changedColumnId.value) &&
-        !Object.hasOwn(visibilityCondition, colCfg.fieldName) &&
-        colCfg.visibility?.kind !== 'whenTableType' &&
-        colCfg.visibility?.kind !== 'whenCollection'
-      ) {
-        const cell = row.getCell(colCfg.fieldName);
-        cell?.changeValue(null);
-        cell?.changeDisplay(null);
-      }
-    });
-
-    if (toShow.length > 0) {
-      table.addColumns(toShow);
-    }
-    row.setVisibilityCondition(visibilityCondition);
+  private applyRemoteVisibilityRules(input: Parameters<typeof applyRemoteVisibilityRules>[1]): Promise<void> {
+    return applyRemoteVisibilityRules(this.dynamic, input);
   }
 
   private async applyComputedColumns(input: {
@@ -899,207 +822,5 @@ export class ApplyDynamicProjectionHandler {
         table.setColumnSchema(new ColumnId(colMeta.fieldName), col);
       }
     });
-  }
-}
-
-/* ======================================================
-   ApplyRowVisibilityHandler
-   ====================================================== */
-
-/**
- * هنگام فعال‌شدن (active) شدن یک سطر اجرا می‌شود:
- * برای هر ستون دارای resolveOn که سلولش مقدار دارد، applyRemoteVisibilityRules
- * را (بدون پاک‌کردن سلول‌های وابسته) صدا می‌زند تا visibilityCondition سطر فعال
- * از سرویس ریموت به‌روز شود. مقدار RowState سطر را تغییر نمی‌دهد.
- */
-export class ApplyRowVisibilityHandler {
-  /**
-   * Dedupe guard: آخرین امضای (row + کالکشن + مقادیر ستون‌های resolveOn) که
-   * برایش سر ریموت صدا زده شد. بدون این، دو مسیر مستقل (کلیک سطر →
-   * setActiveRow و کلیک سلول → setActiveCell) و رفرش‌های متوالی، همان API را
-   * چند بار صدا می‌زدند. وقتی مقادیر عوض شود امضای جدید است و API دوباره
-   * صدا زده می‌شود.
-   */
-  private lastSignature: string | null = null;
-
-  constructor(
-    private readonly repo: TableRepository,
-    private readonly audit: AuditLogger,
-    private readonly permissionPolicy: PermissionPolicy,
-    private readonly dynamic?: DynamicConfig,
-  ) { }
-
-  async execute(
-    command: ApplyRowVisibilityCommand,
-    actor: Actor,
-  ): Promise<TableEvent[]> {
-    const { store, tableKey, rowId } = command;
-    const table = await this.repo.getById(store, tableKey);
-
-    try {
-      if (!this.dynamic) return [];
-
-      const row = table.getRow(rowId);
-      if (!row) {
-        throw new DomainError('ROW_NOT_FOUND', `Row ${rowId} not found`, { rowId });
-      }
-
-      const previousVisibility = { ...(row.getVisibilityCondition() ?? {}) };
-      const activeCollection = table.getActiveCollectionName() ?? 'default';
-
-      // گارد کالکشن: هر کالکشن فقط resolveOnِ خودش را اجرا کند. بدون این،
-      // دوقلوهای RpWayId سایر کالکشن‌ها هم حلقه را طی می‌کردند و API به ازای
-      // هر کالکشن (۴ بار) صدا زده می‌شد.
-      const resolveOnColumns = Array.from(this.dynamic.columnMeta.values())
-        .filter(
-          (colCfg): colCfg is ColumnSchema & { resolveOn: NonNullable<ColumnSchema['resolveOn']> } =>
-            colCfg.resolveOn != null,
-        )
-        .filter(
-          colCfg => (colCfg.fieldCollection ?? 'default') === activeCollection,
-        );
-
-      if (resolveOnColumns.length === 0) return [];
-
-      // امضای dedupe: مقادیر فعلی سلول‌های resolveOn این سطر.
-      const signatureParts = resolveOnColumns.map(colCfg =>
-        String(row.getCell(colCfg.resolveOn.fieldName)?.getValue() ?? ''),
-      );
-      const signature =
-        `${store}:${tableKey}:${rowId}:${activeCollection}:${signatureParts.join('|')}`;
-      if (signature === this.lastSignature) {
-        // همان سطر با همان مقادیر — فلگ‌ها عوض نشده‌اند؛ API و save لازم نیست.
-        return [];
-      }
-
-      // ثبت امضا «قبل» از فراخوانی ریموت: دو مسیر dispatch (کلیک سطر و
-      // کلیک سلول) تقریباً همزمان اجرا می‌شوند و اگر امضا بعد از await ثبت
-      // می‌شد، هر دو از فیلتر رد می‌شدند و API دوبار صدا زده می‌شد.
-      this.lastSignature = signature;
-
-      for (const colCfg of resolveOnColumns) {
-        const cell = row.getCell(colCfg.resolveOn.fieldName);
-        if (!cell) continue;
-        const value = cell.getValue();
-        if (value == null || value === '') continue;
-
-        await this.applyRemoteVisibilityRules({
-          table,
-          rowId: new RowId(rowId),
-          changedColumnId: new ColumnId(colCfg.resolveOn.fieldName),
-          newValue: value,
-          clearDependents: false,
-        });
-      }
-
-      await this.repo.save(store, table);
-
-      const out: TableEvent = {
-        type: 'CELL_CHANGED',
-        tableId: tableKey,
-        rowId,
-        columnId: 'visibilityCondition',
-        previousValue: previousVisibility,
-        newValue: row.getVisibilityCondition(),
-      };
-      this.audit.log({ type: 'INFORMATION', message: 'ROW_VISIBILITY_APPLIED', payload: out });
-      return [out];
-
-    } catch (e) {
-      logError(this.audit, e, `ApplyRowVisibilityHandler[${tableKey}:${rowId}]`);
-      return [];
-    }
-  }
-
-  /* ── identical to ChangeCellValueHandler helper ───────────────────── */
-
-  private async applyRemoteVisibilityRules(input: {
-    table: Table;
-    rowId: RowId;
-    changedColumnId: ColumnId;
-    newValue: unknown;
-    clearDependents?: boolean;
-  }): Promise<void> {
-    const {
-      table,
-      rowId,
-      changedColumnId,
-      newValue,
-      clearDependents = true,
-    } = input;
-
-    const meta = this.dynamic?.columnMeta;
-    if (!meta) return;
-    const colKey = `${table.getActiveCollectionName() ?? 'default'}_${changedColumnId.value}`;
-    const changedMeta = meta.get(colKey) ?? meta.get(changedColumnId.value);
-    const resolveOn = changedMeta?.resolveOn;
-    if (!resolveOn) return;
-    if (resolveOn.fieldName !== changedColumnId.value) return;
-
-    const row = table.getRows().find(r => r.id.value === rowId.value);
-    if (!row) return;
-
-    const rowValues: Record<string, unknown> = {};
-    for (const [colId, cell] of row.getCells().entries()) {
-      rowValues[colId] = cell.getValue();
-    }
-
-    if (newValue == null || newValue === '') return;
-
-    const params =
-      typeof resolveOn.buildParams === 'function'
-        ? resolveOn.buildParams(rowValues)
-        : { value: newValue };
-    const response = await this.dynamic!.remoteApi.request({
-      endpoint: resolveOn.endpoint,
-      params,
-      method: 'POST',
-    });
-
-    resolveOn.getResponse?.(response, row);
-    const flags: Record<string, boolean> = resolveOn.mapFlags?.(response) ?? {};
-
-    const toShow: ColumnSchema[] = [];
-    const visibilityCondition: Record<string, boolean> = {};
-    const activeCollection = table.getActiveCollectionName() ?? 'default';
-
-    meta.forEach(colCfg => {
-      // Collection guard — same rationale as applyDynamicProjection: configs of
-      // other collections must not react to this collection's cell changes.
-      if ((colCfg.fieldCollection ?? 'default') !== activeCollection) return;
-      const v = colCfg.visibility;
-
-      if (
-        v?.kind === 'whenRemoteFlag' &&
-        v.sourceFieldName === changedColumnId.value
-      ) {
-        const schema = table.getColumnSchema(new ColumnId(colCfg.fieldName));
-        const flagValue = flags[v.flag] ?? false;
-        // کلید visibilityCondition باید fieldName باشد چون UI با col.fieldName چک می‌کند.
-        visibilityCondition[colCfg.fieldName] = flagValue;
-        if (flagValue && schema) {
-          toShow.push({ ...schema, hidden: false });
-        }
-      }
-
-      const dependency = colCfg.dynamicSource?.dependsOn;
-      if (
-        clearDependents &&
-        dependency &&
-        dependency.includes(changedColumnId.value) &&
-        !Object.hasOwn(visibilityCondition, colCfg.fieldName) &&
-        colCfg.visibility?.kind !== 'whenTableType' &&
-        colCfg.visibility?.kind !== 'whenCollection'
-      ) {
-        const cell = row.getCell(colCfg.fieldName);
-        cell?.changeValue(null);
-        cell?.changeDisplay(null);
-      }
-    });
-
-    if (toShow.length > 0) {
-      table.addColumns(toShow);
-    }
-    row.setVisibilityCondition(visibilityCondition);
   }
 }

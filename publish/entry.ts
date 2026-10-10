@@ -65,7 +65,10 @@ export {
   createBrowserConnectivity,
   createLocalStorageWatermark,
 } from '../infrastructure/offline';
-export { shouldSkipGridNavigation } from '../ui/keyboard/skipGridNavigation';
+export {
+  isGridShortcutKey,
+  shouldSkipGridNavigation,
+} from '../ui/keyboard/skipGridNavigation';
 export { useGrid, useERPTable } from '../ui/useERPTable';
 export type { UseGridResult, UseERPTableResult } from '../ui/useERPTable';
 export { bindGridHostEvents } from '../ui/host/bindGridHostEvents';
@@ -361,3 +364,7 @@ export {
   TextPdfRenderer,
   VazirmatnPdfRenderer,
 } from './plugins/pdf';
+
+export { GRID_REVALIDATE_EVENT, LEGACY_GRID_REVALIDATE_EVENT } from '../ui/hooks/useRevalidateRevision';
+export type { UseDependOnHook, UseDependOnOptions, UseDependOnResult } from '../ui/host';
+export { useStaticDependOn } from '../ui/host';

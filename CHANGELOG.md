@@ -9,10 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Behaviour change:** `Table.deleteRow` now soft-deletes a *modified* row (`RowState = Delete`) and restores only a row that is already deleted (it used to restore a modified row). Matches the arianERP host table.
+- `isInitiallyHidden` scopes the "has data" check to the column's own collection (no cross-collection unhide).
+
 - **D22 locked (deferred):** monorepo / `@persian-data-grid/core` postponed until after `1.0.0`; release-gate waives `monorepo-core` and treats §۴ 60 KB as stretch (hard ceiling remains 65 KB per D15)
 
 ### Added
 
+- **Paged IndexedDB mode** `persistence: 'paged-idb'` (ported from the arianERP host table): IndexedDB is the single source of truth, RAM holds one page window; paging, add/duplicate-at-end, soft/bulk delete, select-all, search, footer totals and Excel export stream from IndexedDB. Repos: `PagedCachedTableRepository` / `PagedIndexedDbTableRepository` / `PagedLocalTableRepository`; port `WindowedTableRepository` + `isWindowedRepository`. See `docs/paged-idb.md`.
+- `APPLY_ROW_VISIBILITY` (re-apply remote visibility when a row becomes active) and `ROWS_DELETED` (bulk delete) commands; collection guard for dynamic projection / visibility so twin column configs of other collections never leak.
+- `controller.getFullSnapShot / iterateRowsFromDb / isPagedWindow`; streamed `subscribeColumn(col, scope, reducer, seed, cb)` (legacy `cb`-only form still works).
+- Host injection: `CallbackRemoteApi`, `FetchRemoteApi({ getToken, getDefaults, fetcher })`, `ERPTableHostProvider useDependOn`, `GRID_REVALIDATE_EVENT`, pure document helpers (`mapSnapshotToDetails`, `mapDetailsToRowInputs`, `buildDocumentPayload`, `mapServerHeaderToFields`) on `/headless`.
+- `IRule.requiredIf`, keyboard fallback to the engine's active row when focus is inside a Select, table shortcuts win over a focused Select (`isGridShortcutKey`).
 - Document PDF template on `VazirmatnPdfRenderer` / `PdfExportPlugin({ template })`: header, footer, JPEG logo, page numbers, repeating table header, signature, stamp, per-page totals (PR-141)
 - Gallery example `17 · Document PDF` (PR-141)
 - Internal Jalali single/range calendar on `persian-data-grid/date-picker-jalali` (`PersianRangeDateCell` / `JalaliCalendar`); removes `react-persian-range-picker` peer (PR-140)

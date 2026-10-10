@@ -672,6 +672,11 @@ export class UITableController {
     return this.safe(() => this.engine.getSnapShot(collectionScope ?? "active"), 'getSnapShot');
   }
 
+  /** True in persistence 'paged-idb' mode (RAM holds one page window). */
+  isPagedWindow(): boolean {
+    return this.engine.isPagedWindow();
+  }
+
   /** Full IndexedDB snapshot for server save / export. */
   async getFullSnapShot(collectionScope?: CollectionScope) {
     try {
@@ -683,23 +688,6 @@ export class UITableController {
       this.audit.log({
         type: 'ERROR',
         message: 'getFullSnapShot failed',
-        payload: e,
-      });
-      return null;
-    }
-  }
-
-  /** All domain rows from IndexedDB (not just the RAM page window). */
-  async getAllRowsFromDb(collectionScope?: CollectionScope) {
-    try {
-      return await this.engine.getAllRowsFromDb(
-        this.store,
-        collectionScope ?? 'active',
-      );
-    } catch (e) {
-      this.audit.log({
-        type: 'ERROR',
-        message: 'getAllRowsFromDb failed',
         payload: e,
       });
       return null;

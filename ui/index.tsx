@@ -37,7 +37,10 @@ import { IMultiSelectConfig } from './type';
 import type { CellComponentMap } from './cellRenderer/cellRegistry';
 import type { FilterComponentMap } from './filters';
 import type { GridOverlayComponent } from './overlays';
-import { shouldSkipGridNavigation } from './keyboard/skipGridNavigation';
+import {
+  isGridShortcutKey,
+  shouldSkipGridNavigation,
+} from './keyboard/skipGridNavigation';
 import { useGrid } from './useERPTable';
 import { useGridHostEvents } from './host/useGridHostEvents';
 import { assignRef } from './host/assignRef';
@@ -354,12 +357,17 @@ export function DataGrid<TRow = unknown>(props: DataGridProps<TRow>) {
     };
 
     const handler = (e: KeyboardEvent) => {
-      if (shouldSkipGridNavigation(e.target, e.code)) {
+      // Table Alt/Ctrl shortcuts win over Select; preventDefault must run
+      // synchronously — the async dispatch below is too late.
+      if (isGridShortcutKey(e)) {
+        e.preventDefault();
+        e.stopPropagation();
+      } else if (shouldSkipGridNavigation(e.target, e.code)) {
         return;
       }
       const activeRow = controller.getActiveRow();
       const activeCell = controller.getActiveCell();
-      controller.dispatch({
+      void controller.dispatch({
         type: "KEY_DOWN",
         event: e,
         ctx: {

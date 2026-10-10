@@ -325,3 +325,28 @@ export type {
   PresenceLocalState,
 } from '../application/ports/PresencePort';
 export type { PdfRenderer } from '../application/ports/PdfRenderer';
+
+export { CallbackRemoteApi } from '../infrastructure/Repositories/callbackRemoteApi';
+export type { RemoteApiRequest } from '../infrastructure/Repositories/callbackRemoteApi';
+
+// Document-grid (header + detail) mapping — host I/O stays outside the package.
+export {
+  buildDocumentPayload,
+  mapDetailsToRowInputs,
+  mapServerHeaderToFields,
+  mapSnapshotToDetails,
+} from '../infrastructure/document/documentGridMapping';
+export type {
+  BuildDocumentPayloadOptions,
+  DetailLine,
+  DetailsToRowInputsOptions,
+  DocumentHeaderField,
+  SnapshotToDetailsOptions,
+} from '../infrastructure/document/documentGridMapping';
+
+// Page-window repositories (persistence 'paged-idb').
+export { PagedCachedTableRepository } from '../infrastructure/Repositories/paged/PagedCachedTableRepository';
+export { PagedIndexedDbTableRepository } from '../infrastructure/Repositories/paged/PagedIndexedDbTableRepository';
+export { PagedLocalTableRepository } from '../infrastructure/Repositories/paged/PagedLocalTableRepository';
+export { isWindowedRepository } from '../application/ports/TableRepository';
+export type { WindowedTableRepository, PersistedRowRecord } from '../application/ports/TableRepository';

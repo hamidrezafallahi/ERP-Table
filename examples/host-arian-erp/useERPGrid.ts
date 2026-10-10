@@ -1,5 +1,7 @@
-﻿// @ts-nocheck
-// Host page glue for ERP grids (Next.js / redux slices). Outside package core.
+// @ts-nocheck
+// Host page glue for arianERP document grids (Next.js / redux slices).
+// Lives OUTSIDE the package: it only injects I/O (RTK Query, redux page state,
+// router) and delegates every table concern to persian-data-grid.
 import {
   useCallback,
   useEffect,
@@ -17,7 +19,14 @@ import {
   useDispatch,
 } from 'react-redux';
 
-import { ERPTableProps } from '@components/organisms/erp-table/ui';
+import type { DataGridProps } from 'persian-data-grid';
+import {
+  buildDocumentPayload,
+  mapDetailsToRowInputs,
+  mapServerHeaderToFields,
+  mapSnapshotToDetails,
+  type UITableController,
+} from 'persian-data-grid/headless';
 import {
   useInitializePage,
   useNavigatePage,
@@ -36,15 +45,16 @@ import {
 } from '@type/elementType';
 import { PageTypeEnum } from '@type/enum';
 import {
+  chatDetailsToErpRows,
+  normalizeChatPrefill,
+} from '@utils/chatPrefill';
+import {
   showErrorToast,
   showSuccessToast,
 } from '@utils/toast';
 
-import { RowStateEnum } from '../domain/value-objects';
-import { TableSnapShot } from '../engine/type';
-import { UITableController } from '../infrastructure/ui/UITableController';
 
-export function useERPGrid(props: Omit<GridContainedPageProps, "Component" | "form">) {
+export function useERPGrid(props: Omit<GridContainedPageProps, "Component" | "form"> & { form?: any }) {
     const {
         headerGetUrl,
         DefaultHeaderRepoViewId,
@@ -67,7 +77,8 @@ export function useERPGrid(props: Omit<GridContainedPageProps, "Component" | "fo
         formHeight = 500,
         recordHeight = 40,
         masterForm,
-        setMasterForm
+        setMasterForm,
+        form,
     } = props;
 
     const [pageReady, setPageReady] = useState(false);
@@ -112,14 +123,45 @@ export function useERPGrid(props: Omit<GridContainedPageProps, "Component" | "fo
     const listPages = pages.filter((item) => item.url === activePage?.listUrl);
     const initializePage = useInitializePage();
     const fetchDefaultValues = async (recordId: number, asCopy = false) => {
-        // Look up by this page's id ΓÇö on tab return activePage may still be the previous tab
+        // Look up by this page's id — on tab return activePage may still be the previous tab
         const storedData =
             pages.find((p) => p.pageId === pageId)?.pageData ??
             activePage?.pageData;
 
+        const chatPrefill =
+            initData?.chatPrefill && typeof initData.chatPrefill === 'object'
+                ? normalizeChatPrefill(initData.chatPrefill)
+                : null;
+
         if (!recordId) {
-            if (storedData?.length) return storedData;
-            return formConfig.map(i => ({ ...i, value: i.value, originalValue: i.value }));
+            if (storedData?.length) {
+                // صفحه از قبل هست؛ فقط فیلدهای خالی را از chatPrefill پر کن
+                if (!chatPrefill) return storedData;
+                return storedData.map((item: any) => {
+                    if (item.name === 'Details') return item;
+                    if (
+                        !Object.prototype.hasOwnProperty.call(chatPrefill, item.name)
+                    ) {
+                        return item;
+                    }
+                    if (item.value != null && item.value !== '') return item;
+                    const v = chatPrefill[item.name];
+                    return { ...item, value: v, originalValue: v };
+                });
+            }
+            return formConfig.map((i) => {
+                const prefillVal =
+                    chatPrefill &&
+                    Object.prototype.hasOwnProperty.call(chatPrefill, i.name) &&
+                    i.name !== 'Details'
+                        ? chatPrefill[i.name]
+                        : i.value;
+                return {
+                    ...i,
+                    value: prefillVal,
+                    originalValue: prefillVal,
+                };
+            });
         }
 
         const res = await fetchMutation({
@@ -210,6 +252,30 @@ export function useERPGrid(props: Omit<GridContainedPageProps, "Component" | "fo
                             ? existingPage.pageData
                             : await fetchDefaultValues(sourceId, isCopy);
 
+                    // قبل از mount ERP-table، ردیف‌های chatPrefill را ست کن
+                    // (bootstrap فقط بار اول از config.rows می‌خواند → IndexedDB)
+                    if (!sourceId) {
+                        const chatPrefill =
+                            initData?.chatPrefill &&
+                            typeof initData.chatPrefill === 'object'
+                                ? normalizeChatPrefill(initData.chatPrefill)
+                                : null;
+                        const details = Array.isArray(chatPrefill?.Details)
+                            ? chatPrefill.Details
+                            : [];
+                        if (details.length > 0) {
+                            setRows(
+                                chatDetailsToErpRows(details, activeCollection),
+                            );
+                        } else {
+                            setRows([]);
+                        }
+                        if (chatPrefill && form?.setFieldsValue) {
+                            const { Details: _d, ...headerFields } = chatPrefill;
+                            form.setFieldsValue(headerFields);
+                        }
+                    }
+
                     dispatch(
                         addNewPage({
                             Id: Id,
@@ -241,13 +307,12 @@ export function useERPGrid(props: Omit<GridContainedPageProps, "Component" | "fo
                     setPageReady(true);
                 }
             } catch (error) {
-                console.error("Error initializing page:", error);
-
+ 
                 // optional
                 setPageReady(false);
 
-                // ╪º┌»╪▒ toast ╪»╪º╪▒█î:
-                showErrorToast("╪«╪╖╪º ╪»╪▒ ╪»╪▒█î╪º┘ü╪¬ ╪º╪╖┘ä╪º╪╣╪º╪¬ ╪╡┘ü╪¡┘ç", error);
+                // اگر toast داری:
+                showErrorToast("خطا در دریافت اطلاعات صفحه", error);
             }
         };
         init();
@@ -255,34 +320,35 @@ export function useERPGrid(props: Omit<GridContainedPageProps, "Component" | "fo
 
     useEffect(() => {
         if (!sourceId || sourceId === 0) {
-            setRows([]);
+            const chatPrefill =
+                initData?.chatPrefill &&
+                typeof initData.chatPrefill === 'object'
+                    ? normalizeChatPrefill(initData.chatPrefill)
+                    : null;
+            const details = Array.isArray(chatPrefill?.Details)
+                ? chatPrefill.Details
+                : [];
+            setRows(
+                details.length > 0
+                    ? chatDetailsToErpRows(details, activeCollection)
+                    : [],
+            );
             return;
         }
         const loadDetails = async () => {
             const res = await fetchMutation({
                 url: detailGetUrl,
-                body: { HeaderId: sourceId, RepoViewId: DefaultDetailRepoViewId, PagingInfo: { PageNumber: 1, PageRecordCount: recordsPerPage } }
+                body: { HeaderId: sourceId, RepoViewId: DefaultDetailRepoViewId, PagingInfo: { PageNumber: 1, PageRecordCount: 10000 } }
             }).unwrap();
 
             if (res.Result === "Success") {
-                setRows(res.Data.map((item: any) => {
-                    if (isCopy) {
-                        const { [detailFieldKey]: _pk, ...rest } = item;
-                        return {
-                            id: Math.floor(Math.random() * 100000),
-                            values: {
-                                ...rest,
-                                [detailFieldKey]: undefined,
-                                RowState: RowStateEnum.Added,
-                                collection: activeCollection,
-                            },
-                        };
-                    }
-                    return {
-                        id: item[detailFieldKey],
-                        values: { ...item, collection: activeCollection },
-                    };
-                }));
+                setRows(
+                    mapDetailsToRowInputs(res.Data, {
+                        detailFieldKey,
+                        collection: activeCollection,
+                        isCopy,
+                    }),
+                );
             }
         };
         loadDetails();
@@ -331,89 +397,21 @@ export function useERPGrid(props: Omit<GridContainedPageProps, "Component" | "fo
     const handleSubmit = useCallback(async () => {
         if (!controller) return;
         setMasterForm((prev) => ({ ...prev, loading: true }));
-        function mapSnapshotToDetailsDynamic(snapshot: TableSnapShot) {
-            const rows = snapshot.rows.filter((row: any) => row.rowState !== "None");
-            const mapped = rows.map((row: any) => {
-                const detail: Record<string, any> = {
-                    RowState: row.rowState,
-                };
-
-                if (id && row.rowState !== "Add") {
-                    detail[detailFieldKey] = row.id;
-                }
-
-                if (row.isSaveDescription) {
-                    detail.isSaveDescription = row.isSaveDescription;
-                }
-
-                Object.entries(row.cells ?? {}).forEach(([col, cell]: [string, any]) => {
-                    if (cell == null) return;
-                    if (col === "collection" || col === "rowType" || col === "ChangeFields") {
-                        return;
-                    }
-
-                    if (col === "index") {
-                        detail.RowNum = cell;
-                        return;
-                    }
-
-                    const value =
-                        typeof cell === "object" && "value" in cell ? cell.value : cell;
-
-                    detail[col] = value;
-                });
-
-                return {
-                    detail,
-                    collection: row.collection || "default",
-                };
-            });
-
-            const hasCustomCollection = mapped.some(
-                (r) => r.collection && r.collection !== "default",
-            );
-
-            if (!hasCustomCollection) {
-                return { Details: mapped.map((r) => r.detail) };
-            }
-
-            return mapped.reduce((acc: Record<string, any[]>, row) => {
-                (acc[row.collection] ??= []).push(row.detail);
-                return acc;
-            }, {});
-        }
-
         try {
             const currentData = activePage?.pageData || [];
-            const numericFieldNames = new Set([
-                "VoucherNumber",
-                "ReferNumber",
+            // Snapshot از IndexedDB (منبع حقیقت) — scope 'all' تا سطرهای همهٔ
+            // کالکشن‌ها وارد بادی شوند، نه فقط کالکشن فعالِ پنجرهٔ RAM.
+            const snapshot = await controller.getFullSnapShot("all");
+            const payload = buildDocumentPayload({
+                headerFields: currentData,
                 headerFieldKey,
-            ]);
-            const formValues = Object.fromEntries(
-                currentData.map((i) => {
-                    let value = i.value;
-                    if (value === "") value = null;
-                    if (
-                        value != null &&
-                        (i.type === "number" || numericFieldNames.has(i.name))
-                    ) {
-                        const n = Number(value);
-                        value = Number.isNaN(n) ? null : n;
-                    }
-                    return [i.name, value];
+                recordId: id,
+                numericFieldNames: ["VoucherNumber", "ReferNumber"],
+                details: mapSnapshotToDetails(snapshot, {
+                    detailFieldKey,
+                    isUpdate: !!id,
                 }),
-            );
-
-            const snapshotDetails = mapSnapshotToDetailsDynamic(
-                controller?.getSnapShot() as TableSnapShot
-            );
-
-            const payload = {
-                ...formValues,
-                ...snapshotDetails,
-                [headerFieldKey]: id !== 0 ? id : undefined
-            };
+            });
             const res = await itemMutate({ url: !id ? addUrl : updateUrl, body: payload }).unwrap();
             if (res?.Result === "Success") {
                 showSuccessToast(t("toast.successTitle"), t(caption));
@@ -471,9 +469,10 @@ export function useERPGrid(props: Omit<GridContainedPageProps, "Component" | "fo
         }
     }, [controller, activePage, id]);
 
-    const tableProps = useMemo<ERPTableProps>(() => ({
+    const tableProps = useMemo<DataGridProps>(() => ({
         actor: actor,
         store: storeName,
+        persistence: 'paged-idb' as const,
         tableKey: pageId,
         rows,
         columns: columnConfig,

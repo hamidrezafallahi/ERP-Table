@@ -3,6 +3,7 @@ import { RowStateEnum } from '../../../../domain/value-objects';
 import type { ExportSource } from '../../../../application/plugins/GridPlugin';
 import { buildExportTable } from './buildExportTable';
 import { buildXlsxBlob, downloadBlob } from './buildXlsxBlob';
+import { exportActiveCollectionToExcelStreaming } from './exportActiveCollectionToExcelStreaming';
 
 export type ExportActiveCollectionResult = {
   rowCount: number;
@@ -29,6 +30,11 @@ export async function exportActiveCollectionToExcel(
   controller: UITableController,
   options?: ExportActiveCollectionOptions,
 ): Promise<ExportActiveCollectionResult> {
+  // Page-window mode: only one page is in RAM — stream the full set from
+  // IndexedDB instead of materializing rows.
+  if (controller.isPagedWindow()) {
+    return exportActiveCollectionToExcelStreaming(controller, options);
+  }
   const view = controller.getViewState();
   const columns = (
     view?.activeCollectionColumn?.length

@@ -9,7 +9,12 @@ import { ColumnSchema } from '../../../bootstrap/type';
 import {
   UITableController,
 } from '../../../infrastructure/ui/UITableController';
-import { useLocale, useRemoteQuery } from '../../host';
+import {
+  buildDependencyBody,
+  hasDependValue,
+  useLocale,
+  useRemoteQuery,
+} from '../../host';
 import { highlightIfCurrentSearch } from '../../gridSearch/highlightText';
 import {
   CustomDropdownButton,
@@ -72,25 +77,8 @@ export const DescriptionComponent = forwardRef<
   const showSearchHit = !!(isCurrentSearchMatch && searchQuery?.trim());
   const { endpoint, dependOn } = meta.dynamicSource ?? {};
 
-  const hasDependValue = (
-    dependOn:
-      | { fieldName: string; value: unknown }
-      | Array<{ fieldName: string; value: unknown }>,
-  ) => {
-    if (Array.isArray(dependOn)) {
-      return dependOn.every(
-        (item) => item.value !== null && item.value !== undefined,
-      );
-    }
-    return dependOn.value !== null && dependOn.value !== undefined;
-  };
-  const dependencyBody = Array.isArray(dependOn)
-    ? Object.fromEntries(
-        dependOn.map((item) => [item.fieldName, item.value]),
-      )
-    : dependOn
-      ? { [dependOn.fieldName]: dependOn.value }
-      : {};
+  const isReady = hasDependValue(dependOn);
+  const dependencyBody = buildDependencyBody(dependOn);
   const { data: menuData } = useRemoteQuery<VoucherTypeApiResponse>({
     url: endpoint,
     body: {
@@ -100,7 +88,7 @@ export const DescriptionComponent = forwardRef<
         PageRecordCount: 10000,
       },
     },
-    skip: dependOn ? !hasDependValue(dependOn) : false,
+    skip: !isReady,
   });
   const items = useMemo(
     () =>

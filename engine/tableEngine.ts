@@ -1,6 +1,7 @@
 import {
   Actor,
   AddEmptyRowCommand,
+  DuplicateRowCommand,
   ApplicationTableCommand,
   isApplicationTableCommand,
   TableCommand,
@@ -395,13 +396,14 @@ export class TableEngine {
         }
 
         if (shouldActivate && rowId != null) {
+          const target = command as AddEmptyRowCommand | DuplicateRowCommand;
           await this.nav.setActiveRow({
-            store: (command as any).store,
-            tableKey: (command as any).tableKey,
+            store: target.store,
+            tableKey: target.tableKey,
             rowId,
           });
           this.nav.activateFirstCell({
-            tableKey: (command as any).tableKey,
+            tableKey: target.tableKey,
             rowId,
           });
         }
@@ -1248,43 +1250,12 @@ export class TableEngine {
     if (!this.tableKey) return null;
     try {
       const rows = await this.loadAllRows(store, collectionScope);
-      const hasMeaningfulValue = (value: unknown) =>
-        value !== undefined && value !== null && value !== '';
-
-      return {
-        rows: rows
-          .filter(row =>
-            Array.from(row.getCells().entries()).some(
-              ([key, cell]) => key !== 'index' && hasMeaningfulValue(cell.getValue()),
-            ),
-          )
-          .map(row => ({
-            id: row.id.value,
-            changeFields: row.getSnapshotChangeFields(),
-            cells: Object.fromEntries(
-              [...row.getCells()].map(([k, c]) => [k, c.getValue()]),
-            ),
-            rowState: row.rowState.value,
-            collection: row.getCollection(),
-            rowType: row.getCollection(),
-            isSaveDescription: row.isSaveDescription,
-          })),
-      };
+      const { rowsToSnapshot } = await import(
+        '../infrastructure/Repositories/paged/memoryRecords'
+      );
+      return rowsToSnapshot(rows);
     } catch (e) {
       this.errHandler.handle(e, 'TableEngine.getFullSnapShot');
-      return null;
-    }
-  }
-
-  async getAllRowsFromDb(
-    store: string,
-    collectionScope: CollectionScope = 'active',
-  ): Promise<Row[] | null> {
-    if (!this.tableKey) return null;
-    try {
-      return await this.loadAllRows(store, collectionScope);
-    } catch (e) {
-      this.errHandler.handle(e, 'TableEngine.getAllRowsFromDb');
       return null;
     }
   }
@@ -1316,33 +1287,23 @@ export class TableEngine {
         return;
       }
       // Default (event-sourced) mode: every row already lives in RAM, so the
-      // same batched contract is served from the in-memory table.
-      const rows = this.viewBuilder.getAllRows(collectionScope) ?? [];
-      const size = Math.max(1, batchSize ?? 500);
-      for (let base = 0; base < rows.length; base += size) {
-        const slice = rows.slice(base, base + size);
-        const records: PersistedRowRecord[] = slice.map((row, i) => ({
-          rowId: row.id.value,
-          collection: row.getCollection(),
-          sortIndex: Number(row.getCell('index')?.getValue() ?? base + i) || 0,
-          rowState: row.rowState.value,
-          cells: Object.fromEntries(
-            [...row.getCells()].map(([k, c]) => [
-              k,
-              {
-                value: c.getValue(),
-                originalValue: c.getOriginalValue().value,
-                display: c.getDisplay(),
-              },
-            ]),
-          ),
-        }));
-        const cont = await onBatch(records, base);
-        if (cont === false) return;
-      }
+      // same batched contract is served from the in-memory table (lazy module).
+      const { iterateMemoryRows } = await import(
+        '../infrastructure/Repositories/paged/memoryRecords'
+      );
+      await iterateMemoryRows(
+        this.viewBuilder.getAllRows(collectionScope) ?? [],
+        onBatch,
+        batchSize,
+      );
     } catch (e) {
       this.errHandler.handle(e, 'TableEngine.iterateRowsFromDb');
     }
+  }
+
+  /** True in persistence 'paged-idb' mode (RAM holds one page window). */
+  isPagedWindow(): boolean {
+    return isWindowedRepository(this.repo);
   }
 
   /** Windowed: IndexedDB (SoT). Default mode: the in-memory table. */
@@ -2072,103 +2033,58 @@ export class TableEngine {
   ): (() => void) | null {
     const tableStore = this.getStore();
     if (!tableStore) return null;
+    const repo = this.repo;
+    const tableKey = this.tableKey ?? '';
 
-    // Two independent FNV-style hashes over a per-item token — O(1) heap.
-    const mixHash = (h1: number, h2: number, token: string): [number, number] => {
-      for (let i = 0; i < token.length; i++) {
-        const c = token.charCodeAt(i);
-        h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
-        h2 = Math.imul(h2 ^ c, 2654435761) >>> 0;
+    const iterate = async (
+      onItem: (item: { id: number; rowNum: unknown; value: unknown }) => void,
+    ): Promise<void> => {
+      if (store && isWindowedRepository(repo)) {
+        // Stream from IndexedDB (source of truth): heap holds ONE batch.
+        await repo.iterateRowRecords(store, tableKey, collections, async (records) => {
+          for (const rec of records) {
+            if (rec.rowState === RowStateEnum.Deleted) continue;
+            onItem({
+              id: rec.rowId,
+              rowNum: rec.cells['index']?.value ?? rec.sortIndex,
+              value: rec.cells[columnId]?.value,
+            });
+          }
+        });
+        return;
       }
-      return [h1, h2];
+      // Default (event-sourced) mode: rows already live in RAM.
+      for (const r of this.viewBuilder.getAllRows(collections) ?? []) {
+        if (r.rowState.value === RowStateEnum.Deleted) continue;
+        onItem({
+          id: r.id.value,
+          rowNum: r.getCell('index')?.getValue(),
+          value: r.getCell(columnId)?.getValue(),
+        });
+      }
     };
 
     let cancelled = false;
-    let prev = '';
-    let inFlight = false;
-    let pending = false;
-
-    const notify = async (): Promise<void> => {
-      if (cancelled) return;
-      if (inFlight) {
-        pending = true;
-        return;
-      }
-      inFlight = true;
-      try {
-        let acc = seed;
-        let hash: [number, number] = [2166136261, 5381];
-        let sawAny = false;
-
-        if (store && isWindowedRepository(this.repo)) {
-          // Stream from IndexedDB (source of truth): heap holds ONE batch.
-          await this.repo.iterateRowRecords(
-            store,
-            this.tableKey ?? '',
-            collections,
-            async records => {
-              for (const rec of records) {
-                if (rec.rowState === RowStateEnum.Deleted) continue;
-                sawAny = true;
-                const item = {
-                  id: rec.rowId,
-                  rowNum: rec.cells['index']?.value ?? rec.sortIndex,
-                  value: rec.cells[columnId]?.value,
-                };
-                acc = reducer(acc, item);
-                hash = mixHash(
-                  hash[0],
-                  hash[1],
-                  `${item.id}:${String(item.rowNum)}:${String(item.value)}`,
-                );
-              }
-            },
-          );
-        } else {
-          // No store bound (tests / RAM-only usage) → page-window fallback
-          const rows = this.viewBuilder.getAllRows(collections) ?? [];
-          for (const r of rows) {
-            if (r.rowState.value === RowStateEnum.Deleted) continue;
-            sawAny = true;
-            const item = {
-              id: r.id.value,
-              rowNum: r.getCell('index')?.getValue(),
-              value: r.getCell(columnId)?.getValue(),
-            };
-            acc = reducer(acc, item);
-            hash = mixHash(
-              hash[0],
-              hash[1],
-              `${item.id}:${String(item.rowNum)}:${String(item.value)}`,
-            );
-          }
-        }
+    let off: (() => void) | undefined;
+    // The fold (hash-based change detection) is lazy-loaded to keep the
+    // default entry small; the first emit therefore arrives asynchronously.
+    void import('../infrastructure/Repositories/paged/foldedColumn').then(
+      ({ foldColumnSubscription }) => {
         if (cancelled) return;
-        const sig = sawAny ? `${hash[0]}:${hash[1]}` : 'empty';
-        if (sig !== prev) {
-          prev = sig;
-          cb(acc);
-        }
-      } catch (e) {
-        this.errHandler.handle(e, 'TableEngine.subscribeColumn');
-      } finally {
-        inFlight = false;
-        if (pending && !cancelled) {
-          pending = false;
-          void notify();
-        }
-      }
-    };
-
-    const unsubscribe = tableStore.subscribe(() => {
-      void notify();
-    });
-    // Initial full-dataset emit (async)
-    void notify();
+        off = foldColumnSubscription<T>({
+          subscribe: (listener) => tableStore.subscribe(listener),
+          iterate,
+          reducer,
+          seed,
+          cb,
+          onError: (e) => this.errHandler.handle(e, 'TableEngine.subscribeColumn'),
+        });
+      },
+    );
 
     return () => {
       cancelled = true;
-      unsubscribe?.();
+      off?.();
     };
   }
 }

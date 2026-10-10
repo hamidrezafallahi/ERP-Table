@@ -5,7 +5,13 @@ import React, {
 } from 'react';
 
 import { Pagination, CustomButton, InputText, LeftChevron, RightChevron } from '../primitives';
-import { useDirection, useLocale, useRemoteQuery, useTranslations } from '../host';
+import {
+  useDirection,
+  useHostDependOn,
+  useLocale,
+  useRemoteQuery,
+  useTranslations,
+} from '../host';
 
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { IMultiSelectConfig } from '../type';
@@ -42,25 +48,9 @@ export default function MultiselectList({
   const [searchInput, setSearchInput] = useState("");
   const [quickSearch, setQuickSearch] = useState("");
   const { endpoint, repoViewId, dependOn, ...bodyRequest } = dynamicValue;
-  const hasDependValue = (
-    dependOn:
-      | { fieldName: string; value: unknown }
-      | Array<{ fieldName: string; value: unknown }>,
-  ) => {
-    if (Array.isArray(dependOn)) {
-      return dependOn.every(
-        (item) => item.value !== null && item.value !== undefined,
-      );
-    }
-    return dependOn.value !== null && dependOn.value !== undefined;
-  };
-  const dependencyBody = Array.isArray(dependOn)
-    ? Object.fromEntries(
-        dependOn.map((item) => [item.fieldName, item.value]),
-      )
-    : dependOn
-      ? { [dependOn.fieldName]: dependOn.value }
-      : {};
+  const { dependencyBody, isReady } = useHostDependOn(dependOn, {
+    enabled: Boolean(multiSelectConfig.dependOnFromHost),
+  });
   const body = {
     ...bodyRequest,
     ...dependencyBody,
@@ -77,7 +67,7 @@ export default function MultiselectList({
   const { data } = useRemoteQuery<Record<string, unknown>[]>({
     url: endpoint,
     body: existBody,
-    skip: dependOn ? !hasDependValue(dependOn) : false,
+    skip: !isReady,
   });
   // const processedData = useProcessedData({
   //   data: data?.Data,

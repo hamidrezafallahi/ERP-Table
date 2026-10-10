@@ -106,7 +106,15 @@ export async function revealRow(
     return;
   }
 
-  const targetPage = getTargetPage(controller, rowId);
+  let targetPage: number | null;
+  if (controller.isPagedWindow?.()) {
+    // Stream from IDB and count the record's ordinal (sorted position) to
+    // derive the page — no full row array in heap.
+    const { findPagedRowPage } = await import('./pagedSearch');
+    targetPage = await findPagedRowPage(controller, rowId, table.pagination.pageSize);
+  } else {
+    targetPage = getTargetPage(controller, rowId);
+  }
   if (!targetPage) return;
 
   if (table.pagination.page !== targetPage) {

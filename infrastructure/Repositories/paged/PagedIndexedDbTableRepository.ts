@@ -405,7 +405,7 @@ export class PagedIndexedDbTableRepository implements WindowedTableRepository {
       new Pagination(page, pageSize, total),
       null,
       active,
-    );
+    ).setPageWindow(true);
   }
 
   private async readMeta(

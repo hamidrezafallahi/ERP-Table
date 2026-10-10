@@ -27,6 +27,12 @@ export type MultiSelectDependOn = {
 };
 
 export interface IMultiSelectConfig {
+  /**
+   * Resolve `dynamicValue.dependOn` values through the host's
+   * `useDependOn` hook (e.g. header-form fields) instead of the static
+   * values carried by the items.
+   */
+  dependOnFromHost?: boolean;
   dynamicValue: IRequestConfig & {
     dependsOn?: string[];
     dependOn?: MultiSelectDependOn | MultiSelectDependOn[];

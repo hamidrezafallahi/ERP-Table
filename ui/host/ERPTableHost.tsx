@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 
 import type { DateAdapter } from '../../application/ports/DateAdapter';
+import type { UseDependOnHook } from './dependOn';
 import type { RemoteApi } from '../../application/ports/RemoteApi';
 import type { ColumnMenuItemsConfig } from '../../engine/dataOps/columnMenu';
 import {
@@ -60,6 +61,11 @@ export type ERPTableHostValue = {
   columnMenuItems?: ColumnMenuItemsConfig;
   /** Custom column menu action handler (PR-114). */
   onColumnMenuAction?: (event: ColumnMenuActionEvent) => void;
+  /**
+   * Resolves `dependOn` values for remote lists (e.g. from the form that owns
+   * the grid — Redux, React context, …). Default: static item values.
+   */
+  useDependOn?: UseDependOnHook;
 };
 
 function defaultDateAdapter(locale: ERPTableLocale): DateAdapter {
@@ -92,6 +98,7 @@ export function ERPTableHostProvider({
   filterComponents,
   columnMenuItems,
   onColumnMenuAction,
+  useDependOn,
 }: ERPTableHostValue & { children: ReactNode }) {
   const value = useMemo<ERPTableHostValue>(
     () => ({
@@ -110,6 +117,7 @@ export function ERPTableHostProvider({
       filterComponents,
       columnMenuItems,
       onColumnMenuAction,
+      useDependOn,
     }),
     [
       locale,
@@ -127,6 +135,7 @@ export function ERPTableHostProvider({
       filterComponents,
       columnMenuItems,
       onColumnMenuAction,
+      useDependOn,
     ],
   );
 

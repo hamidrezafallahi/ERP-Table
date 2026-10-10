@@ -37,14 +37,7 @@ import {
   WindowedTableRepository,
 } from '../ports/TableRepository';
 
-/**
- * Append a row at the end of the full dataset (IndexedDB SoT), bump totalRows,
- * then load the last page into the RAM window so UI/pagination stay correct.
- *
- * Memory Iron Rule: max index + row count are computed with ONE streaming
- * cursor pass over IndexedDB (batch-bounded heap) — never a full getAllRows
- * hydration of the dataset.
- */
+/** Page-window append (lazy module — only paged mode pays for it). */
 async function appendAtEndAndShowLastPage(
   repo: WindowedTableRepository,
   store: string,
@@ -52,43 +45,8 @@ async function appendAtEndAndShowLastPage(
   table: Table,
   data?: KeyValue[],
 ): Promise<RowAdded> {
-  let maxIndex = 0;
-  let existingCount = 0;
-  await repo.iterateRowRecords(store, tableKey, 'active', async records => {
-    for (const rec of records) {
-      existingCount += 1;
-      // Same semantics as the former getAllRows reduce: cell 'index' value,
-      // 0 when missing/non-numeric.
-      const n = Number(rec.cells['index']?.value ?? 0);
-      if (Number.isFinite(n) && n > maxIndex) maxIndex = n;
-    }
-  });
-  const nextIndex = maxIndex + 1;
-
-  // Meta may be stale (stuck at pageSize); trust the larger of meta vs real count
-  const newTotal = Math.max(table.getPagination().totalRows, existingCount) + 1;
-  const pageSize = Math.max(1, table.getPagination().pageSize);
-  const lastPage = Math.max(1, Math.ceil(newTotal / pageSize));
-
-  const event = table.addNewRow(data, nextIndex);
-  // Force correct totals/page (addNewRow may have used a stale base totalRows)
-  table.setPagination(new Pagination(lastPage, pageSize, newTotal));
-
-  await repo.save(store, table);
-
-  const loaded = await repo.loadPage(store, tableKey, lastPage, pageSize);
-  if (loaded) {
-    // Ensure RAM window carries the corrected pagination after load
-    if (
-      loaded.getPagination().totalRows !== newTotal ||
-      loaded.getPagination().page !== lastPage
-    ) {
-      loaded.setPagination(new Pagination(lastPage, pageSize, newTotal));
-      await repo.save(store, loaded);
-    }
-  }
-
-  return event;
+  const mod = await import('./appendAtEnd');
+  return mod.appendAtEndAndShowLastPage(repo, store, tableKey, table, data);
 }
 
 /* ======================================================
@@ -415,103 +373,6 @@ export class DeleteRowCommandHandler {
           payload: { error }
         });
       } return null
-    }
-  }
-}
-
-/* ======================================================
-   Delete Selected Rows (full dataset / IndexedDB SoT)
-   ====================================================== */
-
-export class DeleteRowsCommandHandler {
-  constructor(
-    private readonly repo: WindowedTableRepository,
-    private readonly audit: AuditLogger,
-    private readonly permission: PermissionPolicy,
-  ) { }
-
-  /**
-   * Bulk delete — never toggles restore:
-   * - `Added` → hard-remove from IndexedDB
-   * - otherwise → `rowState = Deleted` (soft; قابل برگرداندن با حذف تکی)
-   * Already-`Deleted` rows stay deleted.
-   */
-  async execute(command: DeleteRowsCommand, actor: Actor) {
-    try {
-      const rowIds = command.rowIds ?? [];
-      if (rowIds.length === 0) return null;
-
-      for (const rowId of rowIds) {
-        if (!this.permission.canDeleteRow?.({ actor, rowId })) {
-          throw new DomainError(
-            'FORBIDDEN',
-            'Actor is not allowed to delete selected rows',
-            { actor, rowId },
-          );
-        }
-      }
-
-      // Memory Iron Rule: streamed validity check (heap = one batch) — every
-      // requested id must exist in the active collection's persisted records.
-      const remainingWanted = new Set(rowIds);
-      let foundAny = false;
-      await this.repo.iterateRowRecords(
-        command.store,
-        command.tableKey,
-        'active',
-        async records => {
-          for (const rec of records) {
-            if (remainingWanted.delete(rec.rowId)) foundAny = true;
-            if (remainingWanted.size === 0) return false; // early stop
-          }
-        },
-      );
-      if (!foundAny) {
-        throw new DomainError('ROW_NOT_FOUND', 'No requested rows found', {
-          tableKey: command.tableKey,
-        });
-      }
-      // Ids absent from persisted records (e.g. unsaved RAM-only additions)
-      // are skipped silently — the persisted delete cannot act on them.
-
-      // Soft/hard delete applied DIRECTLY on IndexedDB records in one
-      // readwrite transaction (cursor-based) — never getAllRows + replaceAll.
-      // Added → hard-removed; others → rowState=Deleted on the record;
-      // already-Deleted stay deleted (no restore on bulk delete).
-      const { softDeleted, hardRemoved, remaining } =
-        await this.repo.softDeleteRows(command.store, command.tableKey, rowIds);
-
-      this.audit.log({
-        type: 'INFORMATION',
-        message: 'ROWS_DELETED',
-        payload: {
-          requested: rowIds.length,
-          hardRemoved,
-          softDeleted,
-          remaining,
-        },
-      });
-
-      return {
-        removed: hardRemoved,
-        softDeleted,
-        remaining,
-      };
-    } catch (error) {
-      if (error instanceof DomainError) {
-        this.audit.log({
-          type: error.code,
-          message: error.message,
-          payload: error.details,
-        });
-      } else {
-        this.audit.log({
-          type: 'INVARIANT_VIOLATION',
-          message: 'Unexpected error',
-          payload: { error },
-        });
-      }
-      return null;
     }
   }
 }

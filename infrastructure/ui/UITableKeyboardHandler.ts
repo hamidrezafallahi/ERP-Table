@@ -115,9 +115,19 @@ export class UITableKeyboardHandler {
 
     const { altKey, shiftKey, ctrlKey, code } = e;
 
-    const { activeRowId, activeColumnId } = ctx;
+    const { activeColumnId } = ctx;
 
     const selectedRows = this.engine.getSelectedRows();
+
+    // When focus is inside a Select, ctx.activeRowId may be empty; fall back to
+    // the engine's active row, then to the first selected row (arianERP parity).
+    const activeRowId: number | null =
+      ctx.activeRowId ??
+      this.engine.getActiveRow() ??
+      (selectedRows
+        ? Number(Object.keys(selectedRows).find((id) => selectedRows[Number(id)])) ||
+          null
+        : null);
 
 
 

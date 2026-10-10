@@ -85,7 +85,10 @@ export function DesktopTable<TRow = unknown>({
 }: DesktopTableProps<TRow>) {
   const rootRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
-  const useVirtual = resolveDesktopVirtualization(virtualization, session);
+  // Page-window mode ('paged-idb') is pagination-driven: RAM holds one page.
+  const useVirtual =
+    !controller.isPagedWindow() &&
+    resolveDesktopVirtualization(virtualization, session);
   const rowHeight = useERPTableTheme().params.rowHeight;
 
   const { bodyHeight } = useERPTableLayout({

@@ -12,7 +12,6 @@ import {
 import {
   LocalTableRepository,
 } from '../infrastructure/Repositories/localTableRepository';
-import { PagedCachedTableRepository } from '../infrastructure/Repositories/paged/PagedCachedTableRepository';
 import {
   isWindowedRepository,
   WindowedTableRepository,
@@ -89,10 +88,16 @@ export {
 } from './defaults';
 
 async function resolveEventStore(
-  config: Pick<CreateERPTableConfig, 'eventStore' | 'store' | 'eventStoreName'>,
+  config: Pick<
+    CreateERPTableConfig,
+    'eventStore' | 'store' | 'eventStoreName' | 'persistence'
+  >,
   persist: boolean,
 ): Promise<EventStore> {
   if (config.eventStore) return config.eventStore;
+  // Page-window mode: IndexedDB already holds the durable rows, so the audit /
+  // undo log stays in memory unless the host injects its own `eventStore`.
+  if (config.persistence === 'paged-idb') return new InMemoryEventStore();
   // Durable log only when the host asked for a `store` (PR-83).
   if (persist && typeof indexedDB !== 'undefined') {
     return IndexedDbEventStore.open(
@@ -145,78 +150,6 @@ function resolveHostRows<TRow>(
   );
 }
 
-/**
- * Page-window seeding (persistence 'paged-idb'): first open pushes the full
- * seed to IndexedDB (replaceAll) and keeps ONE page in RAM; re-open reuses the
- * persisted window. Conditional (whenFieldTruthy / whenRemoteFlag) columns that
- * hold data are unhidden in their own collection.
- */
-async function seedWindowedTable(args: {
-  repo: WindowedTableRepository;
-  store: string;
-  tableKey: string;
-  table: Table;
-  loadedTable?: Table;
-  columns: Map<string, ColumnSchema>;
-  columnMeta: Map<string, ColumnSchema>;
-  page: number;
-  pageSize: number;
-  activeRowCount: number;
-}): Promise<Table> {
-  const { repo, store, tableKey, loadedTable, columns, columnMeta, page, pageSize } =
-    args;
-  let table = args.table;
-
-  if (loadedTable) {
-    table.setColumns(Array.from(columns.values()));
-    // ویرایش (باز شدن مجدد جدول از IndexedDB): ستون‌های شرطیِ محتوا دار باید
-    // در کالکشن خودشان نمایان شوند — حتی کالکشن‌هایی که سطرشان در پنجرهٔ RAM
-    // نیست. اسکن مقدار، per-collection روی متای ستون‌ها انجام می‌شود.
-    const activeName = table.getActiveCollectionName() ?? 'default';
-    const conditionByCollection = new Map<string, Map<string, boolean>>();
-    for (const row of table.getCollections().get(activeName)?.getRows().values() ?? []) {
-      const cond = row.getVisibilityCondition() ?? {};
-      for (const [fieldName, flag] of Object.entries(cond)) {
-        if (flag !== true) continue;
-        const colCfg =
-          columnMeta.get(`${activeName}_${fieldName}`) ?? columnMeta.get(fieldName);
-        const coll = colCfg?.fieldCollection ?? activeName;
-        (
-          conditionByCollection.get(coll) ??
-          conditionByCollection.set(coll, new Map()).get(coll)!
-        ).set(fieldName, true);
-      }
-    }
-    for (const cfg of columnMeta.values()) {
-      const coll = cfg.fieldCollection ?? activeName;
-      if (conditionByCollection.get(coll)?.get(cfg.fieldName) !== true) continue;
-      const target = table.getCollections().get(coll);
-      const cur = target?.getColumns().get(cfg.fieldName);
-      if (target && cur) {
-        target.getColumns().set(cfg.fieldName, { ...cur, hidden: false });
-      }
-    }
-    const loadedActiveCount =
-      table.getCollections().get(table.getActiveCollectionName())?.getRows().size ?? 0;
-    const totalRows =
-      loadedActiveCount > 0
-        ? Math.max(table.getPagination().totalRows, loadedActiveCount)
-        : table.getPagination().totalRows;
-    table.setPagination(new Pagination(page, pageSize, totalRows));
-    await repo.save(store, table);
-  } else {
-    table.setColumns(Array.from(columns.values()));
-    table.setPagination(new Pagination(page, pageSize, args.activeRowCount));
-    // Full dataset → IndexedDB source of truth; RAM kept to page 1 only
-    await repo.replaceAll(store, table);
-  }
-
-  // Always bind the engine to the RAM page window (not the full dataset)
-  const pageWindow = await repo.loadPage(store, tableKey, page, pageSize);
-  if (pageWindow) table = pageWindow;
-  return table.setPageWindow(true);
-}
-
 async function assembleGrid<TRow>(
   config: CreateERPTableConfig<TRow>,
 ): Promise<CreateERPTableResult<TRow>> {
@@ -235,13 +168,16 @@ async function assembleGrid<TRow>(
       "[createGrid] persistence 'paged-idb' requires a non-empty `store`",
     );
   }
-  if (pagedIdb && !config.tableKey) {
-    throw new Error("[createGrid] persistence 'paged-idb' requires `tableKey`");
-  }
+  // The page-window kit (repositories, seed, bulk delete) is loaded lazily so
+  // the default entry stays within its bundle budget (separate chunk).
+  const pagedKit =
+    pagedIdb || (config.repo && isWindowedRepository(config.repo))
+      ? await import('../infrastructure/Repositories/paged/pagedKit')
+      : undefined;
   const repo =
     config.repo ??
-    (pagedIdb
-      ? new PagedCachedTableRepository()
+    (pagedKit
+      ? new pagedKit.PagedCachedTableRepository()
       : persist
         ? new CachedTableRepository()
         : new LocalTableRepository());
@@ -337,9 +273,9 @@ async function assembleGrid<TRow>(
     null,
     activeCollection ?? 'default'
   );
-  if (windowed) {
+  if (windowed && pagedKit) {
     table.setPageWindow(true);
-    await seedWindowedTable({
+    await pagedKit.seedWindowedTable({
       repo: repo as WindowedTableRepository,
       store,
       tableKey,
@@ -363,6 +299,15 @@ async function assembleGrid<TRow>(
   const permissionPolicy = createPermissionPolicy(resolved, columnMeta, table, repo, audit);
   const app = createTableAppService(repo, audit, permissionPolicy, { columnMeta, remoteApi }, eventStore);
   app.setUndoStack(cellUndoStack);
+  if (windowed && pagedKit) {
+    app.setDeleteRowsHandler(
+      new pagedKit.DeleteRowsCommandHandler(
+        repo as WindowedTableRepository,
+        audit,
+        permissionPolicy,
+      ),
+    );
+  }
   if (snapshotStrategy) {
     app.setSnapshotStrategy(snapshotStrategy);
   }
@@ -584,7 +529,19 @@ export function createGrid<TRow = unknown>(
     tableKey: identity.tableKey,
   } as CreateGridResult<TRow>;
 
-  const ready: Promise<CreateGridResult<TRow>> = assembleGrid(resolved).then(
+  // Page-window mode keys every IndexedDB record by `tableKey`; a generated
+  // key would silently orphan the data on the next open.
+  const missingPagedKey =
+    config.persistence === 'paged-idb' &&
+    !(typeof config.tableKey === 'string' && config.tableKey.length > 0);
+
+  const ready: Promise<CreateGridResult<TRow>> = (
+    missingPagedKey
+      ? Promise.reject(
+          new Error("[createGrid] persistence 'paged-idb' requires `tableKey`"),
+        )
+      : assembleGrid(resolved)
+  ).then(
     (assembled) => {
       Object.assign(grid, assembled);
       return grid;
