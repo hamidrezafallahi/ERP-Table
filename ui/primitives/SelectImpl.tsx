@@ -177,11 +177,8 @@ export function SelectImpl({
   useEffect(() => {
     if (!open) return;
     const selectedIdx = visible.findIndex((o) => String(o.value) === String(value));
-    setActiveIndex((prev) => {
-      if (prev >= 0 && prev < visible.length && query) return prev;
-      if (selectedIdx >= 0 && !query) return selectedIdx;
-      return visible.findIndex((o) => !o.disabled);
-    });
+    const firstEnabled = visible.findIndex((o) => !o.disabled);
+    setActiveIndex(query || selectedIdx < 0 ? firstEnabled : selectedIdx);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, visible]);
 
