@@ -16,8 +16,8 @@ describe('PR-134 semver and next-channel publish (D25)', () => {
     devDependencies?: Record<string, string>;
   };
 
-  it('ships a 0.13.0-next.N prerelease with changesets and dry-run scripts', () => {
-    expect(pkg.version).toMatch(/^0\.13\.0-next\.\d+$/);
+  it('has a valid semver version (plain 0.6.0 style or a prerelease) with changesets and dry-run scripts', () => {
+    expect(pkg.version).toMatch(/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/);
     expect(pkg.devDependencies?.['@changesets/cli']).toBeTruthy();
     expect(pkg.scripts?.changeset).toBe('changeset');
     expect(pkg.scripts?.['changeset:version']).toContain('changeset version');

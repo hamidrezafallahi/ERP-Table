@@ -1,5 +1,5 @@
 /**
- * Dry-run a `next` channel publish for PR-134 verify.
+ * Dry-run a publish (any semver: `latest` for plain, `next` for prerelease).
  * Does not upload; packs the tarball and prints the npm publish command.
  * Uses --ignore-scripts so local dry-run does not re-run prepublishOnly
  * (CI / tag push still runs the full gate via release.yml).
@@ -12,12 +12,8 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 
-if (!String(pkg.version).includes('-next.')) {
-  console.error(
-    `Expected a next prerelease version (e.g. 0.13.0-next.0), got ${pkg.version}`,
-  );
-  process.exit(1);
-}
+// Plain versions (0.6.0) publish to `latest`; prereleases (0.13.0-next.0) to `next`.
+const distTag = String(pkg.version).includes('-') ? 'next' : 'latest';
 
 const pack = spawnSync('npm', ['pack', '--dry-run'], {
   cwd: root,
@@ -37,7 +33,7 @@ const publishDry = spawnSync(
     '--dry-run',
     '--ignore-scripts',
     '--tag',
-    'next',
+    distTag,
     '--access',
     'public',
   ],
@@ -50,11 +46,11 @@ if (publishDry.status !== 0) {
   process.exit(publishDry.status ?? 1);
 }
 
-console.log(`\nnext-channel dry-run ok: ${pkg.name}@${pkg.version} (tag next)`);
+console.log(`\ndry-run ok: ${pkg.name}@${pkg.version} (tag ${distTag})`);
 console.log(
   'Real publish: git tag v' +
     pkg.version +
     ' && git push origin v' +
     pkg.version +
-    '  → Release workflow uses npm publish --tag next --provenance',
+    '  → Release workflow uses npm publish --tag ' + distTag + ' --provenance',
 );
