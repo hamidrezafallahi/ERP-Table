@@ -986,7 +986,7 @@ describe('PR-75 README / public-api honesty', () => {
     expect(byLabel['RTL-native']).toBeTruthy();
     expect(load('ui/host/ERPTableHost.tsx')).toMatch(/direction|rtl/i);
     expect(load('ui/primitives/DatePicker.tsx')).toContain('DateAdapter');
-    expect(load('package.json')).not.toContain('react-persian-range-picker');
+    expect(load('package.json')).toContain('react-persian-range-picker');
 
     // Cell keyboard navigation (honest — Excel clipboard round-trip)
     expect(byLabel['Cell keyboard navigation']).toBeTruthy();

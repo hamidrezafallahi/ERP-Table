@@ -46,6 +46,10 @@ export type SelectProps = {
   getPopupContainer?: (trigger: HTMLElement) => HTMLElement;
   optionFilterProp?: string;
   labelInValue?: boolean;
+  /** Windowed option list (antd default: on; only kicks in when options overflow `listHeight`). */
+  virtual?: boolean;
+  listHeight?: number;
+  listItemHeight?: number;
 };
 
 

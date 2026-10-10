@@ -39,6 +39,7 @@ export default defineConfig({
     'react',
     'react-dom',
     'react/jsx-runtime',
+    'react-persian-range-picker',
     'fflate',
   ],
   esbuildOptions(options) {

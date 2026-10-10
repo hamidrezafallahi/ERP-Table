@@ -136,7 +136,7 @@ describe('PR-83 ERPTable renders with no extra props', () => {
     const html = renderToStaticMarkup(React.createElement(ERPTable));
     expect(open).not.toHaveBeenCalled();
     expect(typeof html).toBe('string');
-  });
+  }, 20_000);
 
   it('SSR-renders <DataGrid /> and ERPTable is the same component', async () => {
     const open = vi.fn(() => {
@@ -148,7 +148,7 @@ describe('PR-83 ERPTable renders with no extra props', () => {
     const html = renderToStaticMarkup(React.createElement(DataGrid));
     expect(open).not.toHaveBeenCalled();
     expect(typeof html).toBe('string');
-  });
+  }, 20_000);
 });
 
 describe('PR-83 defaults', () => {

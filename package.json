@@ -1,6 +1,6 @@
 {
   "name": "persian-data-grid",
-  "version": "0.13.0-next.0",
+  "version": "0.13.0-next.1",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -206,13 +206,17 @@
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
-    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
+    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0",
+    "react-persian-range-picker": "^1.1.1"
   },
   "peerDependenciesMeta": {
     "react": {
       "optional": false
     },
     "react-dom": {
+      "optional": false
+    },
+    "react-persian-range-picker": {
       "optional": false
     }
   },
@@ -231,6 +235,7 @@
     "jsdom": "^30.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.2.8",
+    "react-persian-range-picker": "^1.1.1",
     "size-limit": "^13.0.3",
     "tsup": "^8.5.0",
     "typedoc": "^0.28.20",

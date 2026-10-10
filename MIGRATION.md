@@ -448,7 +448,7 @@ import { enMessages } from 'persian-data-grid/locales/en';
 
 | Before | After |
 |--------|-------|
-| Hard dependency on `react-persian-range-picker` | Optional peer; default DatePicker is native/`DateAdapter` |
+| Hard dependency on `react-persian-range-picker` | **Required peer** (`^1.1.1`): the default date cell renders its `DatePicker`; jalali/gregorian follows `dateAdapter` |
 | Fixed Jalali display via Intl only | `dateAdapter={gregorianAdapter \| jalaliAdapter}` |
 | Picker always in default chrome | Enhanced picker: `import { PersianRangeDatePicker } from 'persian-data-grid/date-picker-jalali'` + `components={{ date: … }}` |
 
@@ -484,7 +484,7 @@ const template: DocumentPdfTemplate = {
 
 | Before | After |
 |--------|-------|
-| Optional peer `react-persian-range-picker` | **Removed** — internal Jalali calendar on `/date-picker-jalali` |
+| Optional peer `react-persian-range-picker` | **Required peer again** — the default date cell uses its `DatePicker`. `/date-picker-jalali` (internal calendar) is optional and no longer the default |
 | `components={{ date: PersianRangeDatePicker }}` | `components={{ date: PersianRangeDateCell }}` (context adapter) |
 | Price = grouped number only | `currencyUnit: 'rial' \| 'toman'` + `persian-data-grid/finance` helpers |
 

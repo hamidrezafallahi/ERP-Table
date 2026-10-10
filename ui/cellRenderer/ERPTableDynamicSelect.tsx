@@ -1,34 +1,40 @@
 "use client";
 
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
-  buildDependencyBody,
-  hasDependValue,
-  useRemoteQuery,
+  useHostDependOn,
+  useLazyRemote,
   useTranslations,
 } from '../host';
+import type { DependOn } from '../host/dependOn';
 import { Reload, Select } from '../primitives';
 import type { SelectOption as UiSelectOption } from '../primitives/Select';
 
-type DependOn = { fieldName: string; value: unknown };
+/**
+ * Behavioural port of arianERP `atoms/defaultElements/dynamicSelect` (+ its
+ * `CustomSelect` wrapper) onto the dependency-free `Select` primitive.
+ * Redux / form-field (`config`), mobile and "add new" specifics are host
+ * concerns and are intentionally not part of the package.
+ */
+
 type RemoteSelectOption = {
   _SelectId: string | number;
   _SelectValue?: string;
   _SelectDisplay?: string;
 };
-type MappedSelectOption = {
+export type MappedSelectOption = {
   key: string | number;
   value: string | number;
   label?: string;
   title?: string;
-  option: RemoteSelectOption;
+  option?: RemoteSelectOption;
+  children?: MappedSelectOption[];
 };
 type DynamicSelectSource = {
   endpoint?: string;
   repoViewId?: string;
-  dependOn?: DependOn | DependOn[];
-  dependsOn?: DependOn | DependOn[] | string[];
+  dependOn?: DependOn;
   [key: string]: unknown;
 };
 
@@ -44,17 +50,23 @@ export interface ERPTableDynamicSelectProps {
     correctOptionTitle?: string,
     option?: unknown,
   ) => void;
+  /** Accepted for API parity; the select is always searchable (as in the host). */
   showSearch?: boolean;
   onOptionsChange?: (options: MappedSelectOption[]) => void;
   labelValue?: 'selectDisplay' | 'selectValue';
   selectFirstDefault?: boolean;
-  displayFormatter?: (option: RemoteSelectOption) => string;
+  displayFormatter?: (option: RemoteSelectOption) => string | undefined;
   disabled?: boolean;
+  /** Reload icon. Shown unless explicitly `false` (host default). */
   showRefetch?: boolean;
   noCache?: boolean;
+  /** Filters the loaded option list itself (e.g. `isUnique` columns). */
   filterOptions?: (option: MappedSelectOption) => boolean;
+  /** Search-box matcher. Default: case-insensitive `label` contains. */
   filterOption?: (input: string, option: UiSelectOption) => boolean;
   options?: MappedSelectOption[];
+  /** Label shown for `value` while it is not (yet) in the loaded options. */
+  valueLabel?: string;
   onClear?: () => void;
   onClick?: () => void;
   autoFocus?: boolean;
@@ -65,11 +77,32 @@ export interface ERPTableDynamicSelectProps {
   onSearch?: (value: string) => void;
 }
 
+const PAGE_RECORD_COUNT = 5000;
+const DEPEND_DEBOUNCE_MS = 808;
+
+const findOptionWithTitle = (data: MappedSelectOption[], searchTerm: string) => {
+  const results: MappedSelectOption[] = [];
+  const search = (items: MappedSelectOption[]) => {
+    items.forEach((item) => {
+      if (
+        String(item?.title ?? '').includes(searchTerm) ||
+        String(item?.label ?? '').includes(searchTerm)
+      ) {
+        results.push(item);
+      }
+      if (item.children && item.children.length > 0) search(item.children);
+    });
+  };
+  search(data);
+  return results;
+};
+
 export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
   className,
   value,
   onChange,
   dynamicValue,
+  showId = false,
   infinite = false,
   onSearchPhrase,
   showSearch = true,
@@ -79,8 +112,8 @@ export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
   displayFormatter,
   disabled,
   showRefetch,
-  noCache = false,
   filterOptions,
+  valueLabel,
   options: externalOptions,
   onClear,
   onClick,
@@ -96,13 +129,11 @@ export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
   const [options, setOptions] = useState<MappedSelectOption[]>([]);
   const [searchPhrase, setSearchPhrase] = useState<string | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
-  const pageRecordCount = 5000;
 
   const {
     endpoint,
     repoViewId,
     dependOn,
-    dependsOn,
     ...bodyRequest
   } = dynamicValue ?? {};
 
@@ -111,30 +142,17 @@ export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
     return option._SelectDisplay;
   };
 
-  const asDependOn = (
-    value: unknown,
-  ): DependOn | DependOn[] | undefined => {
-    if (!value || typeof value === 'string') return undefined;
-    if (Array.isArray(value)) {
-      if (value.length === 0) return [];
-      if (typeof value[0] === 'string') return undefined;
-      return value as DependOn[];
-    }
-    if (typeof value === 'object' && value !== null && 'fieldName' in value) {
-      return value as DependOn;
-    }
-    return undefined;
-  };
-
-  const dependencySource = asDependOn(dependOn ?? dependsOn);
-  const isReady = hasDependValue(dependencySource);
-  const dependencyBody = buildDependencyBody(dependencySource);
+  const [getData, { data, isFetching }] = useLazyRemote<RemoteSelectOption[]>();
+  const { dependencyBody, dependencyKey, isReady } = useHostDependOn(dependOn, {
+    enabled: false,
+    unwrapObjectValue: true,
+  });
 
   const body = {
     ...bodyRequest,
     ...dependencyBody,
     PagingInfo: infinite
-      ? { PageRecordCount: pageRecordCount, PageNumber: pageNumber }
+      ? { PageRecordCount: PAGE_RECORD_COUNT, PageNumber: pageNumber }
       : null,
     RepoViewId: repoViewId,
   };
@@ -142,49 +160,80 @@ export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
     Object.entries(body).filter(([, v]) => v !== null),
   );
 
-  const { data, isFetching, refetch } = useRemoteQuery<RemoteSelectOption[]>({
-    url: endpoint,
-    body: existBody,
-    skip: !isReady,
-    noCache,
-  });
-
   const handleRefetch = () => {
     setPageNumber(1);
-    if (isReady) {
-      void refetch();
-    }
+    if (dependOn && !isReady) return;
+    void getData({ url: endpoint, body: existBody });
   };
 
   useEffect(() => {
     if (!data?.Data) return;
-    const mapOption = (option: RemoteSelectOption): MappedSelectOption => ({
+    const dynamicOptions: MappedSelectOption[] = data.Data.map((option) => ({
       key: option._SelectId,
       value: option._SelectId,
       label:
-        (labelValue === 'selectValue'
+        labelValue === 'selectValue'
           ? option._SelectValue
-          : getOptionLabel(option)) ?? undefined,
+          : getOptionLabel(option),
       title: getOptionLabel(option),
       option,
-    });
-    const dynamicOptions = (data.Data ?? []).map(mapOption);
+    }));
     if (infinite) {
-      if (pageNumber === 1) setOptions(dynamicOptions);
-      else setOptions((prev) => [...prev, ...dynamicOptions]);
+      if (pageNumber === 1) {
+        setOptions(dynamicOptions);
+      } else {
+        setOptions((prev) => [...prev, ...dynamicOptions]);
+        if (showId && selectFirstDefault) onChange?.(dynamicOptions[0]?.value);
+      }
     } else {
       setOptions(dynamicOptions);
     }
-  }, [data?.Data, infinite, labelValue, pageNumber, selectFirstDefault]);
+  }, [data?.Data]);
 
   useEffect(() => {
     if (infinite && searchPhrase && searchPhrase.length > 2) setPageNumber(1);
-  }, [infinite, searchPhrase]);
+  }, [searchPhrase]);
 
   useEffect(() => {
-    onOptionsChange?.(options);
-    if (selectFirstDefault && options.length) onChange?.(options[0]?.value);
-  }, [options, onChange, onOptionsChange, selectFirstDefault]);
+    if (onOptionsChange && options) onOptionsChange(options);
+    if (selectFirstDefault) onChange?.(options[0]?.value);
+  }, [options, onOptionsChange]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const bottom = target.scrollHeight === target.scrollTop + target.clientHeight;
+    if (infinite && bottom && !isFetching) {
+      data?.ReturnCount === PAGE_RECORD_COUNT && setPageNumber((prev) => prev + 1);
+    }
+  };
+
+  const filteredOptions = useMemo(() => {
+    const source = externalOptions ?? options;
+    if (!filterOptions) return source;
+    return source.filter(filterOptions);
+  }, [externalOptions, options, filterOptions]);
+
+  const { selectOptions, selectValue } = useMemo(() => {
+    if (value === null || value === undefined || value === '') {
+      return { selectOptions: filteredOptions, selectValue: value };
+    }
+    const matched = filteredOptions.find(
+      (option) => String(option.value) === String(value),
+    );
+    if (matched) {
+      return { selectOptions: filteredOptions, selectValue: matched.value };
+    }
+    if (valueLabel) {
+      return {
+        selectOptions: [
+          ...filteredOptions,
+          { key: value as string | number, value: value as string | number, label: valueLabel, title: valueLabel },
+        ],
+        selectValue: value,
+      };
+    }
+    return { selectOptions: filteredOptions, selectValue: value };
+  }, [filteredOptions, value, valueLabel]);
 
   useEffect(() => {
     if (value === null || value === undefined) {
@@ -193,47 +242,73 @@ export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
     }
   }, [value]);
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const bottom =
-      e.currentTarget.scrollHeight ===
-      e.currentTarget.scrollTop + e.currentTarget.clientHeight;
-    if (infinite && bottom && !isFetching) {
-      data?.ReturnCount === pageRecordCount && setPageNumber((prev) => prev + 1);
-    }
-  };
+  const dependOnKey = useMemo(
+    () => (dependOn ? JSON.stringify(dependOn) : null),
+    [dependOn],
+  );
 
-  const filteredOptions = useMemo(() => {
-    const source = externalOptions ?? options;
-    if (!filterOptions) return source;
-    return source.filter(filterOptions);
-  }, [externalOptions, filterOptions, options]);
+  const isFirstDependRun = useRef(true);
+  useEffect(() => {
+    if (isFirstDependRun.current) {
+      isFirstDependRun.current = false;
+      return undefined;
+    }
+    const debounce = setTimeout(() => {
+      if (dependOn && isReady) {
+        void getData({ url: endpoint, body: existBody });
+      }
+    }, DEPEND_DEBOUNCE_MS);
+    return () => clearTimeout(debounce);
+  }, [dependOnKey, dependencyKey]);
+
+  useEffect(() => {
+    if (isReady) void getData({ url: endpoint, body: existBody });
+  }, []);
 
   return (
     <div className="relative">
       <Select
-        className={className}
-        value={value}
+        className={`pdg-dynamic-select ${disabled ? 'is-disabled' : ''} ${className ?? ''}`}
+        value={selectValue}
         disabled={disabled}
-        loading={isFetching}
-        showSearch={showSearch}
+        showSearch
         allowClear={allowClear ?? true}
         autoFocus={autoFocus}
         popupMatchSelectWidth={popupMatchSelectWidth}
         popupRender={popupRender}
-        placeholder={placeholder ?? (showSearch ? t('general.search') : t('general.selectField'))}
-        filterOption={filterOption}
+        placeholder={
+          placeholder ??
+          (showSearch ? t('general.search') : t('general.selectField'))
+        }
+        optionRender={(originNode) => (
+          <div
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 'fit-content' }}
+          >
+            <span>{originNode.data.title}</span>
+          </div>
+        )}
+        filterOption={(input, option) => {
+          if (filterOption && typeof filterOption === 'function') {
+            return filterOption(input, option);
+          }
+          const label = option?.label;
+          return (
+            typeof label === 'string' &&
+            label.toLowerCase().includes(input.toLowerCase())
+          );
+        }}
         onClick={onClick}
         onChange={onChange}
         onSearch={(currentValue) => {
           if (infinite) {
             setSearchPhrase(currentValue);
-            const hit = options.filter(
-              (item) =>
-                String(item?.title ?? '').includes(currentValue) ||
-                String(item?.label ?? '').includes(currentValue),
-            );
-            if (hit.length === 1 && onSearchPhrase) {
-              onSearchPhrase(hit[0].value as number, hit[0]?.title, hit);
+            const correctOption = findOptionWithTitle(options, currentValue);
+            if (correctOption.length === 1 && onSearchPhrase) {
+              onSearchPhrase(
+                correctOption[0].value as number,
+                correctOption[0]?.title,
+                correctOption,
+              );
               return;
             }
           }
@@ -247,12 +322,13 @@ export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
           }
           onClear?.();
         }}
-        options={filteredOptions}
+        options={selectOptions}
         notFoundContent={isFetching ? 'Loading...' : 'No options found'}
       />
-      {showRefetch && (
+      {showRefetch !== false && (
         <div
-          className={`${isFetching ? 'animate-spin' : ''} ${disabled ? 'opacity-50' : 'opacity-100'} absolute left-6 top-[0.65rem] cursor-pointer`}
+          className={`${isFetching ? 'animate-spin' : ''} ${disabled ? 'opacity-50' : 'opacity-100'}`}
+          style={{ position: 'absolute', top: '0.65rem', left: '2rem', cursor: 'pointer', transition: 'all 0.4s' }}
           onClick={handleRefetch}
         >
           <Reload config={{ height: 16, width: 16 }} />

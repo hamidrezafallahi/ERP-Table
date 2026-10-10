@@ -619,6 +619,30 @@ const CSS = `/* Visual tokens copied from the ERP Tailwind theme so the publishe
 }
 
 
+/* DynamicSelect root (host: h-[2.125rem] w-full rounded !bg-gray-gray3, 50% when disabled) */
+.pdg-dynamic-select {
+  width: 100%;
+  height: 2.125rem;
+  border-radius: 0.25rem;
+  background-color: var(--pdg-gray-3);
+}
+.pdg-dynamic-select.is-disabled { opacity: 0.5; }
+
+/* Date cell (react-persian-range-picker DatePicker; host: h-[2.125rem] text-sm bg-gray-3 px-2 rounded-sm) */
+.pdg-date-picker {
+  width: 100%;
+  height: 2.125rem;
+  padding: 0 0.5rem;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: 0.125rem;
+  background-color: var(--pdg-gray-3);
+}
+.pdg-date-picker.is-disabled {
+  background-color: var(--pdg-gray-5);
+  color: var(--pdg-gray-7);
+}
+
 .erp-table-checkbox {
   appearance: none;
   -webkit-appearance: none;

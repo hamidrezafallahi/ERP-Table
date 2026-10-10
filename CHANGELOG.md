@@ -16,8 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **D22 locked (deferred):** monorepo / `@persian-data-grid/core` postponed until after `1.0.0`; release-gate waives `monorepo-core` and treats §۴ 60 KB as stretch (hard ceiling remains 65 KB per D15)
 
+### Changed (date)
+
+- **`react-persian-range-picker` is a required peer dependency again** (`^1.1.1`, also a devDependency). The default date cell (`NewDatePicker`) renders its `DatePicker` (Jalali for `fa`, Gregorian otherwise via `dateAdapter`), instead of the text input introduced in PR-128. `persian-data-grid/date-picker-jalali` stays available but is no longer the default. Install it in the host: `yarn add react-persian-range-picker`.
+
 ### Added
 
+- **Dependency-free `Select`** that reproduces antd 5's DOM and look (`ant-select-*` classes, CSS extracted from antd via `scripts/extract-antd-select-css.cjs`, loaded in a lazy chunk so the main bundle does not grow). Windowed option list (`virtual`, `listHeight`, `listItemHeight`), keyboard navigation, search, `allowClear`, RTL, `popupRender`, `onPopupScroll`.
+- `ERPTableDynamicSelect` is now a behavioural port of the arianERP `DynamicSelect`: fetch on mount, 808 ms debounced refetch on `dependOn` change, `valueLabel`, `filterOptions`, `selectFirstDefault`, reload icon (hide with `showRefetch={false}`). New `useLazyRemote` host hook; `useStaticDependOn` honours `unwrapObjectValue`.
 - **Paged IndexedDB mode** `persistence: 'paged-idb'` (ported from the arianERP host table): IndexedDB is the single source of truth, RAM holds one page window; paging, add/duplicate-at-end, soft/bulk delete, select-all, search, footer totals and Excel export stream from IndexedDB. Repos: `PagedCachedTableRepository` / `PagedIndexedDbTableRepository` / `PagedLocalTableRepository`; port `WindowedTableRepository` + `isWindowedRepository`. See `docs/paged-idb.md`.
 - `APPLY_ROW_VISIBILITY` (re-apply remote visibility when a row becomes active) and `ROWS_DELETED` (bulk delete) commands; collection guard for dynamic projection / visibility so twin column configs of other collections never leak.
 - `controller.getFullSnapShot / iterateRowsFromDb / isPagedWindow`; streamed `subscribeColumn(col, scope, reducer, seed, cb)` (legacy `cb`-only form still works).

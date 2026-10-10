@@ -10,7 +10,7 @@ export {
   useDirection,
 } from './ERPTableHost';
 export { useMediaQuery } from './useMediaQuery';
-export { useRemoteQuery } from './useRemoteQuery';
+export { useLazyRemote, useRemoteQuery } from './useRemoteQuery';
 export {
   buildDependencyBody,
   getDependFieldName,

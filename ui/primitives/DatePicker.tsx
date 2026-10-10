@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { DatePicker, type DatePickerValue } from 'react-persian-range-picker';
 
 import type { DateAdapter } from '../../application/ports/DateAdapter';
 import { useDateAdapter, useERPTableTheme } from '../host';
@@ -11,92 +12,56 @@ type Props = {
   disabled?: boolean;
   className?: string;
   showMask?: boolean;
-  /** Optional override; defaults to host `dateAdapter`. */
+  /** Optional override; defaults to host `dateAdapter` (decides jalali / gregorian). */
   adapter?: DateAdapter;
 };
 
+/** Dark surfaces get the same muted highlight the arianERP host passes. */
+function isDarkBackground(color: string): boolean {
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color.trim())?.[1];
+  if (!hex) return false;
+  const full = hex.length === 3 ? [...hex].map((c) => c + c).join('') : hex;
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16));
+  return 0.299 * r + 0.587 * g + 0.114 * b < 128;
+}
+
 /**
- * Default date editor (PR-128). Works without `react-persian-range-picker`.
- * Uses the host {@link DateAdapter} for parse/format.
+ * Date cell editor. Renders `DatePicker` from `react-persian-range-picker`
+ * (required peer dependency) — the same component the arianERP host uses.
+ * Calendar type follows the host {@link DateAdapter}: `jalali` for the
+ * default `fa` locale, `gregorian` otherwise.
+ *
+ * Value contract (unchanged): timestamp in ms in, timestamp in ms (or
+ * `null` when cleared) out.
  */
 export function NewDatePicker({
   value,
   onChange,
   disabled,
   className,
+  showMask,
   adapter: adapterProp,
 }: Props) {
   const hostAdapter = useDateAdapter();
   const adapter = adapterProp ?? hostAdapter;
   const theme = useERPTableTheme();
-  const parsed = adapter.parse(value);
-  const [text, setText] = useState(() =>
-    parsed ? adapter.format(parsed) : '',
-  );
-
-  useEffect(() => {
-    const next = adapter.parse(value);
-    setText(next ? adapter.format(next) : '');
-  }, [value, adapter]);
-
-  const commit = (raw: string) => {
-    const trimmed = raw.trim();
-    if (!trimmed) {
-      onChange?.('');
-      setText('');
-      return;
-    }
-    const date = adapter.parse(trimmed);
-    if (!date) {
-      setText(parsed ? adapter.format(parsed) : '');
-      return;
-    }
-    setText(adapter.format(date));
-    onChange?.(date.getTime());
-  };
-
-  if (adapter.id === 'gregory') {
-    const iso = parsed ? adapter.format(parsed) : '';
-    return (
-      <div className={`erp-table-date ${className ?? ''}`}>
-        <input
-          type="date"
-          className="pdg-cell-editor bg-transparent px-2 w-full h-full text-xs"
-          disabled={disabled}
-          value={iso}
-          onChange={(e) => {
-            const v = e.target.value;
-            if (!v) {
-              onChange?.('');
-              return;
-            }
-            const date = adapter.parse(v);
-            onChange?.(date ? date.getTime() : '');
-          }}
-          style={{ accentColor: theme.params.accentColor }}
-        />
-      </div>
-    );
-  }
+  const dark = isDarkBackground(theme.params.backgroundColor);
 
   return (
-    <div className={`erp-table-date ${className ?? ''}`}>
-      <input
-        type="text"
-        inputMode="numeric"
-        className="pdg-cell-editor bg-transparent px-2 w-full h-full text-xs"
-        disabled={disabled}
-        value={text}
-        placeholder="1404/01/01"
-        onChange={(e) => setText(e.target.value)}
-        onBlur={() => commit(text)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            commit(text);
-          }
-        }}
-      />
-    </div>
+    <DatePicker
+      value={
+        typeof value === 'number' || typeof value === 'string'
+          ? (value as DatePickerValue)
+          : null
+      }
+      onChange={(next) => onChange?.(next)}
+      className={`pdg-date-picker ${disabled ? 'is-disabled' : ''} ${className ?? ''}`}
+      Style={{ width: '100%' }}
+      showMask={showMask}
+      disabled={disabled}
+      isTodaySelectPreset={false}
+      highlightColor={dark ? '#676767' : undefined}
+      calendarType={adapter.id === 'gregory' ? 'gregorian' : 'jalali'}
+    />
   );
 }

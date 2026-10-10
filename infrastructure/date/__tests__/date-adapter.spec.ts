@@ -28,16 +28,16 @@ describe('PR-128 DateAdapter', () => {
     expect(gregorianAdapter.format(start)).toBe('2024-03-01');
   });
 
-  it('default DatePicker does not statically import an external calendar peer', () => {
+  it('default DatePicker renders react-persian-range-picker and follows the host DateAdapter', () => {
     const src = readFileSync(
       join(root, 'ui/primitives/DatePicker.tsx'),
       'utf8',
     );
-    expect(src).not.toContain("from 'react-persian-range-picker'");
+    expect(src).toContain("from 'react-persian-range-picker'");
     expect(src).toContain('useDateAdapter');
   });
 
-  it('package.json has no react-persian-range-picker dependency (PR-140)', () => {
+  it('package.json declares react-persian-range-picker as a required peer (and devDependency)', () => {
     const pkg = JSON.parse(
       readFileSync(join(root, 'package.json'), 'utf8'),
     ) as {
@@ -46,7 +46,7 @@ describe('PR-128 DateAdapter', () => {
       devDependencies?: Record<string, string>;
     };
     expect(pkg.dependencies?.['react-persian-range-picker']).toBeUndefined();
-    expect(pkg.peerDependencies?.['react-persian-range-picker']).toBeUndefined();
-    expect(pkg.devDependencies?.['react-persian-range-picker']).toBeUndefined();
+    expect(pkg.peerDependencies?.['react-persian-range-picker']).toBeDefined();
+    expect(pkg.devDependencies?.['react-persian-range-picker']).toBeDefined();
   });
 });

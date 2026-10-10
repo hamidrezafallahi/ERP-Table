@@ -68,12 +68,17 @@ if (!adapterEsm.includes('persist:arianERP')) {
 }
 console.log('dist/index.js has zero arianERP; adapter subpath keeps persist:arianERP');
 
-// Optional jalali picker peer must stay off `.` (PR-128 / D21).
-if (esm.includes('react-persian-range-picker') || cjs.includes('react-persian-range-picker')) {
-  console.error('dist/index still references react-persian-range-picker');
+// DatePicker comes from the required peer `react-persian-range-picker`: it must be
+// imported (external), never bundled into `.`.
+if (!/from\s*["']react-persian-range-picker["']|require\(["']react-persian-range-picker["']\)/.test(esm + cjs)) {
+  console.error('dist/index does not import react-persian-range-picker');
   process.exit(1);
 }
-console.log('dist/index has zero react-persian-range-picker');
+if (esm.includes('jalaali') || cjs.includes('jalaali')) {
+  console.error('dist/index bundles the picker (jalaali-js found); it must stay external');
+  process.exit(1);
+}
+console.log('dist/index imports react-persian-range-picker as an external peer');
 
 for (const file of ['index.js', 'index.cjs']) {
   const full = join(dist, file);

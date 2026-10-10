@@ -44,8 +44,7 @@ function ensureStyles() {
 }
 ensureStyles();
 
-const ITEM_HEIGHT = 32;
-const LIST_HEIGHT = 256;
+const OVERSCAN = 3;
 const GAP = 4;
 
 const svgProps = {
@@ -121,12 +120,16 @@ export function SelectImpl({
   optionRender,
   notFoundContent,
   getPopupContainer,
+  virtual = true,
+  listHeight = 256,
+  listItemHeight = 32,
 }: SelectProps) {
   const listId = useId();
   const [open, setOpen] = useState(false);
   const [focused, setFocused] = useState(false);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [scrollTop, setScrollTop] = useState(0);
   const [rtl, setRtl] = useState(false);
   const [pos, setPos] = useState<{ top: number; left: number; width: number; flip: boolean }>({
     top: 0,
@@ -179,7 +182,6 @@ export function SelectImpl({
     const selectedIdx = visible.findIndex((o) => String(o.value) === String(value));
     const firstEnabled = visible.findIndex((o) => !o.disabled);
     setActiveIndex(query || selectedIdx < 0 ? firstEnabled : selectedIdx);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, visible]);
 
   const reposition = useCallback(() => {
@@ -188,7 +190,7 @@ export function SelectImpl({
     const rect = root.getBoundingClientRect();
     const isRtl = getComputedStyle(root).direction === 'rtl';
     setRtl(isRtl);
-    const menuHeight = dropdownRef.current?.offsetHeight ?? LIST_HEIGHT + 8;
+    const menuHeight = dropdownRef.current?.offsetHeight ?? listHeight + 8;
     const width =
       typeof popupMatchSelectWidth === 'number'
         ? popupMatchSelectWidth
@@ -227,12 +229,19 @@ export function SelectImpl({
     if (!open || activeIndex < 0) return;
     const holder = listRef.current;
     if (!holder) return;
-    const top = activeIndex * ITEM_HEIGHT;
+    const top = activeIndex * listItemHeight;
     if (top < holder.scrollTop) holder.scrollTop = top;
-    else if (top + ITEM_HEIGHT > holder.scrollTop + holder.clientHeight) {
-      holder.scrollTop = top + ITEM_HEIGHT - holder.clientHeight;
+    else if (top + listItemHeight > holder.scrollTop + holder.clientHeight) {
+      holder.scrollTop = top + listItemHeight - holder.clientHeight;
     }
-  }, [activeIndex, open]);
+  }, [activeIndex, open, listItemHeight]);
+
+  // A new result set starts at the top.
+  useEffect(() => {
+    if (!query || !listRef.current) return;
+    listRef.current.scrollTop = 0;
+    setScrollTop(0);
+  }, [query]);
 
   const move = (delta: number) => {
     if (visible.length === 0) return;
@@ -341,46 +350,79 @@ export function SelectImpl({
     className,
   );
 
+  const useVirtual = virtual !== false && visible.length * listItemHeight > listHeight;
+  const first = useVirtual
+    ? Math.max(0, Math.floor(scrollTop / listItemHeight) - OVERSCAN)
+    : 0;
+  const last = useVirtual
+    ? Math.min(visible.length, Math.ceil((scrollTop + listHeight) / listItemHeight) + OVERSCAN)
+    : visible.length;
+
+  const rows: React.ReactNode[] = [];
+  for (let index = first; index < last; index += 1) {
+    const option = visible[index];
+    if (!option) continue;
+    const isSelected = hasValue && String(option.value) === String(value);
+    rows.push(
+      <div
+        key={String(option.value ?? index)}
+        role="option"
+        id={`${listId}-${index}`}
+        aria-selected={isSelected}
+        aria-disabled={option.disabled || undefined}
+        aria-setsize={useVirtual ? visible.length : undefined}
+        aria-posinset={useVirtual ? index + 1 : undefined}
+        title={typeof option.title === 'string' ? option.title : undefined}
+        className={cx(
+          'ant-select-item',
+          'ant-select-item-option',
+          index === activeIndex && 'ant-select-item-option-active',
+          isSelected && 'ant-select-item-option-selected',
+          option.disabled && 'ant-select-item-option-disabled',
+        )}
+        style={useVirtual ? { height: listItemHeight } : undefined}
+        onMouseEnter={() => !option.disabled && setActiveIndex(index)}
+        onClick={() => commit(option)}
+      >
+        <div className="ant-select-item-option-content">
+          {optionRender ? optionRender({ data: option }, { data: option }) : option.label}
+        </div>
+      </div>,
+    );
+  }
+
   const menu = (
     <div
       ref={listRef}
       id={listId}
       role="listbox"
       className="rc-virtual-list-holder"
-      style={{ maxHeight: LIST_HEIGHT, overflowY: 'auto', overflowAnchor: 'none' }}
-      onScroll={onPopupScroll}
+      style={{ maxHeight: listHeight, overflowY: 'auto', overflowAnchor: 'none' }}
+      onScroll={(e) => {
+        if (useVirtual) setScrollTop(e.currentTarget.scrollTop);
+        onPopupScroll?.(e);
+      }}
     >
       {visible.length === 0 ? (
         <div className="ant-select-item ant-select-item-empty">
           {notFoundContent ?? (loading ? 'Loading...' : 'No data')}
         </div>
+      ) : useVirtual ? (
+        <div style={{ height: visible.length * listItemHeight, position: 'relative' }}>
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              transform: `translateY(${first * listItemHeight}px)`,
+            }}
+          >
+            {rows}
+          </div>
+        </div>
       ) : (
-        visible.map((option, index) => {
-          const isSelected = hasValue && String(option.value) === String(value);
-          return (
-            <div
-              key={String(option.value ?? index)}
-              role="option"
-              id={`${listId}-${index}`}
-              aria-selected={isSelected}
-              aria-disabled={option.disabled || undefined}
-              title={typeof option.title === 'string' ? option.title : undefined}
-              className={cx(
-                'ant-select-item',
-                'ant-select-item-option',
-                index === activeIndex && 'ant-select-item-option-active',
-                isSelected && 'ant-select-item-option-selected',
-                option.disabled && 'ant-select-item-option-disabled',
-              )}
-              onMouseEnter={() => !option.disabled && setActiveIndex(index)}
-              onClick={() => commit(option)}
-            >
-              <div className="ant-select-item-option-content">
-                {optionRender ? optionRender({ data: option }, { data: option }) : option.label}
-              </div>
-            </div>
-          );
-        })
+        rows
       )}
     </div>
   );

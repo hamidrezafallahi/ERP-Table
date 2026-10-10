@@ -65,11 +65,22 @@ export const buildDependencyBody = (
   );
 
 /** Default `UseDependOnHook`: static values carried by the items. */
-export const useStaticDependOn: UseDependOnHook = (dependOn) => ({
-  isReady: hasDependValue(dependOn),
-  dependencyBody: buildDependencyBody(dependOn),
-  dependencyKey: JSON.stringify(dependOn ?? null),
-});
+export const useStaticDependOn: UseDependOnHook = (dependOn, options) => {
+  const unwrap = (value: unknown) =>
+    options?.unwrapObjectValue &&
+    value !== null &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    'value' in value
+      ? (value as { value: unknown }).value
+      : value;
+  const resolve: DependValueResolver = (item) => unwrap(getStaticDependValue(item));
+  return {
+    isReady: hasDependValue(dependOn, resolve),
+    dependencyBody: buildDependencyBody(dependOn, resolve),
+    dependencyKey: JSON.stringify(dependOn ?? null),
+  };
+};
 
 /** Resolve dependency values through the host hook, falling back to static. */
 export const useHostDependOn: UseDependOnHook = (dependOn, options) => {
