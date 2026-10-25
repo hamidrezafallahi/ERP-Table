@@ -73,7 +73,8 @@ newValue: unknown;
 /** When false (e.g. row activate / re-project), keep existing dependent cell values. */
 clearDependents?: boolean;
 },
-): Promise<void> {
+  audit?: AuditLogger,
+): Promise<boolean> {
 const {
   table,
   rowId,
@@ -83,33 +84,44 @@ const {
 } = input;
 
 const meta = dynamic?.columnMeta;
-if (!meta) return;
+if (!meta) return true;
 const colKey = `${table.getActiveCollectionName() ?? 'default'}_${changedColumnId.value}`;
 const changedMeta = meta.get(colKey) ?? meta.get(changedColumnId.value);
 const resolveOn = changedMeta?.resolveOn;
-if (!resolveOn) return;
-if (resolveOn.fieldName !== changedColumnId.value) return;
+if (!resolveOn) return true;
+if (resolveOn.fieldName !== changedColumnId.value) return true;
 
 const row = table.getRows().find(r => r.id.value === rowId.value);
-if (!row) return;
+if (!row) return true;
 
 const rowValues: Record<string, unknown> = {};
 for (const [colId, cell] of row.getCells().entries()) {
   rowValues[colId] = cell.getValue();
 }
-if (newValue == null || newValue === '') return;
+if (newValue == null || newValue === '') return true;
 const params =
   typeof resolveOn.buildParams === 'function'
     ? resolveOn.buildParams(rowValues)
     : { value: newValue };
-const response = await dynamic!.remoteApi.request({
-  endpoint: resolveOn.endpoint,
-  params,
-  method: 'POST',
-});
+let response: unknown;
+let failed = false;
+try {
+  response = await dynamic!.remoteApi.request({
+    endpoint: resolveOn.endpoint,
+    params,
+    method: 'POST',
+  });
+} catch (error) {
+  // Backend failure must never abort the cell edit: keep the current
+  // visibility flags, still clear stale dependents, and report.
+  failed = true;
+  if (audit) logError(audit, error, `resolveOn[${resolveOn.endpoint}]`);
+}
 
-resolveOn.getResponse?.(response, row);
-const flags: Record<string, boolean> = resolveOn.mapFlags?.(response) ?? {};
+if (!failed) resolveOn.getResponse?.(response, row);
+const flags: Record<string, boolean> = failed
+  ? {}
+  : (resolveOn.mapFlags?.(response) ?? {});
 
 const toShow: ColumnSchema[] = [];
 const visibilityCondition: Record<string, boolean> = {};
@@ -122,6 +134,7 @@ meta.forEach(colCfg => {
   const v = colCfg.visibility;
 
   if (
+    !failed &&
     v?.kind === 'whenRemoteFlag' &&
     v.sourceFieldName === changedColumnId.value
   ) {
@@ -157,7 +170,8 @@ if (toShow.length > 0) {
   table.addColumns(toShow);
 }
 
-row.setVisibilityCondition(visibilityCondition);
+if (!failed) row.setVisibilityCondition(visibilityCondition);
+return !failed;
 }
 
 export class ChangeCellValueHandler {
@@ -275,8 +289,8 @@ export class ChangeCellValueHandler {
 
   /* ── helpers ─────────────────────────────────────────────────────── */
 
-  private applyRemoteVisibilityRules(input: Parameters<typeof applyRemoteVisibilityRules>[1]): Promise<void> {
-    return applyRemoteVisibilityRules(this.dynamic, input);
+  private applyRemoteVisibilityRules(input: Parameters<typeof applyRemoteVisibilityRules>[1]): Promise<boolean> {
+    return applyRemoteVisibilityRules(this.dynamic, input, this.audit);
   }
 
   private async applyComputedColumns(input: {
@@ -330,8 +344,16 @@ export class ChangeCellValueHandler {
         const schema = table.getColumnSchema(targetColId);
         if (!schema || !colCfg.computed) continue;
 
-        const rawValue = colCfg.computed.compute(rowValues, remoteApi);
-        const newValue = rawValue instanceof Promise ? await rawValue : rawValue;
+        let newValue: unknown;
+        try {
+          const rawValue = colCfg.computed.compute(rowValues, remoteApi);
+          newValue = rawValue instanceof Promise ? await rawValue : rawValue;
+        } catch (error) {
+          // A failing remote lookup inside `compute` must not discard the edit:
+          // keep the target's current value and report.
+          logError(this.audit, error, `computed[${targetField}]`);
+          continue;
+        }
         const validated = this.validateCellValue(schema.fieldType, newValue);
 
         if (validated.value instanceof Promise) {
@@ -660,8 +682,8 @@ export class ApplyDynamicProjectionHandler {
 
   /* ── helpers (identical to ChangeCellValueHandler) ───────────────── */
 
-  private applyRemoteVisibilityRules(input: Parameters<typeof applyRemoteVisibilityRules>[1]): Promise<void> {
-    return applyRemoteVisibilityRules(this.dynamic, input);
+  private applyRemoteVisibilityRules(input: Parameters<typeof applyRemoteVisibilityRules>[1]): Promise<boolean> {
+    return applyRemoteVisibilityRules(this.dynamic, input, this.audit);
   }
 
   private async applyComputedColumns(input: {
@@ -713,8 +735,16 @@ export class ApplyDynamicProjectionHandler {
         const schema = table.getColumnSchema(targetColId);
         if (!schema || !colCfg.computed) continue;
 
-        const rawValue = colCfg.computed.compute(rowValues, remoteApi);
-        const newValue = rawValue instanceof Promise ? await rawValue : rawValue;
+        let newValue: unknown;
+        try {
+          const rawValue = colCfg.computed.compute(rowValues, remoteApi);
+          newValue = rawValue instanceof Promise ? await rawValue : rawValue;
+        } catch (error) {
+          // A failing remote lookup inside `compute` must not discard the edit:
+          // keep the target's current value and report.
+          logError(this.audit, error, `computed[${targetField}]`);
+          continue;
+        }
         const validated = this.validateCellValue(schema.fieldType, newValue);
 
         if (validated.value instanceof Promise) {

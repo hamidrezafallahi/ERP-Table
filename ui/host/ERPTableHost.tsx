@@ -88,18 +88,28 @@ export function ERPTableHostProvider({
   numberingSystem,
   dateAdapter,
   remoteApi,
-  messages,
-  onToast,
+  messages: messagesProp,
+  onToast: onToastProp,
   theme = themeErp,
   themeToggle = true,
   themeLocked = false,
   onToggleTheme,
-  components,
-  filterComponents,
-  columnMenuItems,
-  onColumnMenuAction,
-  useDependOn,
+  components: componentsProp,
+  filterComponents: filterComponentsProp,
+  columnMenuItems: columnMenuItemsProp,
+  onColumnMenuAction: onColumnMenuActionProp,
+  useDependOn: useDependOnProp,
 }: ERPTableHostValue & { children: ReactNode }) {
+  // Host-injection fields fall back to an outer provider (the host app wraps
+  // the grid); explicit props always win.
+  const outer = useContext(ERPTableHostContext);
+  const messages = messagesProp ?? outer.messages;
+  const onToast = onToastProp ?? outer.onToast;
+  const components = componentsProp ?? outer.components;
+  const filterComponents = filterComponentsProp ?? outer.filterComponents;
+  const columnMenuItems = columnMenuItemsProp ?? outer.columnMenuItems;
+  const onColumnMenuAction = onColumnMenuActionProp ?? outer.onColumnMenuAction;
+  const useDependOn = useDependOnProp ?? outer.useDependOn;
   const value = useMemo<ERPTableHostValue>(
     () => ({
       locale,

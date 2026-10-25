@@ -95,13 +95,15 @@ export class ApplyRowVisibilityHandler {
         const value = cell.getValue();
         if (value == null || value === '') continue;
 
-        await this.applyRemoteVisibilityRules({
+        const ok = await this.applyRemoteVisibilityRules({
           table,
           rowId: new RowId(rowId),
           changedColumnId: new ColumnId(colCfg.resolveOn.fieldName),
           newValue: value,
           clearDependents: false,
         });
+        // Failed lookup: forget the signature so the next activation retries.
+        if (!ok) this.lastSignature = null;
       }
 
       await this.repo.save(store, table);
@@ -125,7 +127,7 @@ export class ApplyRowVisibilityHandler {
 
   /* ── identical to ChangeCellValueHandler helper ───────────────────── */
 
-  private applyRemoteVisibilityRules(input: Parameters<typeof applyRemoteVisibilityRules>[1]): Promise<void> {
-    return applyRemoteVisibilityRules(this.dynamic, input);
+  private applyRemoteVisibilityRules(input: Parameters<typeof applyRemoteVisibilityRules>[1]): Promise<boolean> {
+    return applyRemoteVisibilityRules(this.dynamic, input, this.audit);
   }
 }

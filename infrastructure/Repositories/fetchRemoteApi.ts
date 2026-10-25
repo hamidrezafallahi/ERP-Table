@@ -41,6 +41,8 @@ function joinUrl(baseUrl: string, endpoint: string): string {
  * Not the package default — pass `remoteApi={new FetchRemoteApi()}` from the ERP host.
  * Reads auth cookie `_auth` and redux-persist `persist:arianERP`, then POSTs JSON
  * (relative URLs work on the ERP host).
+ * Non-2xx responses and non-JSON bodies reject with an `Error` naming the HTTP
+ * status and endpoint (also reported through the optional error handler).
  * See `examples/host-arian-erp/host-arian-erp.md`.
  */
 export type FetchRemoteApiOptions = {
@@ -96,9 +98,18 @@ export class FetchRemoteApi implements RemoteApi {
         body: payload ? JSON.stringify(payload) : undefined,
       });
       if (!res.ok) {
-        this.err?.handle(`RemoteApi request failed: ${res.status}`, 'FetchRemoteApi.request');
+        // Never hand an error body to callers as if it were data.
+        throw new Error(
+          `RemoteApi request failed: HTTP ${res.status} ${input.endpoint}`,
+        );
       }
-      return (await res.json()) as TResponse;
+      try {
+        return (await res.json()) as TResponse;
+      } catch {
+        throw new Error(
+          `RemoteApi response is not valid JSON: HTTP ${res.status} ${input.endpoint}`,
+        );
+      }
     } catch (error) {
       this.err?.handle(error, 'FetchRemoteApi.request');
       throw error;

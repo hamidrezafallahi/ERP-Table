@@ -1,3 +1,5 @@
+import type { CSSProperties, ReactNode } from 'react';
+
 import { AuditLogger } from '../application/ports/AuditLogger';
 import { TableRepository } from '../application/ports/TableRepository';
 import type { ColumnDef } from '../domain/types/ColumnDef';
@@ -21,6 +23,9 @@ export type {
   ColumnPinned,
   FilterDef,
 } from '../domain/types/ColumnDef';
+import type { ItemType } from '../engine/type';
+import type { IBaseQueryResponse } from '../ui/hostTypes';
+import type { UIRow } from '../ui/type';
 import type { Row } from '../domain/entities/Row';
 import type { Table } from '../domain/entities/Table';
 import type {
@@ -59,6 +64,62 @@ import type {
   ColumnDefinition,
   ColumnViewBinding,
 } from '../domain/types/ColumnDefinition';
+
+// ---------------------------------------------------------------------------
+// Public, UI-aware column contract (what hosts import as `ColumnSchema`).
+//
+// The domain `ColumnSchema` keeps loose, METHOD-syntax callbacks (domain must
+// not know UIRow / UITableController / React). This layer re-declares the
+// callbacks with their precise types so inline host callbacks are contextually
+// typed. Assignability to the domain type holds through bivariant methods, so
+// the engine keeps consuming the domain shape unchanged.
+// ---------------------------------------------------------------------------
+
+/** Select option with a renderable label. */
+export type HostDefaultOptionType = Omit<DefaultOptionType, 'label'> & {
+  label?: ReactNode;
+};
+
+/** Remote flag resolution typed with the arianERP query envelope. */
+export type HostResolveOnConfig<K = unknown> = ResolveOnConfig<
+  K,
+  IBaseQueryResponse<K>
+>;
+
+export interface HostColumnSchema<T = unknown, K = unknown>
+  extends Omit<
+    ColumnSchema<T, K>,
+    | 'options'
+    | 'resolveOn'
+    | 'indexOptions'
+    | 'onChange'
+    | 'dynamicSelectFilterOption'
+    | 'style'
+  > {
+  options?: HostDefaultOptionType[];
+  resolveOn?: HostResolveOnConfig<K>;
+  /** Extra items of the row index menu. */
+  indexOptions?: (
+    tableKey: string,
+    rowId: number,
+    row: UIRow,
+    controller: UITableController,
+  ) => ItemType[];
+  onChange?: (
+    tableKey: string,
+    rowId: number,
+    row: UIRow,
+    controller: UITableController,
+    value: unknown,
+    option?: HostDefaultOptionType,
+  ) => void;
+  dynamicSelectFilterOption?: (
+    inputValue: string,
+    option: HostDefaultOptionType,
+  ) => boolean;
+  style?: CSSProperties;
+}
+
 
 export type CollectionRowMap = Record<string, object>;
 
@@ -107,7 +168,7 @@ export type CreateERPTableConfig<TRow = unknown> = {
    * If both are set, `columns` wins.
    * @deprecated Prefer `columnDefs` (D14). Remains working for ERP hosts.
    */
-  columns?: ColumnSchema[];
+  columns?: HostColumnSchema[];
   /**
    * ERP / legacy rows. Optional when `rowData` is set (PR-82).
    * If both are set, `rows` wins for the initial load.

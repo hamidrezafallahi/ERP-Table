@@ -7,5 +7,11 @@ export type {
   ErpDefaults,
   FetchRemoteApiOptions,
 } from '../../infrastructure/Repositories/fetchRemoteApi';
-export { CallbackRemoteApi } from '../../infrastructure/Repositories/callbackRemoteApi';
-export type { RemoteApiRequest } from '../../infrastructure/Repositories/callbackRemoteApi';
+export {
+  CallbackRemoteApi,
+  createBaseQueryRemoteApi,
+} from '../../infrastructure/Repositories/callbackRemoteApi';
+export type {
+  BaseQueryResult,
+  RemoteApiRequest,
+} from '../../infrastructure/Repositories/callbackRemoteApi';

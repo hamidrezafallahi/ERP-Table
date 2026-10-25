@@ -21,6 +21,7 @@ import {
   type ERPTableToastKind,
   type NumberingSystem,
   type DateAdapter,
+  type UseDependOnHook,
 } from './host';
 import type { ColumnMenuItemsConfig } from '../engine/dataOps/columnMenu';
 import { DesktopTable } from './desktop/DesktopTable';
@@ -203,6 +204,12 @@ export interface DataGridProps<TRow = unknown> extends CreateERPTableConfig<TRow
   /** Fires for custom column menu items (PR-114). */
   onColumnMenuAction?: (event: ColumnMenuActionEvent) => void;
   /**
+   * Host hook resolving `dependOn` values of remote lists (see
+   * `ERPTableHostProvider`). When omitted, an outer `ERPTableHostProvider`'s
+   * hook is used, else the static item values.
+   */
+  useDependOn?: UseDependOnHook;
+  /**
    * Rows stuck under the header (PR-116). Display-only; not virtualized,
    * sorted, filtered, or selected with body rows.
    */
@@ -270,6 +277,7 @@ export function DataGrid<TRow = unknown>(props: DataGridProps<TRow>) {
     onClipboardPaste,
     columnMenuItems,
     onColumnMenuAction,
+    useDependOn,
     stateKey,
     pinnedTopRowData,
     pinnedBottomRowData,
@@ -480,6 +488,7 @@ export function DataGrid<TRow = unknown>(props: DataGridProps<TRow>) {
       filterComponents={filterComponents}
       columnMenuItems={columnMenuItems}
       onColumnMenuAction={onColumnMenuAction}
+      useDependOn={useDependOn}
     >
       <div
         className="pdg-grid erp-table"

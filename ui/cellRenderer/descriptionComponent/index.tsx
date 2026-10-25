@@ -11,9 +11,13 @@ import {
 } from '../../../infrastructure/ui/UITableController';
 import {
   buildDependencyBody,
+  getDependFieldName,
+  getStaticDependValue,
   hasDependValue,
+  useHostDependOn,
   useLocale,
   useRemoteQuery,
+  type DependValueResolver,
 } from '../../host';
 import { highlightIfCurrentSearch } from '../../gridSearch/highlightText';
 import {
@@ -77,12 +81,21 @@ export const DescriptionComponent = forwardRef<
   const showSearchHit = !!(isCurrentSearchMatch && searchQuery?.trim());
   const { endpoint, dependOn } = meta.dynamicSource ?? {};
 
-  const isReady = hasDependValue(dependOn);
-  const dependencyBody = buildDependencyBody(dependOn);
+  // Static value first, then the value the host resolves for that field
+  // (e.g. the active page's form field).
+  const { dependencyBody: hostValues } = useHostDependOn(dependOn, {
+    enabled: true,
+  });
+  const resolveDepend: DependValueResolver = (item) =>
+    getStaticDependValue(item) ?? hostValues[getDependFieldName(item)];
+  const isReady = hasDependValue(dependOn, resolveDepend);
+  const dependencyBody = buildDependencyBody(dependOn, resolveDepend);
   const { data: menuData } = useRemoteQuery<VoucherTypeApiResponse>({
     url: endpoint,
     body: {
       ...dependencyBody,
+      RepoViewId: 0,
+      RepoId: 0,
       PagingInfo: {
         PageNumber: 1,
         PageRecordCount: 10000,

@@ -11,3 +11,6 @@ blob-report/
 *.tgz
 *.log
 .DS_Store
+
+# host-compat harness output
+scripts/host-compat/.tmp/

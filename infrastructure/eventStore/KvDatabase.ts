@@ -13,6 +13,8 @@ export interface KvStore {
 
 export interface KvDatabase {
   objectStore(name: string): KvStore;
+  /** Release the underlying connection (IndexedDB). Stored data is untouched. */
+  close?(): void;
 }
 
 export class MemoryKvStore implements KvStore {
@@ -84,6 +86,9 @@ export async function openIndexedDbDatabase(
   });
 
   return {
+    close(): void {
+      db.close();
+    },
     objectStore(name: string): KvStore {
       return {
         async get<T = unknown>(key: string): Promise<T | undefined> {

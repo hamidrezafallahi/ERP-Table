@@ -32,6 +32,28 @@ new FetchRemoteApi(undefined, { baseUrl: 'https://erp.example.local' })
 
 A custom `RemoteApi` is fine if it implements `request({ endpoint, params, method })`.
 
+## Failures: reject, never resolve error bodies
+
+`FetchRemoteApi` rejects with an `Error` (message contains the HTTP status and endpoint) on any non-2xx response and on a non-JSON body (e.g. a 502 HTML page). The grid catches rejections: a failing `resolveOn` / `computed` lookup still commits the cell edit and is written to the audit logger; `useRemoteQuery` / `useLazyRemote` expose `error` and call `onToast('error', …)`.
+
+### Wrapping an RTK Query base query (`baseQueryByToken`)
+
+RTK base queries never throw — they resolve `{ data }` or `{ error }`. Returning `res.data` blindly turns a failure into `undefined`. Use `createBaseQueryRemoteApi`, which throws when `error` is set (or the result is empty) and returns `data` otherwise:
+
+```ts
+import { CallbackRemoteApi, createBaseQueryRemoteApi } from 'persian-data-grid/adapters/arian-erp';
+
+const remoteApi = new CallbackRemoteApi(
+  createBaseQueryRemoteApi(({ endpoint, params, method }) =>
+    baseQueryByToken(
+      { url: endpoint, method: method ?? 'POST', body: params ?? {} },
+      { getState: () => store.getState(), dispatch: store.dispatch } as never,
+      {},
+    ),
+  ),
+);
+```
+
 ## Cookie `_auth`
 
 `FetchRemoteApi` reads `document.cookie` for **`_auth`**. If present, every request sends:

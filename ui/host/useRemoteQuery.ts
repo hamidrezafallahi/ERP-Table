@@ -1,8 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useERPTableHost } from './ERPTableHost';
+
+/** Latest `onToast` without making callers' callbacks/effects depend on its identity. */
+function useLatest<T>(value: T) {
+  const ref = useRef(value);
+  ref.current = value;
+  return ref;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Remote request failed';
+}
 
 type UseRemoteQueryArgs = {
   url?: string;
@@ -12,9 +23,11 @@ type UseRemoteQueryArgs = {
 };
 
 export function useRemoteQuery<T = unknown>(args: UseRemoteQueryArgs) {
-  const { remoteApi } = useERPTableHost();
+  const { remoteApi, onToast } = useERPTableHost();
+  const toastRef = useLatest(onToast);
   const [data, setData] = useState<{ Data?: T; TotalCount?: number; ReturnCount?: number; Result?: string } | null>(null);
   const [isFetching, setIsFetching] = useState(false);
+  const [error, setError] = useState<unknown>(null);
 
   const refetch = useCallback(async () => {
     if (!args.url || args.skip || !remoteApi) {
@@ -22,6 +35,7 @@ export function useRemoteQuery<T = unknown>(args: UseRemoteQueryArgs) {
       return;
     }
     setIsFetching(true);
+    setError(null);
     try {
       const response = await remoteApi.request<{
         Data?: T;
@@ -34,6 +48,11 @@ export function useRemoteQuery<T = unknown>(args: UseRemoteQueryArgs) {
         method: 'POST',
       });
       setData(response ?? null);
+    } catch (e) {
+      // Never let a backend failure escape from an effect as an unhandled rejection.
+      setData(null);
+      setError(e);
+      toastRef.current?.('error', errorMessage(e), e);
     } finally {
       setIsFetching(false);
     }
@@ -43,7 +62,7 @@ export function useRemoteQuery<T = unknown>(args: UseRemoteQueryArgs) {
     void refetch();
   }, [refetch]);
 
-  return { data, isFetching, refetch };
+  return { data, isFetching, error, refetch };
 }
 
 /**
@@ -52,9 +71,11 @@ export function useRemoteQuery<T = unknown>(args: UseRemoteQueryArgs) {
  * never refetch on their own.
  */
 export function useLazyRemote<T = unknown>() {
-  const { remoteApi } = useERPTableHost();
+  const { remoteApi, onToast } = useERPTableHost();
+  const toastRef = useLatest(onToast);
   const [data, setData] = useState<{ Data?: T; TotalCount?: number; ReturnCount?: number; Result?: string } | null>(null);
   const [isFetching, setIsFetching] = useState(false);
+  const [error, setError] = useState<unknown>(null);
 
   const trigger = useCallback(
     async (args: { url?: string; body?: Record<string, unknown> }) => {
@@ -63,6 +84,7 @@ export function useLazyRemote<T = unknown>() {
         return;
       }
       setIsFetching(true);
+      setError(null);
       try {
         const response = await remoteApi.request<{
           Data?: T;
@@ -71,6 +93,11 @@ export function useLazyRemote<T = unknown>() {
           Result?: string;
         }>({ endpoint: args.url, params: args.body, method: 'POST' });
         setData(response ?? null);
+      } catch (e) {
+        // Resolves (never rejects): failures surface via `error` and `onToast`.
+        setData(null);
+        setError(e);
+        toastRef.current?.('error', errorMessage(e), e);
       } finally {
         setIsFetching(false);
       }
@@ -78,5 +105,5 @@ export function useLazyRemote<T = unknown>() {
     [remoteApi],
   );
 
-  return [trigger, { data, isFetching }] as const;
+  return [trigger, { data, isFetching, error }] as const;
 }

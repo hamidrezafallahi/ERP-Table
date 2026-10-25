@@ -36,12 +36,18 @@ export type ColumnVisibilityRule =
   | { kind: 'whenCollection'; collection: string }
   | { kind: 'whenTableType'; tableType: string };
 
+/**
+ * Remote flag/response resolution. The response callbacks use METHOD syntax
+ * (bivariant) so a host-typed config (`TResponse` = the host's query response)
+ * stays assignable to the default `ResolveOnConfig<K>` (`TResponse` = `unknown`)
+ * used inside the engine.
+ */
 export interface ResolveOnConfig<K = unknown, TResponse = unknown> {
   endpoint: string;
   fieldName: string;
   buildParams: (row: Record<string, unknown>) => Record<string, unknown>;
-  getResponse?: (response: TResponse, row: Row) => unknown;
-  mapFlags?: (response: TResponse) => Record<string, boolean>;
+  getResponse?(response: TResponse, row: Row): unknown;
+  mapFlags?(response: TResponse): Record<string, boolean>;
 }
 
 type ColumnAccessControl = {
@@ -57,7 +63,8 @@ export interface IDependOn {
 
 export type DefaultOptionType = {
   value?: string | number;
-  label?: string;
+  /** Renderable label; the UI-aware public type narrows it to `ReactNode`. */
+  label?: unknown;
   title?: string;
   [key: string]: unknown;
 };
@@ -107,13 +114,19 @@ export interface ColumnSchema<T = unknown, K = unknown> {
     children?: [] | undefined;
   };
   selectOptions?: { label: string; value: string | number }[];
-  indexOptions?: (...args: unknown[]) => unknown[];
-  onChange?: (...args: unknown[]) => void;
+  /**
+   * Engine-side (loose) callback shapes. Declared with METHOD syntax
+   * (bivariant) so the precise host-facing signatures of the public
+   * `ColumnSchema` (UIRow, UITableController, ItemType, ...) stay assignable.
+   */
+  indexOptions?(...args: unknown[]): unknown[];
+  onChange?(...args: unknown[]): void;
   displayFormat?: (value: unknown) => unknown;
   minWidth?: number;
-  style?: Record<string, string | number>;
+  /** Inline style object (the public type narrows it to `CSSProperties`). */
+  style?: object;
   popUpWidth?: number;
-  dynamicSelectFilterOption?: (inputValue: string, option: unknown) => boolean;
+  dynamicSelectFilterOption?(inputValue: string, option: unknown): boolean;
   labelValue?: 'selectDisplay' | 'selectValue';
   /**
    * ColumnDef-only fields restored by `toColumnDef` (PR-81).
