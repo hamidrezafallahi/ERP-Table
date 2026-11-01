@@ -1,7 +1,6 @@
 // hooks/useERPTable.ts
 import {
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -15,7 +14,10 @@ import {
   DEFAULT_MEMORY_STORE,
   isPersistentStore,
 } from '../bootstrap/defaults';
-import type { CreateERPTableConfig } from '../bootstrap/type';
+import type {
+  CreateERPTableConfig,
+  CreateGridResult,
+} from '../bootstrap/type';
 import { flattenColDefOrGroup } from '../infrastructure/columns/flattenColumnDefs';
 import type { TableSnapShot } from '../engine/type';
 import type {
@@ -98,6 +100,7 @@ export function useGrid<TRow = unknown>(
   const [api, setApi] = useState<GridApi<TRow> | null>(null);
   const [session, setSession] = useState<GridSession | null>(null);
   const [pluginHost, setPluginHost] = useState<PluginHost | null>(null);
+  const [eventStore, setEventStore] = useState<EventStore | null>(null);
   const [rows, setRows] = useState<TableSnapShot | null>(null);
   const [, setViewVersion] = useState(0);
   const [undoFlags, setUndoFlags] = useState({ canUndo: false, canRedo: false });
@@ -108,44 +111,68 @@ export function useGrid<TRow = unknown>(
   // not mounted yet" — never build (or rebuild IndexedDB for) a grid then.
   const pagedIdb = config.persistence === 'paged-idb';
   const disabled = pagedIdb && !config.tableKey;
-  // Bumped when a paged grid is disposed so the next effect run builds a
-  // fresh instance (StrictMode / tableKey changes) instead of reusing a
-  // disposed controller.
-  const [generation, setGeneration] = useState(0);
+  // Latest config for the effect below (config identity changes every render;
+  // only the listed deps rebuild the grid).
+  const configRef = useRef(config);
+  configRef.current = config;
+  // Teardown of the previous grid. A new grid waits for it so the old one has
+  // released its event store / IndexedDB connection before the next opens it.
+  const teardownRef = useRef<Promise<void>>(Promise.resolve());
 
-  const grid = useMemo(
-    () => (disabled ? null : createGrid({ ...config, tableKey })),
-    [tableKey, disabled, generation, config.columns, config.columnDefs, config.store],
-  );
-
-  // ---------- bootstrap ----------
+  // ---------- bootstrap + teardown ----------
+  // The grid is created inside the effect (never in render / useMemo): render
+  // is pure, StrictMode's mount→cleanup→mount creates exactly one grid (the
+  // first run is cancelled before it builds), and every grid that was built is
+  // released by its own cleanup.
   useEffect(() => {
     let cancelled = false;
+    let built: CreateGridResult<TRow> | null = null;
     setController(null);
     setApi(null);
     setSession(null);
     setPluginHost(null);
+    setEventStore(null);
     setRows(null);
 
-    if (!grid) return undefined;
+    if (disabled) return undefined;
 
-    void grid.ready.then((result) => {
+    const previous = teardownRef.current;
+    void previous.then(() => {
       if (cancelled) return;
-      setController(result.controller);
-      setApi(result.api);
-      setSession(result.session);
-      setPluginHost(result.pluginHost);
+      const grid = createGrid<TRow>({ ...configRef.current, tableKey });
+      built = grid;
+      void grid.ready.then((result) => {
+        if (cancelled) return;
+        setController(result.controller);
+        setApi(result.api);
+        setSession(result.session);
+        setPluginHost(result.pluginHost);
+        setEventStore(result.eventStore);
+      });
     });
 
     return () => {
       cancelled = true;
-      if (pagedIdb) {
-        // Drop the RAM page window only (IndexedDB stays the source of truth).
-        void grid.ready.then((result) => result.controller.dispose());
-        setGeneration((g) => g + 1);
+      const grid = built;
+      if (!grid) {
+        teardownRef.current = previous;
+        return;
       }
+      // Paged mode: dispose() = drop the RAM page window (IndexedDB stays the
+      // source of truth) + release resources. Default event-sourced mode:
+      // persisted data is left exactly as it is; only resources are released.
+      // A failed assembly already cleaned up after itself (ready rejects).
+      teardownRef.current = previous.then(() =>
+        grid.ready.then(
+          (result) =>
+            pagedIdb
+              ? result.controller.dispose()
+              : result.controller.releaseResources(),
+          () => undefined,
+        ),
+      );
     };
-  }, [grid, pagedIdb]);
+  }, [tableKey, disabled, pagedIdb, config.columns, config.columnDefs, config.store]);
 
   useEffect(() => {
     if (!controller || config.rowData === undefined) return;
@@ -257,7 +284,7 @@ export function useGrid<TRow = unknown>(
     };
   }, [controller]);
 
-  if (!grid || !controller || !api || !session || !pluginHost || !controller.getViewState()) {
+  if (!eventStore || !controller || !api || !session || !pluginHost || !controller.getViewState()) {
     return { ready: false };
   }
 
@@ -267,7 +294,7 @@ export function useGrid<TRow = unknown>(
     api,
     session,
     pluginHost,
-    eventStore: grid.eventStore,
+    eventStore,
     store: isPersistentStore(config.store) ? config.store : DEFAULT_MEMORY_STORE,
     tableKey,
     rows: rows ?? (controller.getSnapShot('active') as TableSnapShot),

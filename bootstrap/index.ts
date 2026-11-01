@@ -23,6 +23,7 @@ import { NoopRemoteApi } from '../infrastructure/Repositories/noopRemoteApi';
 import { InMemoryEventStore } from '../infrastructure/eventStore/InMemoryEventStore';
 import { IndexedDbEventStore } from '../infrastructure/eventStore/IndexedDbEventStore';
 import { eventStoreDbName } from '../infrastructure/eventStore/eventStoreName';
+import { trackEventStoreSubscriptions } from '../infrastructure/eventStore/trackedEventStore';
 import { HistoryPanelViewModel } from '../infrastructure/history/HistoryPanelViewModel';
 import { OfflineStatus } from '../application/offline/OfflineStatus';
 import {
@@ -87,24 +88,67 @@ export {
   resolveCreateGridDefaults,
 } from './defaults';
 
+type ResolvedEventStore = {
+  eventStore: EventStore;
+  /** Set only when the grid itself opened the store (host stores are never closed). */
+  close?: () => Promise<void>;
+};
+
 async function resolveEventStore(
   config: Pick<
     CreateERPTableConfig,
     'eventStore' | 'store' | 'eventStoreName' | 'persistence'
   >,
   persist: boolean,
-): Promise<EventStore> {
-  if (config.eventStore) return config.eventStore;
+): Promise<ResolvedEventStore> {
+  if (config.eventStore) return { eventStore: config.eventStore };
   // Page-window mode: IndexedDB already holds the durable rows, so the audit /
   // undo log stays in memory unless the host injects its own `eventStore`.
-  if (config.persistence === 'paged-idb') return new InMemoryEventStore();
+  if (config.persistence === 'paged-idb') {
+    return { eventStore: new InMemoryEventStore() };
+  }
   // Durable log only when the host asked for a `store` (PR-83).
   if (persist && typeof indexedDB !== 'undefined') {
-    return IndexedDbEventStore.open(
+    const opened = await IndexedDbEventStore.open(
       eventStoreDbName(config.store as string, config.eventStoreName),
     );
+    return { eventStore: opened, close: () => opened.close() };
   }
-  return new InMemoryEventStore();
+  return { eventStore: new InMemoryEventStore() };
+}
+
+/**
+ * Ordered cleanup registry for everything `assembleGrid` creates. Disposers
+ * run in reverse registration order, each isolated; `run()` is idempotent
+ * (every call returns the same promise) and never rejects.
+ */
+type Disposer = () => void | Promise<void>;
+
+function createDisposerRegistry(): {
+  add(disposer: Disposer): void;
+  run(): Promise<void>;
+} {
+  const disposers: Disposer[] = [];
+  let running: Promise<void> | undefined;
+  return {
+    add(disposer) {
+      disposers.push(disposer);
+    },
+    run() {
+      if (!running) {
+        running = (async () => {
+          for (const disposer of disposers.splice(0).reverse()) {
+            try {
+              await disposer();
+            } catch {
+              // One failing disposer must not leak the rest.
+            }
+          }
+        })();
+      }
+      return running;
+    },
+  };
 }
 
 function createInitialRows(
@@ -150,8 +194,27 @@ function resolveHostRows<TRow>(
   );
 }
 
+/**
+ * Builds the grid; on ANY failure everything created so far (opened event
+ * store, subscriptions, projections …) is released before the error is
+ * rethrown. On success `controller.releaseResources()` / `dispose()` run the
+ * same registry.
+ */
 async function assembleGrid<TRow>(
   config: CreateERPTableConfig<TRow>,
+): Promise<CreateERPTableResult<TRow>> {
+  const registry = createDisposerRegistry();
+  try {
+    return await assembleGridInner(config, registry);
+  } catch (error) {
+    await registry.run();
+    throw error;
+  }
+}
+
+async function assembleGridInner<TRow>(
+  config: CreateERPTableConfig<TRow>,
+  registry: ReturnType<typeof createDisposerRegistry>,
 ): Promise<CreateERPTableResult<TRow>> {
   const { store, tableKey, actor, persist } = resolveCreateGridDefaults(config);
   const resolved: CreateERPTableConfig<TRow> = {
@@ -184,8 +247,19 @@ async function assembleGrid<TRow>(
   const windowed = isWindowedRepository(repo);
   const audit = config.audit ?? new ConsoleAuditLogger();
   const remoteApi = config.remoteApi ?? new NoopRemoteApi();
-  const eventStore = await resolveEventStore(resolved, persist);
-  const changelogProjection = new ChangelogProjection(eventStore);
+  const resolvedStore = await resolveEventStore(resolved, persist);
+  const { eventStore } = resolvedStore;
+  // Registered first => runs last: close the connection only after every
+  // consumer stopped (and only when this grid opened it).
+  if (resolvedStore.close) registry.add(resolvedStore.close);
+  // Internal consumers (projections, sync, plugins) subscribe through this
+  // proxy so no subscription can outlive the grid. `eventStore` itself (the
+  // host-visible one) stays the raw instance.
+  const tracked = trackEventStoreSubscriptions(eventStore);
+  registry.add(() => tracked.release());
+  const internalStore = tracked.store;
+  const changelogProjection = new ChangelogProjection(internalStore);
+  registry.add(() => changelogProjection.dispose());
   const historyPanelViewModel = new HistoryPanelViewModel(changelogProjection);
   const cellUndoStack = new CellUndoStack();
   await changelogProjection.start();
@@ -195,13 +269,14 @@ async function assembleGrid<TRow>(
     connectivity: config.connectivity ?? createBrowserConnectivity(),
     watermark: createLocalStorageWatermark(`pdg-sync-watermark:${store}:${tableKey}`),
   });
-  await offlineStatus.start(eventStore);
+  registry.add(() => offlineStatus.dispose());
+  await offlineStatus.start(internalStore);
 
   const engineRef: { current?: TableEngine } = {};
   const snapshotStrategy = config.snapshotStore
     ? new SnapshotStrategy(
         config.snapshotStore,
-        eventStore,
+        internalStore,
         () =>
           engineRef.current?.getSnapShot('active') ?? {
             rows: [],
@@ -336,19 +411,22 @@ async function assembleGrid<TRow>(
     remoteApi,
     offlineStatus,
   );
+  controller.setResourceTeardown(() => registry.run());
 
   let syncPort: import('../application/ports/SyncPort').SyncPort | undefined;
   if (config.syncTransport) {
     const { GridSyncService } = await import('../application/sync/GridSyncService');
     syncPort = new GridSyncService({
       tableId: tableKey,
-      eventStore,
+      eventStore: internalStore,
       offlineStatus,
       transport: config.syncTransport,
       policy: config.syncConflictPolicy,
       applyCellValue: (rowId, columnId, value) =>
         controller.applySyncedCellValue(rowId, columnId, value),
     });
+    const syncService = syncPort;
+    registry.add(() => syncService.dispose?.());
     controller.setSyncPort(syncPort);
   }
 
@@ -372,6 +450,8 @@ async function assembleGrid<TRow>(
       label: config.presenceLabel ?? actor.userId,
       transport: presenceTransport,
     });
+    const presenceService = presencePort;
+    registry.add(() => presenceService.dispose());
     controller.setPresencePort(presencePort);
   }
 
@@ -450,6 +530,7 @@ async function assembleGrid<TRow>(
       maxBlocksInCache: config.maxBlocksInCache,
     });
     refreshServerSide = () => handle.refreshServerSide();
+    registry.add(() => handle.dispose());
   }
 
   if (snapshotStrategy) {
@@ -459,10 +540,11 @@ async function assembleGrid<TRow>(
   const pluginHost = new PluginHost({
     tableId: tableKey,
     actorId: actor.userId,
-    eventStore,
+    eventStore: internalStore,
     session,
     query: createEngineGridQuery(engine),
   });
+  registry.add(() => pluginHost.dispose());
   if (config.plugins?.length) {
     pluginHost.register(config.plugins);
   }
@@ -475,14 +557,15 @@ async function assembleGrid<TRow>(
     refreshServerSide,
   });
 
-  await attachColumnStatePersistence({
+  const detachColumnState = await attachColumnStatePersistence({
     api,
     controller,
     tableId: tableKey,
     actorId: actor.userId,
     stateKey: config.stateKey,
-    eventStore,
+    eventStore: internalStore,
   });
+  registry.add(detachColumnState);
 
   return {
     engine,

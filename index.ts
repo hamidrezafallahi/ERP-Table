@@ -66,7 +66,7 @@ export {
 } from './bootstrap';
 export type {
   CollectionRowMap,
-  ColumnSchema,
+  HostColumnSchema as ColumnSchema,
   CreateERPTableConfig,
   CreateERPTableResult,
   CreateGridConfig,

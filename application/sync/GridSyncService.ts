@@ -57,6 +57,7 @@ export class GridSyncService implements SyncPort {
   >();
   /** Remote events waiting on manual resolution (by conflict id). */
   private readonly deferredRemote = new Map<string, GridEvent>();
+  private disposed = false;
 
   constructor(private readonly options: GridSyncServiceOptions) {
     this.policy = options.policy ?? 'lastWriteWins';
@@ -78,12 +79,26 @@ export class GridSyncService implements SyncPort {
   subscribeConflicts(
     listener: (conflicts: readonly SyncConflict[]) => void,
   ): () => void {
+    if (this.disposed) return () => undefined;
     this.conflictListeners.add(listener);
     listener(this.openConflicts);
     return () => this.conflictListeners.delete(listener);
   }
 
+  /** Drop listeners and deferred conflicts; later sync() calls are no-ops. */
+  dispose(): void {
+    this.disposed = true;
+    this.conflictListeners.clear();
+    this.deferredRemote.clear();
+    this.openConflicts = [];
+  }
+
+  private emptyResult(): SyncResult {
+    return { pushed: 0, pulled: 0, applied: 0, conflicts: [] };
+  }
+
   async sync(): Promise<SyncResult> {
+    if (this.disposed) return this.emptyResult();
     const pending = this.options.offlineStatus.getPendingChanges();
     const pushable = pending
       .map((p) => p.event)
@@ -93,6 +108,7 @@ export class GridSyncService implements SyncPort {
       );
 
     const { acceptedIds } = await this.options.transport.push(pushable);
+    if (this.disposed) return this.emptyResult();
     if (acceptedIds.length > 0) {
       this.options.offlineStatus.markSynced([...acceptedIds]);
     }
@@ -118,12 +134,15 @@ export class GridSyncService implements SyncPort {
     }
 
     const pulled = await this.options.transport.pull(this.cursor);
+    if (this.disposed) return this.emptyResult();
     this.cursor = pulled.cursor;
 
     let applied = 0;
     const conflicts: SyncConflict[] = [];
 
     for (const remote of pulled.events) {
+      // Torn down mid-apply: stop writing into a released event store.
+      if (this.disposed) return this.emptyResult();
       if (remote.tableId !== this.options.tableId) continue;
       if (!isCellChanged(remote)) {
         await this.ingestRemote(remote);
@@ -179,6 +198,7 @@ export class GridSyncService implements SyncPort {
     conflictId: string,
     choice: ManualResolution,
   ): Promise<void> {
+    if (this.disposed) return;
     const conflict = this.openConflicts.find((c) => c.id === conflictId);
     const remote = this.deferredRemote.get(conflictId);
     if (!conflict || !remote) return;

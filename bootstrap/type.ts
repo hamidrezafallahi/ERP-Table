@@ -6,6 +6,8 @@ import type { ColumnDef } from '../domain/types/ColumnDef';
 import type { ColDefOrGroup } from '../domain/types/ColumnGroupDef';
 import type {
   ColumnSchema,
+  DefaultOptionType,
+  ResolveOnConfig,
 } from '../domain/types/ColumnSchema';
 export type {
   ColumnSchema,
@@ -24,7 +26,10 @@ export type {
   FilterDef,
 } from '../domain/types/ColumnDef';
 import type { ItemType } from '../engine/type';
-import type { IBaseQueryResponse } from '../ui/hostTypes';
+import type {
+  HostRemoteApi,
+  IBaseQueryResponse,
+} from '../ui/hostTypes';
 import type { UIRow } from '../ui/type';
 import type { Row } from '../domain/entities/Row';
 import type { Table } from '../domain/entities/Table';
@@ -91,6 +96,7 @@ export interface HostColumnSchema<T = unknown, K = unknown>
     ColumnSchema<T, K>,
     | 'options'
     | 'resolveOn'
+    | 'computed'
     | 'indexOptions'
     | 'onChange'
     | 'dynamicSelectFilterOption'
@@ -98,6 +104,14 @@ export interface HostColumnSchema<T = unknown, K = unknown>
   > {
   options?: HostDefaultOptionType[];
   resolveOn?: HostResolveOnConfig<K>;
+  computed?: {
+    dependsOn: readonly string[];
+    compute(
+      row: Record<string, unknown>,
+      remoteApi: HostRemoteApi,
+    ): Promise<unknown>;
+    children?: [] | undefined;
+  };
   /** Extra items of the row index menu. */
   indexOptions?: (
     tableKey: string,

@@ -76,6 +76,8 @@ export class OfflineStatus {
   private syncedIds = new Set<string>();
   private connectivityUnsub: Unsubscribe | null = null;
   private storeUnsub: Unsubscribe | null = null;
+  /** Incremented by every stop(); invalidates an in-flight start(). */
+  private lifecycle = 0;
   private readonly connectivityListeners = new Set<
     (state: Connectivity) => void
   >();
@@ -90,12 +92,17 @@ export class OfflineStatus {
 
   async start(eventStore: EventStore): Promise<void> {
     this.stop();
+    // `stop()` bumps the counter; a later stop()/start() while we await
+    // `readAll` makes this run stale so it never subscribes (no leak).
+    const run = this.lifecycle;
     this.connectivityUnsub = this.options.connectivity.subscribe((online) => {
+      if (run !== this.lifecycle) return;
       this.online = online;
       this.emitConnectivity();
     });
 
     const past = await eventStore.readAll(0);
+    if (run !== this.lifecycle) return;
     for (const event of past) {
       this.consider(event);
     }
@@ -105,7 +112,15 @@ export class OfflineStatus {
     this.emitPending();
   }
 
+  /** Stop listening and drop all listeners. The instance is inert afterwards. */
+  dispose(): void {
+    this.stop();
+    this.connectivityListeners.clear();
+    this.pendingListeners.clear();
+  }
+
   stop(): void {
+    this.lifecycle += 1;
     this.connectivityUnsub?.();
     this.connectivityUnsub = null;
     this.storeUnsub?.();

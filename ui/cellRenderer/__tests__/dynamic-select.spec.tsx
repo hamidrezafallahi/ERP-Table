@@ -56,6 +56,18 @@ describe('ERPTableDynamicSelect (host parity)', () => {
     await waitFor(() => expect(optionTexts()).toEqual(['Alpha', 'Beta', 'Gamma']));
   });
 
+  it('keeps the UI-only addButton flag out of the request body', async () => {
+    const { request } = setup({
+      dynamicValue: { endpoint: '/api/list', repoViewId: 'R1', addButton: true, Extra: 5 },
+    });
+    await waitFor(() => expect(request).toHaveBeenCalledTimes(1));
+    expect(request).toHaveBeenCalledWith({
+      endpoint: '/api/list',
+      params: { Extra: 5, RepoViewId: 'R1' },
+      method: 'POST',
+    });
+  });
+
   it('labelValue="selectValue" labels with _SelectValue but the list still shows the title', async () => {
     const { view } = setup({ dynamicValue: { endpoint: '/x' }, labelValue: 'selectValue', value: 2 });
     await waitFor(() =>

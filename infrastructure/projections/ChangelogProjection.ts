@@ -30,6 +30,8 @@ export class ChangelogProjection {
   private subscribers = new Set<ChangelogSubscriber>();
   private seenEventIds = new Set<string>();
   private started = false;
+  /** Incremented by start() and stop(); invalidates an in-flight catch-up. */
+  private run = 0;
 
   constructor(private readonly eventStore: EventStore) {}
 
@@ -47,18 +49,28 @@ export class ChangelogProjection {
       this.project(event);
     };
 
+    const run = ++this.run;
     this.unsubscribe = this.eventStore.subscribeAll(projectOnce);
 
     const past = await this.eventStore.readAll(0);
+    // stop() while catching up: do not project into a stopped projection.
+    if (run !== this.run) return;
     for (const event of past) {
       projectOnce(event);
     }
   }
 
   stop(): void {
+    this.run += 1;
     this.unsubscribe?.();
     this.unsubscribe = null;
     this.started = false;
+  }
+
+  /** Stop and drop all subscribers (grid teardown). Entries stay readable. */
+  dispose(): void {
+    this.stop();
+    this.subscribers.clear();
   }
 
   query(filter: ChangelogQuery = {}): ChangelogEntry[] {

@@ -133,6 +133,8 @@ export const ERPTableDynamicSelect: FC<ERPTableDynamicSelectProps> = ({
   const {
     endpoint,
     repoViewId,
+    // UI-only flag of the host's select config; never part of the request body.
+    addButton: _addButton,
     dependOn,
     ...bodyRequest
   } = dynamicValue ?? {};

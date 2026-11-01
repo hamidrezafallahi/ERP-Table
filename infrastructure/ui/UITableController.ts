@@ -72,6 +72,9 @@ export class UITableController {
   };
   private syncPort?: SyncPort;
   private presencePort?: PresencePort;
+  /** Set by releaseResources(); the first call's promise is reused (idempotent). */
+  private releasePromise?: Promise<void>;
+  private resourceTeardown?: () => void | Promise<void>;
   constructor(
     private readonly engine: TableEngine,
     private readonly store: string,
@@ -98,6 +101,10 @@ export class UITableController {
   }
 
   setSyncPort(port: SyncPort | undefined): void {
+    if (this.releasePromise) {
+      port?.dispose?.();
+      return;
+    }
     this.syncPort = port;
   }
 
@@ -106,7 +113,25 @@ export class UITableController {
   }
 
   setPresencePort(port: PresencePort | undefined): void {
+    if (this.releasePromise) {
+      port?.dispose();
+      return;
+    }
     this.presencePort = port;
+  }
+
+  /**
+   * Composition root hook: the callback that releases every resource the grid
+   * created (subscriptions, projections, plugins, owned event store).
+   * Run once by {@link releaseResources}.
+   */
+  setResourceTeardown(teardown: (() => void | Promise<void>) | undefined): void {
+    this.resourceTeardown = teardown;
+  }
+
+  /** True once resources were released (via releaseResources or dispose). */
+  isReleased(): boolean {
+    return this.releasePromise !== undefined;
   }
 
   getPresencePeers(): readonly PresencePeer[] {
@@ -116,6 +141,7 @@ export class UITableController {
   subscribePresencePeers(
     cb: (peers: readonly PresencePeer[]) => void,
   ): () => void {
+    if (this.isReleased()) return () => {};
     if (!this.presencePort) {
       cb([]);
       return () => {};
@@ -145,6 +171,7 @@ export class UITableController {
   }
 
   subscribeConnectivity(cb: (state: Connectivity) => void): () => void {
+    if (this.isReleased()) return () => {};
     if (!this.offlineStatus) {
       cb('online');
       return () => {};
@@ -155,6 +182,7 @@ export class UITableController {
   subscribePendingChanges(
     cb: (items: readonly PendingChange[]) => void,
   ): () => void {
+    if (this.isReleased()) return () => {};
     if (!this.offlineStatus) {
       cb([]);
       return () => {};
@@ -177,6 +205,7 @@ export class UITableController {
   subscribeSyncConflicts(
     cb: (conflicts: readonly SyncConflict[]) => void,
   ): () => void {
+    if (this.isReleased()) return () => {};
     if (!this.syncPort) {
       cb([]);
       return () => {};
@@ -185,7 +214,7 @@ export class UITableController {
   }
 
   async syncNow(): Promise<SyncResult | null> {
-    if (!this.syncPort) return null;
+    if (this.isReleased() || !this.syncPort) return null;
     return this.syncPort.sync();
   }
 
@@ -193,6 +222,7 @@ export class UITableController {
     conflictId: string,
     choice: ManualResolution,
   ): Promise<void> {
+    if (this.isReleased()) return;
     await this.syncPort?.resolveConflict(conflictId, choice);
   }
 
@@ -752,7 +782,7 @@ export class UITableController {
     cb: (entries: ChangelogEntry[]) => void,
     filter: Omit<ChangelogQuery, 'tableId'> = {},
   ): () => void {
-    if (!this.changelogProjection) return () => {};
+    if (!this.changelogProjection || this.isReleased()) return () => {};
     return this.safe(
       () => this.changelogProjection!.subscribe(cb, { tableId: this.tableKey, ...filter }),
       'subscribeChangelog',
@@ -779,7 +809,7 @@ export class UITableController {
     cb: (items: HistoryItem[]) => void,
     filter: Omit<HistoryQuery, 'tableId'> = {},
   ): () => void {
-    if (!this.historyPanelViewModel) return () => {};
+    if (!this.historyPanelViewModel || this.isReleased()) return () => {};
     return this.safe(
       () => this.historyPanelViewModel!.subscribe(cb, { tableId: this.tableKey, ...filter }),
       'subscribeHistoryItems',
@@ -1050,12 +1080,70 @@ export class UITableController {
 
   // ─── lifecycle ───────────────────────────────────────────────────────
 
-  dispose(): void {
-    if (this.disposed) return;
+  /**
+   * Full dispose: `TABLE_DISPOSED` (windowed repo: drop the RAM page window,
+   * other repos: `repo.delete` — unchanged data semantics) followed by
+   * {@link releaseResources}. Idempotent; the promise settles once teardown
+   * finished and never rejects.
+   */
+  dispose(): Promise<void> {
+    if (this.disposed) return this.releasePromise ?? this.releaseResources();
     this.disposed = true;
     this.presencePort?.dispose();
     this.presencePort = undefined;
-    void this.engine.dispatch({ type: 'TABLE_DISPOSED', store: this.store, tableKey: this.tableKey });
+    const dispatched = this.engine
+      .dispatch({ type: 'TABLE_DISPOSED', store: this.store, tableKey: this.tableKey })
+      .catch((error: unknown) => {
+        this.audit.log({
+          type: 'ERROR',
+          message: 'UITableController.dispose: TABLE_DISPOSED failed',
+          payload: { error, tableKey: this.tableKey },
+        });
+      });
+    return dispatched.then(() => this.releaseResources());
+  }
+
+  /**
+   * Resource-only teardown: stops subscriptions, projections, sync, presence,
+   * plugins, server row model and closes an event store the grid opened.
+   * Does NOT dispatch `TABLE_DISPOSED` — persisted table data is untouched.
+   * Idempotent (same promise on every call); never rejects.
+   */
+  releaseResources(): Promise<void> {
+    if (!this.releasePromise) {
+      this.releasePromise = this.runResourceTeardown();
+    }
+    return this.releasePromise;
+  }
+
+  private async runResourceTeardown(): Promise<void> {
+    const fail = (what: string, error: unknown): void => {
+      this.audit.log({
+        type: 'ERROR',
+        message: `UITableController.releaseResources: ${what} failed`,
+        payload: { error, tableKey: this.tableKey },
+      });
+    };
+    // Detach ports first so nothing re-enters them during teardown.
+    const presence = this.presencePort;
+    const sync = this.syncPort;
+    this.presencePort = undefined;
+    this.syncPort = undefined;
+    try {
+      presence?.dispose();
+    } catch (error) {
+      fail('presence dispose', error);
+    }
+    try {
+      sync?.dispose?.();
+    } catch (error) {
+      fail('sync dispose', error);
+    }
+    try {
+      await this.resourceTeardown?.();
+    } catch (error) {
+      fail('teardown', error);
+    }
   }
 
   // ─── main dispatch ───────────────────────────────────────────────────

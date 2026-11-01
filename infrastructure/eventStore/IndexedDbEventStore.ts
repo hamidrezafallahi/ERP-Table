@@ -22,6 +22,9 @@ export class IndexedDbEventStore implements EventStore {
   private listeners = new Map<string, Set<Listener>>();
   private globalListeners = new Set<Listener>();
   private ready: Promise<void>;
+  private closed = false;
+  private closePromise?: Promise<void>;
+  private readonly inflight = new Set<Promise<AppendResult>>();
 
   constructor(private readonly db: KvDatabase) {
     this.ready = Promise.resolve();
@@ -39,7 +42,42 @@ export class IndexedDbEventStore implements EventStore {
     return new IndexedDbEventStore(new MemoryKvDatabase());
   }
 
-  async append(
+  /**
+   * Release the IndexedDB connection (stored events are untouched). Waits for
+   * appends already in flight; appends started afterwards are dropped (they
+   * resolve `ok` without writing) because the owning grid is gone. Idempotent.
+   */
+  close(): Promise<void> {
+    if (!this.closePromise) {
+      this.closed = true;
+      this.closePromise = (async () => {
+        await Promise.allSettled([...this.inflight]);
+        this.listeners.clear();
+        this.globalListeners.clear();
+        this.db.close?.();
+      })();
+    }
+    return this.closePromise;
+  }
+
+  append(
+    streamId: string,
+    events: GridEvent[],
+    expectedVersion: number,
+  ): Promise<AppendResult> {
+    if (this.closed) {
+      return Promise.resolve({ ok: true, version: 0 });
+    }
+    const job = this.appendInternal(streamId, events, expectedVersion);
+    this.inflight.add(job);
+    const forget = (): void => {
+      this.inflight.delete(job);
+    };
+    job.then(forget, forget);
+    return job;
+  }
+
+  private async appendInternal(
     streamId: string,
     events: GridEvent[],
     expectedVersion: number,
@@ -92,12 +130,14 @@ export class IndexedDbEventStore implements EventStore {
   }
 
   async read(streamId: string, fromVersion: number = 0): Promise<GridEvent[]> {
+    if (this.closed) return [];
     await this.ready;
     const record = await this.db.objectStore(STREAMS).get<StreamRecord>(streamId);
     return (record?.events ?? []).slice(fromVersion);
   }
 
   async readAll(fromPosition: number = 0): Promise<GridEvent[]> {
+    if (this.closed) return [];
     await this.ready;
     const globalStore = this.db.objectStore(GLOBAL);
     const keys = (await globalStore.getAllKeys())
@@ -115,6 +155,7 @@ export class IndexedDbEventStore implements EventStore {
   }
 
   subscribe(streamId: string, onEvent: Listener): Unsubscribe {
+    if (this.closed) return () => undefined;
     if (!this.listeners.has(streamId)) {
       this.listeners.set(streamId, new Set());
     }
@@ -126,6 +167,7 @@ export class IndexedDbEventStore implements EventStore {
   }
 
   subscribeAll(onEvent: Listener): Unsubscribe {
+    if (this.closed) return () => undefined;
     this.globalListeners.add(onEvent);
     return () => {
       this.globalListeners.delete(onEvent);

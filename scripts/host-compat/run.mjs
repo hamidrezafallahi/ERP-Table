@@ -51,15 +51,17 @@ const DEFAULT_CONSUMERS = [
   'components/templates/inventoryVoucherTemplate/config.ts',
   'components/templates/inventoryVoucherTemplate/index.tsx',
   'components/templates/priceAnnouncementTemplate/config.ts',
-  'components/templates/treasury/receiptAndPayment/bankedChequeDeploymentTemplate/config.ts',
-  'components/templates/treasury/receiptAndPayment/bankedChequeDeploymentTemplate/index.tsx',
+  'components/templates/trh/receiptAndPayment/bankedChequeDeploymentTemplate/config.ts',
+  'components/templates/trh/receiptAndPayment/bankedChequeDeploymentTemplate/index.tsx',
   ...['deploy', 'issuance', 'receipt'].flatMap((d) =>
     ['checkConfig.ts', 'index.tsx', 'promissoryNoteConfig.ts'].map(
-      (f) => `components/templates/treasury/receiptAndPayment/cheque&promissoryNote/${d}/${f}`,
+      (f) => `components/templates/trh/receiptAndPayment/cheque&promissoryNote/${d}/${f}`,
     ),
   ),
   'components/templates/voucherTemplate/config.ts',
   'components/templates/voucherTemplate/index.tsx',
+  'components/organisms/receiptAndPayment/cash/withdrawal/index.tsx',
+  'components/organisms/receiptAndPayment/cashFund/withdrawal/index.tsx',
   'types/elementType.ts',
   'utils/chatPrefill.ts',
 ];

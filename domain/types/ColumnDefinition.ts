@@ -23,7 +23,7 @@ export interface ColumnDefinition {
   readonly expandable?: boolean;
   readonly rules?: IRule[];
   readonly options?: ReadonlyArray<{
-    label?: string;
+    label?: unknown;
     value?: string | number;
     title?: string;
   }>;

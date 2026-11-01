@@ -69,4 +69,10 @@ export type SyncPort = {
   subscribeConflicts(
     listener: (conflicts: readonly SyncConflict[]) => void,
   ): () => void;
+  /**
+   * Release listeners / deferred state when the grid is torn down. After
+   * this, `sync()` is a no-op that returns an empty result. Optional so
+   * custom SyncPort implementations keep compiling.
+   */
+  dispose?(): void;
 };

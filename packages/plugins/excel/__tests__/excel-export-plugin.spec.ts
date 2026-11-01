@@ -65,6 +65,16 @@ function stubQuery(source: ExportSource | null): GridQueryPort {
 }
 
 describe('excel plugin', () => {
+  it('formats date cells stored as ISO strings, ms timestamps or Date objects alike', () => {
+    const iso = '2024-03-20T12:00:00.000Z';
+    const expected = formatExportValue(iso, 'date');
+    expect(expected).not.toBe('');
+    expect(formatExportValue(Date.parse(iso), 'date')).toBe(expected);
+    expect(formatExportValue(new Date(iso), 'date')).toBe(expected);
+    expect(formatExportValue('not a date', 'date')).toBe('not a date');
+    expect(formatExportValue(null, 'date')).toBe('');
+  });
+
   it('formats price and builds non-empty xlsx zip', async () => {
     expect(formatExportValue(1200, 'price')).toBe('1,200');
     const table = buildExportTable(sampleSource);

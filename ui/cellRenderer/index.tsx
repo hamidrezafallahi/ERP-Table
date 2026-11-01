@@ -420,7 +420,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           key={idx}
           options={(meta?.options ?? []).map((opt) => ({
             value: opt.value,
-            label: opt.label,
+            label: opt.label as React.ReactNode,
           }))}
           disabled={isDeleted || !isEditable}
           className={`  h-9 ${isDeleted && "cursor-not-allowed"} ${meta.className}`}
@@ -472,6 +472,9 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
           disabled={isDeleted || !isEditable}
           // labelInValue is false in DynamicSelect — pass a primitive, not {value,label}
           value={selectValue}
+          // Stored label for a value missing from the loaded options
+          // (isUnique filter, >5000 entries, or before the fetch resolves).
+          valueLabel={display != null && display !== "" ? String(display) : undefined}
           dynamicValue={meta?.dynamicSource}
           filterOption={(input, option) => {
             if (meta?.dynamicSelectFilterOption) {
