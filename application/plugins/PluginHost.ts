@@ -35,6 +35,8 @@ export type PluginHostDeps = {
   eventStore: EventStore;
   session: GridSession;
   query: GridQueryPort;
+  /** Runs before an export reads rows (createGrid: write the open cell edit). */
+  beforeRead?: () => Promise<void>;
 };
 
 function createEventId(): string {
@@ -114,6 +116,7 @@ export class PluginHost {
   }
 
   async requestExport(options: RequestExportOptions): Promise<void> {
+    await this.deps.beforeRead?.();
     const bus = this.createBus();
     const correlationId = options.correlationId ?? createEventId();
     const pluginName =

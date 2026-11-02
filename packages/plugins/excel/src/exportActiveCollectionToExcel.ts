@@ -30,6 +30,8 @@ export async function exportActiveCollectionToExcel(
   controller: UITableController,
   options?: ExportActiveCollectionOptions,
 ): Promise<ExportActiveCollectionResult> {
+  // The value still in a cell editor belongs in the file.
+  await controller.flushCellEdit();
   // Page-window mode: only one page is in RAM — stream the full set from
   // IndexedDB instead of materializing rows.
   if (controller.isPagedWindow()) {

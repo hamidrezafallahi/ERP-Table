@@ -11,6 +11,8 @@ import { TableEngine } from '../../engine/tableEngine';
 import {
   closestGridRoot,
   isCellEditorTarget,
+  isGridCellTarget,
+  isTextEditorTarget,
 } from './focusTrap';
 
 
@@ -79,6 +81,14 @@ export class UITableKeyboardHandler {
 
 
 
+  /** More than one cell selected (Shift+Arrow / drag): clipboard keys act on the grid. */
+  private hasMultiCellRange(): boolean {
+    const ranges = this.engine.getCellRanges();
+    if (ranges.length > 1) return true;
+    const range = ranges[0];
+    return Boolean(range && (range.startRow !== range.endRow || range.colIds.length > 1));
+  }
+
   async handle(e: KeyboardEvent, ctx: KeydownCtx): Promise<void> {
 
     try {
@@ -128,6 +138,12 @@ export class UITableKeyboardHandler {
         ? Number(Object.keys(selectedRows).find((id) => selectedRows[Number(id)])) ||
           null
         : null);
+
+    // Inside a text editor the editing keys belong to the input: copy / cut /
+    // paste / select-all / undo of TEXT and caret Home / End (the legacy table
+    // never took them). Clipboard keys still act on a multi-cell selection.
+    const inTextEditor = isTextEditorTarget(e.target);
+    const clipboardToEditor = inTextEditor && !this.hasMultiCellRange();
 
 
 
@@ -199,7 +215,7 @@ export class UITableKeyboardHandler {
 
         }
 
-        if (!ctrlKey && !shiftKey && !altKey && activeRowId && activeColumnId) {
+        if (!ctrlKey && !shiftKey && !altKey && !inTextEditor && activeRowId && activeColumnId) {
 
           e.preventDefault();
 
@@ -269,7 +285,7 @@ export class UITableKeyboardHandler {
 
         }
 
-        if (!ctrlKey && !shiftKey && !altKey && activeRowId && activeColumnId) {
+        if (!ctrlKey && !shiftKey && !altKey && !inTextEditor && activeRowId && activeColumnId) {
 
           e.preventDefault();
 
@@ -329,7 +345,14 @@ export class UITableKeyboardHandler {
 
             });
 
-          } else if (this.engine.getCellEdit()) {
+          } else if (
+            !this.engine.getCellEdit() &&
+            !this.engine.getCellEditOptions().singleClickEdit
+          ) {
+
+            this.engine.startCellEdit(activeRowId, activeColumnId);
+
+          } else if (this.engine.getCellEditOptions().enterNavigation === 'down') {
 
             // PR-126: confirm (commit via MOVE) + move vertically.
             await this.dispatchIntent({
@@ -344,21 +367,19 @@ export class UITableKeyboardHandler {
 
             });
 
-          } else if (!this.engine.getCellEditOptions().singleClickEdit) {
-
-            this.engine.startCellEdit(activeRowId, activeColumnId);
-
           } else {
 
+            // 'nextCell' (default): commit + next editable cell like Tab; the
+            // end of the last row adds a new row (arianERP data entry).
             await this.dispatchIntent({
 
-              type: 'MOVE_ACTIVE_CELL_VERTICAL',
+              type: 'MOVE_ACTIVE_CELL',
 
               rowId: activeRowId,
 
               columnId: activeColumnId,
 
-              direction: shiftKey ? 'up' : 'down',
+              direction: shiftKey ? 'prev' : 'next',
 
             });
 
@@ -374,9 +395,11 @@ export class UITableKeyboardHandler {
 
       case 'Tab': {
 
-        // PR-124 APG: Tab exits the grid unless a cell editor is focused.
-        // PR-126: while editing, Tab confirms + moves sideways.
-        if (!isCellEditorTarget(e.target)) {
+        // PR-124 APG: Tab from the grid container itself (navigation focus)
+        // exits the grid. From inside a cell — editor, date-picker button,
+        // checkbox, read-only cell — Tab confirms + moves sideways (PR-126 /
+        // legacy table). Focus outside the grid never reaches this point.
+        if (!isGridCellTarget(e.target)) {
           return;
         }
 
@@ -768,7 +791,7 @@ export class UITableKeyboardHandler {
 
       case 'KeyA': {
 
-        if (ctrlKey) {
+        if (ctrlKey && !inTextEditor) {
 
           e.preventDefault();
 
@@ -785,6 +808,7 @@ export class UITableKeyboardHandler {
       case 'KeyC': {
 
         if (ctrlKey && !altKey) {
+          if (clipboardToEditor) return;
 
           e.preventDefault();
 
@@ -817,6 +841,7 @@ export class UITableKeyboardHandler {
       case 'KeyX': {
 
         if (ctrlKey && !altKey) {
+          if (clipboardToEditor) return;
 
           e.preventDefault();
 
@@ -849,6 +874,7 @@ export class UITableKeyboardHandler {
       case 'KeyV': {
 
         if (ctrlKey && !altKey) {
+          if (clipboardToEditor) return;
 
           e.preventDefault();
 
@@ -946,6 +972,8 @@ export class UITableKeyboardHandler {
 
       case 'KeyZ': {
 
+        if (inTextEditor) return;
+
         if (ctrlKey && !shiftKey) {
 
           e.preventDefault();
@@ -972,7 +1000,7 @@ export class UITableKeyboardHandler {
 
       case 'KeyY': {
 
-        if (ctrlKey) {
+        if (ctrlKey && !inTextEditor) {
 
           e.preventDefault();
 

@@ -109,8 +109,24 @@ await createERPTable({
 ## What the host must still pass
 
 - `actor`, `store`, `tableKey`, `columns`, `rows`
-- `remoteApi={new FetchRemoteApi()}` for live lookups
+- `persistence="paged-idb"` — the in-project table's storage contract: IndexedDB
+  `ERP_TABLE_DB` (same records, existing drafts stay readable), one page in RAM,
+  `dispose()` only drops the page window, every cell change written at once,
+  pagination, no page-local header sort / filter. Without it the grid runs the
+  event-sourced mode (whole table in RAM, `dispose()` deletes the table).
+- `remoteApi` for live lookups. To keep `baseQueryByToken` behaviour
+  (`NEXT_PUBLIC_API_URL`, token refresh, error toasts) wrap it with
+  `CallbackRemoteApi(createBaseQueryRemoteApi(...))` (above); `FetchRemoteApi`
+  alone posts to relative URLs and does not refresh tokens.
+- `useDependOn={useDependOn}` (the host's Redux `@hooks/custom/useDependOn`) —
+  the description column resolves `dependOn` header fields through it.
 - `multiSelectConfig` only if the voucher needs the choose-from-list modal
+- `import 'persian-data-grid/styles.css'` once; `themeToggle={false}` to hide the
+  light/dark button, `onToast` to route toasts to the host.
+
+Everything else of the in-project table is the default: `Enter` → next cell /
+new row, `Tab` from any cell, keys typed in the page header form are never
+taken by the grid, `getFullSnapShot('all')` for the save body.
 
 ## Related
 

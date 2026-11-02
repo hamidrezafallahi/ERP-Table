@@ -287,28 +287,20 @@ export class UITableController {
     this.engine.dispatch({ type: 'CHANGE_PAGE', store: this.store, tableKey: this.tableKey, page });
   }
 
-  private onCellChange(rowId: number, columnId: string, value: unknown): void {
-    if (this.engine.isEditingCell(rowId, columnId)) {
-      this.engine.patchCellEdit(rowId, columnId, { value });
-      return;
-    }
-    // No session (e.g. programmatic / custom cell before activate): write through.
-    this.engine.dispatch({ type: 'CHANGE_CELL_VALUE', store: this.store, tableKey: this.tableKey, rowId, columnId, newValue: value });
+  /** Editor of this cell → session draft (written per `cellEditCommit`); otherwise write-through. */
+  private onCellChange(rowId: number, columnId: string, value: unknown): Promise<void> {
+    return this.engine.inputCellValue(rowId, columnId, value);
   }
 
   private onDescriptionSave(rowId: number, flag: boolean): void {
     this.engine.dispatch({ type: 'SAVE_DESCRIPTION', store: this.store, tableKey: this.tableKey, rowId, flag });
   }
 
-  private onCellDisplayChange(rowId: number, columnId: string, value: string): void {
-    if (this.engine.isEditingCell(rowId, columnId)) {
-      this.engine.patchCellEdit(rowId, columnId, { display: value });
-      return;
-    }
-    this.engine.dispatch({ type: 'CHANGE_CELL_DISPLAY_VALUE', store: this.store, tableKey: this.tableKey, rowId, columnId, newValue: value });
+  private onCellDisplayChange(rowId: number, columnId: string, value: string): Promise<void> {
+    return this.engine.inputCellDisplay(rowId, columnId, value);
   }
 
-  private setActiveCell(rowId: number, columnId: string): void {
+  private async setActiveCell(rowId: number, columnId: string): Promise<void> {
     const prev = this.engine.getActiveCell();
     if (prev?.rowId === rowId && prev?.columnId === columnId) {
       if (
@@ -330,16 +322,16 @@ export class UITableController {
         rowId,
       });
     }
-    this.engine.dispatch({ type: 'ACTIVE_CELL', tableKey: this.tableKey, rowId, columnId });
     this.publishPresenceCell(rowId, columnId);
+    await this.engine.dispatch({ type: 'ACTIVE_CELL', tableKey: this.tableKey, rowId, columnId });
   }
 
   private setActiveRow(rowId: number): void {
     this.engine.dispatch({ type: 'ACTIVE_ROW', store: this.store, tableKey: this.tableKey, rowId });
   }
 
-  private moveActiveCellVertical(rowId: number, columnId: string, direction: 'up' | 'down'): void {
-    this.engine.dispatch({ type: 'MOVE_ACTIVE_CELL_VERTICAL', store: this.store, tableKey: this.tableKey, rowId, columnId, direction });
+  private moveActiveCellVertical(rowId: number, columnId: string, direction: 'up' | 'down'): Promise<void> {
+    return this.engine.dispatch({ type: 'MOVE_ACTIVE_CELL_VERTICAL', store: this.store, tableKey: this.tableKey, rowId, columnId, direction });
   }
 
   private reorderRow(draggedRowId: number, droppedRowId: number, position: 'before' | 'after'): void {
@@ -431,8 +423,8 @@ export class UITableController {
     this.engine.dispatch({ type: 'ACTIVATE_FIRST_CELL', tableKey: this.tableKey, rowId });
   }
 
-  private moveToNextCell(rowId: number, columnId: string, direction: 'next' | 'prev' = 'next'): void {
-    this.engine.dispatch({ type: 'MOVE_ACTIVE_CELL', store: this.store, tableKey: this.tableKey, rowId, columnId, direction });
+  private moveToNextCell(rowId: number, columnId: string, direction: 'next' | 'prev' = 'next'): Promise<void> {
+    return this.engine.dispatch({ type: 'MOVE_ACTIVE_CELL', store: this.store, tableKey: this.tableKey, rowId, columnId, direction });
   }
 
   private async setTableAction(action: TableActions): Promise<void> {
@@ -896,6 +888,43 @@ export class UITableController {
     );
   }
 
+  /**
+   * Write what is still in the cell editor (the edit stays open) and wait
+   * until every pending cell write is durable. `getFullSnapShot` /
+   * `iterateRowsFromDb` / exports already do this; call it before reading
+   * synchronous APIs (`getRowView`, `getSnapShot`) for a save.
+   */
+  flushCellEdit(): Promise<void> {
+    return this.engine.flushCellEdit().catch((error: unknown) => {
+      this.audit.log({
+        type: 'ERROR',
+        message: 'UITableController.flushCellEdit failed',
+        payload: { error, tableKey: this.tableKey },
+      });
+    });
+  }
+
+  /** DataGrid: focus / pointer left the grid (see `stopEditingWhenCellsLoseFocus`). */
+  leaveGridFocus(): Promise<void> {
+    return this.engine.leaveGridFocus().catch((error: unknown) => {
+      this.audit.log({
+        type: 'ERROR',
+        message: 'UITableController.leaveGridFocus failed',
+        payload: { error, tableKey: this.tableKey },
+      });
+    });
+  }
+
+  private settleEditsForTeardown(): Promise<void> {
+    return this.engine.settleEditsForTeardown().catch((error: unknown) => {
+      this.audit.log({
+        type: 'ERROR',
+        message: 'UITableController: committing the open edit before teardown failed',
+        payload: { error, tableKey: this.tableKey },
+      });
+    });
+  }
+
   getEditDraft(rowId: number, columnId: string) {
     return this.safe(
       () => this.engine.getEditDraft(rowId, columnId),
@@ -1091,8 +1120,12 @@ export class UITableController {
     this.disposed = true;
     this.presencePort?.dispose();
     this.presencePort = undefined;
-    const dispatched = this.engine
-      .dispatch({ type: 'TABLE_DISPOSED', store: this.store, tableKey: this.tableKey })
+    // The open edit / queued writes must reach the store before the RAM
+    // window (paged) or the table (default) is dropped.
+    const dispatched = this.settleEditsForTeardown()
+      .then(() =>
+        this.engine.dispatch({ type: 'TABLE_DISPOSED', store: this.store, tableKey: this.tableKey }),
+      )
       .catch((error: unknown) => {
         this.audit.log({
           type: 'ERROR',
@@ -1124,6 +1157,9 @@ export class UITableController {
         payload: { error, tableKey: this.tableKey },
       });
     };
+    // Unmount without dispose (default mode): keep what the user typed — it
+    // is written before the event store this grid opened is closed.
+    await this.settleEditsForTeardown();
     // Detach ports first so nothing re-enters them during teardown.
     const presence = this.presencePort;
     const sync = this.syncPort;
@@ -1170,13 +1206,13 @@ export class UITableController {
         this.changePage(command.page);
         return;
       case 'UI_CELL_CHANGE':
-        this.onCellChange(command.rowId, command.columnId, command.value);
+        await this.onCellChange(command.rowId, command.columnId, command.value);
         return;
       case 'UI_DESCRIPTION_SAVE':
         this.onDescriptionSave(command.rowId, command.flag);
         return;
       case 'UI_CELL_CHANGE_DISPLAY':
-        this.onCellDisplayChange(command.rowId, command.columnId, command.value);
+        await this.onCellDisplayChange(command.rowId, command.columnId, command.value);
         return;
       case 'ADD_EMPTY_ROW':
         await this.addEmptyRow();
@@ -1216,13 +1252,14 @@ export class UITableController {
           shiftKey: Boolean(command.shiftKey),
           ctrlKey: Boolean(command.ctrlKey),
         });
-        this.setActiveCell(command.rowId, command.columnId);
+        // Resolves once the previous cell is committed and this one is active.
+        await this.setActiveCell(command.rowId, command.columnId);
         return;
       case 'UI_MOVE_ACTIVE_CELL':
-        this.moveToNextCell(command.rowId, command.columnId, command.direction);
+        await this.moveToNextCell(command.rowId, command.columnId, command.direction);
         return;
       case 'UI_MOVE_ACTIVE_CELL_VERTICAL':
-        this.moveActiveCellVertical(command.rowId, command.columnId, command.direction);
+        await this.moveActiveCellVertical(command.rowId, command.columnId, command.direction);
         return;
       case 'UI_ACTIVE_ROW':
         this.setActiveRow(command.rowId);

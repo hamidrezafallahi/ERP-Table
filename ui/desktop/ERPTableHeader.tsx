@@ -14,10 +14,13 @@ import {
   ariaSortForColumn,
   cycleSortModel,
   HEADER_SORT_CLICK_MAX_MOVE_PX,
-  isHeaderColumnSortable,
   shouldCommitHeaderSortClick,
   sortPriorityForColumn,
 } from '../../engine/dataOps/sortModel';
+import {
+  isColumnFilterableInGrid,
+  isColumnSortableInGrid,
+} from '../../engine/dataOps/columnMenu';
 import { ValidationCallbackResult } from '../../engine/type';
 import { UITableController } from '../../infrastructure/ui/UITableController';
 import { useRevalidateRevision } from '../hooks/useRevalidateRevision';
@@ -131,6 +134,8 @@ export function ERPTableHeader({
   const columnMenuItems = host.columnMenuItems;
   const onColumnMenuAction = host.onColumnMenuAction;
   const table = controller.getViewState();
+  /** Page-window grid: header sort / filter only on columns that opt in. */
+  const pagedWindow = controller.isPagedWindow();
   const draggedFieldRef = useRef<string | null>(null);
   const draggedGroupRef = useRef<string | null>(null);
   const pointerOriginRef = useRef<{ x: number; y: number } | null>(null);
@@ -248,8 +253,10 @@ export function ERPTableHeader({
       );
     }
 
-    const sortable = isHeaderColumnSortable(col);
-    const filterUi = resolveFilterUi(col);
+    const sortable = isColumnSortableInGrid(col, pagedWindow);
+    const filterUi = isColumnFilterableInGrid(col, pagedWindow)
+      ? resolveFilterUi(col)
+      : null;
     const customFilter =
       filterUi?.mode === 'custom'
         ? resolveFilterComponent(filterUi.name, filters)
@@ -430,7 +437,7 @@ export function ERPTableHeader({
 
   const renderFloatingFilterColumn = (col: ColumnSchema, index: number) => {
     const size = columnSizeStyle(col, table.columnWidths, colWindow.layoutWidths);
-    const ui = resolveFilterUi(col);
+    const ui = isColumnFilterableInGrid(col, pagedWindow) ? resolveFilterUi(col) : null;
     if (isIndexColumn(col) || !ui || ui.mode !== 'builtin') {
       return (
         <th

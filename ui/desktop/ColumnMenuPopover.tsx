@@ -141,9 +141,10 @@ export function ColumnMenuPopover({
     zIndex: 1200,
   });
 
+  const pagedWindow = controller.isPagedWindow();
   const items = useMemo(
-    () => resolveColumnMenuItems(column, itemsConfig),
-    [column, itemsConfig],
+    () => resolveColumnMenuItems(column, itemsConfig, { pagedWindow }),
+    [column, itemsConfig, pagedWindow],
   );
 
   const rows = useMemo(

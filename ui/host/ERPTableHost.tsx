@@ -2,6 +2,7 @@
 
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -174,12 +175,16 @@ export function useThemePortalStyle(extra?: CSSProperties): CSSProperties {
   return themeToStyle(theme, extra);
 }
 
+/** Stable per locale / messages — safe as an effect dependency. */
 export function useTranslations() {
   const { locale, messages } = useERPTableHost();
-  return (key: string, vars?: Record<string, string | number>) => {
-    const raw = translate(key, locale, messages);
-    return vars ? formatMessage(raw, vars) : raw;
-  };
+  return useCallback(
+    (key: string, vars?: Record<string, string | number>) => {
+      const raw = translate(key, locale, messages);
+      return vars ? formatMessage(raw, vars) : raw;
+    },
+    [locale, messages],
+  );
 }
 
 export function useLocale(): ERPTableLocale {

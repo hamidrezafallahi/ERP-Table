@@ -9,7 +9,9 @@ exists for forms whose detail lines must survive page reloads / tab switches
 | Source of truth | EventStore + in-memory table | **IndexedDB — one record per row** |
 | Heap | O(rows) | **O(page)** (Memory Iron Rule) |
 | Row chrome | virtual scroll (default on) | **pagination** |
-| Sort / filter / group | every row | current page only |
+| Cell edits (`cellEditCommit`) | `deferred` — session draft, written on commit | **`immediate`** — every change written at once (arianERP contract) |
+| Header sort / filter UI | every column | **off**, unless a column opts in (`columnDef.sortable: true` / `columnDef.filter`) — they would act on the current page only |
+| Sort / filter / group (API) | every row | current page only |
 | Select-all, delete-selected, search, totals, Excel | in memory | **streamed from IndexedDB** |
 | Delete | soft (`RowState = Delete`) | soft; `Added` rows are hard-removed |
 | EventStore (undo / audit) | IndexedDB | in-memory unless you inject `eventStore` |
@@ -64,6 +66,13 @@ const body = buildDocumentPayload({
 
 `getSnapShot()` stays the RAM page window — never use it for saving in this mode.
 
+Nothing typed is lost by a save: with the default `cellEditCommit: 'immediate'`
+every editor change is already in the table, and `getFullSnapShot`,
+`iterateRowsFromDb`, the exports and `dispose()` first write whatever is still
+in a cell editor (`flushCellEdit`) and wait until every queued cell write is
+durable — the editor stays open. Before reading a synchronous API for a save
+(`getRowView`, `getSnapShot`), `await controller.flushCellEdit()`.
+
 ## Streaming APIs
 
 - `controller.iterateRowsFromDb(scope, onBatch, batchSize?)` — bounded batches.
@@ -81,4 +90,8 @@ const body = buildDocumentPayload({
 - Activating a row re-applies remote visibility flags (`resolveOn`) once per
   row/value signature (`APPLY_ROW_VISIBILITY`).
 - Select / Alt / Ctrl+Space|Arrows|End shortcuts win over a focused Select.
+- `Enter` walks to the next editable cell and adds a row past the last one
+  (`enterNavigation: 'nextCell'`, the default in every mode).
+- Keys typed outside the grid's cells (page forms, toolbar, filters) are never
+  taken; only the legacy `Alt+…` / `Ctrl+Space|Arrows|End` chords are global.
 - Validation covers the RAM page window (same as the host table).

@@ -428,6 +428,36 @@ Cell typing no longer writes EventStore on every keystroke. Drafts live in sessi
 
 Hosts that assumed every `onChange` was durable must call Enter/Tab/blur/`api.stopEditing()` (or keep writing via direct `CHANGE_CELL_VALUE` / non-edit `UI_CELL_CHANGE` when no session is open).
 
+> **Superseded in part — see "Unreleased — host parity" below:** drafts are now
+> `cellEditCommit: 'deferred'` (default only for the event-sourced grid), durable
+> reads flush them, and `Enter` moves to the next cell again by default.
+
+## Unreleased — host parity (arianERP drop-in)
+
+Fixes that make `<DataGrid persistence="paged-idb">` a drop-in for the
+in-project arianERP table. No host change is needed beyond the props the
+adapter contract already lists ([`host-arian-erp.md`](./examples/host-arian-erp/host-arian-erp.md)).
+
+| Behavior | `0.13.0-next.0` | Now |
+|----------|-----------------|-----|
+| `<DataGrid persistence / quickFilterText / rowModelType / editType / …>` | silently ignored (only ~16 props reached `createGrid`) | every `CreateERPTableConfig` option is honoured |
+| Cell commit | always a session draft | `cellEditCommit`: `'immediate'` (default with `paged-idb`) writes each change at once; `'deferred'` (default otherwise) keeps the PR-126 draft |
+| `getFullSnapShot` / `iterateRowsFromDb` / export / `dispose()` with an open edit | missed the value in the editor | write it first (editor stays open); `controller.flushCellEdit()` for sync reads |
+| `Enter` | commit + move **down** | `enterNavigation: 'nextCell'` (default): next editable cell, then next row, new row past the last; `'down'` = previous behaviour |
+| `Esc` (`immediate`) | — | ends editing, keeps the value |
+| Keys typed in page forms / toolbar / filters | taken by the grid (`Ctrl+C/V/A/Z`, `Home/End`, `Enter`, `Tab`, arrows) | native; only the `Alt+…`, `Ctrl+Space`, `Ctrl+ArrowUp/Down`, `Ctrl+End` chords are global |
+| `Ctrl+A/C/X/V/Z/Y`, `Home/End` in a cell text editor | grid select-all / clipboard / undo / jump | native text editing (clipboard keys still act on a multi-cell selection) |
+| `Tab` from a date-picker button / checkbox / read-only cell | left the grid | next editable cell |
+| Paged-idb header sort / filter UI | on (sorted / filtered the visible page only) | off unless `columnDef.sortable: true` / `columnDef.filter` |
+
+```tsx
+// Spreadsheet-style grid (previous next-channel behaviour):
+<DataGrid enterNavigation="down" cellEditCommit="deferred" … />
+
+// Save in a host hook (works in both commit modes):
+const snapshot = await controller.getFullSnapShot('all');
+```
+
 ## Unreleased — PR-127 locale packs
 
 | Before | After |

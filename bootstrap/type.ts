@@ -300,6 +300,26 @@ export type CreateERPTableConfig<TRow = unknown> = {
    */
   editType?: import('../engine/dataOps/cellEditSession').CellEditType;
   /**
+   * When typed values become durable.
+   * - `'immediate'`: every editor change is written at once (the arianERP
+   *   table contract): `getRowView`, totals, `computed` / `resolveOn`, host
+   *   `onChange` code and saves always see what the user typed; `Esc` ends
+   *   editing and keeps the value.
+   * - `'deferred'` (PR-126): typing edits a session draft, written on commit
+   *   (move / Enter / Tab / focus leaves the grid / any durable read such as
+   *   `getFullSnapShot`, `iterateRowsFromDb`, export, dispose); `Esc` discards.
+   *
+   * Default: `'immediate'` with `persistence: 'paged-idb'`, else `'deferred'`.
+   */
+  cellEditCommit?: import('../engine/dataOps/cellEditSession').CellEditCommit;
+  /**
+   * `Enter` on an active cell. `'nextCell'` (default): next editable cell of
+   * the row, then the next row; past the last row a new row is added
+   * (`Shift+Enter` goes back) — the data-entry behaviour of the 0.5 line /
+   * arianERP. `'down'`: commit and move to the cell below (spreadsheet style).
+   */
+  enterNavigation?: import('../engine/dataOps/cellEditSession').EnterNavigation;
+  /**
    * Row model (PR-96). Default `clientSide`.
    * `infinite` / `serverSide` skip local sort/filter and call `datasource.getRows`.
    * Full block cache is PR-102.

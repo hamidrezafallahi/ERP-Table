@@ -53,6 +53,30 @@ export function isColumnFilterable(column: ColumnSchema): boolean {
   return ui != null;
 }
 
+/**
+ * Page-window grids (`persistence: 'paged-idb'`) hold ONE page in RAM, so a
+ * header sort / filter would only reorder / hide the rows of that page. There
+ * they are offered only on columns that opt in explicitly
+ * (`columnDef.sortable: true` / `columnDef.filter`).
+ */
+export function isColumnSortableInGrid(
+  column: ColumnSchema,
+  pagedWindow: boolean,
+): boolean {
+  if (!isHeaderColumnSortable(column)) return false;
+  return !pagedWindow || column.columnDef?.sortable === true;
+}
+
+export function isColumnFilterableInGrid(
+  column: ColumnSchema,
+  pagedWindow: boolean,
+): boolean {
+  if (!isColumnFilterable(column)) return false;
+  if (!pagedWindow) return true;
+  const def = column.columnDef?.filter;
+  return def != null && def !== false;
+}
+
 export function buildDefaultColumnMenuItems(
   ctx: ColumnMenuBuildContext,
 ): ColumnMenuItemDef[] {
@@ -72,11 +96,13 @@ export function buildDefaultColumnMenuItems(
 export function resolveColumnMenuItems(
   column: ColumnSchema,
   config?: ColumnMenuItemsConfig,
+  options?: { pagedWindow?: boolean },
 ): ColumnMenuItemDef[] {
+  const pagedWindow = options?.pagedWindow === true;
   const ctx: ColumnMenuBuildContext = {
     column,
-    sortable: isHeaderColumnSortable(column),
-    filterable: isColumnFilterable(column),
+    sortable: isColumnSortableInGrid(column, pagedWindow),
+    filterable: isColumnFilterableInGrid(column, pagedWindow),
     hideable: !isIndexColumn(column),
     pinnable: !isIndexColumn(column),
   };

@@ -63,7 +63,11 @@ interface CellRendererProps {
    Cell Renderer
    ====================================================== */
 
-export const CellRenderer: React.FC<CellRendererProps> = ({
+/** A cell without column meta renders nothing (the body keeps a stable hook order). */
+export const CellRenderer: React.FC<CellRendererProps> = (props) =>
+  props.meta ? <CellRendererBody {...props} meta={props.meta} /> : null;
+
+const CellRendererBody: React.FC<CellRendererProps & { meta: ColumnSchema }> = ({
   tableKey,
   row,
   columnId,
@@ -78,7 +82,6 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   const numberingSystem = useNumberingSystem();
   const dateAdapter = useDateAdapter();
   const searchState = useGridSearchState(controller);
-  if (!meta) return null;
   const disable =
     typeof row.visibilityCondition[columnId] === "boolean" &&
     row.visibilityCondition[columnId] === false;

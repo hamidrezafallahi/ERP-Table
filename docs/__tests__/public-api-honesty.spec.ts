@@ -281,7 +281,8 @@ describe('PR-46 public API honesty', () => {
   });
 
   it('PDF toolbar button shows when PdfExportPlugin is registered (PR-67)', () => {
-    expect(load('ui/index.tsx')).toContain('plugins');
+    // DataGrid forwards every grid option (plugins included) to useGrid.
+    expect(load('ui/index.tsx')).toMatch(/useGrid<TRow>\(\{\s*\.\.\.props,/);
     expect(load('ui/index.tsx')).toContain('pluginHost: result.pluginHost');
     expect(load('ui/useERPTable.ts')).toContain('pluginHost');
     expect(load('application/plugins/PluginHost.ts')).toContain(
@@ -409,7 +410,8 @@ describe('PR-82 rowData + getRowId', () => {
     expect(load('bootstrap/type.ts')).toContain('rowData?:');
     expect(load('bootstrap/type.ts')).toContain('columnDefs?:');
     expect(load('bootstrap/type.ts')).toContain('getRowId?:');
-    expect(load('ui/index.tsx')).toContain('columnDefs');
+    // columnDefs / getRowId reach useGrid through the full props forward.
+    expect(load('ui/index.tsx')).toMatch(/useGrid<TRow>\(\{\s*\.\.\.props,/);
     expect(load('ui/index.tsx')).toContain('rowData');
     expect(load('domain/entities/Row.ts')).toContain('public data?:');
     expect(load('infrastructure/rows/mapRowData.ts')).toContain(

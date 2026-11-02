@@ -7,8 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`<DataGrid>` ignored most grid options.** It forwarded a fixed list of props to `useGrid`, so `persistence` (paged-idb silently ran the event-sourced mode), `quickFilterText`, `groupBy`, `rowModelType` / `datasource`, `singleClickEdit`, `editType`, `stopEditingWhenCellsLoseFocus`, `eventStore(Name)`, `repo`, `snapshotStore`, `syncTransport`, `presence`, … never reached `createGrid`. Every `CreateERPTableConfig` option is now forwarded.
+- **A typed value could be lost on save.** With session drafts (PR-126) `getFullSnapShot` / `iterateRowsFromDb`, the exports and `dispose()` / unmount read the table without the value still in the cell editor. They now write the open edit first (`flushCellEdit`, the editor stays open) and wait for every pending cell write.
+- **Endless re-render loop after the first edit.** `useTranslations()` returned a new function per render, so the live region re-ran validation on every render, and validation always ticked the store. `t` is stable now and validation notifies only when the error set changed or rows must collapse.
+- **Page-wide keyboard hijack.** The window key listener took keys typed anywhere on the page: `Ctrl+C/V/X/A/Z/Y`, `Home/End`, `Enter`, `Tab` and arrows in page forms, the toolbar, header filters or the search box were redirected to the grid. Only keys from the grid's own cells / table (or with nothing focused) are handled now; the legacy `Alt+…` / `Ctrl+Space|ArrowUp|ArrowDown|End` chords stay global, `AltGr` is typing.
+- Inside a cell text editor `Ctrl+A/C/X/V/Z/Y` and plain `Home/End` are native text editing again (clipboard keys still act on a multi-cell selection).
+- `Tab` from a cell that is not a text editor (date-picker button, checkbox, read-only cell) left the grid; it moves to the next editable cell again.
+- `stopEditingWhenCellsLoseFocus` was documented but not wired: a focus / pointer-down outside the grid (portals of the grid count as inside) now commits a deferred edit.
+- Clearing a value (`UI_CELL_CHANGE` with `value: undefined`, e.g. a cleared Select) was dropped by the draft.
+- Cell writes from editors / host `onChange` code run in arrival order (latest value per cell wins); `computed` results can no longer be overwritten by a slower, older keystroke. `await controller.dispatch(UI_CELL_CHANGE | UI_ACTIVE_CELL | UI_MOVE_ACTIVE_CELL*)` resolves once the change landed.
+- `CellRenderer` no longer changes its hook order when `meta` is missing.
+
+### Added
+
+- `cellEditCommit: 'immediate' | 'deferred'` — `immediate` writes every editor change at once (the arianERP table contract: `getRowView`, totals, `computed` / `resolveOn`, host `onChange` code always see the typed value; `Esc` keeps it). Default `immediate` with `persistence: 'paged-idb'`, else `deferred` (PR-126 drafts).
+- `enterNavigation: 'nextCell' | 'down'` (default `nextCell`).
+- `controller.flushCellEdit()`, `resolveGridKeyScope()` / `GridKeyScope`; one undo reverts a whole cell edit (writes of one edit session share a correlation id).
+
 ### Changed
 
+- **Behaviour change vs `0.13.0-next.0`:** `Enter` moves to the **next editable cell** again (then the next row; past the last row a new row is added, `Shift+Enter` goes back) — the 0.5 / arianERP data-entry behaviour. `enterNavigation: 'down'` restores PR-126's move-down.
+- Paged-idb grids show no header sort / filter UI unless a column opts in (`columnDef.sortable: true` / `columnDef.filter`): on a page window they only reordered / hid the visible page.
 - Main entry gzip ceiling raised **65 → 66 KB** (D15 amended) to budget the paged-idb mode (+0.5 KB measured).
 
 - **Behaviour change:** `Table.deleteRow` now soft-deletes a *modified* row (`RowState = Delete`) and restores only a row that is already deleted (it used to restore a modified row). Matches the arianERP host table.

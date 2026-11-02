@@ -16,6 +16,42 @@ export function isCellEditorTarget(target: EventTarget | null): boolean {
   return Boolean(editor.closest('[role="gridcell"], [data-erp-cell-textarea]'));
 }
 
+const CELL_SELECTOR = '[role="gridcell"], [data-erp-cell-textarea]';
+
+/** Any element inside a body cell (editor, date-picker button, read-only cell button…). */
+export function isGridCellTarget(target: EventTarget | null): boolean {
+  if (!target || !(target instanceof Element)) return false;
+  if (target.closest('[role="menu"], [role="dialog"], .erp-table-modal')) {
+    return false;
+  }
+  return Boolean(target.closest(CELL_SELECTOR));
+}
+
+const TEXT_INPUT_TYPES = new Set([
+  '',
+  'text',
+  'search',
+  'number',
+  'tel',
+  'url',
+  'email',
+  'password',
+]);
+
+/**
+ * A cell editor that edits text (input / textarea / contenteditable). Inside
+ * it, text keys (Ctrl+A/C/X/V/Z/Y, Home/End) belong to the editor, not the grid.
+ */
+export function isTextEditorTarget(target: EventTarget | null): boolean {
+  if (!isCellEditorTarget(target)) return false;
+  const el = target as HTMLElement;
+  if (el.isContentEditable || el.getAttribute('contenteditable') === 'true') return true;
+  const tag = el.tagName;
+  if (tag === 'TEXTAREA') return true;
+  if (tag !== 'INPUT') return false;
+  return TEXT_INPUT_TYPES.has((el.getAttribute('type') ?? '').toLowerCase());
+}
+
 export function closestGridRoot(target: EventTarget | null): HTMLElement | null {
   if (!target || !(target instanceof Element)) return null;
   return target.closest('[role="grid"], [role="treegrid"]') as HTMLElement | null;

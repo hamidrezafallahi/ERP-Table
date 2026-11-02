@@ -63,6 +63,7 @@ import {
   leavesEditSession,
   patchDraft,
   readDraft,
+  rebaseDraft,
   DEFAULT_CELL_EDIT_OPTIONS,
   type CellEditOptions,
   type CellEditSession,
@@ -80,6 +81,23 @@ import {
   type GetRowId,
 } from '../infrastructure/rows/mapRowData';
 
+type PendingCellWrite = {
+  rowId: number;
+  columnId: string;
+  kind: 'value' | 'display';
+  value: unknown;
+  correlationId?: string;
+};
+
+type CellWriteSlot = {
+  write: PendingCellWrite;
+  /** Not started yet — a newer value for the same cell replaces `write`. */
+  queued: boolean;
+};
+
+const cellWriteKey = (kind: PendingCellWrite['kind'], rowId: number, columnId: string) =>
+  `${kind}\u0000${rowId}\u0000${columnId}`;
+
 export class TableEngine {
   // ─── internal state ────────────────────────────────────────────────────────
   private tableStore?: TableStore<TableState>;
@@ -87,6 +105,15 @@ export class TableEngine {
   /** Durable command store id (for CHANGE_CELL_* on edit commit). */
   private commandStore?: string;
   private cellEditOptions: CellEditOptions = { ...DEFAULT_CELL_EDIT_OPTIONS };
+  /**
+   * Cell writes coming from editors / host input, executed one at a time in
+   * arrival order. Consecutive values for the same cell coalesce (latest
+   * wins). Until a write landed, the queued value is what the cell shows.
+   */
+  private readonly cellWrites = new Map<string, CellWriteSlot>();
+  private cellWriteChain: Promise<void> = Promise.resolve();
+  /** > 0 while a queued write executes (re-entrant settle must not wait on itself). */
+  private cellWriteDepth = 0;
   public readonly errors = new Map<string, CellError>();
   public readonly searchResult = new Map<string, CellError>();
   private readonly asyncCellCache = new Map<
@@ -1249,6 +1276,8 @@ export class TableEngine {
   ): Promise<TableSnapShot | null> {
     if (!this.tableKey) return null;
     try {
+      // A save must contain what is still in the editor.
+      await this.flushCellEdit();
       const rows = await this.loadAllRows(store, collectionScope);
       const { rowsToSnapshot } = await import(
         '../infrastructure/Repositories/paged/memoryRecords'
@@ -1276,6 +1305,7 @@ export class TableEngine {
   ): Promise<void> {
     if (!this.tableKey) return;
     try {
+      await this.flushCellEdit();
       if (isWindowedRepository(this.repo)) {
         await this.repo.iterateRowRecords(
           store,
@@ -1348,8 +1378,221 @@ export class TableEngine {
     return this.tableStore?.getState().cellEdit ?? null;
   }
 
+  /**
+   * What the cell editor shows: the session draft, else a value that was
+   * typed but whose write has not reached the table yet (no flicker back to
+   * the old value while it is in flight). `null` = show the table value.
+   */
   getEditDraft(rowId: number, columnId: string): CellEditValue | null {
-    return readDraft(this.getCellEdit(), rowId, columnId);
+    const draft = readDraft(this.getCellEdit(), rowId, columnId);
+    if (draft) return draft;
+    const value = this.cellWrites.get(cellWriteKey('value', rowId, columnId));
+    const display = this.cellWrites.get(cellWriteKey('display', rowId, columnId));
+    if (!value && !display) return null;
+    const cell = this.viewBuilder.getCell(rowId, columnId);
+    return {
+      value: value ? value.write.value : cell?.getValue(),
+      display: display ? display.write.value : cell?.getDisplay(),
+    };
+  }
+
+  /** Editor / host value for a cell (`UI_CELL_CHANGE`). Resolves once it is durable. */
+  inputCellValue(rowId: number, columnId: string, value: unknown): Promise<void> {
+    return this.inputCell(rowId, columnId, 'value', value);
+  }
+
+  /** Editor / host display label for a cell (`UI_CELL_CHANGE_DISPLAY`). */
+  inputCellDisplay(rowId: number, columnId: string, display: unknown): Promise<void> {
+    return this.inputCell(rowId, columnId, 'display', display);
+  }
+
+  private async inputCell(
+    rowId: number,
+    columnId: string,
+    kind: PendingCellWrite['kind'],
+    input: unknown,
+  ): Promise<void> {
+    const store = this.tableStore;
+    if (!store) return;
+    const session = store.getState().cellEdit;
+    if (session && isEditingCell(session, rowId, columnId)) {
+      const immediate = this.cellEditOptions.commit === 'immediate';
+      const patch: Partial<CellEditValue> =
+        kind === 'value' ? { value: input } : { display: input };
+      store.setState((prev) => {
+        if (!prev.cellEdit || prev.cellEdit.rowId !== rowId) return prev;
+        const patched = patchDraft(prev.cellEdit, columnId, patch);
+        return {
+          ...prev,
+          cellEdit: immediate ? rebaseDraft(patched, [columnId]) : patched,
+        };
+      });
+      // Deferred: the draft is written on commit / flush.
+      if (!immediate) return;
+      this.enqueueCellWrite({
+        rowId,
+        columnId,
+        kind,
+        value: input,
+        correlationId: session.correlationId,
+      });
+    } else {
+      // No editor on this cell (host write to a sibling column, custom cell):
+      // write through.
+      this.enqueueCellWrite({ rowId, columnId, kind, value: input });
+    }
+    await this.settleCellWrites();
+  }
+
+  private enqueueCellWrite(write: PendingCellWrite): void {
+    const key = cellWriteKey(write.kind, write.rowId, write.columnId);
+    const pending = this.cellWrites.get(key);
+    if (pending?.queued) {
+      pending.write = write;
+      return;
+    }
+    const slot: CellWriteSlot = { write, queued: true };
+    this.cellWrites.set(key, slot);
+    this.cellWriteChain = this.cellWriteChain.then(() => this.runCellWrite(key, slot));
+  }
+
+  private async runCellWrite(key: string, slot: CellWriteSlot): Promise<void> {
+    slot.queued = false;
+    const { write } = slot;
+    const commandStore = this.commandStore;
+    const tableKey = this.tableKey;
+    this.cellWriteDepth += 1;
+    try {
+      if (commandStore && tableKey && this.tableStore) {
+        await this.dispatch(
+          write.kind === 'value'
+            ? {
+                type: 'CHANGE_CELL_VALUE',
+                store: commandStore,
+                tableKey,
+                rowId: write.rowId,
+                columnId: write.columnId,
+                newValue: write.value,
+                correlationId: write.correlationId,
+              }
+            : {
+                type: 'CHANGE_CELL_DISPLAY_VALUE',
+                store: commandStore,
+                tableKey,
+                rowId: write.rowId,
+                columnId: write.columnId,
+                newValue: write.value == null ? '' : String(write.value),
+                correlationId: write.correlationId,
+              },
+        );
+      }
+    } catch (e) {
+      this.errHandler.handle(e, 'TableEngine.cellWrite');
+    } finally {
+      this.cellWriteDepth -= 1;
+      if (this.cellWrites.get(key) === slot && !slot.queued) {
+        this.cellWrites.delete(key);
+        // The table may hold a normalized value (validation) different from
+        // the overlay that was rendered: re-render once.
+        const cell = this.viewBuilder.getCell(write.rowId, write.columnId);
+        const landed = write.kind === 'value' ? cell?.getValue() : cell?.getDisplay();
+        if (landed !== write.value) this.tableStore?.setState((prev) => ({ ...prev }));
+      }
+    }
+  }
+
+  /**
+   * Resolves when every queued cell write reached the table. Called from inside
+   * a write (re-entrant) it returns at once instead of waiting on itself.
+   */
+  async settleCellWrites(): Promise<void> {
+    if (this.cellWriteDepth > 0) return;
+    let chain: Promise<void>;
+    do {
+      chain = this.cellWriteChain;
+      await chain;
+    } while (chain !== this.cellWriteChain);
+  }
+
+  /** Queues CHANGE_CELL_* for `columnIds` of `session`; returns the value writes. */
+  private queueDraftWrites(session: CellEditSession, columnIds: readonly string[]): number {
+    let writes = 0;
+    for (const colId of columnIds) {
+      const draft = session.drafts[colId];
+      if (!draft) continue;
+      const base = session.baseline[colId];
+      if (!base || draft.value !== base.value) {
+        this.enqueueCellWrite({
+          rowId: session.rowId,
+          columnId: colId,
+          kind: 'value',
+          value: draft.value,
+          correlationId: session.correlationId,
+        });
+        writes += 1;
+      }
+      if (!base || draft.display !== base.display) {
+        this.enqueueCellWrite({
+          rowId: session.rowId,
+          columnId: colId,
+          kind: 'display',
+          value: draft.display,
+          correlationId: session.correlationId,
+        });
+      }
+    }
+    return writes;
+  }
+
+  /**
+   * Make what the user typed durable WITHOUT ending the edit: dirty drafts are
+   * written and become the session baseline, then all queued writes settle.
+   * Every durable read (snapshot, row stream, export) calls this first, so a
+   * save never misses the value still in the editor.
+   */
+  async flushCellEdit(): Promise<void> {
+    const store = this.tableStore;
+    const session = store?.getState().cellEdit;
+    if (store && session) {
+      const dirty = dirtyDraftColumns(session);
+      if (dirty.length > 0) {
+        store.setState((prev) =>
+          prev.cellEdit && prev.cellEdit.rowId === session.rowId
+            ? { ...prev, cellEdit: rebaseDraft(prev.cellEdit, dirty) }
+            : prev,
+        );
+        this.queueDraftWrites(session, dirty);
+      }
+    }
+    await this.settleCellWrites();
+  }
+
+  /**
+   * Focus / pointer moved outside the grid. Deferred commit ends the edit per
+   * `stopEditingWhenCellsLoseFocus`; immediate commit has nothing pending and
+   * keeps the editor (legacy table behaviour).
+   */
+  async leaveGridFocus(): Promise<void> {
+    if (!this.getCellEdit()) return;
+    if (this.cellEditOptions.commit !== 'deferred') return;
+    if (!this.cellEditOptions.stopEditingWhenCellsLoseFocus) return;
+    await this.commitCellEdit();
+  }
+
+  /**
+   * Before dispose / unmount: commit (or drop, when
+   * `stopEditingWhenCellsLoseFocus` is false) the open edit and wait until
+   * every queued write is durable.
+   */
+  async settleEditsForTeardown(): Promise<void> {
+    if (this.getCellEdit()) {
+      if (this.cellEditOptions.stopEditingWhenCellsLoseFocus) {
+        await this.commitCellEdit();
+      } else {
+        this.cancelCellEdit();
+      }
+    }
+    await this.settleCellWrites();
   }
 
   isEditingCell(rowId: number, columnId: string): boolean {
@@ -1460,40 +1703,12 @@ export class TableEngine {
    */
   async commitCellEdit(): Promise<number> {
     const store = this.tableStore;
-    const commandStore = this.commandStore;
-    const tableKey = this.tableKey;
-    if (!store || !commandStore || !tableKey) return 0;
+    if (!store || !this.commandStore || !this.tableKey) return 0;
     const session = store.getState().cellEdit;
     if (!session) return 0;
-    const dirty = dirtyDraftColumns(session);
     store.setState((prev) => ({ ...prev, cellEdit: null }));
-    let writes = 0;
-    for (const colId of dirty) {
-      const draft = session.drafts[colId]!;
-      const base = session.baseline[colId];
-      if (!base || draft.value !== base.value) {
-        await this.dispatch({
-          type: 'CHANGE_CELL_VALUE',
-          store: commandStore,
-          tableKey,
-          rowId: session.rowId,
-          columnId: colId,
-          newValue: draft.value,
-        });
-        writes += 1;
-      }
-      if (!base || draft.display !== base.display) {
-        await this.dispatch({
-          type: 'CHANGE_CELL_DISPLAY_VALUE',
-          store: commandStore,
-          tableKey,
-          rowId: session.rowId,
-          columnId: colId,
-          newValue:
-            draft.display == null ? '' : String(draft.display),
-        });
-      }
-    }
+    const writes = this.queueDraftWrites(session, dirtyDraftColumns(session));
+    await this.settleCellWrites();
     return writes;
   }
 
@@ -1752,16 +1967,21 @@ export class TableEngine {
   private finishValidation(
     cb: ValidationCallback,
     tableStore: TableStore<TableState>,
+    errorsChanged: boolean,
   ): void {
     cb({
       valid: this.errors.size === 0,
       errors: this.errors,
       data: this.getAllRows(),
     });
-    tableStore.setState((prev) => ({
-      ...prev,
-      expandedRows: {},
-    }));
+    // Collapse expanded rows (legacy) and re-render the error marks — but only
+    // when something visible changed: an unconditional tick re-ran every
+    // validation-on-render effect forever (endless re-render loop).
+    tableStore.setState((prev) =>
+      !errorsChanged && Object.keys(prev.expandedRows ?? {}).length === 0
+        ? prev
+        : { ...prev, expandedRows: {} },
+    );
   }
 
   private collectValidationJobs(table: Table): Array<{
@@ -1796,11 +2016,23 @@ export class TableEngine {
     return jobs;
   }
 
-  private applyValidationErrors(nextErrors: Map<string, CellError>): void {
+  /** Replaces the error map; true when the set of errors / messages changed. */
+  private applyValidationErrors(nextErrors: Map<string, CellError>): boolean {
+    let changed = nextErrors.size !== this.errors.size;
+    if (!changed) {
+      for (const [cellId, error] of nextErrors) {
+        const prev = this.errors.get(cellId);
+        if (!prev || prev.message !== error.message || prev.rowId !== error.rowId) {
+          changed = true;
+          break;
+        }
+      }
+    }
     this.errors.clear();
     nextErrors.forEach((error, cellId) => {
       this.errors.set(cellId, error);
     });
+    return changed;
   }
 
   private runValidationSync(
@@ -1818,8 +2050,8 @@ export class TableEngine {
       );
       if (error) nextErrors.set(job.cellId, error);
     }
-    this.applyValidationErrors(nextErrors);
-    this.finishValidation(cb, tableStore);
+    const changed = this.applyValidationErrors(nextErrors);
+    this.finishValidation(cb, tableStore, changed);
   }
 
   private async runValidationAsync(
@@ -1837,8 +2069,8 @@ export class TableEngine {
       );
       if (error) nextErrors.set(job.cellId, error);
     }
-    this.applyValidationErrors(nextErrors);
-    this.finishValidation(cb, tableStore);
+    const changed = this.applyValidationErrors(nextErrors);
+    this.finishValidation(cb, tableStore, changed);
   }
 
   private scheduleAsyncCellCheck(

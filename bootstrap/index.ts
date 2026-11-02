@@ -484,6 +484,17 @@ async function assembleGridInner<TRow>(
     ...(config.editType === 'cell' || config.editType === 'fullRow'
       ? { editType: config.editType }
       : {}),
+    // Page-window (document) grids keep the arianERP write-per-change
+    // contract; the event-sourced grid avoids one EventStore write per key.
+    commit:
+      config.cellEditCommit === 'immediate' || config.cellEditCommit === 'deferred'
+        ? config.cellEditCommit
+        : pagedIdb
+          ? 'immediate'
+          : 'deferred',
+    ...(config.enterNavigation === 'nextCell' || config.enterNavigation === 'down'
+      ? { enterNavigation: config.enterNavigation }
+      : {}),
   });
 
   controller.configureClipboard({
@@ -543,6 +554,7 @@ async function assembleGridInner<TRow>(
     eventStore: internalStore,
     session,
     query: createEngineGridQuery(engine),
+    beforeRead: () => engine.flushCellEdit(),
   });
   registry.add(() => pluginHost.dispose());
   if (config.plugins?.length) {

@@ -67,8 +67,10 @@ export {
 } from '../infrastructure/offline';
 export {
   isGridShortcutKey,
+  resolveGridKeyScope,
   shouldSkipGridNavigation,
 } from '../ui/keyboard/skipGridNavigation';
+export type { GridKeyScope } from '../ui/keyboard/skipGridNavigation';
 export { useGrid, useERPTable } from '../ui/useERPTable';
 export type { UseGridResult, UseERPTableResult } from '../ui/useERPTable';
 export { bindGridHostEvents } from '../ui/host/bindGridHostEvents';

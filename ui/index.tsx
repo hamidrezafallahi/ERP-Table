@@ -40,6 +40,7 @@ import type { FilterComponentMap } from './filters';
 import type { GridOverlayComponent } from './overlays';
 import {
   isGridShortcutKey,
+  resolveGridKeyScope,
   shouldSkipGridNavigation,
 } from './keyboard/skipGridNavigation';
 import { useGrid } from './useERPTable';
@@ -225,12 +226,6 @@ export type ERPTableProps<TRow = unknown> = DataGridProps<TRow>;
 
 export function DataGrid<TRow = unknown>(props: DataGridProps<TRow>) {
   const {
-    columns,
-    rowAccess,
-    rows,
-    actor,
-    store,
-    tableKey,
     apiRef,
     onReady,
     onGridReady,
@@ -244,8 +239,6 @@ export function DataGrid<TRow = unknown>(props: DataGridProps<TRow>) {
     footer,
     footerRows,
     tableHeight,
-    activeCollection,
-    recordPerPage,
     multiSelectConfig,
     moreDetailComponent,
     virtualization,
@@ -260,10 +253,7 @@ export function DataGrid<TRow = unknown>(props: DataGridProps<TRow>) {
     themeToggle = true,
     components,
     filterComponents,
-    plugins,
     rowData,
-    columnDefs,
-    getRowId,
     floatingFilter = false,
     loading = false,
     loadingOverlayComponent,
@@ -278,10 +268,17 @@ export function DataGrid<TRow = unknown>(props: DataGridProps<TRow>) {
     columnMenuItems,
     onColumnMenuAction,
     useDependOn,
-    stateKey,
     pinnedTopRowData,
     pinnedBottomRowData,
   } = props;
+
+  /** Grid root — scopes the window key listener to this grid. */
+  const rootRef = useRef<HTMLDivElement>(null);
+  /** Last focus / pointer event seen inside the grid's React tree (portals included). */
+  const insideEventRef = useRef<Event | null>(null);
+  const markInsideEvent = useCallback((e: React.SyntheticEvent) => {
+    insideEventRef.current = e.nativeEvent;
+  }, []);
 
   const requestedTheme = themeProp ?? themeDefault;
   const requestedKey = JSON.stringify(requestedTheme.params);
@@ -307,23 +304,13 @@ export function DataGrid<TRow = unknown>(props: DataGridProps<TRow>) {
     setPreferDark((value) => !value);
   }, []);
 
+  // Every grid option (`persistence`, `cellEditCommit`, `enterNavigation`,
+  // `quickFilterText`, `rowModelType`, `eventStoreName`, …) reaches createGrid;
+  // the UI-only props are ignored there. Page size follows the rendered row
+  // height of the theme.
   const result = useGrid<TRow>({
-    store,
-    tableKey,
-    activeCollection,
-    columns,
-    rows,
-    actor,
-    rowAccess,
-    tableHeight,
-    recordPerPage,
+    ...props,
     rowHeight: resolvedTheme.params.rowHeight,
-    remoteApi,
-    plugins,
-    rowData,
-    columnDefs,
-    getRowId,
-    stateKey,
   });
 
   useEffect(() => {
@@ -365,9 +352,16 @@ export function DataGrid<TRow = unknown>(props: DataGridProps<TRow>) {
     };
 
     const handler = (e: KeyboardEvent) => {
+      // The listener is window-level (Select popups, legacy chords): keys
+      // typed in page forms, the toolbar, header filters or another grid are
+      // never taken — only the legacy global chords are.
+      const scope = resolveGridKeyScope(e.target, rootRef.current);
+      if (scope === 'other-grid') return;
+      const shortcut = isGridShortcutKey(e);
+      if (scope === 'outside' && !shortcut) return;
       // Table Alt/Ctrl shortcuts win over Select; preventDefault must run
       // synchronously — the async dispatch below is too late.
-      if (isGridShortcutKey(e)) {
+      if (shortcut) {
         e.preventDefault();
         e.stopPropagation();
       } else if (shouldSkipGridNavigation(e.target, e.code)) {
@@ -393,6 +387,26 @@ export function DataGrid<TRow = unknown>(props: DataGridProps<TRow>) {
       window.removeEventListener("keydown", handler, true);
     };
   }, [result.ready, result]);
+
+  // `stopEditingWhenCellsLoseFocus`: a focus / pointer-down outside the grid
+  // ends a deferred edit. React events bubble through portals, so Select
+  // popups, date pickers and menus rendered by the grid count as inside.
+  const readyController = result.ready ? result.controller : null;
+  useEffect(() => {
+    if (!readyController || typeof document === 'undefined') return;
+    const onDocument = (event: Event) => {
+      window.setTimeout(() => {
+        if (insideEventRef.current === event) return;
+        void readyController.leaveGridFocus();
+      }, 0);
+    };
+    document.addEventListener('focusin', onDocument, true);
+    document.addEventListener('pointerdown', onDocument, true);
+    return () => {
+      document.removeEventListener('focusin', onDocument, true);
+      document.removeEventListener('pointerdown', onDocument, true);
+    };
+  }, [readyController]);
 
   useGridHostEvents({
     ready: result.ready,
@@ -491,8 +505,11 @@ export function DataGrid<TRow = unknown>(props: DataGridProps<TRow>) {
       useDependOn={useDependOn}
     >
       <div
+        ref={rootRef}
         className="pdg-grid erp-table"
         dir={dir}
+        onFocusCapture={markInsideEvent}
+        onPointerDownCapture={markInsideEvent}
         data-pdg-grid
         data-erp-table
         data-erp-theme={themeMode}
