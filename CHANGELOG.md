@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The virtual body did not follow a filter / sort / grouping change** until the next scroll: the row index was invalidated after the store had notified its subscribers. It is invalidated first now, and `SparseRowIndex.revision` lets the virtual window see a reorder that keeps the row count.
+- **`<DataGrid rowData>` reset grid edits** (typing, paste) whenever the host re-rendered with an inline `getRowId` / `columnDefs`: host rows are re-applied only when the `rowData` prop changes (PR-82 contract).
 - Public typings contain no `any` again: `HostRemoteApi.request()` (the `remoteApi` of `computed` callbacks) defaults to `IBaseQueryResponse<unknown>`. Name the payload through the type argument, e.g. `remoteApi.request<IBaseQueryResponse<{ Fee?: number }[]>>(…)`.
 - **`<DataGrid>` ignored most grid options.** It forwarded a fixed list of props to `useGrid`, so `persistence` (paged-idb silently ran the event-sourced mode), `quickFilterText`, `groupBy`, `rowModelType` / `datasource`, `singleClickEdit`, `editType`, `stopEditingWhenCellsLoseFocus`, `eventStore(Name)`, `repo`, `snapshotStore`, `syncTransport`, `presence`, … never reached `createGrid`. Every `CreateERPTableConfig` option is now forwarded.
 - **A typed value could be lost on save.** With session drafts (PR-126) `getFullSnapShot` / `iterateRowsFromDb`, the exports and `dispose()` / unmount read the table without the value still in the cell editor. They now write the open edit first (`flushCellEdit`, the editor stays open) and wait for every pending cell write.

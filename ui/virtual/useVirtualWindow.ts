@@ -70,12 +70,16 @@ export function useVirtualWindow<T>(
         const itemCount = isSparseRowIndex(items)
           ? session.getUiRowCount()
           : items.length;
+        // Read after the count (that rebuilds a dirty index): a sort keeps the
+        // count but changes the order.
+        const indexRevision = isSparseRowIndex(items) ? items.revision : 0;
         return {
           scrollOffset: vp.scrollOffset,
           viewportSize: vp.viewportSize,
           rowHeight: vp.rowHeight,
           overscan: vp.overscan,
           itemCount,
+          indexRevision,
         };
       },
       sync,

@@ -846,11 +846,14 @@ export class TableEngine {
           (item.sort === 'asc' || item.sort === 'desc'),
       )
       .map((item) => ({ colId: item.colId, sort: item.sort }));
+    // Invalidate BEFORE setState: store subscribers run inside setState and
+    // must read the rebuilt row index (virtual window, row count). Same order
+    // in every view-query mutator below.
+    this.viewBuilder.invalidateUiRowIndex();
     store.setState((prev) => ({
       ...prev,
       sortModel: next,
     }));
-    this.viewBuilder.invalidateUiRowIndex();
     this.notifyViewQueryChanged();
   }
 
@@ -864,12 +867,12 @@ export class TableEngine {
       typeof command.quickFilterText === 'string'
         ? command.quickFilterText
         : '';
+    // Blobs stay cached — only re-apply the query (PR-93).
+    this.viewBuilder.invalidateUiRowIndex();
     store.setState((prev) => ({
       ...prev,
       quickFilterText: next,
     }));
-    // Blobs stay cached — only re-apply the query (PR-93).
-    this.viewBuilder.invalidateUiRowIndex();
   }
 
   private setFilterModel(command: {
@@ -882,11 +885,11 @@ export class TableEngine {
       command.filterModel && typeof command.filterModel === 'object'
         ? { ...command.filterModel }
         : {};
+    this.viewBuilder.invalidateUiRowIndex();
     store.setState((prev) => ({
       ...prev,
       filterModel: next,
     }));
-    this.viewBuilder.invalidateUiRowIndex();
     this.notifyViewQueryChanged();
   }
 
@@ -899,12 +902,12 @@ export class TableEngine {
     const next = command.columns
       .filter((c) => typeof c === 'string' && c.trim() !== '')
       .map((c) => c.trim());
+    this.viewBuilder.invalidateUiRowIndex();
     store.setState((prev) => ({
       ...prev,
       rowGroupColumns: next,
       rowGroupExpanded: {},
     }));
-    this.viewBuilder.invalidateUiRowIndex();
   }
 
   private setGroupDefaultExpanded(command: {
@@ -913,12 +916,12 @@ export class TableEngine {
   }): void {
     const store = this.getStore(command.tableKey);
     if (!store) return;
+    this.viewBuilder.invalidateUiRowIndex();
     store.setState((prev) => ({
       ...prev,
       groupDefaultExpanded: Boolean(command.expanded),
       rowGroupExpanded: {},
     }));
-    this.viewBuilder.invalidateUiRowIndex();
   }
 
   private toggleRowGroup(command: {
@@ -935,6 +938,7 @@ export class TableEngine {
     )
       ? state.rowGroupExpanded[key]!
       : state.groupDefaultExpanded;
+    this.viewBuilder.invalidateUiRowIndex();
     store.setState((prev) => ({
       ...prev,
       rowGroupExpanded: {
@@ -942,7 +946,6 @@ export class TableEngine {
         [key]: !current,
       },
     }));
-    this.viewBuilder.invalidateUiRowIndex();
   }
 
   /**

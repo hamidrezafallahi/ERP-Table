@@ -174,14 +174,14 @@ export function useGrid<TRow = unknown>(
     };
   }, [tableKey, disabled, pagedIdb, config.columns, config.columnDefs, config.store]);
 
+  // Re-apply host rows only when the `rowData` prop changes (PR-82). Inline
+  // `columnDefs` / `getRowId` get a new identity on every host render; keying
+  // this effect on them re-applied the unchanged rows and reset grid edits.
   useEffect(() => {
     if (!controller || config.rowData === undefined) return;
-    controller.applyHostRowData(
-      config.rowData,
-      config.columnDefs,
-      config.getRowId,
-    );
-  }, [controller, config.rowData, config.columnDefs, config.getRowId]);
+    const { columnDefs, getRowId } = configRef.current;
+    controller.applyHostRowData(config.rowData, columnDefs, getRowId);
+  }, [controller, config.rowData]);
 
   useEffect(() => {
     if (!controller || !config.columnDefs) return;

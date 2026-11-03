@@ -7,6 +7,7 @@ export class SparseRowIndex<T> {
   private orderedIds: number[] = [];
   /** id → position in `orderedIds` (PR-99). */
   private readonly posById = new Map<number, number>();
+  private revisionCount = 0;
 
   constructor(entries: Iterable<readonly [number, T]> = []) {
     for (const [id, value] of entries) {
@@ -18,6 +19,14 @@ export class SparseRowIndex<T> {
 
   get size(): number {
     return this.orderedIds.length;
+  }
+
+  /**
+   * Bumped by every change of ids, order or values. O(1) change detection for
+   * subscribers (a sort keeps `size` but changes the order).
+   */
+  get revision(): number {
+    return this.revisionCount;
   }
 
   getOrderedIds(): readonly number[] {
@@ -45,6 +54,7 @@ export class SparseRowIndex<T> {
 
   set(id: number, value: T): void {
     const existed = this.byId.has(id);
+    this.revisionCount += 1;
     this.byId.set(id, value);
     if (!existed) {
       this.posById.set(id, this.orderedIds.length);
@@ -54,6 +64,7 @@ export class SparseRowIndex<T> {
 
   /** Insert `id` at `pos` (0…size). Shifts later positions — O(n-pos). */
   insertAt(pos: number, id: number, value: T): void {
+    this.revisionCount += 1;
     if (this.byId.has(id)) {
       this.byId.set(id, value);
       return;
@@ -68,6 +79,7 @@ export class SparseRowIndex<T> {
 
   remove(id: number): boolean {
     if (!this.byId.has(id)) return false;
+    this.revisionCount += 1;
     this.byId.delete(id);
     const pos = this.posById.get(id);
     this.posById.delete(id);
@@ -81,6 +93,7 @@ export class SparseRowIndex<T> {
 
   /** Replace order without rebuilding payloads (e.g. after sort). */
   setOrder(orderedIds: readonly number[]): void {
+    this.revisionCount += 1;
     this.orderedIds = orderedIds.slice();
     this.posById.clear();
     for (let i = 0; i < this.orderedIds.length; i += 1) {
@@ -90,6 +103,7 @@ export class SparseRowIndex<T> {
 
   /** Full replace of ids + values in one pass (PR-99 rebuild). */
   replaceAll(orderedIds: readonly number[], valueFor: (id: number) => T): void {
+    this.revisionCount += 1;
     this.byId.clear();
     this.orderedIds = orderedIds.slice();
     this.posById.clear();
@@ -101,6 +115,7 @@ export class SparseRowIndex<T> {
   }
 
   clear(): void {
+    this.revisionCount += 1;
     this.byId.clear();
     this.orderedIds = [];
     this.posById.clear();
