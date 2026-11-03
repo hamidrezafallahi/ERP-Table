@@ -31,19 +31,12 @@ export interface IBaseQueryResponse<T = unknown> {
 }
 
 /**
- * Deliberately loose payload type for ERP query envelopes: arianERP endpoints
- * return untyped JSON and host configs index it freely (`res.Data[0].HasX`).
- * This is the single, documented `any` escape hatch of the host-facing types.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ERPLooseData = any;
-
-/**
  * `RemoteApi` as seen by host `computed` callbacks: `request()` resolves to the
- * ERP envelope by default.
+ * ERP envelope by default. The payload is `unknown`; hosts name its shape
+ * through the type argument (`request<IBaseQueryResponse<Row[]>>(…)`).
  */
 export interface HostRemoteApi {
-  request<TResponse = IBaseQueryResponse<ERPLooseData>>(input: {
+  request<TResponse = IBaseQueryResponse<unknown>>(input: {
     endpoint: string;
     params?: Record<string, unknown>;
     method?: 'GET' | 'POST';

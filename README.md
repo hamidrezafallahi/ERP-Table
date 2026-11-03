@@ -204,7 +204,7 @@ import 'persian-data-grid/styles.css';
 
 ## Changelog
 
-See [CHANGELOG.md](./CHANGELOG.md) (Keep a Changelog). The next npm line is **0.6.0**.
+See [CHANGELOG.md](./CHANGELOG.md) (Keep a Changelog). The next npm line is **0.7.0**.
 
 ## Contributing
 

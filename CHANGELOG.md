@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-11-03
+
 ### Fixed
 
+- Public typings contain no `any` again: `HostRemoteApi.request()` (the `remoteApi` of `computed` callbacks) defaults to `IBaseQueryResponse<unknown>`. Name the payload through the type argument, e.g. `remoteApi.request<IBaseQueryResponse<{ Fee?: number }[]>>(…)`.
 - **`<DataGrid>` ignored most grid options.** It forwarded a fixed list of props to `useGrid`, so `persistence` (paged-idb silently ran the event-sourced mode), `quickFilterText`, `groupBy`, `rowModelType` / `datasource`, `singleClickEdit`, `editType`, `stopEditingWhenCellsLoseFocus`, `eventStore(Name)`, `repo`, `snapshotStore`, `syncTransport`, `presence`, … never reached `createGrid`. Every `CreateERPTableConfig` option is now forwarded.
 - **A typed value could be lost on save.** With session drafts (PR-126) `getFullSnapShot` / `iterateRowsFromDb`, the exports and `dispose()` / unmount read the table without the value still in the cell editor. They now write the open edit first (`flushCellEdit`, the editor stays open) and wait for every pending cell write.
 - **Endless re-render loop after the first edit.** `useTranslations()` returned a new function per render, so the live region re-ran validation on every render, and validation always ticked the store. `t` is stable now and validation notifies only when the error set changed or rows must collapse.
