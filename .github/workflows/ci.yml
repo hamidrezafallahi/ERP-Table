@@ -16,7 +16,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [18, 20, 22]
+        # Dev tooling (jsdom 30, vitest 4, eslint 10) needs Node 22+; yarn
+        # refuses to install it on older Node.
+        node: [22, 24]
 
     steps:
       - name: Checkout

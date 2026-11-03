@@ -13,7 +13,7 @@ Open decisions `D13`–`D21` and `D23`–`D25` are locked — execute them. Only
 
 ## Setup
 
-Node 18+ and Yarn. The lockfile is `yarn.lock` (no `package-lock.json`).
+Node 22+ and Yarn (the dev tooling — jsdom, vitest, eslint — does not install on older Node). The lockfile is `yarn.lock` (no `package-lock.json`).
 
 ```bash
 yarn install --frozen-lockfile
