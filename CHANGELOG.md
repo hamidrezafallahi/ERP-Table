@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed (date)
 
-- **`react-persian-range-picker` is a required peer dependency again** (`^1.1.1`, also a devDependency). The default date cell (`NewDatePicker`) renders its `DatePicker` (Jalali for `fa`, Gregorian otherwise via `dateAdapter`), instead of the text input introduced in PR-128. `persian-data-grid/date-picker-jalali` stays available but is no longer the default. Install it in the host: `yarn add react-persian-range-picker`.
+- **`react-persian-range-picker` is a required peer dependency again** (`^1.1.2`, also a devDependency). The default date cell (`NewDatePicker`) renders its `DatePicker` (Jalali for `fa`, Gregorian otherwise via `dateAdapter`), instead of the text input introduced in PR-128. `persian-data-grid/date-picker-jalali` stays available but is no longer the default. Install it in the host: `yarn add react-persian-range-picker`.
 
 ### Added
 

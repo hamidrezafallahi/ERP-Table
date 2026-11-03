@@ -56,8 +56,9 @@ jobs:
       - name: Prepublish gate
         run: yarn prepublishOnly
 
-      - name: Publish with provenance
-        run: npm publish --provenance --access public --tag ${{ steps.dist.outputs.tag }}
+      # npm accepts provenance only from public source repositories.
+      - name: Publish (with provenance when the repository is public)
+        run: npm publish ${{ !github.event.repository.private && '--provenance' || '' }} --access public --tag ${{ steps.dist.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

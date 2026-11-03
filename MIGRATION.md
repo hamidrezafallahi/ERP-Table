@@ -478,7 +478,7 @@ import { enMessages } from 'persian-data-grid/locales/en';
 
 | Before | After |
 |--------|-------|
-| Hard dependency on `react-persian-range-picker` | **Required peer** (`^1.1.1`): the default date cell renders its `DatePicker`; jalali/gregorian follows `dateAdapter` |
+| Hard dependency on `react-persian-range-picker` | **Required peer** (`^1.1.2`): the default date cell renders its `DatePicker`; jalali/gregorian follows `dateAdapter` |
 | Fixed Jalali display via Intl only | `dateAdapter={gregorianAdapter \| jalaliAdapter}` |
 | Picker always in default chrome | Enhanced picker: `import { PersianRangeDatePicker } from 'persian-data-grid/date-picker-jalali'` + `components={{ date: … }}` |
 
