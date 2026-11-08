@@ -279,7 +279,7 @@ export function Excel({ config, className }: IconProps) {
       />
       <path
         d="M6.3 10.7l2.2-.1 1.3 3.7 1.6-3.9 2.2-.1-2.6 5.2 2.6 5.3-2.3-.2-1.5-4-1.5 3.9-2.1-.2 2.4-4.6z"
-        fill="#fff"
+        fill="#585858"
       />
     </svg>
   );
