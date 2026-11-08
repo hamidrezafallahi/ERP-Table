@@ -172,12 +172,14 @@ export function KeyboardShortcuts() {
                 {group.items.map((item) => (
                   <tr key={item.keys.map((c) => c.join('+')).join('|')}>
                     <td className={styles.shortcutKeys}>
-                      {item.keys.map((combo, i) => (
-                        <span key={combo.join('+')} className={styles.keyAlt}>
-                          {i > 0 && <span className={styles.keyOr}>یا</span>}
-                          <KeyCombo combo={combo} />
-                        </span>
-                      ))}
+                      <span className={styles.keyList}>
+                        {item.keys.map((combo, i) => (
+                          <span key={combo.join('+')} className={styles.keyAlt}>
+                            {i > 0 && <span className={styles.keyOr}>یا</span>}
+                            <KeyCombo combo={combo} />
+                          </span>
+                        ))}
+                      </span>
                     </td>
                     <td>{item.action}</td>
                   </tr>

@@ -153,43 +153,43 @@ Active while focus is inside the grid (`UITableKeyboardHandler`). Full reference
 
 | Shortcut | Action |
 |---|---|
-| `Enter` / `Numpad Enter` | No active cell → activate the first cell of the active row; otherwise → next cell |
-| `Shift + Enter` | Previous cell |
+| `Enter` / `NumpadEnter` | No active cell → activate the first cell of the active row; otherwise → next cell |
+| `Shift+Enter` | Previous cell |
 | `Tab` | Next cell (needs an active row and cell) |
-| `Shift + Tab` | Previous cell (needs an active row and cell) |
-| `Arrow Left` | Next cell (RTL: document order) |
-| `Arrow Right` | Previous cell (RTL: document order) |
-| `Arrow Up` | Move the active cell up in the same column |
-| `Arrow Down` | Move the active cell down in the same column |
+| `Shift+Tab` | Previous cell (needs an active row and cell) |
+| `ArrowLeft` | Next cell (RTL: document order) |
+| `ArrowRight` | Previous cell (RTL: document order) |
+| `ArrowUp` | Move the active cell up in the same column |
+| `ArrowDown` | Move the active cell down in the same column |
 
 ### Row selection and reordering
 
 | Shortcut | Action |
 |---|---|
-| `Ctrl + Space` | Toggle selection of the active row |
-| `Shift + End` | Toggle selection of the active row |
-| `Ctrl + Shift + End` | Select from the active row to the last row |
-| `Ctrl + Arrow Up` / `Ctrl + Arrow Down` | Move the active row up / down |
-| `Alt + Arrow Up` / `Alt + Arrow Down` | Move the selected rows up / down (needs a selection) |
+| `Ctrl+Space` | Toggle selection of the active row |
+| `Shift+End` | Toggle selection of the active row |
+| `Ctrl+Shift+End` | Select from the active row to the last row |
+| `Ctrl+ArrowUp` / `Ctrl+ArrowDown` | Move the active row up / down |
+| `Alt+ArrowUp` / `Alt+ArrowDown` | Move the selected rows up / down (needs a selection) |
 
 ### Row and table operations
 
 | Shortcut | Action |
 |---|---|
-| `Alt + N` | Add an empty row and activate it |
-| `Alt + D` | Duplicate the active row |
-| `Alt + Delete` | Delete the active row |
-| `Alt + Arrow Left` | Collapse all expanded rows |
-| `Alt + C` / `Alt + X` / `Alt + V` | Table copy / cut / paste mode |
-| `Alt + B` | Paste-as-insert mode |
+| `Alt+N` | Add an empty row and activate it |
+| `Alt+D` | Duplicate the active row |
+| `Alt+Delete` | Delete the active row |
+| `Alt+ArrowLeft` | Collapse all expanded rows |
+| `Alt+C` / `Alt+X` / `Alt+V` | Table copy / cut / paste mode |
+| `Alt+B` | Paste-as-insert mode |
 | `Escape` | Clear the current table action |
 
 ### Pagination
 
 | Shortcut | Action |
 |---|---|
-| `Page Up` | Previous page (no-op on the first page) |
-| `Page Down` | Next page (no-op on the last page) |
+| `PageUp` | Previous page (no-op on the first page) |
+| `PageDown` | Next page (no-op on the last page) |
 
 `Ctrl` and `Alt` are the browser modifier keys; `Meta` (⌘) is not treated as `Ctrl`.
 
@@ -255,14 +255,14 @@ import 'persian-data-grid/styles.css';
 
 | میانبر | عملکرد |
 |---|---|
-| `Enter` یا `Numpad Enter` | اگر سلول فعالی وجود نداشته باشد، نخستین سلول سطر فعال را فعال می‌کند؛ در غیر این صورت به سلول بعدی می‌رود. |
-| `Shift + Enter` | به سلول قبلی می‌رود. |
+| `Enter` یا `NumpadEnter` | اگر سلول فعالی وجود نداشته باشد، نخستین سلول سطر فعال را فعال می‌کند؛ در غیر این صورت به سلول بعدی می‌رود. |
+| `Shift+Enter` | به سلول قبلی می‌رود. |
 | `Tab` | با وجود سطر و سلول فعال، به سلول بعدی می‌رود. |
-| `Shift + Tab` | با وجود سطر و سلول فعال، به سلول قبلی می‌رود. |
-| `Arrow Left` | با وجود سطر و سلول فعال، به سلول بعدی می‌رود. |
-| `Arrow Right` | با وجود سطر و سلول فعال، به سلول قبلی می‌رود. |
-| `Arrow Up` | با وجود سطر و سلول فعال، سلول فعال را در همان ستون به بالا می‌برد. |
-| `Arrow Down` | با وجود سطر و سلول فعال، سلول فعال را در همان ستون به پایین می‌برد. |
+| `Shift+Tab` | با وجود سطر و سلول فعال، به سلول قبلی می‌رود. |
+| `ArrowLeft` | با وجود سطر و سلول فعال، به سلول بعدی می‌رود. |
+| `ArrowRight` | با وجود سطر و سلول فعال، به سلول قبلی می‌رود. |
+| `ArrowUp` | با وجود سطر و سلول فعال، سلول فعال را در همان ستون به بالا می‌برد. |
+| `ArrowDown` | با وجود سطر و سلول فعال، سلول فعال را در همان ستون به پایین می‌برد. |
 
 > جهت حرکت بین سلول‌ها همان `next` و `prev` موتور جدول است؛ در نتیجه الزاماً با جهت بصری فلش چپ و راست یکی نیست.
 
@@ -270,34 +270,34 @@ import 'persian-data-grid/styles.css';
 
 | میانبر | عملکرد |
 |---|---|
-| `Ctrl + Space` | انتخاب سطر فعال را تغییر می‌دهد (انتخاب یا لغو انتخاب). |
-| `Shift + End` | انتخاب سطر فعال را تغییر می‌دهد (انتخاب یا لغو انتخاب). |
-| `Ctrl + Shift + End` | از سطر فعال تا آخر، سطرها را انتخاب می‌کند. |
-| `Ctrl + Arrow Up` | سطر فعال را به بالا جابه‌جا می‌کند. |
-| `Ctrl + Arrow Down` | سطر فعال را به پایین جابه‌جا می‌کند. |
-| `Alt + Arrow Up` | سطرهای انتخاب‌شده را به بالا جابه‌جا می‌کند؛ باید سطری انتخاب شده باشد. |
-| `Alt + Arrow Down` | سطرهای انتخاب‌شده را به پایین جابه‌جا می‌کند؛ باید سطری انتخاب شده باشد. |
+| `Ctrl+Space` | انتخاب سطر فعال را تغییر می‌دهد (انتخاب یا لغو انتخاب). |
+| `Shift+End` | انتخاب سطر فعال را تغییر می‌دهد (انتخاب یا لغو انتخاب). |
+| `Ctrl+Shift+End` | از سطر فعال تا آخر، سطرها را انتخاب می‌کند. |
+| `Ctrl+ArrowUp` | سطر فعال را به بالا جابه‌جا می‌کند. |
+| `Ctrl+ArrowDown` | سطر فعال را به پایین جابه‌جا می‌کند. |
+| `Alt+ArrowUp` | سطرهای انتخاب‌شده را به بالا جابه‌جا می‌کند؛ باید سطری انتخاب شده باشد. |
+| `Alt+ArrowDown` | سطرهای انتخاب‌شده را به پایین جابه‌جا می‌کند؛ باید سطری انتخاب شده باشد. |
 
 #### عملیات سطر و جدول
 
 | میانبر | عملکرد |
 |---|---|
-| `Alt + N` | یک سطر خالی اضافه و آن را فعال می‌کند. |
-| `Alt + D` | سطر فعال را کپی می‌کند؛ وجود سطر فعال لازم است. |
-| `Alt + Delete` | سطر فعال را حذف می‌کند؛ وجود سطر فعال لازم است. |
-| `Alt + Arrow Left` | همهٔ سطرهای بازشده را می‌بندد. |
-| `Alt + C` | حالت کپی جدول را فعال می‌کند. |
-| `Alt + X` | حالت برش جدول را فعال می‌کند. |
-| `Alt + V` | حالت چسباندن جدول را فعال می‌کند. |
-| `Alt + B` | حالت چسباندن به‌صورت درج را فعال می‌کند. |
+| `Alt+N` | یک سطر خالی اضافه و آن را فعال می‌کند. |
+| `Alt+D` | سطر فعال را کپی می‌کند؛ وجود سطر فعال لازم است. |
+| `Alt+Delete` | سطر فعال را حذف می‌کند؛ وجود سطر فعال لازم است. |
+| `Alt+ArrowLeft` | همهٔ سطرهای بازشده را می‌بندد. |
+| `Alt+C` | حالت کپی جدول را فعال می‌کند. |
+| `Alt+X` | حالت برش جدول را فعال می‌کند. |
+| `Alt+V` | حالت چسباندن جدول را فعال می‌کند. |
+| `Alt+B` | حالت چسباندن به‌صورت درج را فعال می‌کند. |
 | `Escape` | کنش جاری جدول را پاک می‌کند. |
 
 #### صفحه‌بندی
 
 | میانبر | عملکرد |
 |---|---|
-| `Page Up` | به صفحهٔ قبلی می‌رود؛ اگر صفحهٔ قبلی وجود نداشته باشد کاری نمی‌کند. |
-| `Page Down` | به صفحهٔ بعدی می‌رود؛ اگر صفحهٔ بعدی وجود نداشته باشد کاری نمی‌کند. |
+| `PageUp` | به صفحهٔ قبلی می‌رود؛ اگر صفحهٔ قبلی وجود نداشته باشد کاری نمی‌کند. |
+| `PageDown` | به صفحهٔ بعدی می‌رود؛ اگر صفحهٔ بعدی وجود نداشته باشد کاری نمی‌کند. |
 
 #### نکته‌ها
 
