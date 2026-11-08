@@ -5,6 +5,7 @@ import {
   useState,
 } from 'react';
 
+import { KeyboardShortcuts } from './KeyboardShortcuts';
 import { LiveGridPreview } from './LiveGridPreview';
 import { ensureLink, ensureMeta } from './seo';
 import {
@@ -22,6 +23,7 @@ const SECTION_KEYS = [
   'intro',
   'grid',
   'keyboard',
+  'shortcuts',
   'virtual',
   'plugins',
   'compose',
@@ -178,11 +180,18 @@ const TEXT: Record<SectionKey, SectionContent> = {
               <li>Undo روی تغییرات سلول</li>
             </ul>
             <p>
+              فهرست کامل کلیدها در بخش <strong>میانبرهای صفحه‌کلید</strong> آمده است.
+            </p>
+            <p>
               در playground می‌توانید VirtualList را با کیبورد هم تست کنید:
               <code> npm run dev </code>
             </p>
           </>
         ),
+      },
+      shortcuts: {
+        title: 'میانبرهای صفحه‌کلید',
+        desc: <KeyboardShortcuts />,
       },
       virtual: {
         title: 'VirtualList',
@@ -322,6 +331,14 @@ export function InitialComponent() {
     }
     script.textContent = jsonLd;
   }, [jsonLd]);
+
+  const openSection = (key: SectionKey) => {
+    setActiveSection(key);
+    document.getElementById('main-docs')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  };
 
   const copyInstall = async () => {
     try {
@@ -501,9 +518,9 @@ export function InitialComponent() {
                 <button
                   type="button"
                   className={styles.liveCardLink}
-                  onClick={() => setActiveSection('keyboard')}
+                  onClick={() => openSection('shortcuts')}
                 >
-                  {sections.keyboard.title}
+                  {sections.shortcuts.title}
                 </button>
               </header>
               <p className={styles.liveCardText}>
