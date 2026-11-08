@@ -3397,10 +3397,10 @@ react-is@^17.0.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
 
-react-persian-range-picker@^1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/react-persian-range-picker/-/react-persian-range-picker-1.1.2.tgz#37afc37b7eb38174401c1bf1a6c536856860585a"
-  integrity sha512-uczWzRBuAMKsuhAEMNYvTDAsBtMTkrYkgQxQcbZjPurSvyhHTVJU4DCno4iFraPgpJuFh/GqQhj5k/6l/+dUlg==
+react-persian-range-picker@^1.1.4:
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/react-persian-range-picker/-/react-persian-range-picker-1.1.4.tgz#c84ad21675f2543883459fea14fbebb256014904"
+  integrity sha512-KUpDPSKyoJ2hmPfb9V9+xk4o3viEDbfHqiE7x3Bs0J+kw3NsQ8/mOvXvnnZ/nVKlr7A9X1Pb/g5gvkPCH2bC6g==
   dependencies:
     jalaali-js "^1.2.0 || ^2.0.0"
 
