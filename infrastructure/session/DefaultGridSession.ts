@@ -228,10 +228,12 @@ export class DefaultGridSession implements GridSession {
       case 'UNDO':
         if (!cellUndoStack) return;
         await cellUndoStack.undo(store, (command) => engine.dispatch(command));
+        await engine.syncPageWindow(store, tableKey);
         return;
       case 'REDO':
         if (!cellUndoStack) return;
         await cellUndoStack.redo(store, (command) => engine.dispatch(command));
+        await engine.syncPageWindow(store, tableKey);
         return;
       default: {
         const _exhaustive: never = intent;
@@ -323,16 +325,20 @@ export class DefaultGridSession implements GridSession {
 
   async undo(): Promise<boolean> {
     if (!this.deps.cellUndoStack) return false;
-    return this.deps.cellUndoStack.undo(this.deps.store, (command) =>
+    const ok = await this.deps.cellUndoStack.undo(this.deps.store, (command) =>
       this.deps.engine.dispatch(command),
     );
+    await this.deps.engine.syncPageWindow(this.deps.store, this.deps.tableKey);
+    return ok;
   }
 
   async redo(): Promise<boolean> {
     if (!this.deps.cellUndoStack) return false;
-    return this.deps.cellUndoStack.redo(this.deps.store, (command) =>
+    const ok = await this.deps.cellUndoStack.redo(this.deps.store, (command) =>
       this.deps.engine.dispatch(command),
     );
+    await this.deps.engine.syncPageWindow(this.deps.store, this.deps.tableKey);
+    return ok;
   }
 
   getChangelog(filter: Omit<ChangelogQuery, 'tableId'> = {}): ChangelogEntry[] {

@@ -1,105 +1,99 @@
-import {
-  RefObject,
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
+import { RefObject, useCallback, useEffect, useState } from 'react';
 
-import { UITableController } from '../../infrastructure/ui/UITableController';
-
-const DEFAULT_ROW_HEIGHT = 40;
-const TABLE_HEADER_HEIGHT = 40;
 const VIEWPORT_BOTTOM_GAP = 20;
 const MIN_TABLE_HEIGHT = 240;
+/** Fallback viewport before the first measurement (virtual mode only). */
+export const DEFAULT_VIRTUAL_BODY_HEIGHT = 400;
 
 type UseERPTableLayoutOptions = {
   rootRef: RefObject<HTMLDivElement | null>;
   bodyRef: RefObject<HTMLDivElement | null>;
-  controller: UITableController | null;
+  /** Explicit host height — always wins, nothing is measured. */
   tableHeight?: number;
   ready?: boolean;
-  /** When false, skip CHANGE_PAGE_SIZE sync (virtual scroll mode). */
-  syncPageSize?: boolean;
-  rowHeight?: number;
+  /**
+   * Fill the remaining window height when `tableHeight` is not given.
+   * Needed for row virtualization: the scroll container must be bounded,
+   * otherwise it grows to its content and there is nothing to virtualize.
+   * Off for classic pagination (newFront parity: body height = `100%`).
+   */
+  autoFill?: boolean;
 };
 
+export type ERPTableLayout = {
+  /** CSS height for the scroll container. */
+  bodyHeight: number | '100%';
+  /** Actual inner height of the scroll container (px) — the virtual viewport. */
+  viewportHeight: number;
+};
+
+/**
+ * Layout only. It deliberately does **not** change `pagination.pageSize`:
+ * page size comes from `recordPerPage` / `tableHeight / rowHeight` at
+ * bootstrap. The previous version dispatched `CHANGE_PAGE_SIZE` from the
+ * measured height, which shrank pages (fewer rows rendered than configured).
+ */
 export function useERPTableLayout({
   rootRef,
   bodyRef,
-  controller,
   tableHeight,
   ready = false,
-  syncPageSize = true,
-  rowHeight = DEFAULT_ROW_HEIGHT,
-}: UseERPTableLayoutOptions) {
+  autoFill = false,
+}: UseERPTableLayoutOptions): ERPTableLayout {
   const [autoHeight, setAutoHeight] = useState<number | null>(null);
+  const [measured, setMeasured] = useState<number | null>(null);
+  const fill = autoFill && tableHeight == null;
 
   const measureRootHeight = useCallback(() => {
-    if (tableHeight != null) return;
-
     const root = rootRef.current;
     if (!root) return;
-
     const top = root.getBoundingClientRect().top;
     const available = window.innerHeight - top - VIEWPORT_BOTTOM_GAP;
-    setAutoHeight(Math.max(MIN_TABLE_HEIGHT, Math.floor(available)));
-  }, [tableHeight, rootRef]);
+    const next = Math.max(MIN_TABLE_HEIGHT, Math.floor(available));
+    setAutoHeight((prev) => (prev === next ? prev : next));
+  }, [rootRef]);
 
+  // Window-fill height (virtual mode without an explicit tableHeight).
   useEffect(() => {
-    if (!ready) return;
-    if (tableHeight != null) return;
+    if (!ready || !fill) return;
 
     const frame = requestAnimationFrame(measureRootHeight);
     window.addEventListener('resize', measureRootHeight);
-
     const parent = rootRef.current?.parentElement;
-    const observer = parent ? new ResizeObserver(measureRootHeight) : null;
-    if (parent && observer) {
-      observer.observe(parent);
-    }
+    const observer =
+      parent && typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(measureRootHeight)
+        : null;
+    if (parent && observer) observer.observe(parent);
 
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener('resize', measureRootHeight);
       observer?.disconnect();
     };
-  }, [measureRootHeight, tableHeight, ready]);
+  }, [measureRootHeight, fill, ready, rootRef]);
 
+  // Real inner height of the scroll container → virtual window size.
   useEffect(() => {
-    if (!syncPageSize) return;
-    if (!controller) return;
-
-    const syncPageSizeToHeight = (height: number) => {
-      if (height < rowHeight * 2) return;
-
-      const rowsArea = Math.max(0, height - TABLE_HEADER_HEIGHT);
-      const pageSize = Math.max(3, Math.floor(rowsArea / rowHeight));
-      const table = controller.getViewState();
-
-      if (table && table.pagination.pageSize !== pageSize) {
-        void controller.dispatch({ type: 'CHANGE_PAGE_SIZE', pageSize });
-      }
+    const el = bodyRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const update = () => {
+      const h = el.clientHeight;
+      if (h > 0) setMeasured((prev) => (prev === h ? prev : h));
     };
-
-    if (tableHeight != null) {
-      syncPageSizeToHeight(tableHeight);
-      return;
-    }
-
-    if (!bodyRef.current) return;
-
-    const updatePageSize = () => {
-      syncPageSizeToHeight(bodyRef.current?.clientHeight ?? 0);
-    };
-
-    updatePageSize();
-    const observer = new ResizeObserver(updatePageSize);
-    observer.observe(bodyRef.current);
-
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
     return () => observer.disconnect();
-  }, [controller, bodyRef, tableHeight, autoHeight, syncPageSize, rowHeight]);
+  }, [bodyRef, ready]);
 
-  return {
-    bodyHeight: tableHeight ?? autoHeight,
-  };
+  const bodyHeight: number | '100%' =
+    tableHeight ??
+    (fill ? (autoHeight ?? DEFAULT_VIRTUAL_BODY_HEIGHT) : '100%');
+
+  const viewportHeight =
+    measured ??
+    (typeof bodyHeight === 'number' ? bodyHeight : DEFAULT_VIRTUAL_BODY_HEIGHT);
+
+  return { bodyHeight, viewportHeight };
 }

@@ -530,6 +530,14 @@ export class TableEngine {
     } catch (e) {
       this.errHandler.handle(e, 'TableEngine.executePasteAction.clearAction');
     }
+
+    // Page-window: PASTE_ROW only grows the RAM window (so later sources stay
+    // in RAM). Reload one page now so the page never renders > pageSize rows.
+    await this.syncPageWindow(
+      command.store,
+      command.tableKey,
+      command.action === 'paste' ? 'last' : 'current',
+    );
   }
 
   // ─── public dispatch ────────────────────────────────────────────────────────
@@ -1331,6 +1339,40 @@ export class TableEngine {
       );
     } catch (e) {
       this.errHandler.handle(e, 'TableEngine.iterateRowsFromDb');
+    }
+  }
+
+  /**
+   * Page-window ('paged-idb') only: make the RAM window hold exactly one page
+   * again after a multi-step unit (paste, undo/redo) that grew it past
+   * `pageSize`. `target: 'last'` jumps to the last page (plain paste appends
+   * at the dataset end). No-op in the in-memory mode.
+   */
+  async syncPageWindow(
+    store: string,
+    tableKey: string,
+    target: 'current' | 'last' = 'current',
+  ): Promise<void> {
+    if (!isWindowedRepository(this.repo)) return;
+    try {
+      const table = await this.repo.getById(store, tableKey);
+      const p = table.getPagination();
+      const pageSize = Math.max(1, p.pageSize);
+      const totalPages = Math.max(1, Math.ceil(Math.max(0, p.totalRows) / pageSize));
+      const windowSize = table
+        .getRows()
+        .filter(r => r.collection === table.getActiveCollectionName()).length;
+      const page =
+        target === 'last' ? totalPages : Math.max(1, Math.min(p.page, totalPages));
+      if (target === 'current' && windowSize <= pageSize && page === p.page) return;
+      const loaded = await this.repo.loadPage(store, tableKey, page, pageSize);
+      const live = this.getStore(tableKey);
+      if (loaded && live) {
+        this.viewBuilder.invalidateQuickFilterIndex();
+        live.setState(prev => ({ ...prev, table: loaded }));
+      }
+    } catch (e) {
+      this.errHandler.handle(e, 'TableEngine.syncPageWindow');
     }
   }
 

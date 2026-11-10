@@ -725,10 +725,10 @@ PR-65…PR-67: Vazirmatn + پیش‌فرض پلاگین + دکمهٔ تولبا�
   - `ui/desktop/__tests__/desktop-virtual-body.spec.ts`
 - فایل‌های تغییر یافته:
   - `engine/ViewStateBuilder.ts` / `tableEngine` / `UITableController` — `getAllUIRows()` (بدون slice صفحه‌بندی)
-  - `ui/desktop/DesktopTable.tsx` — prop `virtualization` + `session`؛ pagination مخفی در حالت مجازی
+  <!-- - `ui/desktop/DesktopTable.tsx` — prop `virtualization` + `session`؛ pagination مخفی در حالت مجازی
   - `ui/desktop/useERPTableLayout.ts` — `syncPageSize: false` وقتی مجازی است
   - `ui/index.tsx` (`ERPTable`) — پاس‌دادن `virtualization` / `session`
-  - `docs/public-api.md`
+  - `docs/public-api.md` -->
 - هدف: مهاجرت تدریجی بدون شکستن ERP؛ پیش‌فرض همچنان pagination
 - نتیجه:
   - `<ERPTable virtualization tableHeight={…} />` مسیر مجازی را فعال می‌کند

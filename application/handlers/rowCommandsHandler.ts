@@ -206,7 +206,58 @@ export class PasteRowCommandHandler {
           { actor }
         );
       }
-      const event = table.addRow(command.sourceRowId, command.placeAtRowId);
+      let event: RowAdded;
+      if (isWindowedRepository(this.repo)) {
+        // Page-window: the RAM window is ONE page. Derive the clone's index
+        // from the full dataset (one streaming pass) so it lands at the real
+        // dataset end (paste) or right after the anchor row (pasteInsert),
+        // and bump totalRows. The window itself is NOT reloaded here — the
+        // engine reloads once after the whole paste unit, so later source
+        // rows of a multi-row paste are still in RAM.
+        const anchorIndex =
+          command.placeAtRowId !== undefined
+            ? Number(table.getRow(command.placeAtRowId)?.getCell('index')?.getValue())
+            : undefined;
+        let maxIndex = 0;
+        let nextAfterAnchor: number | undefined;
+        let existingCount = 0;
+        await this.repo.iterateRowRecords(
+          command.store,
+          command.tableKey,
+          'active',
+          async records => {
+            for (const rec of records) {
+              existingCount += 1;
+              const n = Number(rec.cells['index']?.value ?? 0);
+              if (!Number.isFinite(n)) continue;
+              if (n > maxIndex) maxIndex = n;
+              if (
+                anchorIndex !== undefined &&
+                Number.isFinite(anchorIndex) &&
+                n > anchorIndex &&
+                (nextAfterAnchor === undefined || n < nextAfterAnchor)
+              ) {
+                nextAfterAnchor = n;
+              }
+            }
+          },
+        );
+        let explicitIndex: number;
+        if (anchorIndex !== undefined && Number.isFinite(anchorIndex)) {
+          explicitIndex =
+            nextAfterAnchor !== undefined
+              ? (anchorIndex + nextAfterAnchor) / 2
+              : anchorIndex + 1;
+        } else {
+          explicitIndex = maxIndex + 1;
+        }
+        event = table.addRow(command.sourceRowId, command.placeAtRowId, explicitIndex);
+        const p = table.getPagination();
+        const newTotal = Math.max(p.totalRows, existingCount) + 1;
+        table.setPagination(new Pagination(p.page, p.pageSize, newTotal));
+      } else {
+        event = table.addRow(command.sourceRowId, command.placeAtRowId);
+      }
       await this.repo.save(command.store, table);
       this.audit.log({
         type: 'INFORMATION',
@@ -347,9 +398,25 @@ export class DeleteRowCommandHandler {
         await this.repo.removeRows(command.store, command.tableKey, [command.rowId]);
         if (event instanceof RowRemoved) {
           const p = table.getPagination();
-          table.setPagination(
-            new Pagination(p.page, p.pageSize, Math.max(0, p.totalRows - 1)),
-          );
+          const pageSize = Math.max(1, p.pageSize);
+          const newTotal = Math.max(0, p.totalRows - 1);
+          const totalPages = Math.max(1, Math.ceil(newTotal / pageSize));
+          // Last row of page >= 2 removed -> step back one page (page count shrinks)
+          const page = Math.max(1, Math.min(p.page, totalPages));
+          table.setPagination(new Pagination(page, pageSize, newTotal));
+          await this.repo.save(command.store, table);
+          // Refresh RAM window only when it has a gap: empty page -> previous
+          // page; short page -> next row from the following page fills it.
+          // (A window still >= pageSize — e.g. mid paste+cut — is left alone so
+          // the remaining rows of that unit stay in RAM; the engine reloads.)
+          const windowSize = table
+            .getRows()
+            .filter(r => r.collection === table.getActiveCollectionName()).length;
+          if (windowSize < pageSize || page !== p.page) {
+            await this.repo.loadPage(command.store, command.tableKey, page, pageSize);
+          }
+          this.audit.log({ type: 'INFORMATION', message: event.type, payload: event.rowId });
+          return event;
         }
         // MinimumRowConstraintViolated: old Added gone, addNewRow already on table
       }
@@ -404,6 +471,12 @@ export class RestoreAddedRowCommandHandler {
         collection: command.collection,
         isSaveDescription: command.isSaveDescription,
       });
+      if (isWindowedRepository(this.repo)) {
+        // Page-window: the row re-enters the dataset → bump totalRows. The
+        // engine/session trims the RAM window after the undo/redo unit.
+        const p = table.getPagination();
+        table.setPagination(new Pagination(p.page, p.pageSize, p.totalRows + 1));
+      }
       await this.repo.save(command.store, table);
       this.audit.log({
         type: 'INFORMATION',

@@ -176,6 +176,46 @@ describe('table domain behavior', () => {
     expect(rows[0].getCell('index')?.getValue()).toBe(1);
   });
 
+  it('page-window: removing the only added row on page >= 2 does NOT re-add a row', () => {
+    const table = createTable([
+      createRow({ rowId: 11, index: 11, name: 'draft', rowState: RowStateEnum.Added }),
+    ]);
+    table.setPageWindow(true);
+    table.setPagination(new Pagination(2, 10, 11));
+
+    const event = table.deleteRow(new RowId(11));
+
+    expect(event?.type).toBe('NEW_ROW_REMOVED');
+    expect(table.getRows()).toHaveLength(0);
+  });
+
+  it('page-window: removing the only added row on page 1 re-adds an empty row', () => {
+    const table = createTable([
+      createRow({ rowId: 1, index: 1, name: 'draft', rowState: RowStateEnum.Added }),
+    ]);
+    table.setPageWindow(true);
+
+    const event = table.deleteRow(new RowId(1));
+
+    expect(event?.type).toBe('NEW_AND_FIRST_ROW_CAN_NOT_BE_REMOVE');
+    expect(table.getRows()).toHaveLength(1);
+  });
+
+  it('in-memory: removing the last row of the last page steps back one page', () => {
+    const rows = Array.from({ length: 11 }, (_, i) =>
+      createRow({ rowId: i + 1, index: i + 1, rowState: RowStateEnum.Added }),
+    );
+    const table = createTable(rows);
+    table.changePage(2);
+
+    const event = table.deleteRow(new RowId(11));
+
+    expect(event?.type).toBe('NEW_ROW_REMOVED');
+    expect(table.getRows()).toHaveLength(10);
+    expect(table.getPagination().page).toBe(1);
+    expect(table.getVisibleRows()).toHaveLength(10);
+  });
+
   it('marks an unchanged persisted row as deleted instead of removing it', () => {
     const table = createTable([createRow({ rowId: 1, index: 1, name: 'persisted' })]);
 

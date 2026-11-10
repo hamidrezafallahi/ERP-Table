@@ -91,16 +91,15 @@ export function DesktopTable<TRow = unknown>({
     resolveDesktopVirtualization(virtualization, session);
   const rowHeight = useERPTableTheme().params.rowHeight;
 
-  const { bodyHeight } = useERPTableLayout({
+  // Layout never touches pageSize (that shrank pages). Virtual mode needs a
+  // bounded scroll viewport → fill the window; pagination keeps `100%`.
+  const { bodyHeight: resolvedBodyHeight, viewportHeight } = useERPTableLayout({
     rootRef,
     bodyRef,
-    controller,
     tableHeight,
     ready,
-    syncPageSize: !useVirtual,
-    rowHeight,
+    autoFill: useVirtual,
   });
-  const resolvedBodyHeight = tableHeight ?? bodyHeight ?? 400;
 
   useScrollToSearchMatch(bodyRef, controller);
 
@@ -150,7 +149,7 @@ export function DesktopTable<TRow = unknown>({
   return (
     <div
       ref={rootRef}
-      className="flex flex-col w-full h-full transition-all duration-200 erp-table-desktop"
+      className="erp-table-desktop flex flex-col w-full h-full transition-all duration-200"
     >
       <GridLiveRegion controller={controller} />
       {tableTitle}
@@ -159,7 +158,7 @@ export function DesktopTable<TRow = unknown>({
         data-erp-table-scroll
         data-erp-table-key={tableKey}
         data-erp-virtualization={useVirtual ? 'on' : 'off'}
-        className="overflow-auto [overflow-anchor:none] relative"
+        className="relative overflow-auto [overflow-anchor:none]"
         style={{
           height: resolvedBodyHeight ?? '100%',
           width: 'auto',
@@ -173,7 +172,7 @@ export function DesktopTable<TRow = unknown>({
           noRowsOverlayComponent={noRowsOverlayComponent}
         />
         <table
-          className="min-w-max w-full"
+          className="w-full min-w-max"
           role={isTreeGrid ? 'treegrid' : 'grid'}
           tabIndex={0}
           aria-colcount={colCount || undefined}
@@ -231,7 +230,7 @@ export function DesktopTable<TRow = unknown>({
               session={session}
               tableKey={tableKey}
               scrollParentRef={bodyRef}
-              viewportHeight={resolvedBodyHeight}
+              viewportHeight={viewportHeight}
               rowHeight={rowHeight}
               moreDetailComponent={moreDetailComponent}
               pinnedTopCount={pinnedTopCount}
@@ -266,7 +265,7 @@ export function DesktopTable<TRow = unknown>({
           </ColumnWindowProvider>
         </table>
       </div>
-      <div className="flex justify-between items-center gap-3 w-full shrink-0 erp-table-desktop__toolbar">
+      <div className="erp-table-desktop__toolbar flex justify-between items-center gap-3 w-full shrink-0">
         <GroupActionButtons
           controller={controller}
           multiSelectConfig={multiSelectConfig}
@@ -280,7 +279,7 @@ export function DesktopTable<TRow = unknown>({
           />
         ) : (
           <div
-            className="text-xs text-neutral-500 px-2"
+            className="px-2 text-neutral-500 text-xs"
             data-erp-virtual-row-count
           >
             {session?.getUiRowCount() ?? 0} rows

@@ -258,7 +258,13 @@ export class Table {
     return new RowAdded(newRowId);
   }
 
-  addRow(targetRowId: number, placedRowId?: number): RowAdded {
+  /**
+   * Clone `targetRowId` as a new `Added` row.
+   * `explicitIndex` (page-window mode) overrides the `index` computed from the
+   * RAM window — the window is only one page, so the handler derives the real
+   * neighbour / dataset-end index from IndexedDB.
+   */
+  addRow(targetRowId: number, placedRowId?: number, explicitIndex?: number): RowAdded {
     const col = this.getActiveCollection();
     const target = col.getRows().get(targetRowId);
     if (!target) throw new Error('Row not found');
@@ -286,6 +292,9 @@ export class Table {
     } else {
       const lastRowIndexValue = rowsArray[rowsArray.length - 1].getCell('index')?.getValue() as number;
       x = lastRowIndexValue + 1;
+    }
+    if (explicitIndex !== undefined && Number.isFinite(explicitIndex)) {
+      x = explicitIndex;
     }
 
     const newRowId = new RowId(Math.floor((1 + Math.random()) * 0x10000000000000000));
@@ -669,12 +678,26 @@ export class Table {
 
     // Added → complete removal
     if (row.rowState.value === RowStateEnum.Added) {
-      if (rows.size === 1) {
+      // Page-window mode: `rows` is only the current page. Re-add an empty row
+      // ONLY when this is the last row of the whole dataset (page 1 with a
+      // single row); on page >= 2 the row is just removed and the handler
+      // moves back one page.
+      const isLastRowOfDataset =
+        rows.size === 1 && (!this.pageWindow || this.pagination.page <= 1);
+      if (isLastRowOfDataset) {
         rows.delete(rowId.value);
         this.addNewRow();
         return new MinimumRowConstraintViolated(rowId);
       }
       rows.delete(rowId.value);
+      if (!this.pageWindow) {
+        // Full dataset in RAM: if the current page became empty, step back.
+        const totalPages = Math.max(
+          1,
+          Math.ceil(rows.size / Math.max(1, this.pagination.pageSize)),
+        );
+        if (this.pagination.page > totalPages) this.changePage(totalPages);
+      }
       return new RowRemoved(rowId);
     }
 
